@@ -1,0 +1,135 @@
+"use client";
+
+import { useState } from "react";
+import { AppShell } from "@/components/layout";
+import { OrderFilters, OrderTable, SendModal } from "@/components/orders";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  FileSpreadsheet,
+  Mail,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+import { type OrderBatch, orderBatches } from "@/lib/mock-data";
+
+export default function OrdersPage() {
+  const [selectedBatch, setSelectedBatch] = useState<OrderBatch | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSendEmail = (batch: OrderBatch) => {
+    setSelectedBatch(batch);
+    setIsModalOpen(true);
+  };
+
+  const handlePreview = (batch: OrderBatch) => {
+    // In real app, this would open a preview modal or navigate to preview page
+    console.log("Preview batch:", batch);
+  };
+
+  // Calculate summary stats
+  const totalBatches = orderBatches.length;
+  const pendingBatches = orderBatches.filter(
+    (b) => b.status === "pending"
+  ).length;
+  const sentBatches = orderBatches.filter((b) => b.status === "sent").length;
+  const errorBatches = orderBatches.filter((b) => b.status === "error").length;
+
+  return (
+    <AppShell
+      title="발주 생성/발송"
+      description="제조사별 발주서를 생성하고 이메일로 발송하세요"
+    >
+      {/* Summary Stats */}
+      <div className="grid gap-4 md:grid-cols-4 mb-8">
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+              <FileSpreadsheet className="h-5 w-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">전체</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {totalBatches}건
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
+              <Clock className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">대기중</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {pendingBatches}건
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">발송완료</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {sentBatches}건
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
+              <AlertCircle className="h-5 w-5 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">오류</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {errorBatches}건
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions Row */}
+      <div className="flex items-center justify-between mb-6">
+        <OrderFilters />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            새로고침
+          </Button>
+          <Button
+            size="sm"
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+            disabled={pendingBatches === 0}
+          >
+            <Mail className="h-4 w-4" />
+            전체 발송 ({pendingBatches})
+          </Button>
+        </div>
+      </div>
+
+      {/* Order Table */}
+      <OrderTable onSendEmail={handleSendEmail} onPreview={handlePreview} />
+
+      {/* Send Modal */}
+      <SendModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        batch={selectedBatch}
+      />
+    </AppShell>
+  );
+}
+
