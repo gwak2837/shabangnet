@@ -1,24 +1,12 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,31 +16,31 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { type Manufacturer, manufacturers, formatDate } from '@/lib/mock-data';
-import { MoreHorizontal, Pencil, Trash2, Search, Plus, Mail, Phone } from 'lucide-react';
+} from '@/components/ui/alert-dialog'
+import { type Manufacturer, manufacturers, formatDate } from '@/lib/mock-data'
+import { MoreHorizontal, Pencil, Trash2, Search, Plus, Mail, Phone } from 'lucide-react'
 
 interface ManufacturerTableProps {
-  onEdit: (manufacturer: Manufacturer) => void;
-  onAdd: () => void;
+  onEdit: (manufacturer: Manufacturer) => void
+  onAdd: () => void
 }
 
 export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<Manufacturer | null>(null);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Manufacturer | null>(null)
 
   const filteredManufacturers = manufacturers.filter(
     (m) =>
       m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      m.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   const handleDelete = () => {
     // In real app, this would call API to delete
-    console.log('Delete manufacturer:', deleteTarget?.id);
-    setDeleteTarget(null);
-  };
+    console.log('Delete manufacturer:', deleteTarget?.id)
+    setDeleteTarget(null)
+  }
 
   return (
     <>
@@ -79,15 +67,9 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  제조사
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  담당자
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  연락처
-                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">담당자</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">연락처</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                   누적 주문
                 </TableHead>
@@ -107,9 +89,7 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900">{manufacturer.name}</p>
-                        {manufacturer.ccEmail && (
-                          <p className="text-xs text-slate-500">CC: {manufacturer.ccEmail}</p>
-                        )}
+                        {manufacturer.ccEmail && <p className="text-xs text-slate-500">CC: {manufacturer.ccEmail}</p>}
                       </div>
                     </div>
                   </TableCell>
@@ -131,9 +111,7 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
                       {manufacturer.orderCount.toLocaleString()}건
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">
-                    {formatDate(manufacturer.lastOrderDate)}
-                  </TableCell>
+                  <TableCell className="text-sm text-slate-500">{formatDate(manufacturer.lastOrderDate)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -176,9 +154,9 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>제조사 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-semibold text-slate-900">{deleteTarget?.name}</span>을(를) 삭제하시겠습니까?
-              <br />
-              이 작업은 되돌릴 수 없습니다.
+              <span className="font-semibold text-slate-900">{deleteTarget?.name}</span>
+              을(를) 삭제하시겠습니까?
+              <br />이 작업은 되돌릴 수 없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -190,6 +168,5 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }
-

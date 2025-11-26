@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,32 +8,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { type Manufacturer } from '@/lib/mock-data';
-import { Building2, Loader2 } from 'lucide-react';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { type Manufacturer } from '@/lib/mock-data'
+import { Building2, Loader2 } from 'lucide-react'
 
 interface ManufacturerModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  manufacturer: Manufacturer | null;
-  onSave: (data: Partial<Manufacturer>) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  manufacturer: Manufacturer | null
+  onSave: (data: Partial<Manufacturer>) => void
 }
 
 export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: ManufacturerModalProps) {
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     contactName: '',
     email: '',
     ccEmail: '',
     phone: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const isEdit = !!manufacturer;
+  const isEdit = !!manufacturer
 
   useEffect(() => {
     if (manufacturer) {
@@ -43,7 +43,7 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
         email: manufacturer.email,
         ccEmail: manufacturer.ccEmail || '',
         phone: manufacturer.phone,
-      });
+      })
     } else {
       setFormData({
         name: '',
@@ -51,48 +51,48 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
         email: '',
         ccEmail: '',
         phone: '',
-      });
+      })
     }
-    setErrors({});
-  }, [manufacturer, open]);
+    setErrors({})
+  }, [manufacturer, open])
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = '제조사명을 입력하세요';
+      newErrors.name = '제조사명을 입력하세요'
     }
     if (!formData.email.trim()) {
-      newErrors.email = '이메일을 입력하세요';
+      newErrors.email = '이메일을 입력하세요'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식을 입력하세요';
+      newErrors.email = '올바른 이메일 형식을 입력하세요'
     }
     if (formData.ccEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ccEmail)) {
-      newErrors.ccEmail = '올바른 이메일 형식을 입력하세요';
+      newErrors.ccEmail = '올바른 이메일 형식을 입력하세요'
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!validate()) return;
+    if (!validate()) return
 
-    setIsSaving(true);
+    setIsSaving(true)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     onSave({
       ...formData,
       ccEmail: formData.ccEmail || undefined,
-    });
+    })
 
-    setIsSaving(false);
-    onOpenChange(false);
-  };
+    setIsSaving(false)
+    onOpenChange(false)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -195,6 +195,5 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
-

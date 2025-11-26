@@ -1,72 +1,61 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar, Search, Filter, X } from "lucide-react";
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar, Search, Filter, X } from 'lucide-react'
 
 const manufacturers = [
-  { id: "all", name: "전체 제조사" },
-  { id: "m1", name: "농심식품" },
-  { id: "m2", name: "CJ제일제당" },
-  { id: "m3", name: "오뚜기" },
-  { id: "m4", name: "동원F&B" },
-  { id: "m5", name: "풀무원" },
-];
+  { id: 'all', name: '전체 제조사' },
+  { id: 'm1', name: '농심식품' },
+  { id: 'm2', name: 'CJ제일제당' },
+  { id: 'm3', name: '오뚜기' },
+  { id: 'm4', name: '동원F&B' },
+  { id: 'm5', name: '풀무원' },
+]
 
 const statuses = [
-  { id: "all", name: "전체 상태" },
-  { id: "pending", name: "대기중" },
-  { id: "ready", name: "발송대기" },
-  { id: "sent", name: "발송완료" },
-  { id: "error", name: "오류" },
-];
+  { id: 'all', name: '전체 상태' },
+  { id: 'pending', name: '대기중' },
+  { id: 'ready', name: '발송대기' },
+  { id: 'sent', name: '발송완료' },
+  { id: 'error', name: '오류' },
+]
 
 interface OrderFiltersProps {
   onFilterChange?: (filters: {
-    manufacturer: string;
-    status: string;
-    dateFrom: string;
-    dateTo: string;
-    search: string;
-  }) => void;
+    manufacturer: string
+    status: string
+    dateFrom: string
+    dateTo: string
+    search: string
+  }) => void
 }
 
 export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
-  const [manufacturer, setManufacturer] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [search, setSearch] = useState("");
+  const [manufacturer, setManufacturer] = useState('all')
+  const [status, setStatus] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [search, setSearch] = useState('')
 
-  const hasActiveFilters =
-    manufacturer !== "all" ||
-    status !== "all" ||
-    dateFrom ||
-    dateTo ||
-    search;
+  const hasActiveFilters = manufacturer !== 'all' || status !== 'all' || dateFrom || dateTo || search
 
   const handleClearFilters = () => {
-    setManufacturer("all");
-    setStatus("all");
-    setDateFrom("");
-    setDateTo("");
-    setSearch("");
+    setManufacturer('all')
+    setStatus('all')
+    setDateFrom('')
+    setDateTo('')
+    setSearch('')
     onFilterChange?.({
-      manufacturer: "all",
-      status: "all",
-      dateFrom: "",
-      dateTo: "",
-      search: "",
-    });
-  };
+      manufacturer: 'all',
+      status: 'all',
+      dateFrom: '',
+      dateTo: '',
+      search: '',
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -154,6 +143,5 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
         )}
       </div>
     </div>
-  );
+  )
 }
-

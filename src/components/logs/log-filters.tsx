@@ -1,26 +1,20 @@
-'use client';
+'use client'
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { manufacturers } from '@/lib/mock-data';
-import { Calendar, X } from 'lucide-react';
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { manufacturers } from '@/lib/mock-data'
+import { Calendar, X } from 'lucide-react'
 
 interface LogFiltersProps {
-  dateFrom: string;
-  dateTo: string;
-  status: string;
-  manufacturer: string;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
-  onStatusChange: (value: string) => void;
-  onManufacturerChange: (value: string) => void;
+  dateFrom: string
+  dateTo: string
+  status: string
+  manufacturer: string
+  onDateFromChange: (value: string) => void
+  onDateToChange: (value: string) => void
+  onStatusChange: (value: string) => void
+  onManufacturerChange: (value: string) => void
 }
 
 export function LogFilters({
@@ -33,14 +27,14 @@ export function LogFilters({
   onStatusChange,
   onManufacturerChange,
 }: LogFiltersProps) {
-  const hasActiveFilters = dateFrom || dateTo || status !== 'all' || manufacturer !== 'all';
+  const hasActiveFilters = dateFrom || dateTo || status !== 'all' || manufacturer !== 'all'
 
   const handleClear = () => {
-    onDateFromChange('');
-    onDateToChange('');
-    onStatusChange('all');
-    onManufacturerChange('all');
-  };
+    onDateFromChange('')
+    onDateToChange('')
+    onStatusChange('all')
+    onManufacturerChange('all')
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-4">
@@ -102,6 +96,5 @@ export function LogFilters({
         </Button>
       )}
     </div>
-  );
+  )
 }
-

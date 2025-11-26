@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency, manufacturerChartData } from '@/lib/mock-data';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCurrency, manufacturerChartData } from '@/lib/mock-data'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 const COLORS = [
   'oklch(0.65 0.15 250)',
@@ -10,22 +10,22 @@ const COLORS = [
   'oklch(0.55 0.13 250)',
   'oklch(0.50 0.12 250)',
   'oklch(0.45 0.11 250)',
-];
+]
 
 interface CustomTooltipProps {
-  active?: boolean;
+  active?: boolean
   payload?: Array<{
     payload: {
-      name: string;
-      orders: number;
-      amount: number;
-    };
-  }>;
+      name: string
+      orders: number
+      amount: number
+    }
+  }>
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data = payload[0].payload
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
         <p className="font-semibold text-slate-900">{data.name}</p>
@@ -36,9 +36,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           금액: <span className="font-medium">{formatCurrency(data.amount)}</span>
         </p>
       </div>
-    );
+    )
   }
-  return null;
+  return null
 }
 
 export function ManufacturerChart() {
@@ -86,5 +86,5 @@ export function ManufacturerChart() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

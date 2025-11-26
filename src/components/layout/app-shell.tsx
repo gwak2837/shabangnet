@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { Sidebar } from "./sidebar";
-import { Header } from "./header";
+import { Sidebar } from './sidebar'
+import { Header } from './header'
 
 interface AppShellProps {
-  children: React.ReactNode;
-  title: string;
-  description?: string;
+  children: React.ReactNode
+  title: string
+  description?: string
 }
 
 export function AppShell({ children, title, description }: AppShellProps) {
@@ -18,6 +18,5 @@ export function AppShell({ children, title, description }: AppShellProps) {
         <main className="p-8">{children}</main>
       </div>
     </div>
-  );
+  )
 }
-

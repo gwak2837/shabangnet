@@ -1,3 +1,2 @@
-export { Dropzone } from "./dropzone";
-export { UploadResult } from "./upload-result";
-
+export { Dropzone } from './dropzone'
+export { UploadResult } from './upload-result'

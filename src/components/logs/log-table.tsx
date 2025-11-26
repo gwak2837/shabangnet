@@ -1,22 +1,15 @@
-'use client';
+'use client'
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data';
-import { Eye, CheckCircle2, XCircle, Mail, FileSpreadsheet } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data'
+import { Eye, CheckCircle2, XCircle, Mail, FileSpreadsheet } from 'lucide-react'
 
 interface LogTableProps {
-  logs: SendLog[];
-  onViewDetail: (log: SendLog) => void;
+  logs: SendLog[]
+  onViewDetail: (log: SendLog) => void
 }
 
 export function LogTable({ logs, onViewDetail }: LogTableProps) {
@@ -26,24 +19,16 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                발송 일시
-              </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                제조사
-              </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                수신자
-              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발송 일시</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수신자</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 주문 수
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 금액
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                상태
-              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상태</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -105,6 +90,5 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }
-

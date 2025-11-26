@@ -1,74 +1,74 @@
-'use client';
+'use client'
 
-import { AppShell } from '@/components/layout';
-import { ExcludedOrderTable, OrderFilters, OrderTable, SendModal } from '@/components/orders';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { excludedOrderBatches, orderBatches, type OrderBatch } from '@/lib/mock-data';
-import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Mail, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { AppShell } from '@/components/layout'
+import { ExcludedOrderTable, OrderFilters, OrderTable, SendModal } from '@/components/orders'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { excludedOrderBatches, orderBatches, type OrderBatch } from '@/lib/mock-data'
+import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Mail, RefreshCw } from 'lucide-react'
+import { useState } from 'react'
 
-type TabType = 'sendable' | 'excluded';
+type TabType = 'sendable' | 'excluded'
 
 export default function OrdersPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('sendable');
-  const [selectedBatch, setSelectedBatch] = useState<OrderBatch | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sendQueue, setSendQueue] = useState<OrderBatch[]>([]);
-  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabType>('sendable')
+  const [selectedBatch, setSelectedBatch] = useState<OrderBatch | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [sendQueue, setSendQueue] = useState<OrderBatch[]>([])
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0)
 
   const handleSendEmail = (batch: OrderBatch) => {
-    setSelectedBatch(batch);
-    setSendQueue([batch]);
-    setCurrentQueueIndex(0);
-    setIsModalOpen(true);
-  };
+    setSelectedBatch(batch)
+    setSendQueue([batch])
+    setCurrentQueueIndex(0)
+    setIsModalOpen(true)
+  }
 
   const handleBatchSend = (batches: OrderBatch[]) => {
-    if (batches.length === 0) return;
-    setSendQueue(batches);
-    setCurrentQueueIndex(0);
-    setSelectedBatch(batches[0]);
-    setIsModalOpen(true);
-  };
+    if (batches.length === 0) return
+    setSendQueue(batches)
+    setCurrentQueueIndex(0)
+    setSelectedBatch(batches[0])
+    setIsModalOpen(true)
+  }
 
   const handleSendAllPending = () => {
-    const pendingBatchesList = orderBatches.filter((b) => b.status === 'pending');
-    handleBatchSend(pendingBatchesList);
-  };
+    const pendingBatchesList = orderBatches.filter((b) => b.status === 'pending')
+    handleBatchSend(pendingBatchesList)
+  }
 
   const handleModalClose = (open: boolean) => {
     if (!open) {
       // 모달이 닫힐 때, 큐에 다음 항목이 있으면 계속 진행
       if (currentQueueIndex < sendQueue.length - 1) {
-        const nextIndex = currentQueueIndex + 1;
-        setCurrentQueueIndex(nextIndex);
-        setSelectedBatch(sendQueue[nextIndex]);
-        setIsModalOpen(true);
+        const nextIndex = currentQueueIndex + 1
+        setCurrentQueueIndex(nextIndex)
+        setSelectedBatch(sendQueue[nextIndex])
+        setIsModalOpen(true)
       } else {
-        setIsModalOpen(false);
-        setSendQueue([]);
-        setCurrentQueueIndex(0);
+        setIsModalOpen(false)
+        setSendQueue([])
+        setCurrentQueueIndex(0)
       }
     } else {
-      setIsModalOpen(open);
+      setIsModalOpen(open)
     }
-  };
+  }
 
   const handlePreview = (batch: OrderBatch) => {
     // In real app, this would open a preview modal or navigate to preview page
-    console.log('Preview batch:', batch);
-  };
+    console.log('Preview batch:', batch)
+  }
 
   // Calculate summary stats for sendable orders
-  const totalBatches = orderBatches.length;
-  const pendingBatchesCount = orderBatches.filter((b) => b.status === 'pending').length;
-  const sentBatches = orderBatches.filter((b) => b.status === 'sent').length;
-  const errorBatches = orderBatches.filter((b) => b.status === 'error').length;
+  const totalBatches = orderBatches.length
+  const pendingBatchesCount = orderBatches.filter((b) => b.status === 'pending').length
+  const sentBatches = orderBatches.filter((b) => b.status === 'sent').length
+  const errorBatches = orderBatches.filter((b) => b.status === 'error').length
 
   // Calculate excluded orders count
-  const excludedOrdersCount = excludedOrderBatches.reduce((sum, b) => sum + b.totalOrders, 0);
+  const excludedOrdersCount = excludedOrderBatches.reduce((sum, b) => sum + b.totalOrders, 0)
 
   return (
     <AppShell title="발주 생성/발송" description="제조사별 발주서를 생성하고 이메일로 발송하세요">
@@ -218,5 +218,5 @@ export default function OrdersPage() {
       )}
       <SendModal open={isModalOpen} onOpenChange={handleModalClose} batch={selectedBatch} />
     </AppShell>
-  );
+  )
 }

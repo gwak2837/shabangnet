@@ -1,55 +1,55 @@
 // Mock data for the Shabangnet Order Automation System
 
 export interface Manufacturer {
-  id: string;
-  name: string;
-  contactName: string;
-  email: string;
-  ccEmail?: string;
-  phone: string;
-  orderCount: number;
-  lastOrderDate: string;
+  id: string
+  name: string
+  contactName: string
+  email: string
+  ccEmail?: string
+  phone: string
+  orderCount: number
+  lastOrderDate: string
 }
 
 export interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  phone: string;
-  address: string;
-  productCode: string;
-  productName: string;
-  optionName: string;
-  quantity: number;
-  price: number;
-  manufacturerId: string;
-  manufacturerName: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
-  createdAt: string;
+  id: string
+  orderNumber: string
+  customerName: string
+  phone: string
+  address: string
+  productCode: string
+  productName: string
+  optionName: string
+  quantity: number
+  price: number
+  manufacturerId: string
+  manufacturerName: string
+  status: 'pending' | 'processing' | 'completed' | 'error'
+  createdAt: string
   // F열 값 (발송 제외 판단용)
-  fulfillmentType?: string;
+  fulfillmentType?: string
 }
 
 export interface Upload {
-  id: string;
-  fileName: string;
-  fileSize: number;
-  totalOrders: number;
-  processedOrders: number;
-  errorOrders: number;
-  uploadedAt: string;
-  status: 'processing' | 'completed' | 'error';
+  id: string
+  fileName: string
+  fileSize: number
+  totalOrders: number
+  processedOrders: number
+  errorOrders: number
+  uploadedAt: string
+  status: 'processing' | 'completed' | 'error'
 }
 
 export interface DashboardStats {
-  todayOrders: number;
-  pendingOrders: number;
-  completedOrders: number;
-  errorOrders: number;
-  todayOrdersChange: number;
-  pendingOrdersChange: number;
-  completedOrdersChange: number;
-  errorOrdersChange: number;
+  todayOrders: number
+  pendingOrders: number
+  completedOrders: number
+  errorOrders: number
+  todayOrdersChange: number
+  pendingOrdersChange: number
+  completedOrdersChange: number
+  errorOrdersChange: number
 }
 
 // Mock manufacturers
@@ -149,7 +149,7 @@ export const manufacturers: Manufacturer[] = [
     orderCount: 134,
     lastOrderDate: '2024-11-26',
   },
-];
+]
 
 // Mock orders
 export const orders: Order[] = [
@@ -659,7 +659,7 @@ export const orders: Order[] = [
     createdAt: '2024-11-26T11:30:00',
     fulfillmentType: '일반택배',
   },
-];
+]
 
 // Mock recent uploads
 export const recentUploads: Upload[] = [
@@ -693,7 +693,7 @@ export const recentUploads: Upload[] = [
     uploadedAt: '2024-11-24T08:45:00',
     status: 'completed',
   },
-];
+]
 
 // Dashboard stats
 export const dashboardStats: DashboardStats = {
@@ -705,7 +705,7 @@ export const dashboardStats: DashboardStats = {
   pendingOrdersChange: -8.2,
   completedOrdersChange: 23.1,
   errorOrdersChange: -33.3,
-};
+}
 
 // Chart data for manufacturer orders
 export const manufacturerChartData = [
@@ -719,19 +719,19 @@ export const manufacturerChartData = [
   { name: '롯데푸드', orders: 28, amount: 412000 },
   { name: '청정원', orders: 14, amount: 198000 },
   { name: '빙그레', orders: 20, amount: 324000 },
-];
+]
 
 // 발송 제외 패턴 설정
 export interface ExclusionPattern {
-  id: string;
-  pattern: string;
-  enabled: boolean;
-  description?: string;
+  id: string
+  pattern: string
+  enabled: boolean
+  description?: string
 }
 
 export interface ExclusionSettings {
-  enabled: boolean;
-  patterns: ExclusionPattern[];
+  enabled: boolean
+  patterns: ExclusionPattern[]
 }
 
 export const exclusionSettings: ExclusionSettings = {
@@ -762,43 +762,43 @@ export const exclusionSettings: ExclusionSettings = {
       description: '현대홈쇼핑 직택배',
     },
   ],
-};
+}
 
 // 발송 제외 여부 판단 헬퍼 함수
 export function shouldExcludeFromEmail(fulfillmentType?: string): boolean {
   if (!exclusionSettings.enabled || !fulfillmentType) {
-    return false;
+    return false
   }
 
-  return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern));
+  return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
 }
 
 // Order status for batch processing
 export interface OrderBatch {
-  manufacturerId: string;
-  manufacturerName: string;
-  orders: Order[];
-  totalOrders: number;
-  totalAmount: number;
-  status: 'pending' | 'ready' | 'sent' | 'error';
-  email: string;
-  lastSentAt?: string;
+  manufacturerId: string
+  manufacturerName: string
+  orders: Order[]
+  totalOrders: number
+  totalAmount: number
+  status: 'pending' | 'ready' | 'sent' | 'error'
+  email: string
+  lastSentAt?: string
 }
 
 // 발송 대상 주문만 필터링하여 배치 생성
 export function getEmailableOrders(): Order[] {
-  return orders.filter((o) => !shouldExcludeFromEmail(o.fulfillmentType));
+  return orders.filter((o) => !shouldExcludeFromEmail(o.fulfillmentType))
 }
 
 // 발송 제외 주문 가져오기
 export function getExcludedOrders(): Order[] {
-  return orders.filter((o) => shouldExcludeFromEmail(o.fulfillmentType));
+  return orders.filter((o) => shouldExcludeFromEmail(o.fulfillmentType))
 }
 
 // 발송 대상 주문으로 배치 생성
 export const orderBatches: OrderBatch[] = manufacturers.map((m) => {
   // 발송 제외 주문은 배치에서 제외
-  const mOrders = orders.filter((o) => o.manufacturerId === m.id && !shouldExcludeFromEmail(o.fulfillmentType));
+  const mOrders = orders.filter((o) => o.manufacturerId === m.id && !shouldExcludeFromEmail(o.fulfillmentType))
   return {
     manufacturerId: m.id,
     manufacturerName: m.name,
@@ -808,17 +808,17 @@ export const orderBatches: OrderBatch[] = manufacturers.map((m) => {
     status: mOrders.some((o) => o.status === 'error')
       ? 'error'
       : mOrders.every((o) => o.status === 'completed')
-      ? 'sent'
-      : 'pending',
+        ? 'sent'
+        : 'pending',
     email: m.email,
     lastSentAt: mOrders.every((o) => o.status === 'completed') ? '2024-11-26T11:30:00' : undefined,
-  };
-});
+  }
+})
 
 // 발송 제외 주문 배치 (제조사별 그룹화)
 export const excludedOrderBatches: OrderBatch[] = manufacturers
   .map((m) => {
-    const mOrders = orders.filter((o) => o.manufacturerId === m.id && shouldExcludeFromEmail(o.fulfillmentType));
+    const mOrders = orders.filter((o) => o.manufacturerId === m.id && shouldExcludeFromEmail(o.fulfillmentType))
     return {
       manufacturerId: m.id,
       manufacturerName: m.name,
@@ -827,16 +827,16 @@ export const excludedOrderBatches: OrderBatch[] = manufacturers
       totalAmount: mOrders.reduce((sum, o) => sum + o.price * o.quantity, 0),
       status: 'pending' as const,
       email: m.email,
-    };
+    }
   })
-  .filter((batch) => batch.totalOrders > 0);
+  .filter((batch) => batch.totalOrders > 0)
 
 // Utility functions
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
-  }).format(amount);
+  }).format(amount)
 }
 
 export function formatDate(dateString: string): string {
@@ -844,7 +844,7 @@ export function formatDate(dateString: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+  })
 }
 
 export function formatDateTime(dateString: string): string {
@@ -854,15 +854,15 @@ export function formatDateTime(dateString: string): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  });
+  })
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 export function getStatusColor(status: 'pending' | 'processing' | 'completed' | 'error' | 'ready' | 'sent'): string {
@@ -873,8 +873,8 @@ export function getStatusColor(status: 'pending' | 'processing' | 'completed' | 
     completed: 'bg-emerald-100 text-emerald-800',
     sent: 'bg-emerald-100 text-emerald-800',
     error: 'bg-rose-100 text-rose-800',
-  };
-  return colors[status] || colors.pending;
+  }
+  return colors[status] || colors.pending
 }
 
 export function getStatusLabel(status: 'pending' | 'processing' | 'completed' | 'error' | 'ready' | 'sent'): string {
@@ -885,21 +885,21 @@ export function getStatusLabel(status: 'pending' | 'processing' | 'completed' | 
     completed: '완료',
     sent: '발송완료',
     error: '오류',
-  };
-  return labels[status] || status;
+  }
+  return labels[status] || status
 }
 
 // Product interface and mock data
 export interface Product {
-  id: string;
-  productCode: string;
-  productName: string;
-  optionName: string;
-  manufacturerId: string | null;
-  manufacturerName: string | null;
-  price: number;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  productCode: string
+  productName: string
+  optionName: string
+  manufacturerId: string | null
+  manufacturerName: string | null
+  price: number
+  createdAt: string
+  updatedAt: string
 }
 
 export const products: Product[] = [
@@ -1068,40 +1068,40 @@ export const products: Product[] = [
     createdAt: '2024-07-10T11:00:00',
     updatedAt: '2024-11-22T16:00:00',
   },
-];
+]
 
 // Send Log interface and mock data
 export interface SendLog {
-  id: string;
-  manufacturerId: string;
-  manufacturerName: string;
-  email: string;
-  subject: string;
-  fileName: string;
-  orderCount: number;
-  totalAmount: number;
-  status: 'success' | 'failed' | 'pending';
-  errorMessage?: string;
-  sentAt: string;
-  sentBy: string;
+  id: string
+  manufacturerId: string
+  manufacturerName: string
+  email: string
+  subject: string
+  fileName: string
+  orderCount: number
+  totalAmount: number
+  status: 'success' | 'failed' | 'pending'
+  errorMessage?: string
+  sentAt: string
+  sentBy: string
   // 중복 발주 체크를 위한 수취인 주소 정보
-  recipientAddresses: string[];
+  recipientAddresses: string[]
   // 중복 발송 시 입력한 사유
-  duplicateReason?: string;
+  duplicateReason?: string
 }
 
 // 현재 날짜 기준 상대적 날짜 생성 헬퍼
 function getRelativeDate(daysAgo: number, hours: number = 10, minutes: number = 0): string {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  date.setHours(hours, minutes, 0, 0);
-  return date.toISOString();
+  const date = new Date()
+  date.setDate(date.getDate() - daysAgo)
+  date.setHours(hours, minutes, 0, 0)
+  return date.toISOString()
 }
 
 function formatDateForFileName(daysAgo: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return date.toISOString().slice(0, 10).replace(/-/g, '');
+  const date = new Date()
+  date.setDate(date.getDate() - daysAgo)
+  return date.toISOString().slice(0, 10).replace(/-/g, '')
 }
 
 export const sendLogs: SendLog[] = [
@@ -1323,17 +1323,17 @@ export const sendLogs: SendLog[] = [
     sentBy: '관리자',
     recipientAddresses: ['경기도 안양시 동안구 시민대로 235'],
   },
-];
+]
 
 // SMTP Settings interface
 export interface SMTPSettings {
-  host: string;
-  port: number;
-  username: string;
-  password: string;
-  secure: boolean;
-  fromName: string;
-  fromEmail: string;
+  host: string
+  port: number
+  username: string
+  password: string
+  secure: boolean
+  fromName: string
+  fromEmail: string
 }
 
 export const smtpSettings: SMTPSettings = {
@@ -1344,80 +1344,80 @@ export const smtpSettings: SMTPSettings = {
   secure: true,
   fromName: '(주)다온에프앤씨',
   fromEmail: 'daonfnc@gmail.com',
-};
+}
 
 // 중복 발주 체크 설정
-export type DuplicateCheckPeriod = 10 | 15 | 20 | 30;
+export type DuplicateCheckPeriod = 10 | 15 | 20 | 30
 
 export interface DuplicateCheckSettings {
-  enabled: boolean;
-  periodDays: DuplicateCheckPeriod;
+  enabled: boolean
+  periodDays: DuplicateCheckPeriod
 }
 
 export const duplicateCheckSettings: DuplicateCheckSettings = {
   enabled: true,
   periodDays: 10,
-};
+}
 
 // 중복 발송 이력 체크 결과
 export interface DuplicateCheckResult {
-  hasDuplicate: boolean;
-  duplicateLogs: SendLog[];
-  matchedAddresses: string[];
+  hasDuplicate: boolean
+  duplicateLogs: SendLog[]
+  matchedAddresses: string[]
 }
 
 // 중복 발송 체크 헬퍼 함수
 export function checkDuplicateSend(
   manufacturerId: string,
   recipientAddresses: string[],
-  periodDays: DuplicateCheckPeriod = 10
+  periodDays: DuplicateCheckPeriod = 10,
 ): DuplicateCheckResult {
-  const now = new Date();
-  const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+  const now = new Date()
+  const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000)
 
   // 해당 제조사의 성공한 발송 로그 중 기간 내 로그 필터링
   const recentLogs = sendLogs.filter((log) => {
-    if (log.manufacturerId !== manufacturerId) return false;
-    if (log.status !== 'success') return false;
-    const sentDate = new Date(log.sentAt);
-    return sentDate >= periodStart;
-  });
+    if (log.manufacturerId !== manufacturerId) return false
+    if (log.status !== 'success') return false
+    const sentDate = new Date(log.sentAt)
+    return sentDate >= periodStart
+  })
 
   // 중복 주소 찾기
-  const matchedAddresses: string[] = [];
-  const duplicateLogs: SendLog[] = [];
+  const matchedAddresses: string[] = []
+  const duplicateLogs: SendLog[] = []
 
   for (const log of recentLogs) {
     const matches = recipientAddresses.filter((addr) =>
-      log.recipientAddresses.some((logAddr) => normalizeAddress(logAddr) === normalizeAddress(addr))
-    );
+      log.recipientAddresses.some((logAddr) => normalizeAddress(logAddr) === normalizeAddress(addr)),
+    )
     if (matches.length > 0) {
-      matchedAddresses.push(...matches);
+      matchedAddresses.push(...matches)
       if (!duplicateLogs.includes(log)) {
-        duplicateLogs.push(log);
+        duplicateLogs.push(log)
       }
     }
   }
 
   // 중복 제거
-  const uniqueMatchedAddresses = [...new Set(matchedAddresses)];
+  const uniqueMatchedAddresses = [...new Set(matchedAddresses)]
 
   return {
     hasDuplicate: uniqueMatchedAddresses.length > 0,
     duplicateLogs,
     matchedAddresses: uniqueMatchedAddresses,
-  };
+  }
 }
 
 // 주소 정규화 (공백, 특수문자 등 제거하여 비교)
 function normalizeAddress(address: string): string {
-  return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase();
+  return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase()
 }
 
 // 일 수 차이 계산
 export function getDaysDifference(dateString: string): number {
-  const now = new Date();
-  const targetDate = new Date(dateString);
-  const diffTime = Math.abs(now.getTime() - targetDate.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const now = new Date()
+  const targetDate = new Date(dateString)
+  const diffTime = Math.abs(now.getTime() - targetDate.getTime())
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }

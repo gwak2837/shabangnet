@@ -1,35 +1,35 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { AppShell } from '@/components/layout';
-import { ManufacturerTable, ManufacturerModal } from '@/components/manufacturers';
-import { Card, CardContent } from '@/components/ui/card';
-import { type Manufacturer, manufacturers } from '@/lib/mock-data';
-import { Building2, Users, Mail, TrendingUp } from 'lucide-react';
+import { useState } from 'react'
+import { AppShell } from '@/components/layout'
+import { ManufacturerTable, ManufacturerModal } from '@/components/manufacturers'
+import { Card, CardContent } from '@/components/ui/card'
+import { type Manufacturer, manufacturers } from '@/lib/mock-data'
+import { Building2, Users, Mail, TrendingUp } from 'lucide-react'
 
 export default function ManufacturersPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null)
 
   const handleAdd = () => {
-    setEditingManufacturer(null);
-    setIsModalOpen(true);
-  };
+    setEditingManufacturer(null)
+    setIsModalOpen(true)
+  }
 
   const handleEdit = (manufacturer: Manufacturer) => {
-    setEditingManufacturer(manufacturer);
-    setIsModalOpen(true);
-  };
+    setEditingManufacturer(manufacturer)
+    setIsModalOpen(true)
+  }
 
   const handleSave = (data: Partial<Manufacturer>) => {
     // In real app, this would call API
-    console.log('Save manufacturer:', data);
-  };
+    console.log('Save manufacturer:', data)
+  }
 
   // Calculate stats
-  const totalManufacturers = manufacturers.length;
-  const totalOrders = manufacturers.reduce((sum, m) => sum + m.orderCount, 0);
-  const avgOrders = Math.round(totalOrders / totalManufacturers);
+  const totalManufacturers = manufacturers.length
+  const totalOrders = manufacturers.reduce((sum, m) => sum + m.orderCount, 0)
+  const avgOrders = Math.round(totalOrders / totalManufacturers)
 
   return (
     <AppShell title="제조사 관리" description="거래처 제조사 정보를 관리합니다">
@@ -83,6 +83,5 @@ export default function ManufacturersPage() {
         onSave={handleSave}
       />
     </AppShell>
-  );
+  )
 }
-

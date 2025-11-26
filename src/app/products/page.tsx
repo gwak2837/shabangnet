@@ -1,53 +1,52 @@
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
-import { AppShell } from '@/components/layout';
-import { ProductFilters, ProductTable } from '@/components/products';
-import { Card, CardContent } from '@/components/ui/card';
-import { products as initialProducts, type Product } from '@/lib/mock-data';
-import { Package, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useMemo } from 'react'
+import { AppShell } from '@/components/layout'
+import { ProductFilters, ProductTable } from '@/components/products'
+import { Card, CardContent } from '@/components/ui/card'
+import { products as initialProducts, type Product } from '@/lib/mock-data'
+import { Package, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 export default function ProductsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showUnmappedOnly, setShowUnmappedOnly] = useState(false);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
+  const [products, setProducts] = useState<Product[]>(initialProducts)
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesSearch =
         p.productCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.productName.toLowerCase().includes(searchQuery.toLowerCase());
+        p.productName.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesUnmapped = showUnmappedOnly ? !p.manufacturerId : true;
+      const matchesUnmapped = showUnmappedOnly ? !p.manufacturerId : true
 
-      return matchesSearch && matchesUnmapped;
-    });
-  }, [products, searchQuery, showUnmappedOnly]);
+      return matchesSearch && matchesUnmapped
+    })
+  }, [products, searchQuery, showUnmappedOnly])
 
   const handleUpdateManufacturer = (productId: string, manufacturerId: string | null) => {
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id === productId) {
           const manufacturer = manufacturerId
-            ? initialProducts.find((prod) => prod.manufacturerId === manufacturerId) ||
-              { manufacturerName: '농심식품' } // fallback
-            : null;
+            ? initialProducts.find((prod) => prod.manufacturerId === manufacturerId) || { manufacturerName: '농심식품' } // fallback
+            : null
           return {
             ...p,
             manufacturerId,
             manufacturerName: manufacturerId ? manufacturer?.manufacturerName || null : null,
             updatedAt: new Date().toISOString(),
-          };
+          }
         }
-        return p;
-      })
-    );
-  };
+        return p
+      }),
+    )
+  }
 
   // Calculate stats
-  const totalProducts = products.length;
-  const unmappedProducts = products.filter((p) => !p.manufacturerId).length;
-  const mappedProducts = totalProducts - unmappedProducts;
+  const totalProducts = products.length
+  const unmappedProducts = products.filter((p) => !p.manufacturerId).length
+  const mappedProducts = totalProducts - unmappedProducts
 
   return (
     <AppShell title="상품 매핑" description="상품과 제조사 간의 매핑을 관리합니다">
@@ -103,6 +102,5 @@ export default function ProductsPage() {
       {/* Product Table */}
       <ProductTable products={filteredProducts} onUpdateManufacturer={handleUpdateManufacturer} />
     </AppShell>
-  );
+  )
 }
-

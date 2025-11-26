@@ -1,34 +1,21 @@
-'use client';
+'use client'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data';
-import {
-  Mail,
-  FileSpreadsheet,
-  CheckCircle2,
-  XCircle,
-  User,
-  Clock,
-  AlertTriangle,
-} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data'
+import { Mail, FileSpreadsheet, CheckCircle2, XCircle, User, Clock, AlertTriangle } from 'lucide-react'
 
 interface LogDetailModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  log: SendLog | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  log: SendLog | null
 }
 
 export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps) {
-  if (!log) return null;
+  if (!log) return null
 
-  const isSuccess = log.status === 'success';
+  const isSuccess = log.status === 'success'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,9 +35,7 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
             </div>
             <div>
               <DialogTitle>발송 상세 정보</DialogTitle>
-              <p className="text-sm text-slate-500 mt-0.5">
-                {isSuccess ? '발송 성공' : '발송 실패'}
-              </p>
+              <p className="text-sm text-slate-500 mt-0.5">{isSuccess ? '발송 성공' : '발송 실패'}</p>
             </div>
           </div>
         </DialogHeader>
@@ -150,6 +135,5 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
-

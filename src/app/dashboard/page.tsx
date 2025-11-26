@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import { ManufacturerChart, QuickActions, RecentUploads, StatCard } from '@/components/dashboard';
-import { AppShell } from '@/components/layout';
-import { dashboardStats } from '@/lib/mock-data';
-import { AlertCircle, CheckCircle2, Clock, ShoppingCart } from 'lucide-react';
+import { ManufacturerChart, QuickActions, RecentUploads, StatCard } from '@/components/dashboard'
+import { AppShell } from '@/components/layout'
+import { dashboardStats } from '@/lib/mock-data'
+import { AlertCircle, CheckCircle2, Clock, ShoppingCart } from 'lucide-react'
 
 export default function DashboardPage() {
   return (
@@ -58,5 +58,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </AppShell>
-  );
+  )
 }

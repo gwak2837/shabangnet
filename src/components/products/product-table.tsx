@@ -1,39 +1,26 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { type Product, manufacturers, formatCurrency, formatDate } from '@/lib/mock-data';
-import { AlertCircle, Check, Package } from 'lucide-react';
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { type Product, manufacturers, formatCurrency, formatDate } from '@/lib/mock-data'
+import { AlertCircle, Check, Package } from 'lucide-react'
 
 interface ProductTableProps {
-  products: Product[];
-  onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void;
+  products: Product[]
+  onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void
 }
 
 export function ProductTable({ products, onUpdateManufacturer }: ProductTableProps) {
-  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
 
   const handleManufacturerChange = (productId: string, value: string) => {
-    onUpdateManufacturer(productId, value === 'none' ? null : value);
-    setEditingProductId(null);
-  };
+    onUpdateManufacturer(productId, value === 'none' ? null : value)
+    setEditingProductId(null)
+  }
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -41,30 +28,20 @@ export function ProductTable({ products, onUpdateManufacturer }: ProductTablePro
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                상품코드
-              </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                상품명
-              </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                옵션
-              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 가격
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                제조사
-              </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                수정일
-              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수정일</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.map((product) => {
-              const isUnmapped = !product.manufacturerId;
-              const isEditing = editingProductId === product.id;
+              const isUnmapped = !product.manufacturerId
+              const isEditing = editingProductId === product.id
 
               return (
                 <TableRow
@@ -128,7 +105,7 @@ export function ProductTable({ products, onUpdateManufacturer }: ProductTablePro
                   </TableCell>
                   <TableCell className="text-sm text-slate-500">{formatDate(product.updatedAt)}</TableCell>
                 </TableRow>
-              );
+              )
             })}
             {products.length === 0 && (
               <TableRow>
@@ -141,6 +118,5 @@ export function ProductTable({ products, onUpdateManufacturer }: ProductTablePro
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }
-

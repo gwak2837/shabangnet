@@ -1,32 +1,32 @@
-'use client';
+'use client'
 
-import { AppShell } from '@/components/layout';
-import { Button } from '@/components/ui/button';
-import { Dropzone, UploadResult } from '@/components/upload';
-import { useState } from 'react';
+import { AppShell } from '@/components/layout'
+import { Button } from '@/components/ui/button'
+import { Dropzone, UploadResult } from '@/components/upload'
+import { useState } from 'react'
 
 export default function UploadPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isProcessed, setIsProcessed] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessed, setIsProcessed] = useState(false)
 
   const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
-    setIsProcessing(true);
-    setIsProcessed(false);
+    setSelectedFile(file)
+    setIsProcessing(true)
+    setIsProcessed(false)
 
     // Simulate file processing
     setTimeout(() => {
-      setIsProcessing(false);
-      setIsProcessed(true);
-    }, 2000);
-  };
+      setIsProcessing(false)
+      setIsProcessed(true)
+    }, 2000)
+  }
 
   const handleClear = () => {
-    setSelectedFile(null);
-    setIsProcessing(false);
-    setIsProcessed(false);
-  };
+    setSelectedFile(null)
+    setIsProcessing(false)
+    setIsProcessed(false)
+  }
 
   return (
     <AppShell title="주문 업로드" description="사방넷에서 다운로드한 주문 엑셀 파일을 업로드하세요">
@@ -63,5 +63,5 @@ export default function UploadPage() {
         )}
       </div>
     </AppShell>
-  );
+  )
 }

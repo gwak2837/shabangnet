@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Search, X } from 'lucide-react'
 
 interface ProductFiltersProps {
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  showUnmappedOnly: boolean;
-  onShowUnmappedChange: (value: boolean) => void;
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  showUnmappedOnly: boolean
+  onShowUnmappedChange: (value: boolean) => void
 }
 
 export function ProductFilters({
@@ -19,12 +19,12 @@ export function ProductFilters({
   showUnmappedOnly,
   onShowUnmappedChange,
 }: ProductFiltersProps) {
-  const hasActiveFilters = searchQuery || showUnmappedOnly;
+  const hasActiveFilters = searchQuery || showUnmappedOnly
 
   const handleClear = () => {
-    onSearchChange('');
-    onShowUnmappedChange(false);
-  };
+    onSearchChange('')
+    onShowUnmappedChange(false)
+  }
 
   return (
     <div className="flex items-center gap-4">
@@ -60,6 +60,5 @@ export function ProductFilters({
         </Button>
       )}
     </div>
-  );
+  )
 }
-

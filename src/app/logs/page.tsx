@@ -1,53 +1,53 @@
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
-import { AppShell } from '@/components/layout';
-import { LogFilters, LogTable, LogDetailModal } from '@/components/logs';
-import { Card, CardContent } from '@/components/ui/card';
-import { sendLogs, type SendLog } from '@/lib/mock-data';
-import { Mail, CheckCircle2, XCircle } from 'lucide-react';
+import { useState, useMemo } from 'react'
+import { AppShell } from '@/components/layout'
+import { LogFilters, LogTable, LogDetailModal } from '@/components/logs'
+import { Card, CardContent } from '@/components/ui/card'
+import { sendLogs, type SendLog } from '@/lib/mock-data'
+import { Mail, CheckCircle2, XCircle } from 'lucide-react'
 
 export default function LogsPage() {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [status, setStatus] = useState('all');
-  const [manufacturer, setManufacturer] = useState('all');
-  const [selectedLog, setSelectedLog] = useState<SendLog | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [status, setStatus] = useState('all')
+  const [manufacturer, setManufacturer] = useState('all')
+  const [selectedLog, setSelectedLog] = useState<SendLog | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   const filteredLogs = useMemo(() => {
     return sendLogs
       .filter((log) => {
         // Date filter
         if (dateFrom) {
-          const logDate = new Date(log.sentAt).toISOString().split('T')[0];
-          if (logDate < dateFrom) return false;
+          const logDate = new Date(log.sentAt).toISOString().split('T')[0]
+          if (logDate < dateFrom) return false
         }
         if (dateTo) {
-          const logDate = new Date(log.sentAt).toISOString().split('T')[0];
-          if (logDate > dateTo) return false;
+          const logDate = new Date(log.sentAt).toISOString().split('T')[0]
+          if (logDate > dateTo) return false
         }
 
         // Status filter
-        if (status !== 'all' && log.status !== status) return false;
+        if (status !== 'all' && log.status !== status) return false
 
         // Manufacturer filter
-        if (manufacturer !== 'all' && log.manufacturerId !== manufacturer) return false;
+        if (manufacturer !== 'all' && log.manufacturerId !== manufacturer) return false
 
-        return true;
+        return true
       })
-      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
-  }, [dateFrom, dateTo, status, manufacturer]);
+      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+  }, [dateFrom, dateTo, status, manufacturer])
 
   const handleViewDetail = (log: SendLog) => {
-    setSelectedLog(log);
-    setIsDetailOpen(true);
-  };
+    setSelectedLog(log)
+    setIsDetailOpen(true)
+  }
 
   // Calculate stats
-  const totalLogs = sendLogs.length;
-  const successLogs = sendLogs.filter((l) => l.status === 'success').length;
-  const failedLogs = sendLogs.filter((l) => l.status === 'failed').length;
+  const totalLogs = sendLogs.length
+  const successLogs = sendLogs.filter((l) => l.status === 'success').length
+  const failedLogs = sendLogs.filter((l) => l.status === 'failed').length
 
   return (
     <AppShell title="발송 로그" description="이메일 발송 이력을 확인합니다">
@@ -110,6 +110,5 @@ export default function LogsPage() {
       {/* Detail Modal */}
       <LogDetailModal open={isDetailOpen} onOpenChange={setIsDetailOpen} log={selectedLog} />
     </AppShell>
-  );
+  )
 }
-

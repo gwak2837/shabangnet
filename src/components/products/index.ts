@@ -1,3 +1,2 @@
-export { ProductFilters } from './product-filters';
-export { ProductTable } from './product-table';
-
+export { ProductFilters } from './product-filters'
+export { ProductTable } from './product-table'

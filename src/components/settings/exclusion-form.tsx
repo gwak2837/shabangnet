@@ -1,83 +1,70 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import {
-  type ExclusionSettings,
-  type ExclusionPattern,
-  exclusionSettings as initialSettings,
-} from '@/lib/mock-data';
-import {
-  CheckCircle2,
-  Filter,
-  Loader2,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import { type ExclusionSettings, type ExclusionPattern, exclusionSettings as initialSettings } from '@/lib/mock-data'
+import { CheckCircle2, Filter, Loader2, Plus, Trash2, X } from 'lucide-react'
 
 export function ExclusionForm() {
-  const [settings, setSettings] = useState<ExclusionSettings>(initialSettings);
-  const [newPattern, setNewPattern] = useState('');
-  const [newDescription, setNewDescription] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState<ExclusionSettings>(initialSettings)
+  const [newPattern, setNewPattern] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setSaved(false);
+    setIsSaving(true)
+    setSaved(false)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    setIsSaving(false);
-    setSaved(true);
+    setIsSaving(false)
+    setSaved(true)
 
     // Hide saved message after 3 seconds
-    setTimeout(() => setSaved(false), 3000);
-  };
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   const handleAddPattern = () => {
-    if (!newPattern.trim()) return;
+    if (!newPattern.trim()) return
 
     const newPatternObj: ExclusionPattern = {
       id: `exc-${Date.now()}`,
       pattern: newPattern.trim(),
       enabled: true,
       description: newDescription.trim() || undefined,
-    };
+    }
 
     setSettings({
       ...settings,
       patterns: [...settings.patterns, newPatternObj],
-    });
+    })
 
-    setNewPattern('');
-    setNewDescription('');
-  };
+    setNewPattern('')
+    setNewDescription('')
+  }
 
   const handleRemovePattern = (id: string) => {
     setSettings({
       ...settings,
       patterns: settings.patterns.filter((p) => p.id !== id),
-    });
-  };
+    })
+  }
 
   const handleTogglePattern = (id: string, enabled: boolean) => {
     setSettings({
       ...settings,
-      patterns: settings.patterns.map((p) =>
-        p.id === id ? { ...p, enabled } : p
-      ),
-    });
-  };
+      patterns: settings.patterns.map((p) => (p.id === id ? { ...p, enabled } : p)),
+    })
+  }
 
-  const enabledCount = settings.patterns.filter((p) => p.enabled).length;
+  const enabledCount = settings.patterns.filter((p) => p.enabled).length
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -88,9 +75,7 @@ export function ExclusionForm() {
           </div>
           <div>
             <CardTitle className="text-lg">발송 제외 설정</CardTitle>
-            <CardDescription>
-              F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다
-            </CardDescription>
+            <CardDescription>F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -101,16 +86,12 @@ export function ExclusionForm() {
             <Label htmlFor="exclusion-enabled" className="text-base">
               발송 제외 필터 활성화
             </Label>
-            <p className="text-sm text-slate-500">
-              F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다
-            </p>
+            <p className="text-sm text-slate-500">F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다</p>
           </div>
           <Switch
             id="exclusion-enabled"
             checked={settings.enabled}
-            onCheckedChange={(checked) =>
-              setSettings({ ...settings, enabled: checked })
-            }
+            onCheckedChange={(checked) => setSettings({ ...settings, enabled: checked })}
           />
         </div>
 
@@ -128,31 +109,19 @@ export function ExclusionForm() {
               <div
                 key={pattern.id}
                 className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-                  pattern.enabled
-                    ? 'border-slate-200 bg-white'
-                    : 'border-slate-100 bg-slate-50'
+                  pattern.enabled ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50'
                 }`}
               >
                 <Switch
                   checked={pattern.enabled}
-                  onCheckedChange={(checked) =>
-                    handleTogglePattern(pattern.id, checked)
-                  }
+                  onCheckedChange={(checked) => handleTogglePattern(pattern.id, checked)}
                   disabled={!settings.enabled}
                 />
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`font-mono text-sm truncate ${
-                      pattern.enabled ? 'text-slate-900' : 'text-slate-400'
-                    }`}
-                  >
+                  <p className={`font-mono text-sm truncate ${pattern.enabled ? 'text-slate-900' : 'text-slate-400'}`}>
                     {pattern.pattern}
                   </p>
-                  {pattern.description && (
-                    <p className="text-xs text-slate-500 truncate">
-                      {pattern.description}
-                    </p>
-                  )}
+                  {pattern.description && <p className="text-xs text-slate-500 truncate">{pattern.description}</p>}
                 </div>
                 <Button
                   variant="ghost"
@@ -167,9 +136,7 @@ export function ExclusionForm() {
 
             {settings.patterns.length === 0 && (
               <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
-                <p className="text-sm text-slate-500">
-                  등록된 제외 패턴이 없습니다
-                </p>
+                <p className="text-sm text-slate-500">등록된 제외 패턴이 없습니다</p>
               </div>
             )}
           </div>
@@ -202,9 +169,7 @@ export function ExclusionForm() {
               추가
             </Button>
           </div>
-          <p className="text-xs text-slate-500">
-            F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다
-          </p>
+          <p className="text-xs text-slate-500">F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다</p>
         </div>
 
         {/* Info Box */}
@@ -213,8 +178,8 @@ export function ExclusionForm() {
           <div className="text-sm text-violet-800">
             <p className="font-medium">발송 제외 동작</p>
             <p className="mt-1">
-              제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수
-              있습니다. 이메일 발송 배치에는 포함되지 않습니다.
+              제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수 있습니다. 이메일 발송 배치에는
+              포함되지 않습니다.
             </p>
           </div>
         </div>
@@ -227,11 +192,7 @@ export function ExclusionForm() {
               저장되었습니다
             </span>
           )}
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-slate-900 hover:bg-slate-800"
-          >
+          <Button onClick={handleSave} disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -244,6 +205,5 @@ export function ExclusionForm() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-

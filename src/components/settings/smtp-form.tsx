@@ -1,47 +1,47 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { type SMTPSettings, smtpSettings as initialSettings } from '@/lib/mock-data';
-import { Mail, Server, Lock, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { type SMTPSettings, smtpSettings as initialSettings } from '@/lib/mock-data'
+import { Mail, Server, Lock, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 
 export function SMTPForm() {
-  const [settings, setSettings] = useState<SMTPSettings>(initialSettings);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState<SMTPSettings>(initialSettings)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
+  const [saved, setSaved] = useState(false)
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setSaved(false);
+    setIsSaving(true)
+    setSaved(false)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    setIsSaving(false);
-    setSaved(true);
+    setIsSaving(false)
+    setSaved(true)
 
     // Hide saved message after 3 seconds
-    setTimeout(() => setSaved(false), 3000);
-  };
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   const handleTest = async () => {
-    setIsTesting(true);
-    setTestResult(null);
+    setIsTesting(true)
+    setTestResult(null)
 
     // Simulate connection test
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
     // Simulate random success/failure for demo
-    const success = Math.random() > 0.3;
-    setTestResult(success ? 'success' : 'error');
-    setIsTesting(false);
-  };
+    const success = Math.random() > 0.3
+    setTestResult(success ? 'success' : 'error')
+    setIsTesting(false)
+  }
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -79,7 +79,12 @@ export function SMTPForm() {
               id="port"
               type="number"
               value={settings.port}
-              onChange={(e) => setSettings({ ...settings, port: parseInt(e.target.value) || 587 })}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  port: parseInt(e.target.value) || 587,
+                })
+              }
               placeholder="587"
             />
           </div>
@@ -212,6 +217,5 @@ export function SMTPForm() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-

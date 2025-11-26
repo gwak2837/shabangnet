@@ -1,49 +1,43 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   type DuplicateCheckSettings,
   type DuplicateCheckPeriod,
   duplicateCheckSettings as initialSettings,
-} from '@/lib/mock-data';
-import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
+} from '@/lib/mock-data'
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
 
 export function DuplicateCheckForm() {
-  const [settings, setSettings] = useState<DuplicateCheckSettings>(initialSettings);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState<DuplicateCheckSettings>(initialSettings)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setSaved(false);
+    setIsSaving(true)
+    setSaved(false)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    setIsSaving(false);
-    setSaved(true);
+    setIsSaving(false)
+    setSaved(true)
 
     // Hide saved message after 3 seconds
-    setTimeout(() => setSaved(false), 3000);
-  };
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   const periodOptions: { value: DuplicateCheckPeriod; label: string }[] = [
     { value: 10, label: '10일' },
     { value: 15, label: '15일' },
     { value: 20, label: '20일' },
     { value: 30, label: '30일' },
-  ];
+  ]
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -82,7 +76,10 @@ export function DuplicateCheckForm() {
           <Select
             value={settings.periodDays.toString()}
             onValueChange={(value) =>
-              setSettings({ ...settings, periodDays: parseInt(value) as DuplicateCheckPeriod })
+              setSettings({
+                ...settings,
+                periodDays: parseInt(value) as DuplicateCheckPeriod,
+              })
             }
             disabled={!settings.enabled}
           >
@@ -108,8 +105,8 @@ export function DuplicateCheckForm() {
           <div className="text-sm text-amber-800">
             <p className="font-medium">중복 감지 시 동작</p>
             <p className="mt-1">
-              중복이 감지되면 발송 사유를 필수로 입력해야 합니다. 입력한 사유는 발송 로그에
-              기록되어 추후 추적이 가능합니다.
+              중복이 감지되면 발송 사유를 필수로 입력해야 합니다. 입력한 사유는 발송 로그에 기록되어 추후 추적이
+              가능합니다.
             </p>
           </div>
         </div>
@@ -135,6 +132,5 @@ export function DuplicateCheckForm() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-

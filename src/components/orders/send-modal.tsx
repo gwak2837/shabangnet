@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 import {
   checkDuplicateSend,
   type DuplicateCheckResult,
@@ -20,78 +20,68 @@ import {
   formatDateTime,
   getDaysDifference,
   type OrderBatch,
-} from '@/lib/mock-data';
-import {
-  AlertTriangle,
-  Calendar,
-  CheckCircle2,
-  FileSpreadsheet,
-  Loader2,
-  Mail,
-  MapPin,
-  Send,
-  User,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+} from '@/lib/mock-data'
+import { AlertTriangle, Calendar, CheckCircle2, FileSpreadsheet, Loader2, Mail, MapPin, Send, User } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 interface SendModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  batch: OrderBatch | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  batch: OrderBatch | null
 }
 
 export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
-  const [isSending, setIsSending] = useState(false);
-  const [isSent, setIsSent] = useState(false);
-  const [duplicateReason, setDuplicateReason] = useState('');
+  const [isSending, setIsSending] = useState(false)
+  const [isSent, setIsSent] = useState(false)
+  const [duplicateReason, setDuplicateReason] = useState('')
 
   // 중복 체크 결과를 useMemo로 계산 (렌더링 시점에 파생)
   const duplicateCheck = useMemo<DuplicateCheckResult | null>(() => {
     if (!open || !batch || !duplicateCheckSettings.enabled) {
-      return null;
+      return null
     }
-    const recipientAddresses = batch.orders.map((order) => order.address);
-    return checkDuplicateSend(batch.manufacturerId, recipientAddresses, duplicateCheckSettings.periodDays);
-  }, [open, batch]);
+    const recipientAddresses = batch.orders.map((order) => order.address)
+    return checkDuplicateSend(batch.manufacturerId, recipientAddresses, duplicateCheckSettings.periodDays)
+  }, [open, batch])
 
   if (!batch) {
-    return null;
+    return null
   }
 
   // 모달 닫힐 때 사유 초기화를 위한 핸들러
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setDuplicateReason('');
+      setDuplicateReason('')
     }
-    onOpenChange(newOpen);
-  };
+    onOpenChange(newOpen)
+  }
 
   // 중복 감지 시 사유 입력 필수
-  const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0;
+  const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0
 
   const handleSend = async () => {
-    if (!canSend) return;
+    if (!canSend) return
 
-    setIsSending(true);
+    setIsSending(true)
     // Simulate sending email
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSending(false);
-    setIsSent(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setIsSending(false)
+    setIsSent(true)
 
     // Auto close after success
     setTimeout(() => {
-      setIsSent(false);
-      setDuplicateReason('');
-      handleOpenChange(false);
-    }, 2000);
-  };
+      setIsSent(false)
+      setDuplicateReason('')
+      handleOpenChange(false)
+    }, 2000)
+  }
 
   const emailSubject = `[다온에프앤씨 발주서]_${batch.manufacturerName}_${new Date()
     .toISOString()
     .slice(0, 10)
-    .replace(/-/g, '')}`;
+    .replace(/-/g, '')}`
 
-  const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`;
+  const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
 
   if (isSent) {
     return (
@@ -110,7 +100,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           </div>
         </DialogContent>
       </Dialog>
-    );
+    )
   }
 
   return (
@@ -288,5 +278,5 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

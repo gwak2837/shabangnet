@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { AppShell } from '@/components/layout';
-import { DuplicateCheckForm, ExclusionForm, SMTPForm } from '@/components/settings';
+import { AppShell } from '@/components/layout'
+import { DuplicateCheckForm, ExclusionForm, SMTPForm } from '@/components/settings'
 
 export default function SettingsPage() {
   return (
@@ -12,6 +12,5 @@ export default function SettingsPage() {
         <ExclusionForm />
       </div>
     </AppShell>
-  );
+  )
 }
-
