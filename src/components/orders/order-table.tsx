@@ -38,9 +38,10 @@ import {
 interface OrderTableProps {
   onSendEmail: (batch: OrderBatch) => void;
   onPreview: (batch: OrderBatch) => void;
+  onBatchSend?: (batches: OrderBatch[]) => void;
 }
 
-export function OrderTable({ onSendEmail, onPreview }: OrderTableProps) {
+export function OrderTable({ onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
 
   const handleSelectAll = (checked: boolean) => {
@@ -76,7 +77,16 @@ export function OrderTable({ onSendEmail, onPreview }: OrderTableProps) {
                 <Download className="h-4 w-4" />
                 일괄 다운로드
               </Button>
-              <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700">
+              <Button 
+                size="sm" 
+                className="gap-2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  const selectedBatchData = orderBatches.filter((b) => 
+                    selectedBatches.includes(b.manufacturerId)
+                  );
+                  onBatchSend?.(selectedBatchData);
+                }}
+              >
                 <Mail className="h-4 w-4" />
                 일괄 발송
               </Button>
