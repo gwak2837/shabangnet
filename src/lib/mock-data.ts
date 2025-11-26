@@ -335,3 +335,356 @@ export function getStatusLabel(
   return labels[status] || status;
 }
 
+// Product interface and mock data
+export interface Product {
+  id: string;
+  productCode: string;
+  productName: string;
+  optionName: string;
+  manufacturerId: string | null;
+  manufacturerName: string | null;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const products: Product[] = [
+  {
+    id: "p1",
+    productCode: "NS-001",
+    productName: "신라면 멀티팩",
+    optionName: "5개입",
+    manufacturerId: "m1",
+    manufacturerName: "농심식품",
+    price: 7900,
+    createdAt: "2024-01-15T10:00:00",
+    updatedAt: "2024-11-20T14:30:00",
+  },
+  {
+    id: "p2",
+    productCode: "NS-002",
+    productName: "안성탕면",
+    optionName: "5개입",
+    manufacturerId: "m1",
+    manufacturerName: "농심식품",
+    price: 6500,
+    createdAt: "2024-01-15T10:00:00",
+    updatedAt: "2024-11-20T14:30:00",
+  },
+  {
+    id: "p3",
+    productCode: "CJ-101",
+    productName: "햇반 210g",
+    optionName: "12개입",
+    manufacturerId: "m2",
+    manufacturerName: "CJ제일제당",
+    price: 15800,
+    createdAt: "2024-02-10T09:00:00",
+    updatedAt: "2024-11-18T11:00:00",
+  },
+  {
+    id: "p4",
+    productCode: "CJ-102",
+    productName: "비비고 만두",
+    optionName: "1kg",
+    manufacturerId: "m2",
+    manufacturerName: "CJ제일제당",
+    price: 12900,
+    createdAt: "2024-02-10T09:00:00",
+    updatedAt: "2024-11-18T11:00:00",
+  },
+  {
+    id: "p5",
+    productCode: "OT-201",
+    productName: "진라면 순한맛",
+    optionName: "5개입",
+    manufacturerId: "m3",
+    manufacturerName: "오뚜기",
+    price: 4500,
+    createdAt: "2024-03-05T14:00:00",
+    updatedAt: "2024-11-15T09:00:00",
+  },
+  {
+    id: "p6",
+    productCode: "OT-202",
+    productName: "오뚜기 카레",
+    optionName: "100g",
+    manufacturerId: "m3",
+    manufacturerName: "오뚜기",
+    price: 2500,
+    createdAt: "2024-03-05T14:00:00",
+    updatedAt: "2024-11-15T09:00:00",
+  },
+  {
+    id: "p7",
+    productCode: "DW-301",
+    productName: "동원참치 라이트",
+    optionName: "150g 4캔",
+    manufacturerId: "m4",
+    manufacturerName: "동원F&B",
+    price: 12900,
+    createdAt: "2024-04-20T11:00:00",
+    updatedAt: "2024-11-22T16:00:00",
+  },
+  {
+    id: "p8",
+    productCode: "PM-401",
+    productName: "풀무원 두부",
+    optionName: "300g",
+    manufacturerId: "m5",
+    manufacturerName: "풀무원",
+    price: 2800,
+    createdAt: "2024-05-12T08:00:00",
+    updatedAt: "2024-11-10T13:00:00",
+  },
+  {
+    id: "p9",
+    productCode: "PM-402",
+    productName: "풀무원 콩나물",
+    optionName: "200g",
+    manufacturerId: "m5",
+    manufacturerName: "풀무원",
+    price: 1500,
+    createdAt: "2024-05-12T08:00:00",
+    updatedAt: "2024-11-10T13:00:00",
+  },
+  {
+    id: "p10",
+    productCode: "UNKNOWN-001",
+    productName: "미등록 상품 A",
+    optionName: "기본",
+    manufacturerId: null,
+    manufacturerName: null,
+    price: 5000,
+    createdAt: "2024-11-25T10:00:00",
+    updatedAt: "2024-11-25T10:00:00",
+  },
+  {
+    id: "p11",
+    productCode: "UNKNOWN-002",
+    productName: "미등록 상품 B",
+    optionName: "기본",
+    manufacturerId: null,
+    manufacturerName: null,
+    price: 8000,
+    createdAt: "2024-11-25T11:00:00",
+    updatedAt: "2024-11-25T11:00:00",
+  },
+  {
+    id: "p12",
+    productCode: "UNKNOWN-003",
+    productName: "미등록 상품 C",
+    optionName: "대용량",
+    manufacturerId: null,
+    manufacturerName: null,
+    price: 15000,
+    createdAt: "2024-11-26T09:00:00",
+    updatedAt: "2024-11-26T09:00:00",
+  },
+  {
+    id: "p13",
+    productCode: "NS-003",
+    productName: "너구리",
+    optionName: "5개입",
+    manufacturerId: "m1",
+    manufacturerName: "농심식품",
+    price: 6800,
+    createdAt: "2024-06-01T10:00:00",
+    updatedAt: "2024-11-20T14:30:00",
+  },
+  {
+    id: "p14",
+    productCode: "CJ-103",
+    productName: "스팸 클래식",
+    optionName: "200g",
+    manufacturerId: "m2",
+    manufacturerName: "CJ제일제당",
+    price: 5900,
+    createdAt: "2024-06-15T09:00:00",
+    updatedAt: "2024-11-18T11:00:00",
+  },
+  {
+    id: "p15",
+    productCode: "DW-302",
+    productName: "동원 리챔",
+    optionName: "200g",
+    manufacturerId: "m4",
+    manufacturerName: "동원F&B",
+    price: 4500,
+    createdAt: "2024-07-10T11:00:00",
+    updatedAt: "2024-11-22T16:00:00",
+  },
+];
+
+// Send Log interface and mock data
+export interface SendLog {
+  id: string;
+  manufacturerId: string;
+  manufacturerName: string;
+  email: string;
+  subject: string;
+  fileName: string;
+  orderCount: number;
+  totalAmount: number;
+  status: "success" | "failed" | "pending";
+  errorMessage?: string;
+  sentAt: string;
+  sentBy: string;
+}
+
+export const sendLogs: SendLog[] = [
+  {
+    id: "log1",
+    manufacturerId: "m1",
+    manufacturerName: "농심식품",
+    email: "kim@nongshim.com",
+    subject: "[다온에프앤씨 발주서]_농심식품_20241126",
+    fileName: "[다온에프앤씨 발주서]_농심식품_20241126.xlsx",
+    orderCount: 45,
+    totalAmount: 892000,
+    status: "success",
+    sentAt: "2024-11-26T11:30:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log2",
+    manufacturerId: "m2",
+    manufacturerName: "CJ제일제당",
+    email: "park@cj.net",
+    subject: "[다온에프앤씨 발주서]_CJ제일제당_20241126",
+    fileName: "[다온에프앤씨 발주서]_CJ제일제당_20241126.xlsx",
+    orderCount: 38,
+    totalAmount: 756000,
+    status: "success",
+    sentAt: "2024-11-26T11:32:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log3",
+    manufacturerId: "m3",
+    manufacturerName: "오뚜기",
+    email: "lee@ottogi.co.kr",
+    subject: "[다온에프앤씨 발주서]_오뚜기_20241126",
+    fileName: "[다온에프앤씨 발주서]_오뚜기_20241126.xlsx",
+    orderCount: 32,
+    totalAmount: 584000,
+    status: "success",
+    sentAt: "2024-11-26T11:35:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log4",
+    manufacturerId: "m4",
+    manufacturerName: "동원F&B",
+    email: "jung@dongwon.com",
+    subject: "[다온에프앤씨 발주서]_동원F&B_20241125",
+    fileName: "[다온에프앤씨 발주서]_동원F&B_20241125.xlsx",
+    orderCount: 25,
+    totalAmount: 498000,
+    status: "failed",
+    errorMessage: "SMTP 연결 실패: 서버 응답 없음",
+    sentAt: "2024-11-25T10:15:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log5",
+    manufacturerId: "m5",
+    manufacturerName: "풀무원",
+    email: "choi@pulmuone.co.kr",
+    subject: "[다온에프앤씨 발주서]_풀무원_20241125",
+    fileName: "[다온에프앤씨 발주서]_풀무원_20241125.xlsx",
+    orderCount: 16,
+    totalAmount: 312000,
+    status: "success",
+    sentAt: "2024-11-25T10:20:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log6",
+    manufacturerId: "m1",
+    manufacturerName: "농심식품",
+    email: "kim@nongshim.com",
+    subject: "[다온에프앤씨 발주서]_농심식품_20241125",
+    fileName: "[다온에프앤씨 발주서]_농심식품_20241125.xlsx",
+    orderCount: 52,
+    totalAmount: 1024000,
+    status: "success",
+    sentAt: "2024-11-25T10:10:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log7",
+    manufacturerId: "m2",
+    manufacturerName: "CJ제일제당",
+    email: "park@cj.net",
+    subject: "[다온에프앤씨 발주서]_CJ제일제당_20241124",
+    fileName: "[다온에프앤씨 발주서]_CJ제일제당_20241124.xlsx",
+    orderCount: 41,
+    totalAmount: 820000,
+    status: "success",
+    sentAt: "2024-11-24T11:00:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log8",
+    manufacturerId: "m3",
+    manufacturerName: "오뚜기",
+    email: "invalid-email",
+    subject: "[다온에프앤씨 발주서]_오뚜기_20241124",
+    fileName: "[다온에프앤씨 발주서]_오뚜기_20241124.xlsx",
+    orderCount: 28,
+    totalAmount: 456000,
+    status: "failed",
+    errorMessage: "잘못된 이메일 주소 형식",
+    sentAt: "2024-11-24T10:45:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log9",
+    manufacturerId: "m4",
+    manufacturerName: "동원F&B",
+    email: "jung@dongwon.com",
+    subject: "[다온에프앤씨 발주서]_동원F&B_20241124",
+    fileName: "[다온에프앤씨 발주서]_동원F&B_20241124.xlsx",
+    orderCount: 19,
+    totalAmount: 380000,
+    status: "success",
+    sentAt: "2024-11-24T10:30:00",
+    sentBy: "관리자",
+  },
+  {
+    id: "log10",
+    manufacturerId: "m5",
+    manufacturerName: "풀무원",
+    email: "choi@pulmuone.co.kr",
+    subject: "[다온에프앤씨 발주서]_풀무원_20241123",
+    fileName: "[다온에프앤씨 발주서]_풀무원_20241123.xlsx",
+    orderCount: 14,
+    totalAmount: 280000,
+    status: "success",
+    sentAt: "2024-11-23T09:45:00",
+    sentBy: "관리자",
+  },
+];
+
+// SMTP Settings interface
+export interface SMTPSettings {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  secure: boolean;
+  fromName: string;
+  fromEmail: string;
+}
+
+export const smtpSettings: SMTPSettings = {
+  host: "smtp.gmail.com",
+  port: 587,
+  username: "daonfnc@gmail.com",
+  password: "",
+  secure: true,
+  fromName: "(주)다온에프앤씨",
+  fromEmail: "daonfnc@gmail.com",
+};
+
