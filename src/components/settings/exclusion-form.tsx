@@ -1,0 +1,249 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import {
+  type ExclusionSettings,
+  type ExclusionPattern,
+  exclusionSettings as initialSettings,
+} from '@/lib/mock-data';
+import {
+  CheckCircle2,
+  Filter,
+  Loader2,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
+
+export function ExclusionForm() {
+  const [settings, setSettings] = useState<ExclusionSettings>(initialSettings);
+  const [newPattern, setNewPattern] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaved(false);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    setIsSaving(false);
+    setSaved(true);
+
+    // Hide saved message after 3 seconds
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleAddPattern = () => {
+    if (!newPattern.trim()) return;
+
+    const newPatternObj: ExclusionPattern = {
+      id: `exc-${Date.now()}`,
+      pattern: newPattern.trim(),
+      enabled: true,
+      description: newDescription.trim() || undefined,
+    };
+
+    setSettings({
+      ...settings,
+      patterns: [...settings.patterns, newPatternObj],
+    });
+
+    setNewPattern('');
+    setNewDescription('');
+  };
+
+  const handleRemovePattern = (id: string) => {
+    setSettings({
+      ...settings,
+      patterns: settings.patterns.filter((p) => p.id !== id),
+    });
+  };
+
+  const handleTogglePattern = (id: string, enabled: boolean) => {
+    setSettings({
+      ...settings,
+      patterns: settings.patterns.map((p) =>
+        p.id === id ? { ...p, enabled } : p
+      ),
+    });
+  };
+
+  const enabledCount = settings.patterns.filter((p) => p.enabled).length;
+
+  return (
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
+            <Filter className="h-5 w-5 text-violet-600" />
+          </div>
+          <div>
+            <CardTitle className="text-lg">발송 제외 설정</CardTitle>
+            <CardDescription>
+              F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Enable/Disable Toggle */}
+        <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="exclusion-enabled" className="text-base">
+              발송 제외 필터 활성화
+            </Label>
+            <p className="text-sm text-slate-500">
+              F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다
+            </p>
+          </div>
+          <Switch
+            id="exclusion-enabled"
+            checked={settings.enabled}
+            onCheckedChange={(checked) =>
+              setSettings({ ...settings, enabled: checked })
+            }
+          />
+        </div>
+
+        {/* Patterns List */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>제외 패턴 목록</Label>
+            <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+              {enabledCount}/{settings.patterns.length} 활성화
+            </Badge>
+          </div>
+
+          <div className="space-y-2">
+            {settings.patterns.map((pattern) => (
+              <div
+                key={pattern.id}
+                className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                  pattern.enabled
+                    ? 'border-slate-200 bg-white'
+                    : 'border-slate-100 bg-slate-50'
+                }`}
+              >
+                <Switch
+                  checked={pattern.enabled}
+                  onCheckedChange={(checked) =>
+                    handleTogglePattern(pattern.id, checked)
+                  }
+                  disabled={!settings.enabled}
+                />
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`font-mono text-sm truncate ${
+                      pattern.enabled ? 'text-slate-900' : 'text-slate-400'
+                    }`}
+                  >
+                    {pattern.pattern}
+                  </p>
+                  {pattern.description && (
+                    <p className="text-xs text-slate-500 truncate">
+                      {pattern.description}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                  onClick={() => handleRemovePattern(pattern.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            {settings.patterns.length === 0 && (
+              <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
+                <p className="text-sm text-slate-500">
+                  등록된 제외 패턴이 없습니다
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Add New Pattern */}
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <Label>새 패턴 추가</Label>
+          <div className="flex gap-2">
+            <div className="flex-1 space-y-2">
+              <Input
+                placeholder="예: [30002002]주문_센터택배"
+                value={newPattern}
+                onChange={(e) => setNewPattern(e.target.value)}
+                className="bg-white font-mono text-sm"
+              />
+              <Input
+                placeholder="설명 (선택사항)"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                className="bg-white text-sm"
+              />
+            </div>
+            <Button
+              onClick={handleAddPattern}
+              disabled={!newPattern.trim()}
+              className="shrink-0 bg-violet-600 hover:bg-violet-700"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              추가
+            </Button>
+          </div>
+          <p className="text-xs text-slate-500">
+            F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다
+          </p>
+        </div>
+
+        {/* Info Box */}
+        <div className="flex items-start gap-3 rounded-lg border border-violet-200 bg-violet-50 p-4">
+          <Filter className="mt-0.5 h-5 w-5 flex-shrink-0 text-violet-600" />
+          <div className="text-sm text-violet-800">
+            <p className="font-medium">발송 제외 동작</p>
+            <p className="mt-1">
+              제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수
+              있습니다. 이메일 발송 배치에는 포함되지 않습니다.
+            </p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+          {saved && (
+            <span className="flex items-center gap-1 text-sm text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+              저장되었습니다
+            </span>
+          )}
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-slate-900 hover:bg-slate-800"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                저장 중...
+              </>
+            ) : (
+              '설정 저장'
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+

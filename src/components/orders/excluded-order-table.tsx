@@ -1,0 +1,154 @@
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  excludedOrderBatches,
+  formatCurrency,
+  type OrderBatch,
+} from "@/lib/mock-data";
+import { Ban, Info } from "lucide-react";
+
+interface ExcludedOrderTableProps {
+  batches?: OrderBatch[];
+}
+
+export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
+  const orderBatches = batches ?? excludedOrderBatches;
+
+  if (orderBatches.length === 0) {
+    return (
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-4">
+            <Ban className="h-6 w-6 text-slate-400" />
+          </div>
+          <p className="text-slate-500 text-center">
+            발송 제외된 주문이 없습니다
+          </p>
+          <p className="text-sm text-slate-400 mt-1">
+            F열 값이 제외 패턴과 일치하는 주문이 없습니다
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                제조사
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                주문 수
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                총 금액
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                이메일
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                제외 사유
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orderBatches.map((batch) => {
+              // 주문들의 fulfillmentType 추출
+              const fulfillmentTypes = [...new Set(
+                batch.orders.map((o) => o.fulfillmentType).filter(Boolean)
+              )];
+
+              return (
+                <TableRow
+                  key={batch.manufacturerId}
+                  className="hover:bg-slate-50 transition-colors"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
+                        {batch.manufacturerName.slice(0, 2)}
+                      </div>
+                      <span className="font-medium text-slate-900">
+                        {batch.manufacturerName}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-medium text-slate-900">
+                    {batch.totalOrders}건
+                  </TableCell>
+                  <TableCell className="text-right font-medium text-slate-900">
+                    {formatCurrency(batch.totalAmount)}
+                  </TableCell>
+                  <TableCell className="text-slate-600">{batch.email}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {fulfillmentTypes.slice(0, 2).map((type, idx) => (
+                        <TooltipProvider key={idx}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant="secondary"
+                                className="bg-violet-50 text-violet-700 text-xs font-mono max-w-[200px] truncate cursor-help"
+                              >
+                                {type}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-mono text-xs">{type}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                      {fulfillmentTypes.length > 2 && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant="secondary"
+                                className="bg-slate-100 text-slate-600 text-xs cursor-help"
+                              >
+                                +{fulfillmentTypes.length - 2}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="space-y-1">
+                                {fulfillmentTypes.slice(2).map((type, idx) => (
+                                  <p key={idx} className="font-mono text-xs">{type}</p>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+

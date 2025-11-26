@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  orderBatches,
+  orderBatches as defaultOrderBatches,
   formatCurrency,
   formatDateTime,
   getStatusColor,
@@ -36,12 +36,14 @@ import {
 } from "lucide-react";
 
 interface OrderTableProps {
+  batches?: OrderBatch[];
   onSendEmail: (batch: OrderBatch) => void;
   onPreview: (batch: OrderBatch) => void;
   onBatchSend?: (batches: OrderBatch[]) => void;
 }
 
-export function OrderTable({ onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
+export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
+  const orderBatches = batches ?? defaultOrderBatches;
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
 
   const handleSelectAll = (checked: boolean) => {

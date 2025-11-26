@@ -1,7 +1,7 @@
 'use client';
 
 import { AppShell } from '@/components/layout';
-import { DuplicateCheckForm, SMTPForm } from '@/components/settings';
+import { DuplicateCheckForm, ExclusionForm, SMTPForm } from '@/components/settings';
 
 export default function SettingsPage() {
   return (
@@ -9,6 +9,7 @@ export default function SettingsPage() {
       <div className="max-w-3xl space-y-6">
         <SMTPForm />
         <DuplicateCheckForm />
+        <ExclusionForm />
       </div>
     </AppShell>
   );
