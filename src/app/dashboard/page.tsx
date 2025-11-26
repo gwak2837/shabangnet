@@ -1,26 +1,13 @@
-"use client";
+'use client';
 
-import { AppShell } from "@/components/layout";
-import {
-  StatCard,
-  RecentUploads,
-  ManufacturerChart,
-  QuickActions,
-} from "@/components/dashboard";
-import { dashboardStats } from "@/lib/mock-data";
-import {
-  ShoppingCart,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+import { ManufacturerChart, QuickActions, RecentUploads, StatCard } from '@/components/dashboard';
+import { AppShell } from '@/components/layout';
+import { dashboardStats } from '@/lib/mock-data';
+import { AlertCircle, CheckCircle2, Clock, ShoppingCart } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
-    <AppShell
-      title="대시보드"
-      description="오늘의 주문 현황과 발주 상태를 확인하세요"
-    >
+    <AppShell title="대시보드" description="오늘의 주문 현황과 발주 상태를 확인하세요">
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -73,4 +60,3 @@ export default function DashboardPage() {
     </AppShell>
   );
 }
-
