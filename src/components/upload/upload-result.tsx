@@ -48,51 +48,45 @@ export function UploadResult({ fileName }: UploadResultProps) {
   const totalAmount = mockProcessResult.manufacturerBreakdown.reduce((sum, m) => sum + m.amount, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                <Package className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">총 주문 수</p>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {mockProcessResult.totalOrders.toLocaleString()}건
-                </p>
-              </div>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+              <Package className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">총 주문 수</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {mockProcessResult.totalOrders.toLocaleString()}건
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
-                <Building2 className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">제조사 수</p>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {mockProcessResult.manufacturerBreakdown.length}곳
-                </p>
-              </div>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+              <Building2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">제조사 수</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {mockProcessResult.manufacturerBreakdown.length}곳
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
-                <AlertCircle className="h-6 w-6 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">오류 건수</p>
-                <p className="text-2xl font-semibold text-slate-900">{mockProcessResult.errors.length}건</p>
-              </div>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">오류 건수</p>
+              <p className="text-xl font-semibold text-slate-900">{mockProcessResult.errors.length}건</p>
             </div>
           </CardContent>
         </Card>
@@ -100,13 +94,13 @@ export function UploadResult({ fileName }: UploadResultProps) {
 
       {/* Recognized Columns */}
       <Card className="border-slate-200 bg-white shadow-sm">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             <CardTitle className="text-base font-semibold text-slate-900">인식된 컬럼</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-4 pb-4">
           <div className="flex flex-wrap gap-2">
             {mockProcessResult.recognizedColumns.map((col) => (
               <Badge key={col} variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-100">
@@ -119,10 +113,10 @@ export function UploadResult({ fileName }: UploadResultProps) {
 
       {/* Manufacturer Breakdown */}
       <Card className="border-slate-200 bg-white shadow-sm">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3 pt-4 px-4">
           <CardTitle className="text-base font-semibold text-slate-900">제조사별 분류 결과</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-4 pb-4">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -169,7 +163,7 @@ export function UploadResult({ fileName }: UploadResultProps) {
       {/* Errors */}
       {mockProcessResult.errors.length > 0 && (
         <Card className="border-rose-200 bg-rose-50/50 shadow-sm">
-          <CardHeader className="pb-4">
+          <CardHeader className="pb-3 pt-4 px-4">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-rose-600" />
               <CardTitle className="text-base font-semibold text-rose-900">
@@ -177,7 +171,7 @@ export function UploadResult({ fileName }: UploadResultProps) {
               </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 px-4 pb-4">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-rose-200">
@@ -218,7 +212,7 @@ export function UploadResult({ fileName }: UploadResultProps) {
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-3 pt-2">
         <Button variant="outline">다시 업로드</Button>
         <Link href="/orders">
           <Button className="bg-slate-900 hover:bg-slate-800">

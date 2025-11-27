@@ -89,10 +89,10 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing }: 
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
-      <CardContent className="p-0">
+      <CardContent className="p-4">
         <div
           className={cn(
-            'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 transition-all',
+            'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 transition-all',
             isDragging ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
           )}
           onDragOver={handleDragOver}
