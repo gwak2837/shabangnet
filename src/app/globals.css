@@ -2,7 +2,7 @@
 
 @theme inline {
   /* Typography */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans), var(--font-noto-sans-kr);
   --font-mono: var(--font-geist-mono);
 
   /* Radius */
@@ -210,9 +210,6 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 :focus-visible {
