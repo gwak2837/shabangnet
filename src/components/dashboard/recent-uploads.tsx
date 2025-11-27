@@ -3,10 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { recentUploads, formatDateTime, formatFileSize, getStatusColor, getStatusLabel } from '@/lib/mock-data'
-import { FileSpreadsheet } from 'lucide-react'
+import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel, type Upload } from '@/lib/mock-data'
+import { FileSpreadsheet, Loader2 } from 'lucide-react'
 
-export function RecentUploads() {
+interface RecentUploadsProps {
+  uploads: Upload[]
+  isLoading?: boolean
+}
+
+export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
       <CardHeader className="pb-4">
@@ -18,47 +23,55 @@ export function RecentUploads() {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">파일</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">주문 수</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상태</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                업로드 시간
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recentUploads.map((upload) => (
-              <TableRow key={upload.id} className="hover:bg-slate-50 transition-colors">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-                      <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{upload.fileName}</p>
-                      <p className="text-xs text-slate-500">{formatFileSize(upload.fileSize)}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="font-medium text-slate-900">{upload.totalOrders.toLocaleString()}건</p>
-                    {upload.errorOrders > 0 && <p className="text-xs text-rose-600">오류 {upload.errorOrders}건</p>}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className={getStatusColor(upload.status)}>
-                    {getStatusLabel(upload.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right text-sm text-slate-500">{formatDateTime(upload.uploadedAt)}</TableCell>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">파일</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">주문 수</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상태</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                  업로드 시간
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {uploads.map((upload) => (
+                <TableRow key={upload.id} className="hover:bg-slate-50 transition-colors">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                        <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{upload.fileName}</p>
+                        <p className="text-xs text-slate-500">{formatFileSize(upload.fileSize)}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium text-slate-900">{upload.totalOrders.toLocaleString()}건</p>
+                      {upload.errorOrders > 0 && <p className="text-xs text-rose-600">오류 {upload.errorOrders}건</p>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className={getStatusColor(upload.status)}>
+                      {getStatusLabel(upload.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-slate-500">
+                    {formatDateTime(upload.uploadedAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )

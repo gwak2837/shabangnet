@@ -4,13 +4,17 @@ import { useState, useMemo } from 'react'
 import { AppShell } from '@/components/layout'
 import { ProductFilters, ProductTable } from '@/components/products'
 import { Card, CardContent } from '@/components/ui/card'
-import { products as initialProducts, type Product } from '@/lib/mock-data'
-import { Package, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { useProducts, useManufacturers, useUpdateProduct } from '@/hooks'
+import type { Product } from '@/lib/mock-data'
+import { Package, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
-  const [products, setProducts] = useState<Product[]>(initialProducts)
+
+  const { data: products = [], isLoading: isLoadingProducts } = useProducts()
+  const { data: manufacturers = [] } = useManufacturers()
+  const updateProductMutation = useUpdateProduct()
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -25,28 +29,33 @@ export default function ProductsPage() {
   }, [products, searchQuery, showUnmappedOnly])
 
   const handleUpdateManufacturer = (productId: string, manufacturerId: string | null) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id === productId) {
-          const manufacturer = manufacturerId
-            ? initialProducts.find((prod) => prod.manufacturerId === manufacturerId) || { manufacturerName: '농심식품' } // fallback
-            : null
-          return {
-            ...p,
-            manufacturerId,
-            manufacturerName: manufacturerId ? manufacturer?.manufacturerName || null : null,
-            updatedAt: new Date().toISOString(),
-          }
-        }
-        return p
-      }),
-    )
+    const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
+    updateProductMutation.mutate({
+      id: productId,
+      data: {
+        manufacturerId,
+        manufacturerName: manufacturer?.name ?? null,
+      },
+    })
   }
 
   // Calculate stats
-  const totalProducts = products.length
-  const unmappedProducts = products.filter((p) => !p.manufacturerId).length
-  const mappedProducts = totalProducts - unmappedProducts
+  const stats = useMemo(() => {
+    const totalProducts = products.length
+    const unmappedProducts = products.filter((p) => !p.manufacturerId).length
+    const mappedProducts = totalProducts - unmappedProducts
+    return { totalProducts, unmappedProducts, mappedProducts }
+  }, [products])
+
+  if (isLoadingProducts) {
+    return (
+      <AppShell title="상품 매핑" description="상품과 제조사 간의 매핑을 관리합니다">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell title="상품 매핑" description="상품과 제조사 간의 매핑을 관리합니다">
@@ -59,7 +68,7 @@ export default function ProductsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">전체 상품</p>
-              <p className="text-xl font-semibold text-slate-900">{totalProducts}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.totalProducts}개</p>
             </div>
           </CardContent>
         </Card>
@@ -71,7 +80,7 @@ export default function ProductsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">매핑 완료</p>
-              <p className="text-xl font-semibold text-slate-900">{mappedProducts}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.mappedProducts}개</p>
             </div>
           </CardContent>
         </Card>
@@ -83,7 +92,7 @@ export default function ProductsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">미매핑</p>
-              <p className="text-xl font-semibold text-slate-900">{unmappedProducts}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.unmappedProducts}개</p>
             </div>
           </CardContent>
         </Card>
@@ -100,7 +109,11 @@ export default function ProductsPage() {
       </div>
 
       {/* Product Table */}
-      <ProductTable products={filteredProducts} onUpdateManufacturer={handleUpdateManufacturer} />
+      <ProductTable
+        products={filteredProducts}
+        manufacturers={manufacturers}
+        onUpdateManufacturer={handleUpdateManufacturer}
+      />
     </AppShell>
   )
 }

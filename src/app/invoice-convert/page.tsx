@@ -5,6 +5,7 @@ import { AppShell } from '@/components/layout'
 import { OrderSelect, InvoiceDropzone, ConvertResult } from '@/components/invoice-convert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSendLogs } from '@/hooks'
 import {
   type SendLog,
   type InvoiceConvertResult,
@@ -16,9 +17,7 @@ import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide
 type Step = 'select' | 'upload' | 'result'
 
 // 데모용 송장 파일 파싱 시뮬레이션
-function simulateInvoiceParsing(
-  log: SendLog,
-): InvoiceConvertResult[] {
+function simulateInvoiceParsing(log: SendLog): InvoiceConvertResult[] {
   // 실제로는 엑셀 파싱 후 처리
   // 여기서는 발주 로그의 주문 정보를 기반으로 시뮬레이션
 
@@ -66,6 +65,8 @@ export default function InvoiceConvertPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [convertResults, setConvertResults] = useState<InvoiceConvertResult[]>([])
 
+  const { data: logs = [], isLoading: isLoadingLogs } = useSendLogs()
+
   const handleSelectLog = (log: SendLog) => {
     setSelectedLog(log)
   }
@@ -111,6 +112,16 @@ export default function InvoiceConvertPage() {
     ? `사방넷_송장업로드_${selectedLog.manufacturerName}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
     : ''
 
+  if (isLoadingLogs) {
+    return (
+      <AppShell title="송장 변환" description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell title="송장 변환" description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다">
       {step === 'result' ? (
@@ -129,17 +140,13 @@ export default function InvoiceConvertPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                      selectedLog
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-blue-500 text-white'
+                      selectedLog ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
                     }`}
                   >
                     {selectedLog ? <CheckCircle2 className="h-5 w-5" /> : '1'}
                   </div>
                   <span
-                    className={`text-sm font-medium ${
-                      selectedLog ? 'text-emerald-600' : 'text-slate-900'
-                    }`}
+                    className={`text-sm font-medium ${selectedLog ? 'text-emerald-600' : 'text-slate-900'}`}
                   >
                     발주 선택
                   </span>
@@ -161,11 +168,7 @@ export default function InvoiceConvertPage() {
                   </div>
                   <span
                     className={`text-sm font-medium ${
-                      selectedFile
-                        ? 'text-emerald-600'
-                        : selectedLog
-                          ? 'text-slate-900'
-                          : 'text-slate-400'
+                      selectedFile ? 'text-emerald-600' : selectedLog ? 'text-slate-900' : 'text-slate-400'
                     }`}
                   >
                     송장 업로드
@@ -187,7 +190,7 @@ export default function InvoiceConvertPage() {
           {/* Main Content */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left: Order Select */}
-            <OrderSelect selectedLog={selectedLog} onSelect={handleSelectLog} />
+            <OrderSelect logs={logs} selectedLog={selectedLog} onSelect={handleSelectLog} />
 
             {/* Right: Invoice Upload */}
             <InvoiceDropzone
@@ -215,13 +218,22 @@ export default function InvoiceConvertPage() {
                       return (
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
-                            주문번호: {template.useColumnIndex ? `${template.orderNumberColumn}열` : `"${template.orderNumberColumn}"`}
+                            주문번호:{' '}
+                            {template.useColumnIndex
+                              ? `${template.orderNumberColumn}열`
+                              : `"${template.orderNumberColumn}"`}
                           </span>
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
-                            택배사: {template.useColumnIndex ? `${template.courierColumn}열` : `"${template.courierColumn}"`}
+                            택배사:{' '}
+                            {template.useColumnIndex
+                              ? `${template.courierColumn}열`
+                              : `"${template.courierColumn}"`}
                           </span>
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
-                            송장번호: {template.useColumnIndex ? `${template.trackingNumberColumn}열` : `"${template.trackingNumberColumn}"`}
+                            송장번호:{' '}
+                            {template.useColumnIndex
+                              ? `${template.trackingNumberColumn}열`
+                              : `"${template.trackingNumberColumn}"`}
                           </span>
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
                             헤더: {template.headerRow}행
@@ -283,4 +295,3 @@ export default function InvoiceConvertPage() {
     </AppShell>
   )
 }
-

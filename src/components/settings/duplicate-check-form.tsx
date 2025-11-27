@@ -5,30 +5,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  type DuplicateCheckPeriod,
-  type DuplicateCheckSettings,
-  duplicateCheckSettings as initialSettings,
-} from '@/lib/mock-data'
+import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/lib/mock-data'
 import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 
-export function DuplicateCheckForm() {
-  const [settings, setSettings] = useState<DuplicateCheckSettings>(initialSettings)
-  const [isSaving, setIsSaving] = useState(false)
+interface DuplicateCheckFormProps {
+  settings?: DuplicateCheckSettings
+  onSave: (data: Partial<DuplicateCheckSettings>) => void
+  isSaving?: boolean
+}
+
+const defaultSettings: DuplicateCheckSettings = {
+  enabled: true,
+  periodDays: 15,
+}
+
+export function DuplicateCheckForm({ settings, onSave, isSaving = false }: DuplicateCheckFormProps) {
+  const [formData, setFormData] = useState<DuplicateCheckSettings>(settings ?? defaultSettings)
   const [saved, setSaved] = useState(false)
+  const [prevSettings, setPrevSettings] = useState(settings)
 
-  async function handleSave() {
-    setIsSaving(true)
-    setSaved(false)
+  if (settings !== prevSettings) {
+    setPrevSettings(settings)
+    if (settings) {
+      setFormData(settings)
+    }
+  }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setIsSaving(false)
+  function handleSave() {
+    onSave(formData)
     setSaved(true)
-
-    // Hide saved message after 3 seconds
     setTimeout(() => setSaved(false), 3000)
   }
 
@@ -65,8 +71,8 @@ export function DuplicateCheckForm() {
           </div>
           <Switch
             id="duplicate-check-enabled"
-            checked={settings.enabled}
-            onCheckedChange={(checked) => setSettings({ ...settings, enabled: checked })}
+            checked={formData.enabled}
+            onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
           />
         </div>
 
@@ -74,14 +80,14 @@ export function DuplicateCheckForm() {
         <div className="space-y-3">
           <Label htmlFor="duplicate-check-period">중복 체크 기간</Label>
           <Select
-            value={settings.periodDays.toString()}
+            value={formData.periodDays.toString()}
             onValueChange={(value) =>
-              setSettings({
-                ...settings,
+              setFormData({
+                ...formData,
                 periodDays: parseInt(value) as DuplicateCheckPeriod,
               })
             }
-            disabled={!settings.enabled}
+            disabled={!formData.enabled}
           >
             <SelectTrigger id="duplicate-check-period" className="w-full">
               <SelectValue placeholder="기간 선택" />

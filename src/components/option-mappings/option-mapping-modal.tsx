@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { type OptionManufacturerMapping, manufacturers } from '@/lib/mock-data'
+import type { OptionManufacturerMapping, Manufacturer } from '@/lib/mock-data'
 import { Loader2, Settings2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -20,7 +20,9 @@ interface OptionMappingModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mapping: OptionManufacturerMapping | null
+  manufacturers: Manufacturer[]
   onSave: (data: Omit<OptionManufacturerMapping, 'id' | 'createdAt' | 'updatedAt'>) => void
+  isSaving?: boolean
 }
 
 function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
@@ -31,8 +33,14 @@ function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
   }
 }
 
-export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: OptionMappingModalProps) {
-  const [isSaving, setIsSaving] = useState(false)
+export function OptionMappingModal({
+  open,
+  onOpenChange,
+  mapping,
+  manufacturers,
+  onSave,
+  isSaving = false,
+}: OptionMappingModalProps) {
   const [formData, setFormData] = useState(() => getFormDataFromMapping(mapping))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [prevMappingId, setPrevMappingId] = useState(mapping?.id)
@@ -65,15 +73,10 @@ export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: Opti
     return Object.keys(newErrors).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!validate()) return
-
-    setIsSaving(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
 
     const selectedManufacturer = manufacturers.find((m) => m.id === formData.manufacturerId)
 
@@ -84,7 +87,6 @@ export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: Opti
       manufacturerName: selectedManufacturer?.name || '',
     })
 
-    setIsSaving(false)
     onOpenChange(false)
   }
 

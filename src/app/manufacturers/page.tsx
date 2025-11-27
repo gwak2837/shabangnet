@@ -1,15 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { AppShell } from '@/components/layout'
 import { ManufacturerTable, ManufacturerModal } from '@/components/manufacturers'
 import { Card, CardContent } from '@/components/ui/card'
-import { type Manufacturer, type InvoiceTemplate, manufacturers } from '@/lib/mock-data'
-import { Building2, Users, TrendingUp } from 'lucide-react'
+import { useManufacturers, useCreateManufacturer, useUpdateManufacturer, useDeleteManufacturer } from '@/hooks'
+import type { Manufacturer, InvoiceTemplate } from '@/lib/mock-data'
+import { Building2, Users, TrendingUp, Loader2 } from 'lucide-react'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null)
+
+  const { data: manufacturers = [], isLoading } = useManufacturers()
+  const createMutation = useCreateManufacturer()
+  const updateMutation = useUpdateManufacturer()
+  const deleteMutation = useDeleteManufacturer()
 
   const handleAdd = () => {
     setEditingManufacturer(null)
@@ -21,16 +27,36 @@ export default function ManufacturersPage() {
     setIsModalOpen(true)
   }
 
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id)
+  }
+
   const handleSave = (data: Partial<Manufacturer>, invoiceTemplate?: Partial<InvoiceTemplate>) => {
-    // In real app, this would call API
-    console.log('Save manufacturer:', data)
+    if (editingManufacturer) {
+      updateMutation.mutate({ id: editingManufacturer.id, data })
+    } else {
+      createMutation.mutate(data as Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>)
+    }
     console.log('Save invoice template:', invoiceTemplate)
   }
 
   // Calculate stats
-  const totalManufacturers = manufacturers.length
-  const totalOrders = manufacturers.reduce((sum, m) => sum + m.orderCount, 0)
-  const avgOrders = Math.round(totalOrders / totalManufacturers)
+  const stats = useMemo(() => {
+    const totalManufacturers = manufacturers.length
+    const totalOrders = manufacturers.reduce((sum, m) => sum + m.orderCount, 0)
+    const avgOrders = totalManufacturers > 0 ? Math.round(totalOrders / totalManufacturers) : 0
+    return { totalManufacturers, totalOrders, avgOrders }
+  }, [manufacturers])
+
+  if (isLoading) {
+    return (
+      <AppShell title="제조사 관리" description="거래처 제조사 정보를 관리합니다">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell title="제조사 관리" description="거래처 제조사 정보를 관리합니다">
@@ -43,7 +69,7 @@ export default function ManufacturersPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">등록 제조사</p>
-              <p className="text-xl font-semibold text-slate-900">{totalManufacturers}곳</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.totalManufacturers}곳</p>
             </div>
           </CardContent>
         </Card>
@@ -55,7 +81,7 @@ export default function ManufacturersPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">총 누적 주문</p>
-              <p className="text-xl font-semibold text-slate-900">{totalOrders.toLocaleString()}건</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.totalOrders.toLocaleString()}건</p>
             </div>
           </CardContent>
         </Card>
@@ -67,14 +93,19 @@ export default function ManufacturersPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사당 평균 주문</p>
-              <p className="text-xl font-semibold text-slate-900">{avgOrders.toLocaleString()}건</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.avgOrders.toLocaleString()}건</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Manufacturer Table */}
-      <ManufacturerTable onEdit={handleEdit} onAdd={handleAdd} />
+      <ManufacturerTable
+        manufacturers={manufacturers}
+        onEdit={handleEdit}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+      />
 
       {/* Add/Edit Modal */}
       <ManufacturerModal
@@ -82,6 +113,7 @@ export default function ManufacturersPage() {
         onOpenChange={setIsModalOpen}
         manufacturer={editingManufacturer}
         onSave={handleSave}
+        isSaving={createMutation.isPending || updateMutation.isPending}
       />
     </AppShell>
   )

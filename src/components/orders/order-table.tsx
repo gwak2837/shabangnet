@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
-  orderBatches as defaultOrderBatches,
   formatCurrency,
   formatDateTime,
   getStatusColor,
@@ -18,21 +17,20 @@ import { CheckCircle2, Download, Eye, Mail, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
 interface OrderTableProps {
-  batches?: OrderBatch[]
+  batches: OrderBatch[]
   onSendEmail: (batch: OrderBatch) => void
   onPreview: (batch: OrderBatch) => void
   onBatchSend?: (batches: OrderBatch[]) => void
 }
 
 export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
-  const orderBatches = batches ?? defaultOrderBatches
   const [selectedBatches, setSelectedBatches] = useState<string[]>([])
-  const isAllSelected = selectedBatches.length === orderBatches.length
+  const isAllSelected = batches.length > 0 && selectedBatches.length === batches.length
   const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedBatches(orderBatches.map((b) => b.manufacturerId))
+      setSelectedBatches(batches.map((b) => b.manufacturerId))
     } else {
       setSelectedBatches([])
     }
@@ -62,7 +60,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
                 size="sm"
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
                 onClick={() => {
-                  const selectedBatchData = orderBatches.filter((b) => selectedBatches.includes(b.manufacturerId))
+                  const selectedBatchData = batches.filter((b) => selectedBatches.includes(b.manufacturerId))
                   onBatchSend?.(selectedBatchData)
                 }}
               >
@@ -98,7 +96,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orderBatches.map((batch) => (
+            {batches.map((batch) => (
               <TableRow key={batch.manufacturerId} className="hover:bg-slate-50 transition-colors">
                 <TableCell>
                   <Checkbox

@@ -5,28 +5,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { type SMTPSettings, smtpSettings as initialSettings } from '@/lib/mock-data'
+import type { SMTPSettings } from '@/lib/mock-data'
 import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-export function SMTPForm() {
-  const [settings, setSettings] = useState<SMTPSettings>(initialSettings)
-  const [isSaving, setIsSaving] = useState(false)
+interface SMTPFormProps {
+  settings?: SMTPSettings
+  onSave: (data: Partial<SMTPSettings>) => void
+  isSaving?: boolean
+}
+
+export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) {
+  const [formData, setFormData] = useState<SMTPSettings>({
+    host: '',
+    port: 587,
+    username: '',
+    password: '',
+    secure: true,
+    fromName: '',
+    fromEmail: '',
+  })
   const [isTesting, setIsTesting] = useState(false)
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
   const [saved, setSaved] = useState(false)
 
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings)
+    }
+  }, [settings])
+
   async function handleSave() {
-    setIsSaving(true)
-    setSaved(false)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setIsSaving(false)
+    onSave(formData)
     setSaved(true)
-
-    // Hide saved message after 3 seconds
     setTimeout(() => setSaved(false), 3000)
   }
 
@@ -65,8 +76,8 @@ export function SMTPForm() {
               <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="host"
-                value={settings.host}
-                onChange={(e) => setSettings({ ...settings, host: e.target.value })}
+                value={formData.host}
+                onChange={(e) => setFormData({ ...formData, host: e.target.value })}
                 placeholder="smtp.gmail.com"
                 className="pl-9"
               />
@@ -78,10 +89,10 @@ export function SMTPForm() {
             <Input
               id="port"
               type="number"
-              value={settings.port}
+              value={formData.port}
               onChange={(e) =>
-                setSettings({
-                  ...settings,
+                setFormData({
+                  ...formData,
                   port: parseInt(e.target.value) || 587,
                 })
               }
@@ -99,8 +110,8 @@ export function SMTPForm() {
               <Input
                 id="username"
                 type="email"
-                value={settings.username}
-                onChange={(e) => setSettings({ ...settings, username: e.target.value })}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="your-email@gmail.com"
                 className="pl-9"
               />
@@ -114,8 +125,8 @@ export function SMTPForm() {
               <Input
                 id="password"
                 type="password"
-                value={settings.password}
-                onChange={(e) => setSettings({ ...settings, password: e.target.value })}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••••••••••"
                 className="pl-9"
               />
@@ -129,8 +140,8 @@ export function SMTPForm() {
             <Label htmlFor="fromName">발신자 이름</Label>
             <Input
               id="fromName"
-              value={settings.fromName}
-              onChange={(e) => setSettings({ ...settings, fromName: e.target.value })}
+              value={formData.fromName}
+              onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
               placeholder="(주)다온에프앤씨"
             />
           </div>
@@ -140,8 +151,8 @@ export function SMTPForm() {
             <Input
               id="fromEmail"
               type="email"
-              value={settings.fromEmail}
-              onChange={(e) => setSettings({ ...settings, fromEmail: e.target.value })}
+              value={formData.fromEmail}
+              onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
               placeholder="daonfnc@gmail.com"
             />
           </div>
@@ -157,8 +168,8 @@ export function SMTPForm() {
           </div>
           <Switch
             id="secure"
-            checked={settings.secure}
-            onCheckedChange={(checked) => setSettings({ ...settings, secure: checked })}
+            checked={formData.secure}
+            onCheckedChange={(checked) => setFormData({ ...formData, secure: checked })}
           />
         </div>
 

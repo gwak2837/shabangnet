@@ -2,19 +2,20 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { type SendLog, sendLogs, formatDateTime, formatCurrency } from '@/lib/mock-data'
+import type { SendLog } from '@/lib/mock-data'
+import { formatDateTime, formatCurrency } from '@/lib/mock-data'
 import { CheckCircle2, Mail, Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface OrderSelectProps {
+  logs: SendLog[]
   selectedLog: SendLog | null
   onSelect: (log: SendLog) => void
 }
 
-export function OrderSelect({ selectedLog, onSelect }: OrderSelectProps) {
+export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
   // 발송 완료된 로그만 필터링
-  const completedLogs = sendLogs.filter((log) => log.status === 'success')
+  const completedLogs = logs.filter((log) => log.status === 'success')
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -68,9 +69,7 @@ export function OrderSelect({ selectedLog, onSelect }: OrderSelectProps) {
                   </div>
                 </div>
                 <div className="mt-2 pt-2 border-t border-slate-100">
-                  <p className="text-xs text-slate-500 truncate">
-                    파일: {log.fileName}
-                  </p>
+                  <p className="text-xs text-slate-500 truncate">파일: {log.fileName}</p>
                 </div>
               </button>
             ))
@@ -91,4 +90,3 @@ export function OrderSelect({ selectedLog, onSelect }: OrderSelectProps) {
     </Card>
   )
 }
-

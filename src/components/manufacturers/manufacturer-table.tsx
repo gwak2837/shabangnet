@@ -16,29 +16,34 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate, type Manufacturer, manufacturers } from '@/lib/mock-data'
+import { formatDate, type Manufacturer } from '@/lib/mock-data'
 import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface ManufacturerTableProps {
+  manufacturers: Manufacturer[]
   onEdit: (manufacturer: Manufacturer) => void
   onAdd: () => void
+  onDelete: (id: string) => void
 }
 
-export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
+export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: ManufacturerTableProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Manufacturer | null>(null)
 
-  const filteredManufacturers = manufacturers.filter(
-    (m) =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredManufacturers = useMemo(() => {
+    return manufacturers.filter(
+      (m) =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.email.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+  }, [manufacturers, searchQuery])
 
   function handleDelete() {
-    // In real app, this would call API to delete
-    console.log('Delete manufacturer:', deleteTarget?.id)
+    if (deleteTarget) {
+      onDelete(deleteTarget.id)
+    }
     setDeleteTarget(null)
   }
 

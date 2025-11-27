@@ -4,17 +4,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { excludedOrderBatches, formatCurrency, type OrderBatch } from '@/lib/mock-data'
-import { Ban, Info } from 'lucide-react'
+import { formatCurrency, type OrderBatch } from '@/lib/mock-data'
+import { Ban } from 'lucide-react'
 
 interface ExcludedOrderTableProps {
-  batches?: OrderBatch[]
+  batches: OrderBatch[]
 }
 
 export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
-  const orderBatches = batches ?? excludedOrderBatches
-
-  if (orderBatches.length === 0) {
+  if (batches.length === 0) {
     return (
       <Card className="border-slate-200 bg-white shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-16">
@@ -46,7 +44,7 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orderBatches.map((batch) => {
+            {batches.map((batch) => {
               // 주문들의 fulfillmentType 추출
               const fulfillmentTypes = [...new Set(batch.orders.map((o) => o.fulfillmentType).filter(Boolean))]
 

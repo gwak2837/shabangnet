@@ -5,18 +5,26 @@ import { AppShell } from '@/components/layout'
 import { OptionMappingFilters, OptionMappingTable, OptionMappingModal } from '@/components/option-mappings'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  optionManufacturerMappings as initialMappings,
-  type OptionManufacturerMapping,
-  manufacturers,
-} from '@/lib/mock-data'
-import { Settings2, Building2, Package } from 'lucide-react'
+  useOptionMappings,
+  useManufacturers,
+  useCreateOptionMapping,
+  useUpdateOptionMapping,
+  useDeleteOptionMapping,
+} from '@/hooks'
+import type { OptionManufacturerMapping } from '@/lib/mock-data'
+import { Settings2, Building2, Package, Loader2 } from 'lucide-react'
 
 export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedManufacturer, setSelectedManufacturer] = useState('all')
-  const [mappings, setMappings] = useState<OptionManufacturerMapping[]>(initialMappings)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMapping, setEditingMapping] = useState<OptionManufacturerMapping | null>(null)
+
+  const { data: mappings = [], isLoading: isLoadingMappings } = useOptionMappings()
+  const { data: manufacturers = [] } = useManufacturers()
+  const createMutation = useCreateOptionMapping()
+  const updateMutation = useUpdateOptionMapping()
+  const deleteMutation = useDeleteOptionMapping()
 
   const filteredMappings = useMemo(() => {
     return mappings.filter((m) => {
@@ -41,39 +49,34 @@ export default function OptionMappingsPage() {
   }
 
   const handleDelete = (mappingId: string) => {
-    setMappings((prev) => prev.filter((m) => m.id !== mappingId))
+    deleteMutation.mutate(mappingId)
   }
 
   const handleSave = (data: Omit<OptionManufacturerMapping, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingMapping) {
-      // Update existing
-      setMappings((prev) =>
-        prev.map((m) =>
-          m.id === editingMapping.id
-            ? {
-                ...m,
-                ...data,
-                updatedAt: new Date().toISOString(),
-              }
-            : m,
-        ),
-      )
+      updateMutation.mutate({ id: editingMapping.id, data })
     } else {
-      // Add new
-      const newMapping: OptionManufacturerMapping = {
-        id: `om${Date.now()}`,
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      setMappings((prev) => [newMapping, ...prev])
+      createMutation.mutate(data)
     }
   }
 
   // Calculate stats
-  const totalMappings = mappings.length
-  const uniqueProductCodes = new Set(mappings.map((m) => m.productCode)).size
-  const uniqueManufacturers = new Set(mappings.map((m) => m.manufacturerId)).size
+  const stats = useMemo(() => {
+    const totalMappings = mappings.length
+    const uniqueProductCodes = new Set(mappings.map((m) => m.productCode)).size
+    const uniqueManufacturers = new Set(mappings.map((m) => m.manufacturerId)).size
+    return { totalMappings, uniqueProductCodes, uniqueManufacturers }
+  }, [mappings])
+
+  if (isLoadingMappings) {
+    return (
+      <AppShell title="옵션 매핑" description="상품코드 + 옵션 조합별로 제조사를 매핑합니다">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell title="옵션 매핑" description="상품코드 + 옵션 조합별로 제조사를 매핑합니다">
@@ -86,7 +89,7 @@ export default function OptionMappingsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">전체 매핑</p>
-              <p className="text-xl font-semibold text-slate-900">{totalMappings}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.totalMappings}개</p>
             </div>
           </CardContent>
         </Card>
@@ -98,7 +101,7 @@ export default function OptionMappingsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">상품 수</p>
-              <p className="text-xl font-semibold text-slate-900">{uniqueProductCodes}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.uniqueProductCodes}개</p>
             </div>
           </CardContent>
         </Card>
@@ -110,7 +113,7 @@ export default function OptionMappingsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사 수</p>
-              <p className="text-xl font-semibold text-slate-900">{uniqueManufacturers}개</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.uniqueManufacturers}개</p>
             </div>
           </CardContent>
         </Card>
@@ -134,6 +137,7 @@ export default function OptionMappingsPage() {
       {/* Filters */}
       <div className="mb-6">
         <OptionMappingFilters
+          manufacturers={manufacturers}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           selectedManufacturer={selectedManufacturer}
@@ -150,9 +154,10 @@ export default function OptionMappingsPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         mapping={editingMapping}
+        manufacturers={manufacturers}
         onSave={handleSave}
+        isSaving={createMutation.isPending || updateMutation.isPending}
       />
     </AppShell>
   )
 }
-

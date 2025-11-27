@@ -3,10 +3,11 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { manufacturers } from '@/lib/mock-data'
+import type { Manufacturer } from '@/lib/mock-data'
 import { Calendar, X } from 'lucide-react'
 
 interface LogFiltersProps {
+  manufacturers: Manufacturer[]
   dateFrom: string
   dateTo: string
   status: string
@@ -18,6 +19,7 @@ interface LogFiltersProps {
 }
 
 export function LogFilters({
+  manufacturers,
   dateFrom,
   dateTo,
   status,

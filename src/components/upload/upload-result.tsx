@@ -1,10 +1,10 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { CheckCircle2, AlertCircle, ArrowRight, Package, Building2 } from 'lucide-react'
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, Package } from 'lucide-react'
 import Link from 'next/link'
 
 // Mock processed data
@@ -58,9 +58,7 @@ export function UploadResult({ fileName }: UploadResultProps) {
             </div>
             <div>
               <p className="text-sm text-slate-500">총 주문 수</p>
-              <p className="text-xl font-semibold text-slate-900">
-                {mockProcessResult.totalOrders.toLocaleString()}건
-              </p>
+              <p className="text-xl font-semibold text-slate-900">{mockProcessResult.totalOrders.toLocaleString()}건</p>
             </div>
           </CardContent>
         </Card>
@@ -72,9 +70,7 @@ export function UploadResult({ fileName }: UploadResultProps) {
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사 수</p>
-              <p className="text-xl font-semibold text-slate-900">
-                {mockProcessResult.manufacturerBreakdown.length}곳
-              </p>
+              <p className="text-xl font-semibold text-slate-900">{mockProcessResult.manufacturerBreakdown.length}곳</p>
             </div>
           </CardContent>
         </Card>

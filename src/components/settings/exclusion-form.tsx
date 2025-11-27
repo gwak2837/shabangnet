@@ -6,62 +6,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { type ExclusionPattern, type ExclusionSettings, exclusionSettings as initialSettings } from '@/lib/mock-data'
+import type { ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
 import { CheckCircle2, Filter, Loader2, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-export function ExclusionForm() {
-  const [settings, setSettings] = useState<ExclusionSettings>(initialSettings)
+interface ExclusionFormProps {
+  settings?: ExclusionSettings
+  onUpdateSettings: (data: Partial<ExclusionSettings>) => void
+  onAddPattern: (pattern: Omit<ExclusionPattern, 'id'>) => void
+  onRemovePattern: (id: string) => void
+  isSaving?: boolean
+}
+
+export function ExclusionForm({
+  settings,
+  onUpdateSettings,
+  onAddPattern,
+  onRemovePattern,
+  isSaving = false,
+}: ExclusionFormProps) {
+  const [formData, setFormData] = useState<ExclusionSettings>({
+    enabled: true,
+    patterns: [],
+  })
   const [newPattern, setNewPattern] = useState('')
   const [newDescription, setNewDescription] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const enabledCount = settings.patterns.filter((p) => p.enabled).length
+  const enabledCount = formData.patterns.filter((p) => p.enabled).length
 
-  async function handleSave() {
-    setIsSaving(true)
-    setSaved(false)
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings)
+    }
+  }, [settings])
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setIsSaving(false)
+  function handleToggleEnabled(checked: boolean) {
+    setFormData({ ...formData, enabled: checked })
+    onUpdateSettings({ enabled: checked })
     setSaved(true)
-
-    // Hide saved message after 3 seconds
     setTimeout(() => setSaved(false), 3000)
   }
 
   function handleAddPattern() {
     if (!newPattern.trim()) return
 
-    const newPatternObj: ExclusionPattern = {
-      id: `exc-${Date.now()}`,
+    onAddPattern({
       pattern: newPattern.trim(),
       enabled: true,
       description: newDescription.trim() || undefined,
-    }
-
-    setSettings({
-      ...settings,
-      patterns: [...settings.patterns, newPatternObj],
     })
 
     setNewPattern('')
     setNewDescription('')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
   }
 
   function handleRemovePattern(id: string) {
-    setSettings({
-      ...settings,
-      patterns: settings.patterns.filter((p) => p.id !== id),
-    })
+    onRemovePattern(id)
   }
 
   function handleTogglePattern(id: string, enabled: boolean) {
-    setSettings({
-      ...settings,
-      patterns: settings.patterns.map((p) => (p.id === id ? { ...p, enabled } : p)),
+    // Local update - in real app this would call onUpdatePattern
+    setFormData({
+      ...formData,
+      patterns: formData.patterns.map((p) => (p.id === id ? { ...p, enabled } : p)),
     })
   }
 
@@ -87,11 +96,7 @@ export function ExclusionForm() {
             </Label>
             <p className="text-sm text-slate-500">F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다</p>
           </div>
-          <Switch
-            id="exclusion-enabled"
-            checked={settings.enabled}
-            onCheckedChange={(checked) => setSettings({ ...settings, enabled: checked })}
-          />
+          <Switch id="exclusion-enabled" checked={formData.enabled} onCheckedChange={handleToggleEnabled} />
         </div>
 
         {/* Patterns List */}
@@ -99,12 +104,12 @@ export function ExclusionForm() {
           <div className="flex items-center justify-between">
             <Label>제외 패턴 목록</Label>
             <Badge variant="secondary" className="bg-slate-100 text-slate-600">
-              {enabledCount}/{settings.patterns.length} 활성화
+              {enabledCount}/{formData.patterns.length} 활성화
             </Badge>
           </div>
 
           <div className="space-y-2">
-            {settings.patterns.map((pattern) => (
+            {formData.patterns.map((pattern) => (
               <div
                 key={pattern.id}
                 className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
@@ -114,7 +119,7 @@ export function ExclusionForm() {
                 <Switch
                   checked={pattern.enabled}
                   onCheckedChange={(checked) => handleTogglePattern(pattern.id, checked)}
-                  disabled={!settings.enabled}
+                  disabled={!formData.enabled}
                 />
                 <div className="flex-1 min-w-0">
                   <p className={`font-mono text-sm truncate ${pattern.enabled ? 'text-slate-900' : 'text-slate-400'}`}>
@@ -133,7 +138,7 @@ export function ExclusionForm() {
               </div>
             ))}
 
-            {settings.patterns.length === 0 && (
+            {formData.patterns.length === 0 && (
               <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
                 <p className="text-sm text-slate-500">등록된 제외 패턴이 없습니다</p>
               </div>
@@ -161,10 +166,10 @@ export function ExclusionForm() {
             </div>
             <Button
               onClick={handleAddPattern}
-              disabled={!newPattern.trim()}
+              disabled={!newPattern.trim() || isSaving}
               className="shrink-0 bg-violet-600 hover:bg-violet-700"
             >
-              <Plus className="h-4 w-4 mr-1" />
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
               추가
             </Button>
           </div>
@@ -191,16 +196,6 @@ export function ExclusionForm() {
               저장되었습니다
             </span>
           )}
-          <Button onClick={handleSave} disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                저장 중...
-              </>
-            ) : (
-              '설정 저장'
-            )}
-          </Button>
         </div>
       </CardContent>
     </Card>

@@ -1,13 +1,14 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { AppShell } from '@/components/layout'
 import { ExcludedOrderTable, OrderFilters, OrderTable, SendModal } from '@/components/orders'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { excludedOrderBatches, orderBatches, type OrderBatch } from '@/lib/mock-data'
-import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Mail, RefreshCw } from 'lucide-react'
-import { useState } from 'react'
+import { useOrderBatches, useExcludedOrderBatches } from '@/hooks'
+import type { OrderBatch } from '@/lib/mock-data'
+import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Mail, RefreshCw, Loader2 } from 'lucide-react'
 
 type TabType = 'sendable' | 'excluded'
 
@@ -17,6 +18,9 @@ export default function OrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [sendQueue, setSendQueue] = useState<OrderBatch[]>([])
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0)
+
+  const { data: orderBatches = [], isLoading: isLoadingBatches, refetch: refetchBatches } = useOrderBatches()
+  const { data: excludedOrderBatches = [], isLoading: isLoadingExcluded } = useExcludedOrderBatches()
 
   const handleSendEmail = (batch: OrderBatch) => {
     setSelectedBatch(batch)
@@ -61,14 +65,30 @@ export default function OrdersPage() {
     console.log('Preview batch:', batch)
   }
 
-  // Calculate summary stats for sendable orders
-  const totalBatches = orderBatches.length
-  const pendingBatchesCount = orderBatches.filter((b) => b.status === 'pending').length
-  const sentBatches = orderBatches.filter((b) => b.status === 'sent').length
-  const errorBatches = orderBatches.filter((b) => b.status === 'error').length
+  const handleRefresh = () => {
+    refetchBatches()
+  }
 
-  // Calculate excluded orders count
-  const excludedOrdersCount = excludedOrderBatches.reduce((sum, b) => sum + b.totalOrders, 0)
+  // Calculate summary stats for sendable orders
+  const stats = useMemo(() => {
+    const totalBatches = orderBatches.length
+    const pendingBatchesCount = orderBatches.filter((b) => b.status === 'pending').length
+    const sentBatches = orderBatches.filter((b) => b.status === 'sent').length
+    const errorBatches = orderBatches.filter((b) => b.status === 'error').length
+    const excludedOrdersCount = excludedOrderBatches.reduce((sum, b) => sum + b.totalOrders, 0)
+    const totalOrders = orderBatches.reduce((sum, b) => sum + b.totalOrders, 0)
+    return { totalBatches, pendingBatchesCount, sentBatches, errorBatches, excludedOrdersCount, totalOrders }
+  }, [orderBatches, excludedOrderBatches])
+
+  if (isLoadingBatches || isLoadingExcluded) {
+    return (
+      <AppShell title="발주 생성/발송" description="제조사별 발주서를 생성하고 이메일로 발송하세요">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell title="발주 생성/발송" description="제조사별 발주서를 생성하고 이메일로 발송하세요">
@@ -87,7 +107,7 @@ export default function OrdersPage() {
               variant="secondary"
               className={`${activeTab === 'sendable' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}
             >
-              {orderBatches.reduce((sum, b) => sum + b.totalOrders, 0)}
+              {stats.totalOrders}
             </Badge>
           </div>
           {activeTab === 'sendable' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
@@ -107,7 +127,7 @@ export default function OrdersPage() {
                 activeTab === 'excluded' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
               }`}
             >
-              {excludedOrdersCount}
+              {stats.excludedOrdersCount}
             </Badge>
           </div>
           {activeTab === 'excluded' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600" />}
@@ -125,7 +145,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">전체</p>
-                  <p className="text-xl font-semibold text-slate-900">{totalBatches}건</p>
+                  <p className="text-xl font-semibold text-slate-900">{stats.totalBatches}건</p>
                 </div>
               </CardContent>
             </Card>
@@ -137,7 +157,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">대기중</p>
-                  <p className="text-xl font-semibold text-slate-900">{pendingBatchesCount}건</p>
+                  <p className="text-xl font-semibold text-slate-900">{stats.pendingBatchesCount}건</p>
                 </div>
               </CardContent>
             </Card>
@@ -149,7 +169,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">발송완료</p>
-                  <p className="text-xl font-semibold text-slate-900">{sentBatches}건</p>
+                  <p className="text-xl font-semibold text-slate-900">{stats.sentBatches}건</p>
                 </div>
               </CardContent>
             </Card>
@@ -161,7 +181,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">오류</p>
-                  <p className="text-xl font-semibold text-slate-900">{errorBatches}건</p>
+                  <p className="text-xl font-semibold text-slate-900">{stats.errorBatches}건</p>
                 </div>
               </CardContent>
             </Card>
@@ -171,24 +191,29 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between mb-6">
             <OrderFilters />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4" />
                 새로고침
               </Button>
               <Button
                 size="sm"
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
-                disabled={pendingBatchesCount === 0}
+                disabled={stats.pendingBatchesCount === 0}
                 onClick={handleSendAllPending}
               >
                 <Mail className="h-4 w-4" />
-                전체 발송 ({pendingBatchesCount})
+                전체 발송 ({stats.pendingBatchesCount})
               </Button>
             </div>
           </div>
 
           {/* Order Table */}
-          <OrderTable onSendEmail={handleSendEmail} onPreview={handlePreview} onBatchSend={handleBatchSend} />
+          <OrderTable
+            batches={orderBatches}
+            onSendEmail={handleSendEmail}
+            onPreview={handlePreview}
+            onBatchSend={handleBatchSend}
+          />
         </>
       ) : (
         <>
@@ -206,7 +231,7 @@ export default function OrdersPage() {
           </div>
 
           {/* Excluded Order Table */}
-          <ExcludedOrderTable />
+          <ExcludedOrderTable batches={excludedOrderBatches} />
         </>
       )}
 

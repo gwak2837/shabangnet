@@ -14,18 +14,25 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { type CourierMapping, courierMappings as initialMappings } from '@/lib/mock-data'
+import type { CourierMapping } from '@/lib/mock-data'
 import { CheckCircle2, Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 
-export function CourierForm() {
-  const [mappings, setMappings] = useState<CourierMapping[]>(initialMappings)
-  const [isSaving, setIsSaving] = useState(false)
+interface CourierFormProps {
+  mappings: CourierMapping[]
+  onUpdate: (id: string, data: Partial<CourierMapping>) => void
+  onAdd: (data: Omit<CourierMapping, 'id'>) => void
+  onRemove: (id: string) => void
+  isSaving?: boolean
+}
+
+export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = false }: CourierFormProps) {
   const [saved, setSaved] = useState(false)
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newAlias, setNewAlias] = useState('')
+  const [isNewCourier, setIsNewCourier] = useState(false)
 
   // 새 택배사 추가용 빈 객체
   const createEmptyCourier = (): CourierMapping => ({
@@ -38,20 +45,22 @@ export function CourierForm() {
 
   const handleAddCourier = () => {
     setEditingCourier(createEmptyCourier())
+    setIsNewCourier(true)
     setIsModalOpen(true)
   }
 
   const handleEditCourier = (courier: CourierMapping) => {
     setEditingCourier({ ...courier, aliases: [...courier.aliases] })
+    setIsNewCourier(false)
     setIsModalOpen(true)
   }
 
   const handleDeleteCourier = (id: string) => {
-    setMappings(mappings.filter((m) => m.id !== id))
+    onRemove(id)
   }
 
-  const handleToggleEnabled = (id: string) => {
-    setMappings(mappings.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m)))
+  const handleToggleEnabled = (id: string, currentEnabled: boolean) => {
+    onUpdate(id, { enabled: !currentEnabled })
   }
 
   const handleAddAlias = () => {
@@ -78,29 +87,20 @@ export function CourierForm() {
   const handleSaveCourier = () => {
     if (!editingCourier || !editingCourier.name || !editingCourier.code) return
 
-    const existingIndex = mappings.findIndex((m) => m.id === editingCourier.id)
-    if (existingIndex >= 0) {
-      // 기존 택배사 수정
-      setMappings(mappings.map((m) => (m.id === editingCourier.id ? editingCourier : m)))
+    if (isNewCourier) {
+      onAdd({
+        name: editingCourier.name,
+        code: editingCourier.code,
+        aliases: editingCourier.aliases,
+        enabled: editingCourier.enabled,
+      })
     } else {
-      // 새 택배사 추가
-      setMappings([...mappings, editingCourier])
+      onUpdate(editingCourier.id, editingCourier)
     }
 
     setIsModalOpen(false)
     setEditingCourier(null)
-  }
-
-  async function handleSaveAll() {
-    setIsSaving(true)
-    setSaved(false)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setIsSaving(false)
     setSaved(true)
-
     setTimeout(() => setSaved(false), 3000)
   }
 
@@ -143,7 +143,7 @@ export function CourierForm() {
                     <TableCell>
                       <Switch
                         checked={courier.enabled}
-                        onCheckedChange={() => handleToggleEnabled(courier.id)}
+                        onCheckedChange={() => handleToggleEnabled(courier.id, courier.enabled)}
                         className="data-[state=checked]:bg-emerald-500"
                       />
                     </TableCell>
@@ -198,7 +198,9 @@ export function CourierForm() {
             <p>
               <strong>별칭</strong>은 거래처 송장 파일에서 사용하는 다양한 택배사 표기를 인식합니다.
             </p>
-            <p className="mt-1">예: &quot;CJ대한통운&quot;, &quot;CJ택배&quot;, &quot;대한통운&quot; → 모두 코드 &quot;04&quot;로 변환</p>
+            <p className="mt-1">
+              예: &quot;CJ대한통운&quot;, &quot;CJ택배&quot;, &quot;대한통운&quot; → 모두 코드 &quot;04&quot;로 변환
+            </p>
           </div>
 
           {/* Actions */}
@@ -209,16 +211,6 @@ export function CourierForm() {
                 저장되었습니다
               </span>
             )}
-            <Button onClick={handleSaveAll} disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                '설정 저장'
-              )}
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -227,7 +219,7 @@ export function CourierForm() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingCourier?.id.startsWith('c') && !mappings.find((m) => m.id === editingCourier.id) ? '택배사 추가' : '택배사 수정'}</DialogTitle>
+            <DialogTitle>{isNewCourier ? '택배사 추가' : '택배사 수정'}</DialogTitle>
             <DialogDescription>택배사 정보와 별칭을 입력하세요</DialogDescription>
           </DialogHeader>
 
@@ -306,10 +298,17 @@ export function CourierForm() {
             </Button>
             <Button
               onClick={handleSaveCourier}
-              disabled={!editingCourier?.name || !editingCourier?.code}
+              disabled={!editingCourier?.name || !editingCourier?.code || isSaving}
               className="bg-slate-900 hover:bg-slate-800"
             >
-              저장
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  저장 중...
+                </>
+              ) : (
+                '저장'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -317,4 +316,3 @@ export function CourierForm() {
     </>
   )
 }
-

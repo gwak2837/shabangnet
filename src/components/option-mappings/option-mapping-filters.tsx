@@ -3,10 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { manufacturers } from '@/lib/mock-data'
+import type { Manufacturer } from '@/lib/mock-data'
 import { Plus, Search, X } from 'lucide-react'
 
 interface OptionMappingFiltersProps {
+  manufacturers: Manufacturer[]
   searchQuery: string
   onSearchChange: (value: string) => void
   selectedManufacturer: string
@@ -15,6 +16,7 @@ interface OptionMappingFiltersProps {
 }
 
 export function OptionMappingFilters({
+  manufacturers,
   searchQuery,
   onSearchChange,
   selectedManufacturer,

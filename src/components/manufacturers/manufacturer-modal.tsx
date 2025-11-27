@@ -26,6 +26,7 @@ interface ManufacturerModalProps {
   onOpenChange: (open: boolean) => void
   manufacturer: Manufacturer | null
   onSave: (data: Partial<Manufacturer>, invoiceTemplate?: Partial<InvoiceTemplate>) => void
+  isSaving?: boolean
 }
 
 function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
@@ -46,8 +47,13 @@ function getInvoiceTemplateFromManufacturer(manufacturer: Manufacturer | null): 
   return existingTemplate || { ...defaultInvoiceTemplate }
 }
 
-export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: ManufacturerModalProps) {
-  const [isSaving, setIsSaving] = useState(false)
+export function ManufacturerModal({
+  open,
+  onOpenChange,
+  manufacturer,
+  onSave,
+  isSaving = false,
+}: ManufacturerModalProps) {
   const [formData, setFormData] = useState(() => getFormDataFromManufacturer(manufacturer))
   const [invoiceTemplate, setInvoiceTemplate] = useState(() => getInvoiceTemplateFromManufacturer(manufacturer))
   const [showInvoiceSettings, setShowInvoiceSettings] = useState(false)
@@ -86,15 +92,10 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
     return Object.keys(newErrors).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!validate()) return
-
-    setIsSaving(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     onSave(
       {
@@ -104,7 +105,6 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
       invoiceTemplate,
     )
 
-    setIsSaving(false)
     onOpenChange(false)
   }
 
