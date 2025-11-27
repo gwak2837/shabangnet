@@ -3,7 +3,7 @@
 // ============================================
 
 export const SITE_CONFIG = {
-  url: 'https://shabangnet.com',
+  url: 'https://shabangnet.vercel.app',
   name: '사방넷 발주 자동화',
   shortName: '사방넷',
   description: '주문 취합 및 제조사별 발주 자동화 시스템',
