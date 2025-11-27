@@ -1669,3 +1669,221 @@ export function getDaysDifference(dateString: string): number {
   const diffTime = Math.abs(now.getTime() - targetDate.getTime())
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
+
+// ============================================
+// 송장 변환 관련 인터페이스 및 데이터
+// ============================================
+
+// 택배사 코드 매핑 인터페이스
+export interface CourierMapping {
+  id: string
+  name: string // 기본 택배사명 (사방넷 기준)
+  code: string // 사방넷 택배사 코드 (숫자)
+  aliases: string[] // 별칭 (거래처에서 사용하는 다른 이름들)
+  enabled: boolean
+}
+
+// 택배사 코드 매핑 데이터
+export const courierMappings: CourierMapping[] = [
+  {
+    id: 'c1',
+    name: 'CJ대한통운',
+    code: '04',
+    aliases: ['CJ대한통운', 'CJ택배', 'CJ', '대한통운', 'CJGLS'],
+    enabled: true,
+  },
+  {
+    id: 'c2',
+    name: '한진택배',
+    code: '05',
+    aliases: ['한진택배', '한진', 'HANJIN'],
+    enabled: true,
+  },
+  {
+    id: 'c3',
+    name: '롯데택배',
+    code: '08',
+    aliases: ['롯데택배', '롯데', 'LOTTE', '롯데글로벌로지스'],
+    enabled: true,
+  },
+  {
+    id: 'c4',
+    name: '우체국택배',
+    code: '01',
+    aliases: ['우체국택배', '우체국', '우편', 'EPOST', '우정사업본부'],
+    enabled: true,
+  },
+  {
+    id: 'c5',
+    name: '로젠택배',
+    code: '06',
+    aliases: ['로젠택배', '로젠', 'LOGEN'],
+    enabled: true,
+  },
+  {
+    id: 'c6',
+    name: '경동택배',
+    code: '23',
+    aliases: ['경동택배', '경동', 'KD택배'],
+    enabled: true,
+  },
+  {
+    id: 'c7',
+    name: '대신택배',
+    code: '22',
+    aliases: ['대신택배', '대신'],
+    enabled: true,
+  },
+  {
+    id: 'c8',
+    name: '일양로지스',
+    code: '11',
+    aliases: ['일양로지스', '일양택배', '일양'],
+    enabled: true,
+  },
+  {
+    id: 'c9',
+    name: '합동택배',
+    code: '32',
+    aliases: ['합동택배', '합동'],
+    enabled: true,
+  },
+  {
+    id: 'c10',
+    name: 'GS포스트박스',
+    code: '24',
+    aliases: ['GS포스트박스', 'GS택배', 'CVSnet', 'GS25택배'],
+    enabled: true,
+  },
+]
+
+// 택배사명으로 코드 찾기 (별칭 포함)
+export function getCourierCode(courierName: string): string | null {
+  const normalized = courierName.trim()
+  for (const courier of courierMappings) {
+    if (!courier.enabled) continue
+    if (courier.name === normalized) return courier.code
+    if (courier.aliases.some((alias) => alias.toLowerCase() === normalized.toLowerCase())) {
+      return courier.code
+    }
+  }
+  return null
+}
+
+// 거래처별 송장 템플릿 인터페이스
+export interface InvoiceTemplate {
+  id: string
+  manufacturerId: string
+  manufacturerName: string
+  // 컬럼 매핑 (컬럼 인덱스 또는 헤더명)
+  orderNumberColumn: string // 주문번호 컬럼 (예: "A" 또는 "주문번호")
+  courierColumn: string // 택배사 컬럼
+  trackingNumberColumn: string // 송장번호 컬럼
+  headerRow: number // 헤더가 있는 행 번호 (1부터 시작)
+  dataStartRow: number // 데이터 시작 행 번호
+  useColumnIndex: boolean // true면 A,B,C 인덱스 사용, false면 헤더명 사용
+}
+
+// 기본 송장 템플릿 (대부분의 거래처에 적용)
+export const defaultInvoiceTemplate: Omit<InvoiceTemplate, 'id' | 'manufacturerId' | 'manufacturerName'> = {
+  orderNumberColumn: 'A',
+  courierColumn: 'B',
+  trackingNumberColumn: 'C',
+  headerRow: 1,
+  dataStartRow: 2,
+  useColumnIndex: true,
+}
+
+// 거래처별 커스텀 송장 템플릿
+export const invoiceTemplates: InvoiceTemplate[] = [
+  {
+    id: 'it1',
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    orderNumberColumn: '주문번호',
+    courierColumn: '배송업체',
+    trackingNumberColumn: '운송장번호',
+    headerRow: 1,
+    dataStartRow: 2,
+    useColumnIndex: false,
+  },
+  {
+    id: 'it2',
+    manufacturerId: 'm4',
+    manufacturerName: '동원F&B',
+    orderNumberColumn: 'B',
+    courierColumn: 'D',
+    trackingNumberColumn: 'E',
+    headerRow: 2,
+    dataStartRow: 3,
+    useColumnIndex: true,
+  },
+]
+
+// 제조사ID로 템플릿 가져오기 (없으면 기본 템플릿 반환)
+export function getInvoiceTemplate(manufacturerId: string): InvoiceTemplate {
+  const customTemplate = invoiceTemplates.find((t) => t.manufacturerId === manufacturerId)
+  if (customTemplate) return customTemplate
+
+  const manufacturer = manufacturers.find((m) => m.id === manufacturerId)
+  return {
+    id: 'default',
+    manufacturerId,
+    manufacturerName: manufacturer?.name || '알 수 없음',
+    ...defaultInvoiceTemplate,
+  }
+}
+
+// 송장 변환 결과 인터페이스
+export interface InvoiceConvertResult {
+  orderNumber: string // 사방넷 주문번호
+  courierCode: string // 변환된 택배사 코드
+  trackingNumber: string // 송장번호
+  status: 'success' | 'courier_error' | 'order_not_found'
+  originalCourier?: string // 원본 택배사명 (에러 시 표시용)
+  errorMessage?: string
+}
+
+// 송장 변환 이력 인터페이스
+export interface InvoiceConvertLog {
+  id: string
+  sendLogId: string // 연결된 발송 로그 ID
+  manufacturerId: string
+  manufacturerName: string
+  uploadedFileName: string
+  convertedFileName: string
+  totalRows: number
+  successCount: number
+  errorCount: number
+  convertedAt: string
+  convertedBy: string
+  results: InvoiceConvertResult[]
+}
+
+// 송장 변환 이력 Mock 데이터
+export const invoiceConvertLogs: InvoiceConvertLog[] = [
+  {
+    id: 'icl1',
+    sendLogId: 'log1',
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    uploadedFileName: '농심_송장_20241126.xlsx',
+    convertedFileName: '사방넷_송장업로드_농심식품_20241126.xlsx',
+    totalRows: 45,
+    successCount: 43,
+    errorCount: 2,
+    convertedAt: getRelativeDate(0, 14, 0),
+    convertedBy: '관리자',
+    results: [
+      { orderNumber: 'SB20241126001', courierCode: '04', trackingNumber: '123456789012', status: 'success' },
+      { orderNumber: 'SB20241126002', courierCode: '05', trackingNumber: '987654321098', status: 'success' },
+      {
+        orderNumber: 'SB20241126099',
+        courierCode: '',
+        trackingNumber: '111222333444',
+        status: 'order_not_found',
+        errorMessage: '주문번호를 찾을 수 없습니다',
+      },
+    ],
+  },
+]

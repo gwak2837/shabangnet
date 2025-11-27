@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { AppShell } from '@/components/layout'
 import { ManufacturerTable, ManufacturerModal } from '@/components/manufacturers'
 import { Card, CardContent } from '@/components/ui/card'
-import { type Manufacturer, manufacturers } from '@/lib/mock-data'
-import { Building2, Users, Mail, TrendingUp } from 'lucide-react'
+import { type Manufacturer, type InvoiceTemplate, manufacturers } from '@/lib/mock-data'
+import { Building2, Users, TrendingUp } from 'lucide-react'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -21,9 +21,10 @@ export default function ManufacturersPage() {
     setIsModalOpen(true)
   }
 
-  const handleSave = (data: Partial<Manufacturer>) => {
+  const handleSave = (data: Partial<Manufacturer>, invoiceTemplate?: Partial<InvoiceTemplate>) => {
     // In real app, this would call API
     console.log('Save manufacturer:', data)
+    console.log('Save invoice template:', invoiceTemplate)
   }
 
   // Calculate stats
