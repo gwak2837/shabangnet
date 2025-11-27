@@ -1,10 +1,10 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { formatCurrency, type OrderBatch } from '@/lib/mock-data'
+import { formatCurrency, getExclusionLabel, type OrderBatch } from '@/lib/mock-data'
 import { Ban } from 'lucide-react'
 
 interface ExcludedOrderTableProps {
@@ -45,8 +45,14 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
           </TableHeader>
           <TableBody>
             {batches.map((batch) => {
-              // 주문들의 fulfillmentType 추출
-              const fulfillmentTypes = [...new Set(batch.orders.map((o) => o.fulfillmentType).filter(Boolean))]
+              // 주문들의 fulfillmentType을 라벨로 변환하고 중복 제거
+              const exclusionLabels = [
+                ...new Set(
+                  batch.orders
+                    .map((o) => getExclusionLabel(o.fulfillmentType))
+                    .filter((label): label is string => label !== null),
+                ),
+              ]
 
               return (
                 <TableRow key={batch.manufacturerId} className="hover:bg-slate-50 transition-colors">
@@ -65,36 +71,28 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
                   <TableCell className="text-slate-600">{batch.email}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {fulfillmentTypes.slice(0, 2).map((type, idx) => (
-                        <TooltipProvider key={idx}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge
-                                variant="secondary"
-                                className="bg-violet-50 text-violet-700 text-xs font-mono max-w-[200px] truncate cursor-help"
-                              >
-                                {type}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="font-mono text-xs">{type}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                      {exclusionLabels.slice(0, 2).map((label, idx) => (
+                        <Badge
+                          key={idx}
+                          variant="secondary"
+                          className="bg-violet-50 text-violet-700 text-xs max-w-[200px] truncate"
+                        >
+                          {label}
+                        </Badge>
                       ))}
-                      {fulfillmentTypes.length > 2 && (
+                      {exclusionLabels.length > 2 && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-xs cursor-help">
-                                +{fulfillmentTypes.length - 2}
+                                +{exclusionLabels.length - 2}
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
                               <div className="space-y-1">
-                                {fulfillmentTypes.slice(2).map((type, idx) => (
-                                  <p key={idx} className="font-mono text-xs">
-                                    {type}
+                                {exclusionLabels.slice(2).map((label, idx) => (
+                                  <p key={idx} className="text-xs">
+                                    {label}
                                   </p>
                                 ))}
                               </div>

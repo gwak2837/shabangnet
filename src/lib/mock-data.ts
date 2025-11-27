@@ -659,6 +659,244 @@ export const orders: Order[] = [
     createdAt: '2024-11-26T11:30:00',
     fulfillmentType: '일반택배',
   },
+  // ===== 지정일 제외 대상 주문들 =====
+  // 케이스 1: "지정일" 단독 - 농심식품
+  {
+    id: 'o30',
+    orderNumber: 'SB20241126030',
+    customerName: '김지정',
+    phone: '010-1111-0030',
+    address: '서울시 강동구 천호대로 1005',
+    productCode: 'NS-001',
+    productName: '신라면 멀티팩',
+    optionName: '5개입',
+    quantity: 3,
+    price: 7900,
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    status: 'pending',
+    createdAt: '2024-11-26T13:00:00',
+    fulfillmentType: '지정일',
+  },
+  // 케이스 2: "지정일 12/25" (날짜와 함께) - CJ제일제당
+  {
+    id: 'o31',
+    orderNumber: 'SB20241126031',
+    customerName: '박크리스',
+    phone: '010-2222-0031',
+    address: '서울시 서초구 반포대로 45',
+    productCode: 'CJ-102',
+    productName: '비비고 만두',
+    optionName: '1kg',
+    quantity: 2,
+    price: 12900,
+    manufacturerId: 'm2',
+    manufacturerName: 'CJ제일제당',
+    status: 'pending',
+    createdAt: '2024-11-26T13:15:00',
+    fulfillmentType: '지정일 12/25',
+  },
+  // 케이스 3: "지정일배송" (연속된 텍스트) - 오뚜기
+  {
+    id: 'o32',
+    orderNumber: 'SB20241126032',
+    customerName: '이배송',
+    phone: '010-3333-0032',
+    address: '경기도 안양시 만안구 안양로 100',
+    productCode: 'OT-202',
+    productName: '오뚜기 카레',
+    optionName: '100g',
+    quantity: 5,
+    price: 2500,
+    manufacturerId: 'm3',
+    manufacturerName: '오뚜기',
+    status: 'pending',
+    createdAt: '2024-11-26T13:30:00',
+    fulfillmentType: '지정일배송',
+  },
+  // 케이스 4: "지정일요청" - 동원F&B
+  {
+    id: 'o33',
+    orderNumber: 'SB20241126033',
+    customerName: '최요청',
+    phone: '010-4444-0033',
+    address: '부산시 사하구 낙동대로 550',
+    productCode: 'DW-302',
+    productName: '동원 리챔',
+    optionName: '200g',
+    quantity: 4,
+    price: 4500,
+    manufacturerId: 'm4',
+    manufacturerName: '동원F&B',
+    status: 'pending',
+    createdAt: '2024-11-26T13:45:00',
+    fulfillmentType: '지정일요청',
+  },
+  // 케이스 5: "희망지정일" - 풀무원
+  {
+    id: 'o34',
+    orderNumber: 'SB20241126034',
+    customerName: '정희망',
+    phone: '010-5555-0034',
+    address: '대구시 달서구 달구벌대로 1234',
+    productCode: 'PM-402',
+    productName: '풀무원 콩나물',
+    optionName: '200g',
+    quantity: 8,
+    price: 1500,
+    manufacturerId: 'm5',
+    manufacturerName: '풀무원',
+    status: 'pending',
+    createdAt: '2024-11-26T14:00:00',
+    fulfillmentType: '희망지정일',
+  },
+  // ===== 복합 케이스: 한 제조사에 여러 제외 사유 =====
+  // 케이스 6: 농심식품 - CJ온스타일 센터택배 (기존 패턴)
+  {
+    id: 'o35',
+    orderNumber: 'SB20241126035',
+    customerName: '강복합',
+    phone: '010-6666-0035',
+    address: '서울시 광진구 능동로 120',
+    productCode: 'NS-003',
+    productName: '너구리',
+    optionName: '5개입',
+    quantity: 2,
+    price: 6800,
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    status: 'pending',
+    createdAt: '2024-11-26T14:15:00',
+    fulfillmentType: '[30002002]주문_센터택배',
+  },
+  // 케이스 7: 농심식품에 지정일 추가 (같은 제조사에 여러 제외 사유)
+  {
+    id: 'o36',
+    orderNumber: 'SB20241126036',
+    customerName: '윤다중',
+    phone: '010-7777-0036',
+    address: '서울시 송파구 송파대로 111',
+    productCode: 'NS-002',
+    productName: '안성탕면',
+    optionName: '5개입',
+    quantity: 3,
+    price: 6500,
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    status: 'pending',
+    createdAt: '2024-11-26T14:30:00',
+    fulfillmentType: '지정일 12/31',
+  },
+  // ===== 복합 케이스: 동원F&B에 지정일 + 현대홈직택배 =====
+  // 케이스 8: 동원F&B - 지정일 추가
+  {
+    id: 'o37',
+    orderNumber: 'SB20241126037',
+    customerName: '임혼합',
+    phone: '010-8888-0037',
+    address: '인천시 부평구 부평대로 200',
+    productCode: 'DW-301',
+    productName: '동원참치 라이트',
+    optionName: '150g 4캔',
+    quantity: 2,
+    price: 12900,
+    manufacturerId: 'm4',
+    manufacturerName: '동원F&B',
+    status: 'pending',
+    createdAt: '2024-11-26T14:45:00',
+    fulfillmentType: '지정일',
+  },
+  // ===== 여러 제조사에 걸친 지정일 주문들 =====
+  // 케이스 9: 삼양식품 - 지정일
+  {
+    id: 'o38',
+    orderNumber: 'SB20241126038',
+    customerName: '한삼양',
+    phone: '010-9999-0038',
+    address: '광주시 북구 용봉로 77',
+    productCode: 'SY-001',
+    productName: '삼양라면',
+    optionName: '5개입',
+    quantity: 4,
+    price: 5500,
+    manufacturerId: 'm6',
+    manufacturerName: '삼양식품',
+    status: 'pending',
+    createdAt: '2024-11-26T15:00:00',
+    fulfillmentType: '지정일 01/01',
+  },
+  // 케이스 10: 해태제과 - 지정일
+  {
+    id: 'o39',
+    orderNumber: 'SB20241126039',
+    customerName: '오해태',
+    phone: '010-0000-0039',
+    address: '울산시 중구 번영로 500',
+    productCode: 'HT-001',
+    productName: '맛동산',
+    optionName: '300g',
+    quantity: 6,
+    price: 3200,
+    manufacturerId: 'm7',
+    manufacturerName: '해태제과',
+    status: 'pending',
+    createdAt: '2024-11-26T15:15:00',
+    fulfillmentType: '지정일배송요청',
+  },
+  // 케이스 11: 롯데푸드 - 지정일
+  {
+    id: 'o40',
+    orderNumber: 'SB20241126040',
+    customerName: '서롯데',
+    phone: '010-1010-0040',
+    address: '세종시 한누리대로 2130',
+    productCode: 'LF-001',
+    productName: '롯데햄 의성마늘',
+    optionName: '240g',
+    quantity: 3,
+    price: 6900,
+    manufacturerId: 'm8',
+    manufacturerName: '롯데푸드',
+    status: 'pending',
+    createdAt: '2024-11-26T15:30:00',
+    fulfillmentType: '지정일',
+  },
+  // 케이스 12: 청정원 - 지정일 (날짜 포함)
+  {
+    id: 'o41',
+    orderNumber: 'SB20241126041',
+    customerName: '노청정',
+    phone: '010-1111-0041',
+    address: '제주시 연동 292-20',
+    productCode: 'CJ-001',
+    productName: '청정원 순창 고추장',
+    optionName: '500g',
+    quantity: 2,
+    price: 8900,
+    manufacturerId: 'm9',
+    manufacturerName: '청정원',
+    status: 'pending',
+    createdAt: '2024-11-26T15:45:00',
+    fulfillmentType: '지정일 12/20',
+  },
+  // 케이스 13: 빙그레 - 지정일
+  {
+    id: 'o42',
+    orderNumber: 'SB20241126042',
+    customerName: '장빙그',
+    phone: '010-1212-0042',
+    address: '경기도 의정부시 호국로 1000',
+    productCode: 'BG-001',
+    productName: '바나나맛 우유',
+    optionName: '240ml 8개',
+    quantity: 5,
+    price: 9600,
+    manufacturerId: 'm10',
+    manufacturerName: '빙그레',
+    status: 'pending',
+    createdAt: '2024-11-26T16:00:00',
+    fulfillmentType: '지정일요청 12/24',
+  },
 ]
 
 // Mock recent uploads
@@ -727,6 +965,7 @@ export interface ExclusionPattern {
   pattern: string
   enabled: boolean
   description?: string
+  displayLabel?: string // 표시용 라벨 (없으면 pattern 그대로 표시)
 }
 
 export interface ExclusionSettings {
@@ -761,6 +1000,13 @@ export const exclusionSettings: ExclusionSettings = {
       enabled: true,
       description: '현대홈쇼핑 직택배',
     },
+    {
+      id: 'exc5',
+      pattern: '지정일',
+      enabled: true,
+      description: '지정일 배송 요청',
+      displayLabel: '지정일',
+    },
   ],
 }
 
@@ -771,6 +1017,24 @@ export function shouldExcludeFromEmail(fulfillmentType?: string): boolean {
   }
 
   return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
+}
+
+// 제외 사유 표시용 라벨 가져오기
+export function getExclusionLabel(fulfillmentType?: string): string | null {
+  if (!fulfillmentType) {
+    return null
+  }
+
+  const matchedPattern = exclusionSettings.patterns.find(
+    (p) => p.enabled && fulfillmentType.includes(p.pattern)
+  )
+
+  if (!matchedPattern) {
+    return null
+  }
+
+  // displayLabel이 있으면 사용, 없으면 description, 그것도 없으면 원본 fulfillmentType
+  return matchedPattern.displayLabel || matchedPattern.description || fulfillmentType
 }
 
 // Order status for batch processing
