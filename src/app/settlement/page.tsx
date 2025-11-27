@@ -10,6 +10,7 @@ import { SettlementFilters, SettlementSummary, SettlementTable } from '@/compone
 import { Button } from '@/components/ui/button'
 import { useManufacturers, useSettlement } from '@/hooks'
 import { api } from '@/lib/api'
+import { downloadExcel } from '@/lib/excel-client'
 
 export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()
@@ -56,7 +57,6 @@ export default function SettlementPage() {
   const handleDownload = async () => {
     if (filteredOrders.length === 0 || !searchParams) return
 
-    const XLSX = await import('xlsx')
     const { data, summary: downloadSummary } = await api.settlement.getSettlementExcelData(searchParams)
 
     // Add summary row
@@ -72,25 +72,12 @@ export default function SettlementPage() {
       배송지: '',
     } as Record<string, unknown>)
 
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '정산내역')
-
-    // Set column widths
-    worksheet['!cols'] = [
-      { wch: 20 }, // 주문번호
-      { wch: 12 }, // 발주일
-      { wch: 30 }, // 상품명
-      { wch: 15 }, // 옵션
-      { wch: 8 }, // 수량
-      { wch: 12 }, // 원가
-      { wch: 12 }, // 총원가
-      { wch: 10 }, // 고객명
-      { wch: 40 }, // 배송지
-    ]
-
     const fileName = `정산서_${selectedManufacturer?.name}_${summary.period.replace(/[^0-9]/g, '')}.xlsx`
-    XLSX.writeFile(workbook, fileName)
+    await downloadExcel(data, {
+      fileName,
+      sheetName: '정산내역',
+      columnWidths: [20, 12, 30, 15, 8, 12, 12, 10, 40],
+    })
   }
 
   return (

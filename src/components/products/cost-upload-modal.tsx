@@ -7,6 +7,7 @@ import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { downloadExcel, parseExcelToJson } from '@/lib/excel-client'
 import { formatCurrency } from '@/lib/mock-data'
 
 interface CostUploadData {
@@ -36,17 +37,12 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
     try {
       // Parse Excel file
-      const XLSX = await import('xlsx')
-      const data = await file.arrayBuffer()
-      const workbook = XLSX.read(data)
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      const jsonData = XLSX.utils.sheet_to_json<{
+      const jsonData = await parseExcelToJson<{
         상품코드?: string
         productCode?: string
         원가?: number
         cost?: number
-      }>(worksheet)
+      }>(file)
 
       // Transform data
       const parsedData: CostUploadData[] = jsonData
@@ -90,16 +86,15 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
   })
 
   const handleDownloadTemplate = async () => {
-    const XLSX = await import('xlsx')
     const templateData = [
       { 상품코드: 'NS-001', 원가: 5500 },
       { 상품코드: 'CJ-101', 원가: 11000 },
       { 상품코드: 'OT-201', 원가: 3100 },
     ]
-    const worksheet = XLSX.utils.json_to_sheet(templateData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '원가등록')
-    XLSX.writeFile(workbook, '원가_일괄등록_템플릿.xlsx')
+    await downloadExcel(templateData, {
+      fileName: '원가_일괄등록_템플릿.xlsx',
+      sheetName: '원가등록',
+    })
   }
 
   const handleApply = () => {
