@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar, Search, Filter, X } from 'lucide-react'
+import { Calendar, Filter, Search, X } from 'lucide-react'
+import { useState } from 'react'
 
 const manufacturers = [
   { id: 'all', name: '전체 제조사' },
@@ -39,10 +39,9 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [search, setSearch] = useState('')
-
   const hasActiveFilters = manufacturer !== 'all' || status !== 'all' || dateFrom || dateTo || search
 
-  const handleClearFilters = () => {
+  function handleClearFilters() {
     setManufacturer('all')
     setStatus('all')
     setDateFrom('')

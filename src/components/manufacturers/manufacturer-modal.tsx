@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { type Manufacturer } from '@/lib/mock-data'
 import { Building2, Loader2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface ManufacturerModalProps {
   open: boolean
@@ -22,41 +22,34 @@ interface ManufacturerModalProps {
   onSave: (data: Partial<Manufacturer>) => void
 }
 
+function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
+  return {
+    name: manufacturer?.name ?? '',
+    contactName: manufacturer?.contactName ?? '',
+    email: manufacturer?.email ?? '',
+    ccEmail: manufacturer?.ccEmail ?? '',
+    phone: manufacturer?.phone ?? '',
+  }
+}
+
 export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: ManufacturerModalProps) {
   const [isSaving, setIsSaving] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    contactName: '',
-    email: '',
-    ccEmail: '',
-    phone: '',
-  })
+  const [formData, setFormData] = useState(() => getFormDataFromManufacturer(manufacturer))
   const [errors, setErrors] = useState<Record<string, string>>({})
-
+  const [prevManufacturerId, setPrevManufacturerId] = useState(manufacturer?.id)
+  const [prevOpen, setPrevOpen] = useState(open)
   const isEdit = !!manufacturer
 
-  useEffect(() => {
-    if (manufacturer) {
-      setFormData({
-        name: manufacturer.name,
-        contactName: manufacturer.contactName,
-        email: manufacturer.email,
-        ccEmail: manufacturer.ccEmail || '',
-        phone: manufacturer.phone,
-      })
-    } else {
-      setFormData({
-        name: '',
-        contactName: '',
-        email: '',
-        ccEmail: '',
-        phone: '',
-      })
-    }
+  if (manufacturer?.id !== prevManufacturerId || (open && !prevOpen)) {
+    setPrevManufacturerId(manufacturer?.id)
+    setPrevOpen(open)
+    setFormData(getFormDataFromManufacturer(manufacturer))
     setErrors({})
-  }, [manufacturer, open])
+  } else if (open !== prevOpen) {
+    setPrevOpen(open)
+  }
 
-  const validate = () => {
+  function validate() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) {
@@ -75,7 +68,7 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer, onSave }: 
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!validate()) return

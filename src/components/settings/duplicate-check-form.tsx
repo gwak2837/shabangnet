@@ -1,24 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
-  type DuplicateCheckSettings,
   type DuplicateCheckPeriod,
+  type DuplicateCheckSettings,
   duplicateCheckSettings as initialSettings,
 } from '@/lib/mock-data'
 import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
 
 export function DuplicateCheckForm() {
   const [settings, setSettings] = useState<DuplicateCheckSettings>(initialSettings)
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const handleSave = async () => {
+  async function handleSave() {
     setIsSaving(true)
     setSaved(false)
 
@@ -101,7 +101,7 @@ export function DuplicateCheckForm() {
 
         {/* Info Box */}
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div className="text-sm text-amber-800">
             <p className="font-medium">중복 감지 시 동작</p>
             <p className="mt-1">

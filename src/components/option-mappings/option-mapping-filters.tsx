@@ -1,10 +1,10 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { manufacturers } from '@/lib/mock-data'
-import { Search, X, Plus } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 
 interface OptionMappingFiltersProps {
   searchQuery: string
@@ -23,7 +23,7 @@ export function OptionMappingFilters({
 }: OptionMappingFiltersProps) {
   const hasActiveFilters = searchQuery || selectedManufacturer !== 'all'
 
-  const handleClear = () => {
+  function handleClear() {
     onSearchChange('')
     onManufacturerChange('all')
   }
@@ -75,4 +75,3 @@ export function OptionMappingFilters({
     </div>
   )
 }
-

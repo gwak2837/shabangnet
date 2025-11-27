@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,12 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { type OptionManufacturerMapping, manufacturers } from '@/lib/mock-data'
-import { Settings2, Loader2 } from 'lucide-react'
+import { Loader2, Settings2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface OptionMappingModalProps {
   open: boolean
@@ -23,35 +23,32 @@ interface OptionMappingModalProps {
   onSave: (data: Omit<OptionManufacturerMapping, 'id' | 'createdAt' | 'updatedAt'>) => void
 }
 
+function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
+  return {
+    productCode: mapping?.productCode ?? '',
+    optionName: mapping?.optionName ?? '',
+    manufacturerId: mapping?.manufacturerId ?? '',
+  }
+}
+
 export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: OptionMappingModalProps) {
   const [isSaving, setIsSaving] = useState(false)
-  const [formData, setFormData] = useState({
-    productCode: '',
-    optionName: '',
-    manufacturerId: '',
-  })
+  const [formData, setFormData] = useState(() => getFormDataFromMapping(mapping))
   const [errors, setErrors] = useState<Record<string, string>>({})
-
+  const [prevMappingId, setPrevMappingId] = useState(mapping?.id)
+  const [prevOpen, setPrevOpen] = useState(open)
   const isEdit = !!mapping
 
-  useEffect(() => {
-    if (mapping) {
-      setFormData({
-        productCode: mapping.productCode,
-        optionName: mapping.optionName,
-        manufacturerId: mapping.manufacturerId,
-      })
-    } else {
-      setFormData({
-        productCode: '',
-        optionName: '',
-        manufacturerId: '',
-      })
-    }
+  if (mapping?.id !== prevMappingId || (open && !prevOpen)) {
+    setPrevMappingId(mapping?.id)
+    setPrevOpen(open)
+    setFormData(getFormDataFromMapping(mapping))
     setErrors({})
-  }, [mapping, open])
+  } else if (open !== prevOpen) {
+    setPrevOpen(open)
+  }
 
-  const validate = () => {
+  function validate() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.productCode.trim()) {
@@ -68,7 +65,7 @@ export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: Opti
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!validate()) return
@@ -135,16 +132,17 @@ export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: Opti
               className={errors.optionName ? 'border-rose-500' : ''}
             />
             {errors.optionName && <p className="text-xs text-rose-500">{errors.optionName}</p>}
-            <p className="text-xs text-slate-500">
-              사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력하세요
-            </p>
+            <p className="text-xs text-slate-500">사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력하세요</p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="manufacturerId">
               제조사 <span className="text-rose-500">*</span>
             </Label>
-            <Select value={formData.manufacturerId} onValueChange={(v) => setFormData({ ...formData, manufacturerId: v })}>
+            <Select
+              value={formData.manufacturerId}
+              onValueChange={(v) => setFormData({ ...formData, manufacturerId: v })}
+            >
               <SelectTrigger className={errors.manufacturerId ? 'border-rose-500' : ''}>
                 <SelectValue placeholder="제조사 선택" />
               </SelectTrigger>
@@ -190,4 +188,3 @@ export function OptionMappingModal({ open, onOpenChange, mapping, onSave }: Opti
     </Dialog>
   )
 }
-

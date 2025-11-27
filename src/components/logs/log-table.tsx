@@ -1,18 +1,19 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data'
-import { Eye, CheckCircle2, XCircle, Mail, FileSpreadsheet } from 'lucide-react'
+import { type SendLog, formatCurrency, formatDateTime } from '@/lib/mock-data'
+import { CheckCircle2, Eye, FileSpreadsheet, Mail, XCircle } from 'lucide-react'
 
 interface LogTableProps {
   logs: SendLog[]
   onViewDetail: (log: SendLog) => void
+  onDownloadExcel?: (log: SendLog) => void
 }
 
-export function LogTable({ logs, onViewDetail }: LogTableProps) {
+export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps) {
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
       <CardContent className="p-0">
@@ -29,7 +30,7 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
                 금액
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상태</TableHead>
-              <TableHead className="w-12" />
+              <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,14 +69,28 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onViewDetail(log)}
-                    className="h-8 w-8 text-slate-400 hover:text-slate-600"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {onDownloadExcel && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDownloadExcel(log)}
+                        className="h-8 w-8 text-slate-400 hover:text-emerald-600"
+                        title="엑셀 다운로드"
+                      >
+                        <FileSpreadsheet className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onViewDetail(log)}
+                      className="h-8 w-8 text-slate-400 hover:text-slate-600"
+                      title="상세보기"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

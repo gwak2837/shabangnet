@@ -1,12 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +10,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { type Manufacturer, manufacturers, formatDate } from '@/lib/mock-data'
-import { MoreHorizontal, Pencil, Trash2, Search, Plus, Mail, Phone } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatDate, type Manufacturer, manufacturers } from '@/lib/mock-data'
+import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface ManufacturerTableProps {
   onEdit: (manufacturer: Manufacturer) => void
@@ -36,7 +36,7 @@ export function ManufacturerTable({ onEdit, onAdd }: ManufacturerTableProps) {
       m.email.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleDelete = () => {
+  function handleDelete() {
     // In real app, this would call API to delete
     console.log('Delete manufacturer:', deleteTarget?.id)
     setDeleteTarget(null)

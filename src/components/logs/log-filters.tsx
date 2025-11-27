@@ -29,7 +29,7 @@ export function LogFilters({
 }: LogFiltersProps) {
   const hasActiveFilters = dateFrom || dateTo || status !== 'all' || manufacturer !== 'all'
 
-  const handleClear = () => {
+  function handleClear() {
     onDateFromChange('')
     onDateToChange('')
     onStatusChange('all')

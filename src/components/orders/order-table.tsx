@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   orderBatches as defaultOrderBatches,
   formatCurrency,
@@ -15,7 +14,8 @@ import {
   getStatusLabel,
   type OrderBatch,
 } from '@/lib/mock-data'
-import { MoreHorizontal, Eye, Download, Mail, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Download, Eye, Mail, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
 
 interface OrderTableProps {
   batches?: OrderBatch[]
@@ -27,8 +27,10 @@ interface OrderTableProps {
 export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
   const orderBatches = batches ?? defaultOrderBatches
   const [selectedBatches, setSelectedBatches] = useState<string[]>([])
+  const isAllSelected = selectedBatches.length === orderBatches.length
+  const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
 
-  const handleSelectAll = (checked: boolean) => {
+  function handleSelectAll(checked: boolean) {
     if (checked) {
       setSelectedBatches(orderBatches.map((b) => b.manufacturerId))
     } else {
@@ -36,16 +38,13 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
     }
   }
 
-  const handleSelectBatch = (manufacturerId: string, checked: boolean) => {
+  function handleSelectBatch(manufacturerId: string, checked: boolean) {
     if (checked) {
       setSelectedBatches([...selectedBatches, manufacturerId])
     } else {
       setSelectedBatches(selectedBatches.filter((id) => id !== manufacturerId))
     }
   }
-
-  const isAllSelected = selectedBatches.length === orderBatches.length
-  const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">

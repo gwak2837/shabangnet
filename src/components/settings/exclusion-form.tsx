@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
-import { type ExclusionSettings, type ExclusionPattern, exclusionSettings as initialSettings } from '@/lib/mock-data'
-import { CheckCircle2, Filter, Loader2, Plus, Trash2, X } from 'lucide-react'
+import { type ExclusionPattern, type ExclusionSettings, exclusionSettings as initialSettings } from '@/lib/mock-data'
+import { CheckCircle2, Filter, Loader2, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 export function ExclusionForm() {
   const [settings, setSettings] = useState<ExclusionSettings>(initialSettings)
@@ -16,8 +16,9 @@ export function ExclusionForm() {
   const [newDescription, setNewDescription] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const enabledCount = settings.patterns.filter((p) => p.enabled).length
 
-  const handleSave = async () => {
+  async function handleSave() {
     setIsSaving(true)
     setSaved(false)
 
@@ -31,7 +32,7 @@ export function ExclusionForm() {
     setTimeout(() => setSaved(false), 3000)
   }
 
-  const handleAddPattern = () => {
+  function handleAddPattern() {
     if (!newPattern.trim()) return
 
     const newPatternObj: ExclusionPattern = {
@@ -50,21 +51,19 @@ export function ExclusionForm() {
     setNewDescription('')
   }
 
-  const handleRemovePattern = (id: string) => {
+  function handleRemovePattern(id: string) {
     setSettings({
       ...settings,
       patterns: settings.patterns.filter((p) => p.id !== id),
     })
   }
 
-  const handleTogglePattern = (id: string, enabled: boolean) => {
+  function handleTogglePattern(id: string, enabled: boolean) {
     setSettings({
       ...settings,
       patterns: settings.patterns.map((p) => (p.id === id ? { ...p, enabled } : p)),
     })
   }
-
-  const enabledCount = settings.patterns.filter((p) => p.enabled).length
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
@@ -174,7 +173,7 @@ export function ExclusionForm() {
 
         {/* Info Box */}
         <div className="flex items-start gap-3 rounded-lg border border-violet-200 bg-violet-50 p-4">
-          <Filter className="mt-0.5 h-5 w-5 flex-shrink-0 text-violet-600" />
+          <Filter className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
           <div className="text-sm text-violet-800">
             <p className="font-medium">발송 제외 동작</p>
             <p className="mt-1">

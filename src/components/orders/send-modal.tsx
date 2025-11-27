@@ -63,22 +63,21 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     return null
   }
 
+  const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0
+
   // 모달 닫힐 때 사유 초기화를 위한 핸들러
-  const handleOpenChange = (newOpen: boolean) => {
+  function handleOpenChange(newOpen: boolean) {
     if (!newOpen) {
       setDuplicateReason('')
     }
     onOpenChange(newOpen)
   }
 
-  // 중복 감지 시 사유 입력 필수
-  const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0
-
-  const handleSend = async () => {
+  async function handleSend() {
     if (!canSend) return
 
-    setIsSending(true)
     // Simulate sending email
+    setIsSending(true)
     await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsSending(false)
     setIsSent(true)
@@ -91,12 +90,12 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     }, 2000)
   }
 
+  const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
+
   const emailSubject = `[다온에프앤씨 발주서]_${batch.manufacturerName}_${new Date()
     .toISOString()
     .slice(0, 10)
     .replace(/-/g, '')}`
-
-  const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
 
   if (isSent) {
     return (
@@ -185,14 +184,16 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
             {showOrderDetails && (
               <div className="mt-3 max-h-48 overflow-y-auto rounded-md border border-slate-100 bg-slate-50">
                 <div className="divide-y divide-slate-100">
-                  {batch.orders.map((order, idx) => (
+                  {batch.orders.map((order) => (
                     <div key={order.id} className="px-3 py-2 text-xs">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-700 truncate">
                             {formatProductNameWithOption(order.productName, order.optionName)}
                           </p>
-                          <p className="text-slate-500 truncate">{order.customerName} · {order.address}</p>
+                          <p className="text-slate-500 truncate">
+                            {order.customerName} · {order.address}
+                          </p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="font-medium text-slate-700">{order.quantity}개</p>

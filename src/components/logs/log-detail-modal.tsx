@@ -1,10 +1,10 @@
 'use client'
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { type SendLog, formatDateTime, formatCurrency } from '@/lib/mock-data'
-import { Mail, FileSpreadsheet, CheckCircle2, XCircle, User, Clock, AlertTriangle } from 'lucide-react'
+import { type SendLog, formatCurrency, formatDateTime } from '@/lib/mock-data'
+import { AlertTriangle, CheckCircle2, Clock, FileSpreadsheet, Mail, User, XCircle } from 'lucide-react'
 
 interface LogDetailModalProps {
   open: boolean
@@ -13,7 +13,9 @@ interface LogDetailModalProps {
 }
 
 export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps) {
-  if (!log) return null
+  if (!log) {
+    return null
+  }
 
   const isSuccess = log.status === 'success'
 

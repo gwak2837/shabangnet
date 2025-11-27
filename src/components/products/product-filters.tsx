@@ -21,7 +21,7 @@ export function ProductFilters({
 }: ProductFiltersProps) {
   const hasActiveFilters = searchQuery || showUnmappedOnly
 
-  const handleClear = () => {
+  function handleClear() {
     onSearchChange('')
     onShowUnmappedChange(false)
   }

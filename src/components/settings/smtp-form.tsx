@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { type SMTPSettings, smtpSettings as initialSettings } from '@/lib/mock-data'
-import { Mail, Server, Lock, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server } from 'lucide-react'
+import { useState } from 'react'
 
 export function SMTPForm() {
   const [settings, setSettings] = useState<SMTPSettings>(initialSettings)
@@ -16,7 +16,7 @@ export function SMTPForm() {
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
   const [saved, setSaved] = useState(false)
 
-  const handleSave = async () => {
+  async function handleSave() {
     setIsSaving(true)
     setSaved(false)
 
@@ -30,7 +30,7 @@ export function SMTPForm() {
     setTimeout(() => setSaved(false), 3000)
   }
 
-  const handleTest = async () => {
+  async function handleTest() {
     setIsTesting(true)
     setTestResult(null)
 
