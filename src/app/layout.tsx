@@ -1,3 +1,5 @@
+import { getOrigin } from '@/lib/config'
+import { SITE_CONFIG } from '@/lib/constants'
 import { QueryProvider } from '@/providers/query-provider'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
@@ -20,8 +22,49 @@ const notoSansKr = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-  title: '사방넷 발주 자동화',
-  description: '주문 취합 및 제조사별 발주 자동화 시스템',
+  title: {
+    default: SITE_CONFIG.name,
+    template: `%s | ${SITE_CONFIG.shortName}`,
+  },
+  description: SITE_CONFIG.description,
+  metadataBase: new URL(getOrigin()),
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+  openGraph: {
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+    url: SITE_CONFIG.url,
+    siteName: SITE_CONFIG.shortName,
+    locale: SITE_CONFIG.locale,
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: SITE_CONFIG.name,
+      },
+    ],
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: SITE_CONFIG.shortName,
+  },
 }
 
 interface RootLayoutProps {
@@ -31,6 +74,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ko">
+      <head>
+        <meta name="apple-mobile-web-app-title" content="사방넷" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${notoSansKr.variable} font-sans antialiased`}>
         <QueryProvider>{children}</QueryProvider>
       </body>
