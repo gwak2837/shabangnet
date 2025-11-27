@@ -18,10 +18,24 @@ import {
   duplicateCheckSettings,
   formatCurrency,
   formatDateTime,
+  formatProductNameWithOption,
   getDaysDifference,
   type OrderBatch,
 } from '@/lib/mock-data'
-import { AlertTriangle, Calendar, CheckCircle2, FileSpreadsheet, Loader2, Mail, MapPin, Send, User } from 'lucide-react'
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileSpreadsheet,
+  Loader2,
+  Mail,
+  MapPin,
+  Package,
+  Send,
+  User,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 interface SendModalProps {
@@ -34,6 +48,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
   const [isSending, setIsSending] = useState(false)
   const [isSent, setIsSent] = useState(false)
   const [duplicateReason, setDuplicateReason] = useState('')
+  const [showOrderDetails, setShowOrderDetails] = useState(false)
 
   // 중복 체크 결과를 useMemo로 계산 (렌더링 시점에 파생)
   const duplicateCheck = useMemo<DuplicateCheckResult | null>(() => {
@@ -154,6 +169,41 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <p className="font-semibold text-slate-900">{formatCurrency(batch.totalAmount)}</p>
               </div>
             </div>
+
+            {/* Order Details Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowOrderDetails(!showOrderDetails)}
+              className="mt-3 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+            >
+              <Package className="h-4 w-4" />
+              주문 상세 {showOrderDetails ? '접기' : '보기'}
+              {showOrderDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+
+            {/* Order Details List */}
+            {showOrderDetails && (
+              <div className="mt-3 max-h-48 overflow-y-auto rounded-md border border-slate-100 bg-slate-50">
+                <div className="divide-y divide-slate-100">
+                  {batch.orders.map((order, idx) => (
+                    <div key={order.id} className="px-3 py-2 text-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-700 truncate">
+                            {formatProductNameWithOption(order.productName, order.optionName)}
+                          </p>
+                          <p className="text-slate-500 truncate">{order.customerName} · {order.address}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-medium text-slate-700">{order.quantity}개</p>
+                          <p className="text-slate-500">{formatCurrency(order.price * order.quantity)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Duplicate Warning */}

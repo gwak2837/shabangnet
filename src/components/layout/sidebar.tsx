@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Upload, FileSpreadsheet, Building2, Package, FileText, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Upload, FileSpreadsheet, Building2, Package, FileText, Settings, LogOut, Settings2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -35,6 +35,11 @@ const managementNavItems = [
     title: '상품 매핑',
     href: '/products',
     icon: Package,
+  },
+  {
+    title: '옵션 매핑',
+    href: '/option-mappings',
+    icon: Settings2,
   },
   {
     title: '발송 로그',

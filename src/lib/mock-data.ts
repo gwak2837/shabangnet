@@ -902,6 +902,128 @@ export interface Product {
   updatedAt: string
 }
 
+// 옵션-제조사 매핑 인터페이스
+export interface OptionManufacturerMapping {
+  id: string
+  productCode: string // 상품코드
+  optionName: string // 옵션명
+  manufacturerId: string // 매핑된 제조사 ID
+  manufacturerName: string // 제조사명 (표시용)
+  createdAt: string
+  updatedAt: string
+}
+
+// 옵션-제조사 매핑 Mock 데이터
+export const optionManufacturerMappings: OptionManufacturerMapping[] = [
+  {
+    id: 'om1',
+    productCode: 'OL-001',
+    optionName: '500ml x 2병',
+    manufacturerId: 'm3',
+    manufacturerName: '오뚜기',
+    createdAt: '2024-11-01T10:00:00',
+    updatedAt: '2024-11-20T14:30:00',
+  },
+  {
+    id: 'om2',
+    productCode: 'OL-001',
+    optionName: '1L x 1병',
+    manufacturerId: 'm4',
+    manufacturerName: '동원F&B',
+    createdAt: '2024-11-01T10:00:00',
+    updatedAt: '2024-11-20T14:30:00',
+  },
+  {
+    id: 'om3',
+    productCode: 'HW-001',
+    optionName: '등심 + 채끝',
+    manufacturerId: 'm4',
+    manufacturerName: '동원F&B',
+    createdAt: '2024-11-05T09:00:00',
+    updatedAt: '2024-11-22T11:00:00',
+  },
+  {
+    id: 'om4',
+    productCode: 'HW-001',
+    optionName: '불고기 세트',
+    manufacturerId: 'm5',
+    manufacturerName: '풀무원',
+    createdAt: '2024-11-05T09:00:00',
+    updatedAt: '2024-11-22T11:00:00',
+  },
+  {
+    id: 'om5',
+    productCode: 'NS-001',
+    optionName: '10개입',
+    manufacturerId: 'm1',
+    manufacturerName: '농심식품',
+    createdAt: '2024-11-10T14:00:00',
+    updatedAt: '2024-11-25T09:00:00',
+  },
+  {
+    id: 'om6',
+    productCode: 'CJ-101',
+    optionName: '24개입',
+    manufacturerId: 'm2',
+    manufacturerName: 'CJ제일제당',
+    createdAt: '2024-11-12T11:00:00',
+    updatedAt: '2024-11-24T16:00:00',
+  },
+]
+
+// 빈 옵션 판별 헬퍼 함수
+// "없음", "없음 [1]", "00001(없음) [1]" 등의 패턴 체크
+export function isEmptyOption(optionName: string | undefined | null): boolean {
+  if (!optionName) return true
+  const normalized = optionName.trim().toLowerCase()
+  // 빈 옵션 패턴들
+  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
+  return emptyPatterns.some((pattern) => pattern.test(normalized))
+}
+
+// 상품명 + 옵션명 조합 헬퍼 함수
+// 빈 옵션이면 상품명만, 아니면 "상품명 옵션명" 형식
+export function formatProductNameWithOption(productName: string, optionName: string | undefined | null): string {
+  if (isEmptyOption(optionName)) {
+    return productName
+  }
+  return `${productName} ${optionName}`
+}
+
+// 제조사 결정 함수 (우선순위: 옵션매핑 → 상품매핑 → null)
+export function getManufacturerByProductAndOption(
+  productCode: string,
+  optionName: string | undefined | null,
+): { manufacturerId: string | null; manufacturerName: string | null } {
+  // 1. 옵션 매핑 테이블에서 (상품코드 + 옵션) 조합 검색
+  if (optionName && !isEmptyOption(optionName)) {
+    const optionMapping = optionManufacturerMappings.find(
+      (m) => m.productCode === productCode && m.optionName === optionName,
+    )
+    if (optionMapping) {
+      return {
+        manufacturerId: optionMapping.manufacturerId,
+        manufacturerName: optionMapping.manufacturerName,
+      }
+    }
+  }
+
+  // 2. 기존 상품-제조사 매핑 사용
+  const product = products.find((p) => p.productCode === productCode)
+  if (product && product.manufacturerId) {
+    return {
+      manufacturerId: product.manufacturerId,
+      manufacturerName: product.manufacturerName,
+    }
+  }
+
+  // 3. 매핑 없음
+  return {
+    manufacturerId: null,
+    manufacturerName: null,
+  }
+}
+
 export const products: Product[] = [
   {
     id: 'p1',
