@@ -1,10 +1,5 @@
 @import 'tailwindcss';
 
-/* Enable light-dark() function */
-:root {
-  color-scheme: light dark;
-}
-
 @theme inline {
   /* Typography */
   --font-sans: var(--font-geist-sans);
@@ -204,7 +199,10 @@
   --color-yellow-950: light-dark(oklch(0.286 0.066 53.813), oklch(0.95 0.04 54));
 }
 
-/* Base Styles */
+:root {
+  color-scheme: light dark;
+}
+
 * {
   border-color: var(--color-border);
 }
@@ -217,45 +215,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar - Apple Style */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: oklch(0.8 0 0);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0 0);
-}
-
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb {
-    background: oklch(0.35 0 0);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.45 0 0);
-  }
-}
-
-/* Smooth transitions globally */
-button,
-a,
-input,
-select,
-textarea {
-  transition: all 150ms ease;
-}
-
-/* Focus styles - Apple inspired */
 :focus-visible {
-  outline: 2px solid oklch(0.59 0.2 255);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
