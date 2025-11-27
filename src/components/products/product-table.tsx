@@ -1,20 +1,21 @@
 'use client'
 
+import { AlertCircle, Check, Package, Pencil } from 'lucide-react'
+import { useState } from 'react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { type Product, type Manufacturer, formatCurrency, formatDate } from '@/lib/mock-data'
-import { AlertCircle, Check, Package, Pencil } from 'lucide-react'
-import { useState } from 'react'
+import { formatCurrency, formatDate, type Manufacturer, type Product } from '@/lib/mock-data'
 
 interface ProductTableProps {
-  products: Product[]
   manufacturers: Manufacturer[]
-  onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void
   onUpdateCost?: (productId: string, cost: number) => void
+  onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void
+  products: Product[]
 }
 
 export function ProductTable({ products, manufacturers, onUpdateManufacturer, onUpdateCost }: ProductTableProps) {
@@ -76,8 +77,8 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
 
               return (
                 <TableRow
-                  key={product.id}
                   className={`hover:bg-slate-50 transition-colors ${isUnmapped ? 'bg-amber-50/50' : ''}`}
+                  key={product.id}
                 >
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -95,13 +96,13 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                   <TableCell className="text-right">
                     {editingCostProductId === product.id ? (
                       <Input
-                        type="number"
-                        value={costInputValue}
+                        autoFocus
+                        className="w-24 h-8 text-right"
+                        onBlur={() => handleCostSave(product.id)}
                         onChange={(e) => setCostInputValue(e.target.value)}
                         onKeyDown={(e) => handleCostKeyDown(e, product.id)}
-                        onBlur={() => handleCostSave(product.id)}
-                        className="w-24 h-8 text-right"
-                        autoFocus
+                        type="number"
+                        value={costInputValue}
                       />
                     ) : (
                       <div
@@ -137,10 +138,10 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                       </Select>
                     ) : isUnmapped ? (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingProductId(product.id)}
                         className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                        onClick={() => setEditingProductId(product.id)}
+                        size="sm"
+                        variant="outline"
                       >
                         <AlertCircle className="h-4 w-4" />
                         매핑 필요
@@ -150,7 +151,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                         className="flex items-center gap-2 cursor-pointer group"
                         onClick={() => setEditingProductId(product.id)}
                       >
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 group-hover:bg-slate-200">
+                        <Badge className="bg-slate-100 text-slate-700 group-hover:bg-slate-200" variant="secondary">
                           {product.manufacturerName}
                         </Badge>
                         <Check className="h-4 w-4 text-emerald-500" />
@@ -163,7 +164,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
             })}
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-slate-500">
+                <TableCell className="h-32 text-center text-slate-500" colSpan={7}>
                   상품이 없습니다.
                 </TableCell>
               </TableRow>

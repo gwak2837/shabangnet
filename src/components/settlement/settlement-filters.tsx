@@ -1,26 +1,27 @@
 'use client'
 
+import { Calendar, Search } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type Manufacturer } from '@/lib/mock-data'
-import { Calendar, Search } from 'lucide-react'
 
 interface SettlementFiltersProps {
-  manufacturers: Manufacturer[]
-  selectedManufacturerId: string
-  onManufacturerChange: (id: string) => void
-  periodType: 'month' | 'range'
-  onPeriodTypeChange: (type: 'month' | 'range') => void
-  selectedMonth: string // YYYY-MM format
-  onMonthChange: (month: string) => void
-  startDate: string // YYYY-MM-DD format
   endDate: string
-  onStartDateChange: (date: string) => void
+  manufacturers: Manufacturer[]
   onEndDateChange: (date: string) => void
+  onManufacturerChange: (id: string) => void
+  onMonthChange: (month: string) => void
+  onPeriodTypeChange: (type: 'month' | 'range') => void
   onSearch: () => void
+  onStartDateChange: (date: string) => void
+  periodType: 'month' | 'range'
+  selectedManufacturerId: string
+  selectedMonth: string // YYYY-MM format
+  startDate: string // YYYY-MM-DD format
 }
 
 export function SettlementFilters({
@@ -42,7 +43,7 @@ export function SettlementFilters({
       {/* Manufacturer Select */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-slate-700">제조사 선택</Label>
-        <Select value={selectedManufacturerId} onValueChange={onManufacturerChange}>
+        <Select onValueChange={onManufacturerChange} value={selectedManufacturerId}>
           <SelectTrigger className="w-full md:w-[300px]">
             <SelectValue placeholder="제조사를 선택하세요" />
           </SelectTrigger>
@@ -60,7 +61,7 @@ export function SettlementFilters({
       <div className="space-y-3">
         <Label className="text-sm font-medium text-slate-700">기간 선택</Label>
 
-        <Tabs value={periodType} onValueChange={(v) => onPeriodTypeChange(v as 'month' | 'range')}>
+        <Tabs onValueChange={(v) => onPeriodTypeChange(v as 'month' | 'range')} value={periodType}>
           <TabsList className="grid w-full max-w-[300px] grid-cols-2">
             <TabsTrigger value="month">월 선택</TabsTrigger>
             <TabsTrigger value="range">기간 지정</TabsTrigger>
@@ -71,34 +72,34 @@ export function SettlementFilters({
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-400" />
             <Input
+              className="w-[200px]"
+              onChange={(e) => onMonthChange(e.target.value)}
               type="month"
               value={selectedMonth}
-              onChange={(e) => onMonthChange(e.target.value)}
-              className="w-[200px]"
             />
           </div>
         ) : (
           <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-4 w-4 text-slate-400" />
             <Input
+              className="w-[160px]"
+              onChange={(e) => onStartDateChange(e.target.value)}
               type="date"
               value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-              className="w-[160px]"
             />
             <span className="text-slate-500">~</span>
             <Input
+              className="w-[160px]"
+              onChange={(e) => onEndDateChange(e.target.value)}
               type="date"
               value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-              className="w-[160px]"
             />
           </div>
         )}
       </div>
 
       {/* Search Button */}
-      <Button onClick={onSearch} disabled={!selectedManufacturerId} className="gap-2">
+      <Button className="gap-2" disabled={!selectedManufacturerId} onClick={onSearch}>
         <Search className="h-4 w-4" />
         조회
       </Button>

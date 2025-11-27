@@ -1,18 +1,20 @@
 'use client'
 
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+
+import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/lib/mock-data'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/lib/mock-data'
-import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
-import { useState } from 'react'
 
 interface DuplicateCheckFormProps {
-  settings?: DuplicateCheckSettings
-  onSave: (data: Partial<DuplicateCheckSettings>) => void
   isSaving?: boolean
+  onSave: (data: Partial<DuplicateCheckSettings>) => void
+  settings?: DuplicateCheckSettings
 }
 
 const defaultSettings: DuplicateCheckSettings = {
@@ -62,7 +64,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
           <div className="space-y-0.5">
-            <Label htmlFor="duplicate-check-enabled" className="text-base">
+            <Label className="text-base" htmlFor="duplicate-check-enabled">
               중복 발주 체크 활성화
             </Label>
             <p className="text-sm text-slate-500">
@@ -70,8 +72,8 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
             </p>
           </div>
           <Switch
-            id="duplicate-check-enabled"
             checked={formData.enabled}
+            id="duplicate-check-enabled"
             onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
           />
         </div>
@@ -80,16 +82,16 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
         <div className="space-y-3">
           <Label htmlFor="duplicate-check-period">중복 체크 기간</Label>
           <Select
-            value={formData.periodDays.toString()}
+            disabled={!formData.enabled}
             onValueChange={(value) =>
               setFormData({
                 ...formData,
                 periodDays: parseInt(value) as DuplicateCheckPeriod,
               })
             }
-            disabled={!formData.enabled}
+            value={formData.periodDays.toString()}
           >
-            <SelectTrigger id="duplicate-check-period" className="w-full">
+            <SelectTrigger className="w-full" id="duplicate-check-period">
               <SelectValue placeholder="기간 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -125,7 +127,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
               저장되었습니다
             </span>
           )}
-          <Button onClick={handleSave} disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
+          <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving} onClick={handleSave}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

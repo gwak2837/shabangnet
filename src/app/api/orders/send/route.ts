@@ -1,26 +1,27 @@
-import { sendEmail } from '@/lib/email'
-import { generateOrderSheet, generateOrderFileName, type OrderData } from '@/lib/excel'
 import { NextResponse } from 'next/server'
+
+import { sendEmail } from '@/lib/email'
+import { generateOrderFileName, generateOrderSheet, type OrderData } from '@/lib/excel'
 
 // 발주 발송 요청 타입
 interface SendOrderRequest {
-  manufacturerId: string
-  manufacturerName: string
-  email: string
   ccEmail?: string
-  orders: OrderData[]
   // 중복 발송 시 사유
   duplicateReason?: string
+  email: string
+  manufacturerId: string
+  manufacturerName: string
+  orders: OrderData[]
 }
 
 // 응답 타입
 interface SendOrderResponse {
-  success: boolean
-  messageId?: string
-  fileName?: string
-  orderCount?: number
-  totalAmount?: number
   error?: string
+  fileName?: string
+  messageId?: string
+  orderCount?: number
+  success: boolean
+  totalAmount?: number
 }
 
 export async function POST(request: Request): Promise<NextResponse<SendOrderResponse>> {

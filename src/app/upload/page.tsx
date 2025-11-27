@@ -1,27 +1,28 @@
 'use client'
 
-import { useState } from 'react'
-import { AppShell } from '@/components/layout'
-import { Button } from '@/components/ui/button'
-import { Dropzone, UploadResult } from '@/components/upload'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SHOPPING_MALL_CONFIGS } from '@/lib/constants'
 import { FileSpreadsheet, Store } from 'lucide-react'
+import { useState } from 'react'
 
-type UploadType = 'sabangnet' | 'shopping_mall'
+import { AppShell } from '@/components/layout'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dropzone, UploadResult } from '@/components/upload'
+import { SHOPPING_MALL_CONFIGS } from '@/lib/constants'
 
 interface UploadResultData {
-  success: boolean
-  uploadId: string
+  errorOrders: number
+  errors: { row: number; message: string; productCode?: string; productName?: string }[]
   fileName: string
   mallName?: string
-  totalOrders: number
-  processedOrders: number
-  errorOrders: number
   manufacturerBreakdown: { name: string; orders: number; amount: number }[]
-  errors: { row: number; message: string; productCode?: string; productName?: string }[]
+  processedOrders: number
+  success: boolean
+  totalOrders: number
+  uploadId: string
 }
+
+type UploadType = 'sabangnet' | 'shopping_mall'
 
 export default function UploadPage() {
   const [uploadType, setUploadType] = useState<UploadType>('sabangnet')
@@ -83,17 +84,17 @@ export default function UploadPage() {
   }
 
   return (
-    <AppShell title="주문 업로드" description={descriptions[uploadType]}>
+    <AppShell description={descriptions[uploadType]} title="주문 업로드">
       {/* Upload Type Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
         <button
+          className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+            uploadType === 'sabangnet' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
+          }`}
           onClick={() => {
             setUploadType('sabangnet')
             handleClear()
           }}
-          className={`relative px-4 py-3 text-sm font-medium transition-colors ${
-            uploadType === 'sabangnet' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
-          }`}
         >
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="h-4 w-4" />
@@ -102,18 +103,18 @@ export default function UploadPage() {
           {uploadType === 'sabangnet' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
         </button>
         <button
+          className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+            uploadType === 'shopping_mall' ? 'text-violet-600' : 'text-slate-500 hover:text-slate-700'
+          }`}
           onClick={() => {
             setUploadType('shopping_mall')
             handleClear()
           }}
-          className={`relative px-4 py-3 text-sm font-medium transition-colors ${
-            uploadType === 'shopping_mall' ? 'text-violet-600' : 'text-slate-500 hover:text-slate-700'
-          }`}
         >
           <div className="flex items-center gap-2">
             <Store className="h-4 w-4" />
             쇼핑몰 주문
-            <Badge variant="secondary" className="bg-violet-100 text-violet-700 text-xs">
+            <Badge className="bg-violet-100 text-violet-700 text-xs" variant="secondary">
               변환
             </Badge>
           </div>
@@ -132,7 +133,7 @@ export default function UploadPage() {
                 <p className="text-sm text-violet-700 mt-1 mb-3">
                   업로드할 파일의 출처 쇼핑몰을 선택하세요. 선택한 쇼핑몰의 양식에 맞게 파일을 파싱합니다.
                 </p>
-                <Select value={selectedMall} onValueChange={setSelectedMall}>
+                <Select onValueChange={setSelectedMall} value={selectedMall}>
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="쇼핑몰을 선택하세요" />
                   </SelectTrigger>
@@ -154,11 +155,11 @@ export default function UploadPage() {
       <div className="max-w-2xl mx-auto">
         {!uploadResult && (
           <Dropzone
+            disabled={uploadType === 'shopping_mall' && !selectedMall}
+            isProcessing={isProcessing}
+            onClear={handleClear}
             onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
-            onClear={handleClear}
-            isProcessing={isProcessing}
-            disabled={uploadType === 'shopping_mall' && !selectedMall}
           />
         )}
 
@@ -187,12 +188,12 @@ export default function UploadPage() {
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold text-slate-900">업로드 결과</h2>
               {uploadType === 'shopping_mall' && uploadResult.mallName && (
-                <Badge variant="secondary" className="bg-violet-100 text-violet-700">
+                <Badge className="bg-violet-100 text-violet-700" variant="secondary">
                   {uploadResult.mallName}
                 </Badge>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={handleClear} className="text-slate-600">
+            <Button className="text-slate-600" onClick={handleClear} size="sm" variant="outline">
               새 파일 업로드
             </Button>
           </div>

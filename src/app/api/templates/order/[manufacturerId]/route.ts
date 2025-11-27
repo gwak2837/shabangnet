@@ -5,22 +5,22 @@ import { NextResponse } from 'next/server'
 // 실제 구현시 DB를 사용하면 이 문제가 해결됨
 
 interface OrderTemplateData {
+  columnMappings: Record<string, string>
+  createdAt: string
+  dataStartRow: number
+  fixedValues?: Record<string, string>
+  headerRow: number
   id: string
   manufacturerId: string
   manufacturerName: string
   templateFileName?: string
-  headerRow: number
-  dataStartRow: number
-  columnMappings: Record<string, string>
-  fixedValues?: Record<string, string>
-  createdAt: string
   updatedAt: string
 }
 
 // 기본 템플릿 설정
 const defaultTemplate: Omit<
   OrderTemplateData,
-  'id' | 'manufacturerId' | 'manufacturerName' | 'createdAt' | 'updatedAt'
+  'createdAt' | 'id' | 'manufacturerId' | 'manufacturerName' | 'updatedAt'
 > = {
   headerRow: 1,
   dataStartRow: 2,
@@ -33,6 +33,27 @@ const defaultTemplate: Omit<
     memo: 'F',
   },
   fixedValues: {},
+}
+
+// 특정 제조사 템플릿 삭제
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ manufacturerId: string }> },
+): Promise<NextResponse> {
+  try {
+    const { manufacturerId } = await params
+
+    // TODO: DB에서 삭제
+
+    return NextResponse.json({
+      success: true,
+      message: `제조사 ${manufacturerId}의 템플릿이 삭제되었습니다`,
+    })
+  } catch (error) {
+    console.error('Template delete error:', error)
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  }
 }
 
 // 특정 제조사 템플릿 조회
@@ -95,27 +116,6 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Template update error:', error)
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
-  }
-}
-
-// 특정 제조사 템플릿 삭제
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ manufacturerId: string }> },
-): Promise<NextResponse> {
-  try {
-    const { manufacturerId } = await params
-
-    // TODO: DB에서 삭제
-
-    return NextResponse.json({
-      success: true,
-      message: `제조사 ${manufacturerId}의 템플릿이 삭제되었습니다`,
-    })
-  } catch (error) {
-    console.error('Template delete error:', error)
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }

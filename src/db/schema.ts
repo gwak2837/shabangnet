@@ -337,38 +337,38 @@ export const uploadsRelations = relations(uploads, ({ one, many }) => ({
 // Type Exports
 // ============================================
 
-export type Manufacturer = typeof manufacturers.$inferSelect
-export type NewManufacturer = typeof manufacturers.$inferInsert
-
-export type Product = typeof products.$inferSelect
-export type NewProduct = typeof products.$inferInsert
-
-export type OptionMapping = typeof optionMappings.$inferSelect
-export type NewOptionMapping = typeof optionMappings.$inferInsert
-
+export type CourierMapping = typeof courierMappings.$inferSelect
 export type EmailLog = typeof emailLogs.$inferSelect
-export type NewEmailLog = typeof emailLogs.$inferInsert
 
 export type EmailLogOrder = typeof emailLogOrders.$inferSelect
-export type NewEmailLogOrder = typeof emailLogOrders.$inferInsert
-
-export type Upload = typeof uploads.$inferSelect
-export type NewUpload = typeof uploads.$inferInsert
-
 export type ExclusionPattern = typeof exclusionPatterns.$inferSelect
-export type NewExclusionPattern = typeof exclusionPatterns.$inferInsert
-
-export type CourierMapping = typeof courierMappings.$inferSelect
-export type NewCourierMapping = typeof courierMappings.$inferInsert
 
 export type InvoiceTemplate = typeof invoiceTemplates.$inferSelect
+export type Manufacturer = typeof manufacturers.$inferSelect
+
+export type NewCourierMapping = typeof courierMappings.$inferInsert
+export type NewEmailLog = typeof emailLogs.$inferInsert
+
+export type NewEmailLogOrder = typeof emailLogOrders.$inferInsert
+export type NewExclusionPattern = typeof exclusionPatterns.$inferInsert
+
 export type NewInvoiceTemplate = typeof invoiceTemplates.$inferInsert
+export type NewManufacturer = typeof manufacturers.$inferInsert
+
+export type NewOptionMapping = typeof optionMappings.$inferInsert
+export type NewOrder = typeof orders.$inferInsert
+
+export type NewOrderTemplate = typeof orderTemplates.$inferInsert
+export type NewProduct = typeof products.$inferInsert
+
+export type NewShoppingMallTemplate = typeof shoppingMallTemplates.$inferInsert
+export type NewUpload = typeof uploads.$inferInsert
+
+export type OptionMapping = typeof optionMappings.$inferSelect
+export type Order = typeof orders.$inferSelect
 
 export type OrderTemplate = typeof orderTemplates.$inferSelect
-export type NewOrderTemplate = typeof orderTemplates.$inferInsert
+export type Product = typeof products.$inferSelect
 
 export type ShoppingMallTemplate = typeof shoppingMallTemplates.$inferSelect
-export type NewShoppingMallTemplate = typeof shoppingMallTemplates.$inferInsert
-
-export type Order = typeof orders.$inferSelect
-export type NewOrder = typeof orders.$inferInsert
+export type Upload = typeof uploads.$inferSelect

@@ -1,9 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+
+import type { SettlementFilters } from '@/lib/api/settlement'
+
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
-import type { SettlementFilters } from '@/lib/api/settlement'
 
 export function useSettlement(filters: SettlementFilters | null) {
   return useQuery({

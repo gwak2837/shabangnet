@@ -1,55 +1,55 @@
 // Mock data for the Shabangnet Order Automation System
 
+export interface DashboardStats {
+  completedOrders: number
+  completedOrdersChange: number
+  errorOrders: number
+  errorOrdersChange: number
+  pendingOrders: number
+  pendingOrdersChange: number
+  todayOrders: number
+  todayOrdersChange: number
+}
+
 export interface Manufacturer {
-  id: string
-  name: string
+  ccEmail?: string
   contactName: string
   email: string
-  ccEmail?: string
-  phone: string
-  orderCount: number
+  id: string
   lastOrderDate: string
+  name: string
+  orderCount: number
+  phone: string
 }
 
 export interface Order {
-  id: string
-  orderNumber: string
-  customerName: string
-  phone: string
   address: string
-  productCode: string
-  productName: string
-  optionName: string
-  quantity: number
-  price: number
-  manufacturerId: string
-  manufacturerName: string
-  status: 'pending' | 'processing' | 'completed' | 'error'
   createdAt: string
+  customerName: string
   // F열 값 (발송 제외 판단용)
   fulfillmentType?: string
+  id: string
+  manufacturerId: string
+  manufacturerName: string
+  optionName: string
+  orderNumber: string
+  phone: string
+  price: number
+  productCode: string
+  productName: string
+  quantity: number
+  status: 'completed' | 'error' | 'pending' | 'processing'
 }
 
 export interface Upload {
-  id: string
+  errorOrders: number
   fileName: string
   fileSize: number
-  totalOrders: number
+  id: string
   processedOrders: number
-  errorOrders: number
+  status: 'completed' | 'error' | 'processing'
+  totalOrders: number
   uploadedAt: string
-  status: 'processing' | 'completed' | 'error'
-}
-
-export interface DashboardStats {
-  todayOrders: number
-  pendingOrders: number
-  completedOrders: number
-  errorOrders: number
-  todayOrdersChange: number
-  pendingOrdersChange: number
-  completedOrdersChange: number
-  errorOrdersChange: number
 }
 
 // Mock manufacturers
@@ -961,11 +961,11 @@ export const manufacturerChartData = [
 
 // 발송 제외 패턴 설정
 export interface ExclusionPattern {
-  id: string
-  pattern: string
-  enabled: boolean
   description?: string
   displayLabel?: string // 표시용 라벨 (없으면 pattern 그대로 표시)
+  enabled: boolean
+  id: string
+  pattern: string
 }
 
 export interface ExclusionSettings {
@@ -1010,13 +1010,26 @@ export const exclusionSettings: ExclusionSettings = {
   ],
 }
 
-// 발송 제외 여부 판단 헬퍼 함수
-export function shouldExcludeFromEmail(fulfillmentType?: string): boolean {
-  if (!exclusionSettings.enabled || !fulfillmentType) {
-    return false
-  }
+// Order status for batch processing
+export interface OrderBatch {
+  email: string
+  lastSentAt?: string
+  manufacturerId: string
+  manufacturerName: string
+  orders: Order[]
+  status: 'error' | 'pending' | 'ready' | 'sent'
+  totalAmount: number
+  totalOrders: number
+}
 
-  return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
+// 발송 대상 주문만 필터링하여 배치 생성
+export function getEmailableOrders(): Order[] {
+  return orders.filter((o) => !shouldExcludeFromEmail(o.fulfillmentType))
+}
+
+// 발송 제외 주문 가져오기
+export function getExcludedOrders(): Order[] {
+  return orders.filter((o) => shouldExcludeFromEmail(o.fulfillmentType))
 }
 
 // 제외 사유 표시용 라벨 가져오기
@@ -1037,26 +1050,13 @@ export function getExclusionLabel(fulfillmentType?: string): string | null {
   return matchedPattern.displayLabel || matchedPattern.description || fulfillmentType
 }
 
-// Order status for batch processing
-export interface OrderBatch {
-  manufacturerId: string
-  manufacturerName: string
-  orders: Order[]
-  totalOrders: number
-  totalAmount: number
-  status: 'pending' | 'ready' | 'sent' | 'error'
-  email: string
-  lastSentAt?: string
-}
+// 발송 제외 여부 판단 헬퍼 함수
+export function shouldExcludeFromEmail(fulfillmentType?: string): boolean {
+  if (!exclusionSettings.enabled || !fulfillmentType) {
+    return false
+  }
 
-// 발송 대상 주문만 필터링하여 배치 생성
-export function getEmailableOrders(): Order[] {
-  return orders.filter((o) => !shouldExcludeFromEmail(o.fulfillmentType))
-}
-
-// 발송 제외 주문 가져오기
-export function getExcludedOrders(): Order[] {
-  return orders.filter((o) => shouldExcludeFromEmail(o.fulfillmentType))
+  return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
 }
 
 // 발송 대상 주문으로 배치 생성
@@ -1095,6 +1095,31 @@ export const excludedOrderBatches: OrderBatch[] = manufacturers
   })
   .filter((batch) => batch.totalOrders > 0)
 
+// 옵션-제조사 매핑 인터페이스
+export interface OptionManufacturerMapping {
+  createdAt: string
+  id: string
+  manufacturerId: string // 매핑된 제조사 ID
+  manufacturerName: string // 제조사명 (표시용)
+  optionName: string // 옵션명
+  productCode: string // 상품코드
+  updatedAt: string
+}
+
+// Product interface and mock data
+export interface Product {
+  cost: number // 원가
+  createdAt: string
+  id: string
+  manufacturerId: string | null
+  manufacturerName: string | null
+  optionName: string
+  price: number
+  productCode: string
+  productName: string
+  updatedAt: string
+}
+
 // Utility functions
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR', {
@@ -1129,7 +1154,7 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-export function getStatusColor(status: 'pending' | 'processing' | 'completed' | 'error' | 'ready' | 'sent'): string {
+export function getStatusColor(status: 'completed' | 'error' | 'pending' | 'processing' | 'ready' | 'sent'): string {
   const colors = {
     pending: 'bg-amber-100 text-amber-800',
     processing: 'bg-blue-100 text-blue-800',
@@ -1141,7 +1166,7 @@ export function getStatusColor(status: 'pending' | 'processing' | 'completed' | 
   return colors[status] || colors.pending
 }
 
-export function getStatusLabel(status: 'pending' | 'processing' | 'completed' | 'error' | 'ready' | 'sent'): string {
+export function getStatusLabel(status: 'completed' | 'error' | 'pending' | 'processing' | 'ready' | 'sent'): string {
   const labels = {
     pending: '대기중',
     processing: '처리중',
@@ -1151,31 +1176,6 @@ export function getStatusLabel(status: 'pending' | 'processing' | 'completed' | 
     error: '오류',
   }
   return labels[status] || status
-}
-
-// Product interface and mock data
-export interface Product {
-  id: string
-  productCode: string
-  productName: string
-  optionName: string
-  manufacturerId: string | null
-  manufacturerName: string | null
-  price: number
-  cost: number // 원가
-  createdAt: string
-  updatedAt: string
-}
-
-// 옵션-제조사 매핑 인터페이스
-export interface OptionManufacturerMapping {
-  id: string
-  productCode: string // 상품코드
-  optionName: string // 옵션명
-  manufacturerId: string // 매핑된 제조사 ID
-  manufacturerName: string // 제조사명 (표시용)
-  createdAt: string
-  updatedAt: string
 }
 
 // 옵션-제조사 매핑 Mock 데이터
@@ -1236,19 +1236,9 @@ export const optionManufacturerMappings: OptionManufacturerMapping[] = [
   },
 ]
 
-// 빈 옵션 판별 헬퍼 함수
-// "없음", "없음 [1]", "00001(없음) [1]" 등의 패턴 체크
-export function isEmptyOption(optionName: string | undefined | null): boolean {
-  if (!optionName) return true
-  const normalized = optionName.trim().toLowerCase()
-  // 빈 옵션 패턴들
-  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
-  return emptyPatterns.some((pattern) => pattern.test(normalized))
-}
-
 // 상품명 + 옵션명 조합 헬퍼 함수
 // 빈 옵션이면 상품명만, 아니면 "상품명 옵션명" 형식
-export function formatProductNameWithOption(productName: string, optionName: string | undefined | null): string {
+export function formatProductNameWithOption(productName: string, optionName: string | null | undefined): string {
   if (isEmptyOption(optionName)) {
     return productName
   }
@@ -1258,7 +1248,7 @@ export function formatProductNameWithOption(productName: string, optionName: str
 // 제조사 결정 함수 (우선순위: 옵션매핑 → 상품매핑 → null)
 export function getManufacturerByProductAndOption(
   productCode: string,
-  optionName: string | undefined | null,
+  optionName: string | null | undefined,
 ): { manufacturerId: string | null; manufacturerName: string | null } {
   // 1. 옵션 매핑 테이블에서 (상품코드 + 옵션) 조합 검색
   if (optionName && !isEmptyOption(optionName)) {
@@ -1287,6 +1277,16 @@ export function getManufacturerByProductAndOption(
     manufacturerId: null,
     manufacturerName: null,
   }
+}
+
+// 빈 옵션 판별 헬퍼 함수
+// "없음", "없음 [1]", "00001(없음) [1]" 등의 패턴 체크
+export function isEmptyOption(optionName: string | null | undefined): boolean {
+  if (!optionName) return true
+  const normalized = optionName.trim().toLowerCase()
+  // 빈 옵션 패턴들
+  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
+  return emptyPatterns.some((pattern) => pattern.test(normalized))
 }
 
 export const products: Product[] = [
@@ -1472,38 +1472,44 @@ export const products: Product[] = [
   },
 ]
 
-// Send Log Order (발송 로그에 포함된 주문 상세)
-export interface SendLogOrder {
-  orderNumber: string
-  productName: string
-  optionName: string
-  quantity: number
-  price: number
-  cost: number // 발주 시점 원가
-  customerName: string
-  address: string
-}
-
 // Send Log interface and mock data
 export interface SendLog {
+  // 중복 발송 시 입력한 사유
+  duplicateReason?: string
+  email: string
+  errorMessage?: string
+  fileName: string
   id: string
   manufacturerId: string
   manufacturerName: string
-  email: string
-  subject: string
-  fileName: string
   orderCount: number
-  totalAmount: number
-  status: 'success' | 'failed' | 'pending'
-  errorMessage?: string
-  sentAt: string
-  sentBy: string
-  // 중복 발주 체크를 위한 수취인 주소 정보
-  recipientAddresses: string[]
-  // 중복 발송 시 입력한 사유
-  duplicateReason?: string
   // 발송에 포함된 주문 상세
   orders: SendLogOrder[]
+  // 중복 발주 체크를 위한 수취인 주소 정보
+  recipientAddresses: string[]
+  sentAt: string
+  sentBy: string
+  status: 'failed' | 'pending' | 'success'
+  subject: string
+  totalAmount: number
+}
+
+// Send Log Order (발송 로그에 포함된 주문 상세)
+export interface SendLogOrder {
+  address: string
+  cost: number // 발주 시점 원가
+  customerName: string
+  optionName: string
+  orderNumber: string
+  price: number
+  productName: string
+  quantity: number
+}
+
+function formatDateForFileName(daysAgo: number): string {
+  const date = new Date()
+  date.setDate(date.getDate() - daysAgo)
+  return date.toISOString().slice(0, 10).replace(/-/g, '')
 }
 
 // 현재 날짜 기준 상대적 날짜 생성 헬퍼
@@ -1512,12 +1518,6 @@ function getRelativeDate(daysAgo: number, hours: number = 10, minutes: number = 
   date.setDate(date.getDate() - daysAgo)
   date.setHours(hours, minutes, 0, 0)
   return date.toISOString()
-}
-
-function formatDateForFileName(daysAgo: number): string {
-  const date = new Date()
-  date.setDate(date.getDate() - daysAgo)
-  return date.toISOString().slice(0, 10).replace(/-/g, '')
 }
 
 // 주문 샘플 데이터 생성 헬퍼
@@ -1858,13 +1858,13 @@ export const sendLogs: SendLog[] = [
 
 // SMTP Settings interface
 export interface SMTPSettings {
-  host: string
-  port: number
-  username: string
-  password: string
-  secure: boolean
-  fromName: string
   fromEmail: string
+  fromName: string
+  host: string
+  password: string
+  port: number
+  secure: boolean
+  username: string
 }
 
 export const smtpSettings: SMTPSettings = {
@@ -1890,10 +1890,19 @@ export const duplicateCheckSettings: DuplicateCheckSettings = {
   periodDays: 10,
 }
 
+// 택배사 코드 매핑 인터페이스
+export interface CourierMapping {
+  aliases: string[] // 별칭 (거래처에서 사용하는 다른 이름들)
+  code: string // 사방넷 택배사 코드 (숫자)
+  enabled: boolean
+  id: string
+  name: string // 기본 택배사명 (사방넷 기준)
+}
+
 // 중복 발송 이력 체크 결과
 export interface DuplicateCheckResult {
-  hasDuplicate: boolean
   duplicateLogs: SendLog[]
+  hasDuplicate: boolean
   matchedAddresses: string[]
 }
 
@@ -1940,11 +1949,6 @@ export function checkDuplicateSend(
   }
 }
 
-// 주소 정규화 (공백, 특수문자 등 제거하여 비교)
-function normalizeAddress(address: string): string {
-  return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase()
-}
-
 // 일 수 차이 계산
 export function getDaysDifference(dateString: string): number {
   const now = new Date()
@@ -1957,13 +1961,9 @@ export function getDaysDifference(dateString: string): number {
 // 송장 변환 관련 인터페이스 및 데이터
 // ============================================
 
-// 택배사 코드 매핑 인터페이스
-export interface CourierMapping {
-  id: string
-  name: string // 기본 택배사명 (사방넷 기준)
-  code: string // 사방넷 택배사 코드 (숫자)
-  aliases: string[] // 별칭 (거래처에서 사용하는 다른 이름들)
-  enabled: boolean
+// 주소 정규화 (공백, 특수문자 등 제거하여 비교)
+function normalizeAddress(address: string): string {
+  return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase()
 }
 
 // 택배사 코드 매핑 데이터
@@ -2040,6 +2040,20 @@ export const courierMappings: CourierMapping[] = [
   },
 ]
 
+// 거래처별 송장 템플릿 인터페이스
+export interface InvoiceTemplate {
+  courierColumn: string // 택배사 컬럼
+  dataStartRow: number // 데이터 시작 행 번호
+  headerRow: number // 헤더가 있는 행 번호 (1부터 시작)
+  id: string
+  manufacturerId: string
+  manufacturerName: string
+  // 컬럼 매핑 (컬럼 인덱스 또는 헤더명)
+  orderNumberColumn: string // 주문번호 컬럼 (예: "A" 또는 "주문번호")
+  trackingNumberColumn: string // 송장번호 컬럼
+  useColumnIndex: boolean // true면 A,B,C 인덱스 사용, false면 헤더명 사용
+}
+
 // 택배사명으로 코드 찾기 (별칭 포함)
 export function getCourierCode(courierName: string): string | null {
   const normalized = courierName.trim()
@@ -2051,20 +2065,6 @@ export function getCourierCode(courierName: string): string | null {
     }
   }
   return null
-}
-
-// 거래처별 송장 템플릿 인터페이스
-export interface InvoiceTemplate {
-  id: string
-  manufacturerId: string
-  manufacturerName: string
-  // 컬럼 매핑 (컬럼 인덱스 또는 헤더명)
-  orderNumberColumn: string // 주문번호 컬럼 (예: "A" 또는 "주문번호")
-  courierColumn: string // 택배사 컬럼
-  trackingNumberColumn: string // 송장번호 컬럼
-  headerRow: number // 헤더가 있는 행 번호 (1부터 시작)
-  dataStartRow: number // 데이터 시작 행 번호
-  useColumnIndex: boolean // true면 A,B,C 인덱스 사용, false면 헤더명 사용
 }
 
 // 기본 송장 템플릿 (대부분의 거래처에 적용)
@@ -2103,6 +2103,32 @@ export const invoiceTemplates: InvoiceTemplate[] = [
   },
 ]
 
+// 송장 변환 이력 인터페이스
+export interface InvoiceConvertLog {
+  convertedAt: string
+  convertedBy: string
+  convertedFileName: string
+  errorCount: number
+  id: string
+  manufacturerId: string
+  manufacturerName: string
+  results: InvoiceConvertResult[]
+  sendLogId: string // 연결된 발송 로그 ID
+  successCount: number
+  totalRows: number
+  uploadedFileName: string
+}
+
+// 송장 변환 결과 인터페이스
+export interface InvoiceConvertResult {
+  courierCode: string // 변환된 택배사 코드
+  errorMessage?: string
+  orderNumber: string // 사방넷 주문번호
+  originalCourier?: string // 원본 택배사명 (에러 시 표시용)
+  status: 'courier_error' | 'order_not_found' | 'success'
+  trackingNumber: string // 송장번호
+}
+
 // 제조사ID로 템플릿 가져오기 (없으면 기본 템플릿 반환)
 export function getInvoiceTemplate(manufacturerId: string): InvoiceTemplate {
   const customTemplate = invoiceTemplates.find((t) => t.manufacturerId === manufacturerId)
@@ -2115,32 +2141,6 @@ export function getInvoiceTemplate(manufacturerId: string): InvoiceTemplate {
     manufacturerName: manufacturer?.name || '알 수 없음',
     ...defaultInvoiceTemplate,
   }
-}
-
-// 송장 변환 결과 인터페이스
-export interface InvoiceConvertResult {
-  orderNumber: string // 사방넷 주문번호
-  courierCode: string // 변환된 택배사 코드
-  trackingNumber: string // 송장번호
-  status: 'success' | 'courier_error' | 'order_not_found'
-  originalCourier?: string // 원본 택배사명 (에러 시 표시용)
-  errorMessage?: string
-}
-
-// 송장 변환 이력 인터페이스
-export interface InvoiceConvertLog {
-  id: string
-  sendLogId: string // 연결된 발송 로그 ID
-  manufacturerId: string
-  manufacturerName: string
-  uploadedFileName: string
-  convertedFileName: string
-  totalRows: number
-  successCount: number
-  errorCount: number
-  convertedAt: string
-  convertedBy: string
-  results: InvoiceConvertResult[]
 }
 
 // 송장 변환 이력 Mock 데이터

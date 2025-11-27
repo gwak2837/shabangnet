@@ -1,21 +1,23 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Manufacturer } from '@/lib/mock-data'
 import { Calendar, X } from 'lucide-react'
 
+import type { Manufacturer } from '@/lib/mock-data'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
 interface LogFiltersProps {
-  manufacturers: Manufacturer[]
   dateFrom: string
   dateTo: string
-  status: string
   manufacturer: string
+  manufacturers: Manufacturer[]
   onDateFromChange: (value: string) => void
   onDateToChange: (value: string) => void
-  onStatusChange: (value: string) => void
   onManufacturerChange: (value: string) => void
+  onStatusChange: (value: string) => void
+  status: string
 }
 
 export function LogFilters({
@@ -45,26 +47,26 @@ export function LogFilters({
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
+            className="w-[150px] pl-9 bg-white border-slate-200"
+            onChange={(e) => onDateFromChange(e.target.value)}
             type="date"
             value={dateFrom}
-            onChange={(e) => onDateFromChange(e.target.value)}
-            className="w-[150px] pl-9 bg-white border-slate-200"
           />
         </div>
         <span className="text-slate-400">~</span>
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
+            className="w-[150px] pl-9 bg-white border-slate-200"
+            onChange={(e) => onDateToChange(e.target.value)}
             type="date"
             value={dateTo}
-            onChange={(e) => onDateToChange(e.target.value)}
-            className="w-[150px] pl-9 bg-white border-slate-200"
           />
         </div>
       </div>
 
       {/* Status Select */}
-      <Select value={status} onValueChange={onStatusChange}>
+      <Select onValueChange={onStatusChange} value={status}>
         <SelectTrigger className="w-[140px] bg-white border-slate-200">
           <SelectValue placeholder="상태 선택" />
         </SelectTrigger>
@@ -76,7 +78,7 @@ export function LogFilters({
       </Select>
 
       {/* Manufacturer Select */}
-      <Select value={manufacturer} onValueChange={onManufacturerChange}>
+      <Select onValueChange={onManufacturerChange} value={manufacturer}>
         <SelectTrigger className="w-[160px] bg-white border-slate-200">
           <SelectValue placeholder="제조사 선택" />
         </SelectTrigger>
@@ -92,7 +94,7 @@ export function LogFilters({
 
       {/* Clear Filters */}
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={handleClear} className="gap-1 text-slate-500 hover:text-slate-700">
+        <Button className="gap-1 text-slate-500 hover:text-slate-700" onClick={handleClear} size="sm" variant="ghost">
           <X className="h-4 w-4" />
           필터 초기화
         </Button>

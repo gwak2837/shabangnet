@@ -1,18 +1,20 @@
 'use client'
 
+import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import type { SMTPSettings } from '@/lib/mock-data'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import type { SMTPSettings } from '@/lib/mock-data'
-import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server } from 'lucide-react'
-import { useState, useEffect } from 'react'
 
 interface SMTPFormProps {
-  settings?: SMTPSettings
-  onSave: (data: Partial<SMTPSettings>) => void
   isSaving?: boolean
+  onSave: (data: Partial<SMTPSettings>) => void
+  settings?: SMTPSettings
 }
 
 export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) {
@@ -26,7 +28,7 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
     fromEmail: '',
   })
   const [isTesting, setIsTesting] = useState(false)
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
+  const [testResult, setTestResult] = useState<'error' | 'success' | null>(null)
   const [testError, setTestError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -89,11 +91,11 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <div className="relative">
               <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
+                className="pl-9"
                 id="host"
-                value={formData.host}
                 onChange={(e) => setFormData({ ...formData, host: e.target.value })}
                 placeholder="smtp.gmail.com"
-                className="pl-9"
+                value={formData.host}
               />
             </div>
           </div>
@@ -102,8 +104,6 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <Label htmlFor="port">포트</Label>
             <Input
               id="port"
-              type="number"
-              value={formData.port}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -111,6 +111,8 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
                 })
               }
               placeholder="587"
+              type="number"
+              value={formData.port}
             />
           </div>
         </div>
@@ -122,12 +124,12 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
+                className="pl-9"
                 id="username"
-                type="email"
-                value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="your-email@gmail.com"
-                className="pl-9"
+                type="email"
+                value={formData.username}
               />
             </div>
           </div>
@@ -137,12 +139,12 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
+                className="pl-9"
                 id="password"
-                type="password"
-                value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••••••••••"
-                className="pl-9"
+                type="password"
+                value={formData.password}
               />
             </div>
           </div>
@@ -154,9 +156,9 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <Label htmlFor="fromName">발신자 이름</Label>
             <Input
               id="fromName"
-              value={formData.fromName}
               onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
               placeholder="(주)다온에프앤씨"
+              value={formData.fromName}
             />
           </div>
 
@@ -164,10 +166,10 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
             <Label htmlFor="fromEmail">발신자 이메일</Label>
             <Input
               id="fromEmail"
-              type="email"
-              value={formData.fromEmail}
               onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
               placeholder="daonfnc@gmail.com"
+              type="email"
+              value={formData.fromEmail}
             />
           </div>
         </div>
@@ -175,14 +177,14 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
         {/* Security */}
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
           <div className="space-y-0.5">
-            <Label htmlFor="secure" className="text-base">
+            <Label className="text-base" htmlFor="secure">
               보안 연결 (TLS/SSL)
             </Label>
             <p className="text-sm text-slate-500">대부분의 이메일 서비스에서 권장됩니다</p>
           </div>
           <Switch
-            id="secure"
             checked={formData.secure}
+            id="secure"
             onCheckedChange={(checked) => setFormData({ ...formData, secure: checked })}
           />
         </div>
@@ -213,7 +215,7 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-          <Button variant="outline" onClick={handleTest} disabled={isTesting || isSaving}>
+          <Button disabled={isTesting || isSaving} onClick={handleTest} variant="outline">
             {isTesting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -231,7 +233,7 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
                 저장되었습니다
               </span>
             )}
-            <Button onClick={handleSave} disabled={isSaving || isTesting} className="bg-slate-900 hover:bg-slate-800">
+            <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving || isTesting} onClick={handleSave}>
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

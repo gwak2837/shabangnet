@@ -1,9 +1,10 @@
 'use client'
 
+import { ArrowRight, Building2, FileSpreadsheet, Upload } from 'lucide-react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Button } from '@/components/ui/button'
-import { Upload, FileSpreadsheet, Building2, ArrowRight } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const actions = [
   {
@@ -38,10 +39,10 @@ export function QuickActions() {
       <CardContent className="pt-0">
         <div className="grid gap-3">
           {actions.map((action) => (
-            <Link key={action.href} href={action.href}>
+            <Link href={action.href} key={action.href}>
               <Button
-                variant="outline"
                 className="w-full justify-between h-auto p-4 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all group"
+                variant="outline"
               >
                 <div className="flex items-center gap-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}`}>

@@ -1,66 +1,35 @@
-import { env } from '@/lib/env'
-import nodemailer from 'nodemailer'
 import type { Attachment } from 'nodemailer/lib/mailer'
 
-// SMTP 설정 타입
-interface SMTPConfig {
-  host: string
-  port: number
-  secure: boolean
-  auth: {
-    user: string
-    pass: string
-  }
-}
+import nodemailer from 'nodemailer'
+
+import { env } from '@/lib/env'
 
 // 이메일 발송 옵션 타입
 export interface SendEmailOptions {
-  to: string | string[]
+  attachments?: Attachment[]
   cc?: string | string[]
+  html?: string
   subject: string
   text?: string
-  html?: string
-  attachments?: Attachment[]
+  to: string | string[]
 }
 
 // 이메일 발송 결과 타입
 export interface SendEmailResult {
-  success: boolean
-  messageId?: string
   error?: string
+  messageId?: string
+  success: boolean
 }
 
-// 환경변수에서 SMTP 설정 가져오기
-function getSMTPConfig(): SMTPConfig {
-  return {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465, // 465 포트는 SSL, 587은 TLS(STARTTLS)
-    auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS,
-    },
+// SMTP 설정 타입
+interface SMTPConfig {
+  auth: {
+    user: string
+    pass: string
   }
-}
-
-// 발신자 정보 가져오기
-function getFromAddress(): string {
-  const fromName = env.SMTP_FROM_NAME || ''
-  const fromEmail = env.SMTP_FROM_EMAIL || env.SMTP_USER
-
-  return fromName ? `"${fromName}" <${fromEmail}>` : fromEmail
-}
-
-// Nodemailer transporter 생성
-function createTransporter() {
-  const config = getSMTPConfig()
-
-  return nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    auth: config.auth,
-  })
+  host: string
+  port: number
+  secure: boolean
 }
 
 /**
@@ -100,6 +69,29 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
 }
 
 /**
+ * 발주서 이메일 발송을 위한 헬퍼 함수
+ * @param manufacturerEmail 제조사 이메일
+ * @param manufacturerName 제조사명
+ * @param subject 메일 제목
+ * @param body 메일 본문
+ * @param attachments 첨부파일 (엑셀 등)
+ */
+export async function sendOrderEmail(
+  manufacturerEmail: string,
+  manufacturerName: string,
+  subject: string,
+  body: string,
+  attachments?: Attachment[],
+): Promise<SendEmailResult> {
+  return sendEmail({
+    to: manufacturerEmail,
+    subject,
+    html: body,
+    attachments,
+  })
+}
+
+/**
  * SMTP 연결 테스트 함수
  * @returns 연결 성공 여부
  */
@@ -121,25 +113,35 @@ export async function testSMTPConnection(): Promise<{ success: boolean; error?: 
   }
 }
 
-/**
- * 발주서 이메일 발송을 위한 헬퍼 함수
- * @param manufacturerEmail 제조사 이메일
- * @param manufacturerName 제조사명
- * @param subject 메일 제목
- * @param body 메일 본문
- * @param attachments 첨부파일 (엑셀 등)
- */
-export async function sendOrderEmail(
-  manufacturerEmail: string,
-  manufacturerName: string,
-  subject: string,
-  body: string,
-  attachments?: Attachment[],
-): Promise<SendEmailResult> {
-  return sendEmail({
-    to: manufacturerEmail,
-    subject,
-    html: body,
-    attachments,
+// Nodemailer transporter 생성
+function createTransporter() {
+  const config = getSMTPConfig()
+
+  return nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: config.auth,
   })
+}
+
+// 발신자 정보 가져오기
+function getFromAddress(): string {
+  const fromName = env.SMTP_FROM_NAME || ''
+  const fromEmail = env.SMTP_FROM_EMAIL || env.SMTP_USER
+
+  return fromName ? `"${fromName}" <${fromEmail}>` : fromEmail
+}
+
+// 환경변수에서 SMTP 설정 가져오기
+function getSMTPConfig(): SMTPConfig {
+  return {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_PORT === 465, // 465 포트는 SSL, 587은 TLS(STARTTLS)
+    auth: {
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
+    },
+  }
 }

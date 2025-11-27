@@ -1,16 +1,17 @@
 'use client'
 
+import { CheckCircle2, Eye, FileSpreadsheet, Mail, XCircle } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { type SendLog, formatCurrency, formatDateTime } from '@/lib/mock-data'
-import { CheckCircle2, Eye, FileSpreadsheet, Mail, XCircle } from 'lucide-react'
+import { formatCurrency, formatDateTime, type SendLog } from '@/lib/mock-data'
 
 interface LogTableProps {
   logs: SendLog[]
-  onViewDetail: (log: SendLog) => void
   onDownloadExcel?: (log: SendLog) => void
+  onViewDetail: (log: SendLog) => void
 }
 
 export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps) {
@@ -35,7 +36,7 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
           </TableHeader>
           <TableBody>
             {logs.map((log) => (
-              <TableRow key={log.id} className="hover:bg-slate-50 transition-colors">
+              <TableRow className="hover:bg-slate-50 transition-colors" key={log.id}>
                 <TableCell className="text-sm text-slate-600">{formatDateTime(log.sentAt)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -57,12 +58,12 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
                 </TableCell>
                 <TableCell>
                   {log.status === 'success' ? (
-                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 gap-1">
+                    <Badge className="bg-emerald-100 text-emerald-700 gap-1" variant="secondary">
                       <CheckCircle2 className="h-3 w-3" />
                       성공
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="bg-rose-100 text-rose-700 gap-1">
+                    <Badge className="bg-rose-100 text-rose-700 gap-1" variant="secondary">
                       <XCircle className="h-3 w-3" />
                       실패
                     </Badge>
@@ -72,21 +73,21 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
                   <div className="flex items-center gap-1">
                     {onDownloadExcel && (
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDownloadExcel(log)}
                         className="h-8 w-8 text-slate-400 hover:text-emerald-600"
+                        onClick={() => onDownloadExcel(log)}
+                        size="icon"
                         title="엑셀 다운로드"
+                        variant="ghost"
                       >
                         <FileSpreadsheet className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onViewDetail(log)}
                       className="h-8 w-8 text-slate-400 hover:text-slate-600"
+                      onClick={() => onViewDetail(log)}
+                      size="icon"
                       title="상세보기"
+                      variant="ghost"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -96,7 +97,7 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
             ))}
             {logs.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-slate-500">
+                <TableCell className="h-32 text-center text-slate-500" colSpan={7}>
                   발송 기록이 없습니다.
                 </TableCell>
               </TableRow>

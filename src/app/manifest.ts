@@ -1,5 +1,6 @@
-import { SITE_CONFIG } from '@/lib/constants'
 import type { MetadataRoute } from 'next'
+
+import { SITE_CONFIG } from '@/lib/constants'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

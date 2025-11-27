@@ -1,23 +1,24 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard,
-  Upload,
-  FileSpreadsheet,
   Building2,
-  Package,
+  Calculator,
+  FileSpreadsheet,
   FileText,
-  Settings,
+  LayoutDashboard,
   LogOut,
+  Package,
+  Settings,
   Settings2,
   Truck,
-  Calculator,
+  Upload,
 } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 const mainNavItems = [
   {
@@ -95,14 +96,14 @@ export function Sidebar() {
                 const isActive = pathname === item.href
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive
                         ? 'bg-slate-100 text-slate-900'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                     )}
+                    href={item.href}
+                    key={item.href}
                   >
                     <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
                     {item.title}
@@ -121,13 +122,13 @@ export function Sidebar() {
                   <Tooltip key={item.href}>
                     <TooltipTrigger asChild>
                       <Link
-                        href={item.href}
                         className={cn(
                           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                           isActive
                             ? 'bg-slate-100 text-slate-900'
                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                         )}
+                        href={item.href}
                       >
                         <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
                         {item.title}
@@ -156,8 +157,8 @@ export function Sidebar() {
 
             <div className="mt-2 flex gap-1">
               <Link
-                href="/settings"
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                href="/settings"
               >
                 <Settings className="h-4 w-4" />
                 설정

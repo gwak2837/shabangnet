@@ -1,10 +1,17 @@
 import { sendLogs as mockSendLogs, type SendLog } from '@/lib/mock-data'
 
 // 메모리에 데이터 복사
-let logsData = [...mockSendLogs]
+const logsData = [...mockSendLogs]
 
 // API 지연 시뮬레이션
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+export interface LogFilters {
+  endDate?: string
+  manufacturerId?: string
+  startDate?: string
+  status?: 'failed' | 'pending' | 'success'
+}
 
 export async function getAll(): Promise<SendLog[]> {
   await delay(300)
@@ -14,13 +21,6 @@ export async function getAll(): Promise<SendLog[]> {
 export async function getById(id: string): Promise<SendLog | undefined> {
   await delay(200)
   return logsData.find((log) => log.id === id)
-}
-
-export interface LogFilters {
-  manufacturerId?: string
-  status?: 'success' | 'failed' | 'pending'
-  startDate?: string
-  endDate?: string
 }
 
 export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {

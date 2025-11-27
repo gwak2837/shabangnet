@@ -4,14 +4,14 @@
 import { type ParsedOrder } from '@/lib/excel'
 
 export interface OrderBatch {
+  email?: string
+  lastSentAt?: string
   manufacturerId: string
   manufacturerName: string
   orders: ParsedOrder[]
-  totalOrders: number
+  status: 'error' | 'pending' | 'ready' | 'sent'
   totalAmount: number
-  status: 'pending' | 'ready' | 'sent' | 'error'
-  email?: string
-  lastSentAt?: string
+  totalOrders: number
 }
 
 // 전역 저장소
@@ -27,9 +27,31 @@ const exclusionPatterns = [
   '현대홈직택배',
 ]
 
-function shouldExclude(order: ParsedOrder): boolean {
-  const shoppingMall = order.shoppingMall || ''
-  return exclusionPatterns.some((pattern) => shoppingMall.includes(pattern))
+// 초기화
+export function clearOrders(): void {
+  uploadedOrders = []
+  orderBatches = []
+  excludedOrderBatches = []
+}
+
+// 제외 배치 조회
+export function getExcludedOrderBatches(): OrderBatch[] {
+  return excludedOrderBatches
+}
+
+// 배치 조회
+export function getOrderBatches(): OrderBatch[] {
+  return orderBatches
+}
+
+// 주문 조회
+export function getUploadedOrders(): ParsedOrder[] {
+  return uploadedOrders
+}
+
+// 업로드된 주문이 있는지 확인
+export function hasUploadedOrders(): boolean {
+  return uploadedOrders.length > 0
 }
 
 // 주문 저장 (업로드 시 호출)
@@ -74,25 +96,10 @@ export function setUploadedOrders(orders: ParsedOrder[]): void {
   }))
 }
 
-// 주문 조회
-export function getUploadedOrders(): ParsedOrder[] {
-  return uploadedOrders
-}
-
-// 배치 조회
-export function getOrderBatches(): OrderBatch[] {
-  return orderBatches
-}
-
-// 제외 배치 조회
-export function getExcludedOrderBatches(): OrderBatch[] {
-  return excludedOrderBatches
-}
-
 // 배치 상태 업데이트
 export function updateBatchStatus(
   manufacturerId: string,
-  status: 'pending' | 'ready' | 'sent' | 'error',
+  status: 'error' | 'pending' | 'ready' | 'sent',
   sentAt?: string,
 ): void {
   const batchIndex = orderBatches.findIndex((b) => b.manufacturerId === manufacturerId)
@@ -105,14 +112,7 @@ export function updateBatchStatus(
   }
 }
 
-// 초기화
-export function clearOrders(): void {
-  uploadedOrders = []
-  orderBatches = []
-  excludedOrderBatches = []
-}
-
-// 업로드된 주문이 있는지 확인
-export function hasUploadedOrders(): boolean {
-  return uploadedOrders.length > 0
+function shouldExclude(order: ParsedOrder): boolean {
+  const shoppingMall = order.shoppingMall || ''
+  return exclusionPatterns.some((pattern) => shoppingMall.includes(pattern))
 }

@@ -1,9 +1,7 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Edit2, Settings2, Trash2 } from 'lucide-react'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,13 +13,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { type OptionManufacturerMapping, formatDate } from '@/lib/mock-data'
-import { Edit2, Trash2, Settings2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatDate, type OptionManufacturerMapping } from '@/lib/mock-data'
 
 interface OptionMappingTableProps {
   mappings: OptionManufacturerMapping[]
-  onEdit: (mapping: OptionManufacturerMapping) => void
   onDelete: (mappingId: string) => void
+  onEdit: (mapping: OptionManufacturerMapping) => void
 }
 
 export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMappingTableProps) {
@@ -42,7 +43,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
           </TableHeader>
           <TableBody>
             {mappings.map((mapping) => (
-              <TableRow key={mapping.id} className="hover:bg-slate-50 transition-colors">
+              <TableRow className="hover:bg-slate-50 transition-colors" key={mapping.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100">
@@ -52,24 +53,24 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200" variant="outline">
                     {mapping.optionName}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                  <Badge className="bg-slate-100 text-slate-700" variant="secondary">
                     {mapping.manufacturerName}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-slate-500">{formatDate(mapping.updatedAt)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(mapping)} className="h-8 w-8 p-0">
+                    <Button className="h-8 w-8 p-0" onClick={() => onEdit(mapping)} size="sm" variant="ghost">
                       <Edit2 className="h-4 w-4 text-slate-500" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-rose-50">
+                        <Button className="h-8 w-8 p-0 hover:bg-rose-50" size="sm" variant="ghost">
                           <Trash2 className="h-4 w-4 text-slate-500 hover:text-rose-500" />
                         </Button>
                       </AlertDialogTrigger>
@@ -85,8 +86,8 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                         <AlertDialogFooter>
                           <AlertDialogCancel>취소</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => onDelete(mapping.id)}
                             className="bg-rose-600 hover:bg-rose-700"
+                            onClick={() => onDelete(mapping.id)}
                           >
                             삭제
                           </AlertDialogAction>
@@ -99,7 +100,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
             ))}
             {mappings.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-slate-500">
+                <TableCell className="h-32 text-center text-slate-500" colSpan={5}>
                   옵션-제조사 매핑이 없습니다.
                 </TableCell>
               </TableRow>

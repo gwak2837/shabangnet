@@ -1,8 +1,11 @@
+import type { Metadata } from 'next'
+
+import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
+
 import { getOrigin } from '@/lib/config'
 import { SITE_CONFIG } from '@/lib/constants'
 import { QueryProvider } from '@/providers/query-provider'
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
+
 import './globals.css'
 
 const geistSans = Geist({
@@ -75,7 +78,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ko">
       <head>
-        <meta name="apple-mobile-web-app-title" content="사방넷" />
+        <meta content="사방넷" name="apple-mobile-web-app-title" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${notoSansKr.variable} font-sans antialiased`}>
         <QueryProvider>{children}</QueryProvider>

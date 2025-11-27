@@ -1,22 +1,23 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
+
 import { AppShell } from '@/components/layout'
 import { CourierForm, DuplicateCheckForm, ExclusionForm, SMTPForm } from '@/components/settings'
 import {
-  useSmtpSettings,
-  useUpdateSmtpSettings,
-  useExclusionSettings,
-  useUpdateExclusionSettings,
-  useAddExclusionPattern,
-  useRemoveExclusionPattern,
-  useDuplicateCheckSettings,
-  useUpdateDuplicateCheckSettings,
-  useCourierMappings,
-  useUpdateCourierMapping,
   useAddCourierMapping,
+  useAddExclusionPattern,
+  useCourierMappings,
+  useDuplicateCheckSettings,
+  useExclusionSettings,
   useRemoveCourierMapping,
+  useRemoveExclusionPattern,
+  useSmtpSettings,
+  useUpdateCourierMapping,
+  useUpdateDuplicateCheckSettings,
+  useUpdateExclusionSettings,
+  useUpdateSmtpSettings,
 } from '@/hooks'
-import { Loader2 } from 'lucide-react'
 
 export default function SettingsPage() {
   // SMTP Settings
@@ -43,7 +44,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <AppShell title="설정" description="시스템 설정을 관리합니다">
+      <AppShell description="시스템 설정을 관리합니다" title="설정">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -52,31 +53,31 @@ export default function SettingsPage() {
   }
 
   return (
-    <AppShell title="설정" description="시스템 설정을 관리합니다">
+    <AppShell description="시스템 설정을 관리합니다" title="설정">
       <div className="max-w-3xl space-y-6">
         <SMTPForm
-          settings={smtpSettings}
-          onSave={(data) => updateSmtpMutation.mutate(data)}
           isSaving={updateSmtpMutation.isPending}
+          onSave={(data) => updateSmtpMutation.mutate(data)}
+          settings={smtpSettings}
         />
         <CourierForm
+          isSaving={updateCourierMappingMutation.isPending || addCourierMappingMutation.isPending}
           mappings={courierMappings ?? []}
-          onUpdate={(id, data) => updateCourierMappingMutation.mutate({ id, data })}
           onAdd={(data) => addCourierMappingMutation.mutate(data)}
           onRemove={(id) => removeCourierMappingMutation.mutate(id)}
-          isSaving={updateCourierMappingMutation.isPending || addCourierMappingMutation.isPending}
+          onUpdate={(id, data) => updateCourierMappingMutation.mutate({ id, data })}
         />
         <DuplicateCheckForm
-          settings={duplicateCheckSettings}
-          onSave={(data) => updateDuplicateCheckMutation.mutate(data)}
           isSaving={updateDuplicateCheckMutation.isPending}
+          onSave={(data) => updateDuplicateCheckMutation.mutate(data)}
+          settings={duplicateCheckSettings}
         />
         <ExclusionForm
-          settings={exclusionSettings}
-          onUpdateSettings={(data) => updateExclusionMutation.mutate(data)}
+          isSaving={updateExclusionMutation.isPending || addExclusionPatternMutation.isPending}
           onAddPattern={(pattern) => addExclusionPatternMutation.mutate(pattern)}
           onRemovePattern={(id) => removeExclusionPatternMutation.mutate(id)}
-          isSaving={updateExclusionMutation.isPending || addExclusionPatternMutation.isPending}
+          onUpdateSettings={(data) => updateExclusionMutation.mutate(data)}
+          settings={exclusionSettings}
         />
       </div>
     </AppShell>

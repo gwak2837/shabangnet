@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { Building2, Loader2, TrendingUp, Users } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
+import type { InvoiceTemplate, Manufacturer } from '@/lib/mock-data'
+
 import { AppShell } from '@/components/layout'
-import { ManufacturerTable, ManufacturerModal } from '@/components/manufacturers'
+import { ManufacturerModal, ManufacturerTable } from '@/components/manufacturers'
 import { Card, CardContent } from '@/components/ui/card'
-import { useManufacturers, useCreateManufacturer, useUpdateManufacturer, useDeleteManufacturer } from '@/hooks'
-import type { Manufacturer, InvoiceTemplate } from '@/lib/mock-data'
-import { Building2, Users, TrendingUp, Loader2 } from 'lucide-react'
+import { useCreateManufacturer, useDeleteManufacturer, useManufacturers, useUpdateManufacturer } from '@/hooks'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -35,7 +37,7 @@ export default function ManufacturersPage() {
     if (editingManufacturer) {
       updateMutation.mutate({ id: editingManufacturer.id, data })
     } else {
-      createMutation.mutate(data as Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>)
+      createMutation.mutate(data as Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>)
     }
     console.log('Save invoice template:', invoiceTemplate)
   }
@@ -50,7 +52,7 @@ export default function ManufacturersPage() {
 
   if (isLoading) {
     return (
-      <AppShell title="제조사 관리" description="거래처 제조사 정보를 관리합니다">
+      <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -59,7 +61,7 @@ export default function ManufacturersPage() {
   }
 
   return (
-    <AppShell title="제조사 관리" description="거래처 제조사 정보를 관리합니다">
+    <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card className="border-slate-200 bg-white shadow-sm">
@@ -100,15 +102,15 @@ export default function ManufacturersPage() {
       </div>
 
       {/* Manufacturer Table */}
-      <ManufacturerTable manufacturers={manufacturers} onEdit={handleEdit} onAdd={handleAdd} onDelete={handleDelete} />
+      <ManufacturerTable manufacturers={manufacturers} onAdd={handleAdd} onDelete={handleDelete} onEdit={handleEdit} />
 
       {/* Add/Edit Modal */}
       <ManufacturerModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        manufacturer={editingManufacturer}
-        onSave={handleSave}
         isSaving={createMutation.isPending || updateMutation.isPending}
+        manufacturer={editingManufacturer}
+        onOpenChange={setIsModalOpen}
+        onSave={handleSave}
+        open={isModalOpen}
       />
     </AppShell>
   )

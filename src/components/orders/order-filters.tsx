@@ -1,10 +1,11 @@
 'use client'
 
+import { Calendar, Filter, Search, X } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar, Filter, Search, X } from 'lucide-react'
-import { useState } from 'react'
 
 const manufacturers = [
   { id: 'all', name: '전체 제조사' },
@@ -63,16 +64,16 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            type="search"
-            placeholder="제조사명, 주문번호 검색..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-white border-slate-200"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="제조사명, 주문번호 검색..."
+            type="search"
+            value={search}
           />
         </div>
 
         {/* Manufacturer Select */}
-        <Select value={manufacturer} onValueChange={setManufacturer}>
+        <Select onValueChange={setManufacturer} value={manufacturer}>
           <SelectTrigger className="w-[180px] bg-white border-slate-200">
             <SelectValue placeholder="제조사 선택" />
           </SelectTrigger>
@@ -86,7 +87,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
         </Select>
 
         {/* Status Select */}
-        <Select value={status} onValueChange={setStatus}>
+        <Select onValueChange={setStatus} value={status}>
           <SelectTrigger className="w-[150px] bg-white border-slate-200">
             <SelectValue placeholder="상태 선택" />
           </SelectTrigger>
@@ -104,26 +105,26 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
+              className="w-[150px] pl-9 bg-white border-slate-200"
+              onChange={(e) => setDateFrom(e.target.value)}
               type="date"
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-[150px] pl-9 bg-white border-slate-200"
             />
           </div>
           <span className="text-slate-400">~</span>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
+              className="w-[150px] pl-9 bg-white border-slate-200"
+              onChange={(e) => setDateTo(e.target.value)}
               type="date"
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-[150px] pl-9 bg-white border-slate-200"
             />
           </div>
         </div>
 
         {/* Filter Button */}
-        <Button variant="outline" className="gap-2 border-slate-200">
+        <Button className="gap-2 border-slate-200" variant="outline">
           <Filter className="h-4 w-4" />
           필터 적용
         </Button>
@@ -131,10 +132,10 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
         {/* Clear Filters */}
         {hasActiveFilters && (
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearFilters}
             className="gap-1 text-slate-500 hover:text-slate-700"
+            onClick={handleClearFilters}
+            size="sm"
+            variant="ghost"
           >
             <X className="h-4 w-4" />
             필터 초기화

@@ -5,21 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency, formatDateTime } from '@/lib/mock-data'
 
 export interface SettlementOrder {
-  id: string
-  orderNumber: string
-  sentAt: string
-  productName: string
-  optionName: string
-  quantity: number
-  cost: number
-  totalCost: number
-  customerName: string
   address: string
+  cost: number
+  customerName: string
+  id: string
+  optionName: string
+  orderNumber: string
+  productName: string
+  quantity: number
+  sentAt: string
+  totalCost: number
 }
 
 interface SettlementTableProps {
-  orders: SettlementOrder[]
   isLoading?: boolean
+  orders: SettlementOrder[]
 }
 
 export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
@@ -59,7 +59,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id} className="hover:bg-slate-50">
+                <TableRow className="hover:bg-slate-50" key={order.id}>
                   <TableCell className="font-mono text-sm text-slate-700">{order.orderNumber}</TableCell>
                   <TableCell className="text-sm text-slate-600">{formatDateTime(order.sentAt)}</TableCell>
                   <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
@@ -77,7 +77,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
               ))}
               {orders.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-slate-500">
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={9}>
                     조회된 발주 내역이 없습니다.
                   </TableCell>
                 </TableRow>

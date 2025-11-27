@@ -1,11 +1,12 @@
 'use client'
 
+import { Ban } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatCurrency, getExclusionLabel, type OrderBatch } from '@/lib/mock-data'
-import { Ban } from 'lucide-react'
 
 interface ExcludedOrderTableProps {
   batches: OrderBatch[]
@@ -55,7 +56,7 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
               ]
 
               return (
-                <TableRow key={batch.manufacturerId} className="hover:bg-slate-50 transition-colors">
+                <TableRow className="hover:bg-slate-50 transition-colors" key={batch.manufacturerId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
@@ -73,9 +74,9 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
                     <div className="flex flex-wrap gap-1">
                       {exclusionLabels.slice(0, 2).map((label, idx) => (
                         <Badge
+                          className="bg-violet-50 text-violet-700 text-xs max-w-[200px] truncate"
                           key={idx}
                           variant="secondary"
-                          className="bg-violet-50 text-violet-700 text-xs max-w-[200px] truncate"
                         >
                           {label}
                         </Badge>
@@ -84,14 +85,14 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-xs cursor-help">
+                              <Badge className="bg-slate-100 text-slate-600 text-xs cursor-help" variant="secondary">
                                 +{exclusionLabels.length - 2}
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
                               <div className="space-y-1">
                                 {exclusionLabels.slice(2).map((label, idx) => (
-                                  <p key={idx} className="text-xs">
+                                  <p className="text-xs" key={idx}>
                                     {label}
                                   </p>
                                 ))}

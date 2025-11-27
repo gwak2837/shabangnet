@@ -1,7 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import * as schema from './schema'
+
 import { env } from '@/lib/env'
+
+import * as schema from './schema'
 
 // postgres.js 클라이언트 생성
 // max: 1 은 서버리스 환경에서 권장 (Next.js API Routes)

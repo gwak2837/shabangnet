@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FileSpreadsheet, Truck, Upload, X } from 'lucide-react'
+import { useCallback, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { Upload, FileSpreadsheet, X, Truck } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatFileSize } from '@/lib/mock-data'
+import { cn } from '@/lib/utils'
 
 interface InvoiceDropzoneProps {
+  disabled?: boolean
+  isProcessing: boolean
+  onClear: () => void
   onFileSelect: (file: File) => void
   selectedFile: File | null
-  onClear: () => void
-  isProcessing: boolean
-  disabled?: boolean
 }
 
 export function InvoiceDropzone({
@@ -89,7 +90,7 @@ export function InvoiceDropzone({
                 </div>
               </div>
               {!isProcessing && (
-                <Button variant="ghost" size="icon" onClick={onClear} className="text-slate-400 hover:text-slate-600">
+                <Button className="text-slate-400 hover:text-slate-600" onClick={onClear} size="icon" variant="ghost">
                   <X className="h-5 w-5" />
                 </Button>
               )}
@@ -116,16 +117,16 @@ export function InvoiceDropzone({
                   ? 'border-amber-400 bg-amber-50'
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
             )}
-            onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
             {!disabled && (
               <input
-                type="file"
                 accept=".xlsx,.xls"
-                onChange={handleFileInput}
                 className="absolute inset-0 cursor-pointer opacity-0"
+                onChange={handleFileInput}
+                type="file"
               />
             )}
 

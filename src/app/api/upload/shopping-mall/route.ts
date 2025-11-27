@@ -1,38 +1,45 @@
 import { NextResponse } from 'next/server'
-import { parseShoppingMallFile, groupOrdersByManufacturer, type ParsedOrder } from '@/lib/excel'
+
 import { SHOPPING_MALL_CONFIGS } from '@/lib/constants'
+import { groupOrdersByManufacturer, type ParsedOrder, parseShoppingMallFile } from '@/lib/excel'
 import { setUploadedOrders } from '@/lib/stores/order-store'
 
-// 간단한 ID 생성 함수
-function generateId(): string {
-  return `upl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
+interface ManufacturerBreakdown {
+  amount: number
+  name: string
+  orders: number
+}
+
+interface UploadError {
+  message: string
+  productCode?: string
+  productName?: string
+  row: number
 }
 
 // 업로드 결과 타입
 interface UploadResult {
-  success: boolean
-  uploadId: string
+  errorOrders: number
+  errors: UploadError[]
   fileName: string
   mallName: string
-  totalOrders: number
-  processedOrders: number
-  errorOrders: number
   manufacturerBreakdown: ManufacturerBreakdown[]
-  errors: UploadError[]
   orders: ParsedOrder[]
+  processedOrders: number
+  success: boolean
+  totalOrders: number
+  uploadId: string
 }
 
-interface ManufacturerBreakdown {
-  name: string
-  orders: number
-  amount: number
-}
+// 쇼핑몰 목록 조회
+export async function GET(): Promise<NextResponse> {
+  const malls = SHOPPING_MALL_CONFIGS.map((m) => ({
+    id: m.id,
+    name: m.mallName,
+    displayName: m.displayName,
+  }))
 
-interface UploadError {
-  row: number
-  message: string
-  productCode?: string
-  productName?: string
+  return NextResponse.json({ malls })
 }
 
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
@@ -122,13 +129,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
   }
 }
 
-// 쇼핑몰 목록 조회
-export async function GET(): Promise<NextResponse> {
-  const malls = SHOPPING_MALL_CONFIGS.map((m) => ({
-    id: m.id,
-    name: m.mallName,
-    displayName: m.displayName,
-  }))
-
-  return NextResponse.json({ malls })
+// 간단한 ID 생성 함수
+function generateId(): string {
+  return `upl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
 }

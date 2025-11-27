@@ -1,24 +1,25 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 'lucide-react'
+import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Download, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/mock-data'
 
 interface CostUploadData {
-  productCode: string
   cost: number
-  status: 'success' | 'error' | 'not_found'
   message?: string
+  productCode: string
+  status: 'error' | 'not_found' | 'success'
 }
 
 interface CostUploadModalProps {
-  open: boolean
   onOpenChange: (open: boolean) => void
   onUpload: (data: CostUploadData[]) => void
+  open: boolean
 }
 
 export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModalProps) {
@@ -117,7 +118,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
   const errorCount = uploadedData.filter((d) => d.status === 'error').length
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={open}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -129,7 +130,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
         <div className="flex-1 overflow-auto space-y-4">
           {/* Template Download */}
-          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-2">
+          <Button className="gap-2" onClick={handleDownloadTemplate} size="sm" variant="outline">
             <Download className="h-4 w-4" />
             템플릿 다운로드
           </Button>
@@ -163,12 +164,12 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                 <span className="font-medium text-slate-700">{fileName}</span>
               </div>
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => {
                   setFileName(null)
                   setUploadedData([])
                 }}
+                size="sm"
+                variant="ghost"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -236,10 +237,10 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
+          <Button onClick={handleClose} variant="outline">
             취소
           </Button>
-          <Button onClick={handleApply} disabled={successCount === 0} className="gap-2">
+          <Button className="gap-2" disabled={successCount === 0} onClick={handleApply}>
             <CheckCircle2 className="h-4 w-4" />
             {successCount}건 적용
           </Button>

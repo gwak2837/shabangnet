@@ -1,13 +1,15 @@
 'use client'
 
+import { Download, FileSpreadsheet } from 'lucide-react'
+import { useState } from 'react'
+
+import type { SettlementFilters as SettlementFiltersType } from '@/lib/api/settlement'
+
 import { AppShell } from '@/components/layout'
 import { SettlementFilters, SettlementSummary, SettlementTable } from '@/components/settlement'
 import { Button } from '@/components/ui/button'
 import { useManufacturers, useSettlement } from '@/hooks'
 import { api } from '@/lib/api'
-import type { SettlementFilters as SettlementFiltersType } from '@/lib/api/settlement'
-import { Download, FileSpreadsheet } from 'lucide-react'
-import { useState } from 'react'
 
 export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()
@@ -92,22 +94,22 @@ export default function SettlementPage() {
   }
 
   return (
-    <AppShell title="정산 관리" description="제조사별 발주 내역을 조회하고 정산서를 다운로드합니다">
+    <AppShell description="제조사별 발주 내역을 조회하고 정산서를 다운로드합니다" title="정산 관리">
       {/* Filters */}
       <div className="mb-6">
         <SettlementFilters
-          manufacturers={manufacturers}
-          selectedManufacturerId={selectedManufacturerId}
-          onManufacturerChange={setSelectedManufacturerId}
-          periodType={periodType}
-          onPeriodTypeChange={setPeriodType}
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-          startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
+          manufacturers={manufacturers}
           onEndDateChange={setEndDate}
+          onManufacturerChange={setSelectedManufacturerId}
+          onMonthChange={setSelectedMonth}
+          onPeriodTypeChange={setPeriodType}
           onSearch={handleSearch}
+          onStartDateChange={setStartDate}
+          periodType={periodType}
+          selectedManufacturerId={selectedManufacturerId}
+          selectedMonth={selectedMonth}
+          startDate={startDate}
         />
       </div>
 
@@ -117,18 +119,18 @@ export default function SettlementPage() {
           {/* Summary */}
           {selectedManufacturer && !isLoading && (
             <SettlementSummary
-              totalOrders={summary.totalOrders}
-              totalQuantity={summary.totalQuantity}
-              totalCost={summary.totalCost}
               manufacturerName={summary.manufacturerName || selectedManufacturer.name}
               period={summary.period}
+              totalCost={summary.totalCost}
+              totalOrders={summary.totalOrders}
+              totalQuantity={summary.totalQuantity}
             />
           )}
 
           {/* Download Button */}
           {filteredOrders.length > 0 && !isLoading && (
             <div className="flex justify-end">
-              <Button onClick={handleDownload} className="gap-2">
+              <Button className="gap-2" onClick={handleDownload}>
                 <Download className="h-4 w-4" />
                 엑셀 다운로드
               </Button>
@@ -136,7 +138,7 @@ export default function SettlementPage() {
           )}
 
           {/* Table */}
-          <SettlementTable orders={filteredOrders} isLoading={isLoading} />
+          <SettlementTable isLoading={isLoading} orders={filteredOrders} />
         </div>
       )}
 

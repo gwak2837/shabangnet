@@ -1,18 +1,20 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { Building2, Loader2, Package, Settings2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
+import type { OptionManufacturerMapping } from '@/lib/mock-data'
+
 import { AppShell } from '@/components/layout'
-import { OptionMappingFilters, OptionMappingTable, OptionMappingModal } from '@/components/option-mappings'
+import { OptionMappingFilters, OptionMappingModal, OptionMappingTable } from '@/components/option-mappings'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  useOptionMappings,
-  useManufacturers,
   useCreateOptionMapping,
-  useUpdateOptionMapping,
   useDeleteOptionMapping,
+  useManufacturers,
+  useOptionMappings,
+  useUpdateOptionMapping,
 } from '@/hooks'
-import type { OptionManufacturerMapping } from '@/lib/mock-data'
-import { Settings2, Building2, Package, Loader2 } from 'lucide-react'
 
 export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -52,7 +54,7 @@ export default function OptionMappingsPage() {
     deleteMutation.mutate(mappingId)
   }
 
-  const handleSave = (data: Omit<OptionManufacturerMapping, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSave = (data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>) => {
     if (editingMapping) {
       updateMutation.mutate({ id: editingMapping.id, data })
     } else {
@@ -70,7 +72,7 @@ export default function OptionMappingsPage() {
 
   if (isLoadingMappings) {
     return (
-      <AppShell title="옵션 매핑" description="상품코드 + 옵션 조합별로 제조사를 매핑합니다">
+      <AppShell description="상품코드 + 옵션 조합별로 제조사를 매핑합니다" title="옵션 매핑">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -79,7 +81,7 @@ export default function OptionMappingsPage() {
   }
 
   return (
-    <AppShell title="옵션 매핑" description="상품코드 + 옵션 조합별로 제조사를 매핑합니다">
+    <AppShell description="상품코드 + 옵션 조합별로 제조사를 매핑합니다" title="옵션 매핑">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card className="border-slate-200 bg-white shadow-sm">
@@ -138,25 +140,25 @@ export default function OptionMappingsPage() {
       <div className="mb-6">
         <OptionMappingFilters
           manufacturers={manufacturers}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedManufacturer={selectedManufacturer}
-          onManufacturerChange={setSelectedManufacturer}
           onAddNew={handleAddNew}
+          onManufacturerChange={setSelectedManufacturer}
+          onSearchChange={setSearchQuery}
+          searchQuery={searchQuery}
+          selectedManufacturer={selectedManufacturer}
         />
       </div>
 
       {/* Mapping Table */}
-      <OptionMappingTable mappings={filteredMappings} onEdit={handleEdit} onDelete={handleDelete} />
+      <OptionMappingTable mappings={filteredMappings} onDelete={handleDelete} onEdit={handleEdit} />
 
       {/* Modal */}
       <OptionMappingModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        mapping={editingMapping}
-        manufacturers={manufacturers}
-        onSave={handleSave}
         isSaving={createMutation.isPending || updateMutation.isPending}
+        manufacturers={manufacturers}
+        mapping={editingMapping}
+        onOpenChange={setIsModalOpen}
+        onSave={handleSave}
+        open={isModalOpen}
       />
     </AppShell>
   )

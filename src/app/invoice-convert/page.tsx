@@ -1,57 +1,16 @@
 'use client'
 
+import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+
+import { ConvertResult, InvoiceDropzone, OrderSelect } from '@/components/invoice-convert'
 import { AppShell } from '@/components/layout'
-import { OrderSelect, InvoiceDropzone, ConvertResult } from '@/components/invoice-convert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks'
-import { type SendLog, type InvoiceConvertResult, getInvoiceTemplate, getCourierCode } from '@/lib/mock-data'
-import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
+import { getCourierCode, getInvoiceTemplate, type InvoiceConvertResult, type SendLog } from '@/lib/mock-data'
 
-type Step = 'select' | 'upload' | 'result'
-
-// 데모용 송장 파일 파싱 시뮬레이션
-function simulateInvoiceParsing(log: SendLog): InvoiceConvertResult[] {
-  // 실제로는 엑셀 파싱 후 처리
-  // 여기서는 발주 로그의 주문 정보를 기반으로 시뮬레이션
-
-  const results: InvoiceConvertResult[] = []
-
-  // 성공 케이스 - 발주 로그의 주문 사용
-  log.orders.forEach((order, idx) => {
-    if (idx < log.orderCount - 2) {
-      // 대부분 성공
-      const courierCode = getCourierCode('CJ대한통운') || '04'
-      results.push({
-        orderNumber: order.orderNumber,
-        courierCode,
-        trackingNumber: `${Math.floor(100000000000 + Math.random() * 900000000000)}`,
-        status: 'success',
-      })
-    }
-  })
-
-  // 택배사 오류 케이스 추가
-  results.push({
-    orderNumber: 'SB20241126099',
-    courierCode: '',
-    trackingNumber: '111222333444',
-    status: 'courier_error',
-    originalCourier: '알수없는택배',
-  })
-
-  // 주문 미매칭 케이스 추가
-  results.push({
-    orderNumber: 'UNKNOWN-001',
-    courierCode: '',
-    trackingNumber: '555666777888',
-    status: 'order_not_found',
-    errorMessage: '주문번호를 찾을 수 없습니다',
-  })
-
-  return results
-}
+type Step = 'result' | 'select' | 'upload'
 
 export default function InvoiceConvertPage() {
   const [step, setStep] = useState<Step>('select')
@@ -109,7 +68,7 @@ export default function InvoiceConvertPage() {
 
   if (isLoadingLogs) {
     return (
-      <AppShell title="송장 변환" description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다">
+      <AppShell description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다" title="송장 변환">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -118,13 +77,13 @@ export default function InvoiceConvertPage() {
   }
 
   return (
-    <AppShell title="송장 변환" description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다">
+    <AppShell description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다" title="송장 변환">
       {step === 'result' ? (
         <ConvertResult
-          results={convertResults}
           fileName={outputFileName}
           onDownload={handleDownload}
           onReset={handleReset}
+          results={convertResults}
         />
       ) : (
         <div className="space-y-6">
@@ -183,15 +142,15 @@ export default function InvoiceConvertPage() {
           {/* Main Content */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left: Order Select */}
-            <OrderSelect logs={logs} selectedLog={selectedLog} onSelect={handleSelectLog} />
+            <OrderSelect logs={logs} onSelect={handleSelectLog} selectedLog={selectedLog} />
 
             {/* Right: Invoice Upload */}
             <InvoiceDropzone
+              disabled={!selectedLog}
+              isProcessing={isProcessing}
+              onClear={handleClearFile}
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
-              onClear={handleClearFile}
-              isProcessing={isProcessing}
-              disabled={!selectedLog}
             />
           </div>
 
@@ -262,9 +221,9 @@ export default function InvoiceConvertPage() {
           {/* Convert Button */}
           <div className="flex justify-end">
             <Button
-              onClick={handleConvert}
-              disabled={!selectedLog || !selectedFile || isProcessing}
               className="bg-slate-900 hover:bg-slate-800 min-w-[160px]"
+              disabled={!selectedLog || !selectedFile || isProcessing}
+              onClick={handleConvert}
             >
               {isProcessing ? (
                 <>
@@ -283,4 +242,46 @@ export default function InvoiceConvertPage() {
       )}
     </AppShell>
   )
+}
+
+// 데모용 송장 파일 파싱 시뮬레이션
+function simulateInvoiceParsing(log: SendLog): InvoiceConvertResult[] {
+  // 실제로는 엑셀 파싱 후 처리
+  // 여기서는 발주 로그의 주문 정보를 기반으로 시뮬레이션
+
+  const results: InvoiceConvertResult[] = []
+
+  // 성공 케이스 - 발주 로그의 주문 사용
+  log.orders.forEach((order, idx) => {
+    if (idx < log.orderCount - 2) {
+      // 대부분 성공
+      const courierCode = getCourierCode('CJ대한통운') || '04'
+      results.push({
+        orderNumber: order.orderNumber,
+        courierCode,
+        trackingNumber: `${Math.floor(100000000000 + Math.random() * 900000000000)}`,
+        status: 'success',
+      })
+    }
+  })
+
+  // 택배사 오류 케이스 추가
+  results.push({
+    orderNumber: 'SB20241126099',
+    courierCode: '',
+    trackingNumber: '111222333444',
+    status: 'courier_error',
+    originalCourier: '알수없는택배',
+  })
+
+  // 주문 미매칭 케이스 추가
+  results.push({
+    orderNumber: 'UNKNOWN-001',
+    courierCode: '',
+    trackingNumber: '555666777888',
+    status: 'order_not_found',
+    errorMessage: '주문번호를 찾을 수 없습니다',
+  })
+
+  return results
 }

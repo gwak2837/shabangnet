@@ -1,21 +1,28 @@
 'use client'
 
+import { CheckCircle2, Filter, Loader2, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+
+import type { ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import type { ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
-import { CheckCircle2, Filter, Loader2, Plus, Trash2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
 
 interface ExclusionFormProps {
-  settings?: ExclusionSettings
-  onUpdateSettings: (data: Partial<ExclusionSettings>) => void
+  isSaving?: boolean
   onAddPattern: (pattern: Omit<ExclusionPattern, 'id'>) => void
   onRemovePattern: (id: string) => void
-  isSaving?: boolean
+  onUpdateSettings: (data: Partial<ExclusionSettings>) => void
+  settings?: ExclusionSettings
+}
+
+const defaultSettings: ExclusionSettings = {
+  enabled: true,
+  patterns: [],
 }
 
 export function ExclusionForm({
@@ -25,20 +32,19 @@ export function ExclusionForm({
   onRemovePattern,
   isSaving = false,
 }: ExclusionFormProps) {
-  const [formData, setFormData] = useState<ExclusionSettings>({
-    enabled: true,
-    patterns: [],
-  })
+  const [formData, setFormData] = useState<ExclusionSettings>(settings ?? defaultSettings)
   const [newPattern, setNewPattern] = useState('')
   const [newDescription, setNewDescription] = useState('')
   const [saved, setSaved] = useState(false)
+  const [prevSettings, setPrevSettings] = useState(settings)
   const enabledCount = formData.patterns.filter((p) => p.enabled).length
 
-  useEffect(() => {
+  if (settings !== prevSettings) {
+    setPrevSettings(settings)
     if (settings) {
       setFormData(settings)
     }
-  }, [settings])
+  }
 
   function handleToggleEnabled(checked: boolean) {
     setFormData({ ...formData, enabled: checked })
@@ -91,19 +97,19 @@ export function ExclusionForm({
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
           <div className="space-y-0.5">
-            <Label htmlFor="exclusion-enabled" className="text-base">
+            <Label className="text-base" htmlFor="exclusion-enabled">
               발송 제외 필터 활성화
             </Label>
             <p className="text-sm text-slate-500">F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다</p>
           </div>
-          <Switch id="exclusion-enabled" checked={formData.enabled} onCheckedChange={handleToggleEnabled} />
+          <Switch checked={formData.enabled} id="exclusion-enabled" onCheckedChange={handleToggleEnabled} />
         </div>
 
         {/* Patterns List */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label>제외 패턴 목록</Label>
-            <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+            <Badge className="bg-slate-100 text-slate-600" variant="secondary">
               {enabledCount}/{formData.patterns.length} 활성화
             </Badge>
           </div>
@@ -111,15 +117,15 @@ export function ExclusionForm({
           <div className="space-y-2">
             {formData.patterns.map((pattern) => (
               <div
-                key={pattern.id}
                 className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
                   pattern.enabled ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50'
                 }`}
+                key={pattern.id}
               >
                 <Switch
                   checked={pattern.enabled}
-                  onCheckedChange={(checked) => handleTogglePattern(pattern.id, checked)}
                   disabled={!formData.enabled}
+                  onCheckedChange={(checked) => handleTogglePattern(pattern.id, checked)}
                 />
                 <div className="flex-1 min-w-0">
                   <p className={`font-mono text-sm truncate ${pattern.enabled ? 'text-slate-900' : 'text-slate-400'}`}>
@@ -128,10 +134,10 @@ export function ExclusionForm({
                   {pattern.description && <p className="text-xs text-slate-500 truncate">{pattern.description}</p>}
                 </div>
                 <Button
-                  variant="ghost"
-                  size="icon"
                   className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
                   onClick={() => handleRemovePattern(pattern.id)}
+                  size="icon"
+                  variant="ghost"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -152,22 +158,22 @@ export function ExclusionForm({
           <div className="flex gap-2">
             <div className="flex-1 space-y-2">
               <Input
+                className="bg-white font-mono text-sm"
+                onChange={(e) => setNewPattern(e.target.value)}
                 placeholder="예: [30002002]주문_센터택배"
                 value={newPattern}
-                onChange={(e) => setNewPattern(e.target.value)}
-                className="bg-white font-mono text-sm"
               />
               <Input
+                className="bg-white text-sm"
+                onChange={(e) => setNewDescription(e.target.value)}
                 placeholder="설명 (선택사항)"
                 value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                className="bg-white text-sm"
               />
             </div>
             <Button
-              onClick={handleAddPattern}
-              disabled={!newPattern.trim() || isSaving}
               className="shrink-0 bg-violet-600 hover:bg-violet-700"
+              disabled={!newPattern.trim() || isSaving}
+              onClick={handleAddPattern}
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
               추가

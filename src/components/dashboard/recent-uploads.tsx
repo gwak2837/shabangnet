@@ -1,14 +1,15 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel, type Upload } from '@/lib/mock-data'
 import { FileSpreadsheet, Loader2 } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel, type Upload } from '@/lib/mock-data'
+
 interface RecentUploadsProps {
-  uploads: Upload[]
   isLoading?: boolean
+  uploads: Upload[]
 }
 
 export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
@@ -17,7 +18,7 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">최근 업로드</CardTitle>
-          <a href="/upload" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+          <a className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/upload">
             모두 보기
           </a>
         </div>
@@ -41,7 +42,7 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
             </TableHeader>
             <TableBody>
               {uploads.map((upload) => (
-                <TableRow key={upload.id} className="hover:bg-slate-50 transition-colors">
+                <TableRow className="hover:bg-slate-50 transition-colors" key={upload.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
@@ -60,7 +61,7 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(upload.status)}>
+                    <Badge className={getStatusColor(upload.status)} variant="secondary">
                       {getStatusLabel(upload.status)}
                     </Badge>
                   </TableCell>

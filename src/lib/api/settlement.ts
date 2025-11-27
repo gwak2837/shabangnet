@@ -3,38 +3,38 @@ import { sendLogs as mockSendLogs } from '@/lib/mock-data'
 // API 지연 시뮬레이션
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export interface SettlementFilters {
-  manufacturerId: string
-  periodType: 'month' | 'range'
-  month?: string // YYYY-MM format
-  startDate?: string // YYYY-MM-DD format
-  endDate?: string
-}
-
-export interface SettlementOrderItem {
-  id: string
-  orderNumber: string
-  sentAt: string
-  productName: string
-  optionName: string
-  quantity: number
-  cost: number
-  totalCost: number
-  customerName: string
-  address: string
-}
-
-export interface SettlementSummary {
-  totalOrders: number
-  totalQuantity: number
-  totalCost: number
-  manufacturerName: string
-  period: string
-}
-
 export interface SettlementData {
   orders: SettlementOrderItem[]
   summary: SettlementSummary
+}
+
+export interface SettlementFilters {
+  endDate?: string
+  manufacturerId: string
+  month?: string // YYYY-MM format
+  periodType: 'month' | 'range'
+  startDate?: string // YYYY-MM-DD format
+}
+
+export interface SettlementOrderItem {
+  address: string
+  cost: number
+  customerName: string
+  id: string
+  optionName: string
+  orderNumber: string
+  productName: string
+  quantity: number
+  sentAt: string
+  totalCost: number
+}
+
+export interface SettlementSummary {
+  manufacturerName: string
+  period: string
+  totalCost: number
+  totalOrders: number
+  totalQuantity: number
 }
 
 export async function getSettlementData(filters: SettlementFilters): Promise<SettlementData> {

@@ -1,27 +1,28 @@
 import { NextResponse } from 'next/server'
+
 import {
-  generateTemplateBasedOrderSheet,
-  generateOrderSheet,
   generateOrderFileName,
-  type ParsedOrder,
+  generateOrderSheet,
+  generateTemplateBasedOrderSheet,
   type OrderTemplateConfig,
+  type ParsedOrder,
 } from '@/lib/excel'
 
 interface GenerateRequest {
   manufacturerId: string
   manufacturerName: string
   orders: ParsedOrder[]
-  templateConfig?: OrderTemplateConfig
   templateBuffer?: string // base64 encoded
+  templateConfig?: OrderTemplateConfig
 }
 
 interface GenerateResponse {
-  success: boolean
-  fileName?: string
-  fileBuffer?: string // base64 encoded
-  orderCount?: number
-  totalAmount?: number
   error?: string
+  fileBuffer?: string // base64 encoded
+  fileName?: string
+  orderCount?: number
+  success: boolean
+  totalAmount?: number
 }
 
 export async function POST(request: Request): Promise<NextResponse<GenerateResponse>> {

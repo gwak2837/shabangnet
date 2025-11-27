@@ -1,12 +1,12 @@
 'use client'
 
-import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { Sidebar } from './sidebar'
 
 interface AppShellProps {
   children: React.ReactNode
-  title: string
   description?: string
+  title: string
 }
 
 export function AppShell({ children, title, description }: AppShellProps) {
@@ -14,7 +14,7 @@ export function AppShell({ children, title, description }: AppShellProps) {
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
       <div className="pl-64">
-        <Header title={title} description={description} />
+        <Header description={description} title={title} />
         <main className="p-8">{children}</main>
       </div>
     </div>

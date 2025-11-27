@@ -1,9 +1,10 @@
 import ExcelJS from 'exceljs'
+
 import {
-  SABANGNET_COLUMNS,
   columnLetterToIndex,
   findSabangnetKeyByLabel,
   indexToColumnLetter,
+  SABANGNET_COLUMNS,
   type ShoppingMallConfig,
 } from './constants'
 
@@ -11,85 +12,85 @@ import {
 // 타입 정의
 // ============================================
 
-// 사방넷 원본 파일에서 파싱된 주문 데이터
-export interface ParsedOrder {
-  orderNumber: string
-  productName: string
-  quantity: number
-  orderName: string
-  recipientName: string
-  orderPhone: string
-  orderMobile: string
-  recipientPhone: string
-  recipientMobile: string
-  postalCode: string
-  address: string
-  memo: string
-  shoppingMall: string
-  manufacturer: string
-  courier: string
-  trackingNumber: string
-  optionName: string
-  paymentAmount: number
-  productAbbr: string
-  productCode: string
-  cost: number
-  // 원본 행 번호 (에러 추적용)
-  rowIndex: number
-}
-
-// 파싱 결과
-export interface ParseResult {
-  orders: ParsedOrder[]
-  errors: ParseError[]
-  headers: string[]
-  totalRows: number
-}
-
-// 파싱 에러
-export interface ParseError {
-  row: number
-  column?: string
-  message: string
-  data?: Record<string, unknown>
-}
-
-// 템플릿 분석 결과
-export interface TemplateAnalysis {
-  headers: string[]
-  headerRow: number
-  dataStartRow: number
-  suggestedMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
-  sampleData: Record<string, string>[] // 샘플 데이터 (최대 3행)
-}
-
-// 제조사 발주서 템플릿 설정
-export interface OrderTemplateConfig {
-  headerRow: number
-  dataStartRow: number
-  columnMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
-  fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
-}
-
 // 발주서에 포함될 주문 데이터 타입
 export interface OrderData {
-  orderNumber: string
-  customerName: string
-  phone: string
   address: string
+  customerName: string
+  memo?: string
+  optionName: string
+  orderNumber: string
+  phone: string
+  price: number
   productCode: string
   productName: string
-  optionName: string
   quantity: number
-  price: number
-  memo?: string
 }
 
 // 제조사별 발주서 생성 옵션
 export interface OrderSheetOptions {
+  date?: Date
   manufacturerName: string
   orders: OrderData[]
-  date?: Date
+}
+
+// 제조사 발주서 템플릿 설정
+export interface OrderTemplateConfig {
+  columnMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
+  dataStartRow: number
+  fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
+  headerRow: number
+}
+
+// 사방넷 원본 파일에서 파싱된 주문 데이터
+export interface ParsedOrder {
+  address: string
+  cost: number
+  courier: string
+  manufacturer: string
+  memo: string
+  optionName: string
+  orderMobile: string
+  orderName: string
+  orderNumber: string
+  orderPhone: string
+  paymentAmount: number
+  postalCode: string
+  productAbbr: string
+  productCode: string
+  productName: string
+  quantity: number
+  recipientMobile: string
+  recipientName: string
+  recipientPhone: string
+  // 원본 행 번호 (에러 추적용)
+  rowIndex: number
+  shoppingMall: string
+  trackingNumber: string
+}
+
+// 파싱 에러
+export interface ParseError {
+  column?: string
+  data?: Record<string, unknown>
+  message: string
+  row: number
+}
+
+// 파싱 결과
+export interface ParseResult {
+  errors: ParseError[]
+  headers: string[]
+  orders: ParsedOrder[]
+  totalRows: number
+}
+
+// 템플릿 분석 결과
+export interface TemplateAnalysis {
+  dataStartRow: number
+  headerRow: number
+  headers: string[]
+  sampleData: Record<string, string>[] // 샘플 데이터 (최대 3행)
+  suggestedMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
 }
 
 // 발주서 기본 헤더
@@ -104,6 +105,128 @@ const DEFAULT_HEADERS = [
   { key: 'price', header: '금액', width: 15 },
   { key: 'memo', header: '비고', width: 20 },
 ]
+
+/**
+ * 템플릿 파일 구조 분석
+ */
+export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<TemplateAnalysis> {
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(buffer)
+
+  const worksheet = workbook.worksheets[0]
+  if (!worksheet) {
+    throw new Error('워크시트를 찾을 수 없습니다')
+  }
+
+  // 헤더 행 찾기 (데이터가 있는 첫 번째 행)
+  let headerRow = 1
+  let headers: string[] = []
+  let dataStartRow = 2
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (headers.length === 0) {
+      const rowValues: string[] = []
+      let hasContent = false
+
+      row.eachCell((cell, colNumber) => {
+        const value = getCellValue(cell)
+        rowValues[colNumber - 1] = value
+        if (value && value.trim()) hasContent = true
+      })
+
+      if (hasContent) {
+        // 첫 번째 데이터가 있는 행을 헤더로 간주
+        headers = rowValues.filter((v) => v !== undefined)
+        headerRow = rowNumber
+        dataStartRow = rowNumber + 1
+      }
+    }
+  })
+
+  // 자동 매핑 제안
+  const suggestedMappings: Record<string, string> = {}
+  headers.forEach((header, index) => {
+    if (!header) return
+    const sabangnetKey = findSabangnetKeyByLabel(header)
+    if (sabangnetKey) {
+      suggestedMappings[sabangnetKey] = indexToColumnLetter(index)
+    }
+  })
+
+  // 샘플 데이터 추출 (최대 3행)
+  const sampleData: Record<string, string>[] = []
+  let sampleCount = 0
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber <= headerRow || sampleCount >= 3) return
+
+    const rowData: Record<string, string> = {}
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const col = indexToColumnLetter(colNumber - 1)
+      rowData[col] = getCellValue(cell)
+    })
+
+    // 빈 행이 아니면 추가
+    if (Object.values(rowData).some((v) => v && v.trim())) {
+      sampleData.push(rowData)
+      sampleCount++
+    }
+  })
+
+  return {
+    headers,
+    headerRow,
+    dataStartRow,
+    suggestedMappings,
+    sampleData,
+  }
+}
+
+/**
+ * 사방넷 양식으로 변환 (쇼핑몰 주문 -> 사방넷 업로드용)
+ */
+export async function convertToSabangnetFormat(orders: ParsedOrder[]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = '(주)다온에프앤씨'
+  workbook.created = new Date()
+
+  const worksheet = workbook.addWorksheet('사방넷주문')
+
+  // 헤더 설정
+  const headers = SABANGNET_COLUMNS.map((col) => col.label)
+  worksheet.addRow(headers)
+
+  // 데이터 추가
+  for (const order of orders) {
+    const rowData = SABANGNET_COLUMNS.map((col) => getOrderValue(order, col.key))
+    worksheet.addRow(rowData)
+  }
+
+  // 컬럼 너비 자동 조정
+  worksheet.columns.forEach((column) => {
+    column.width = 15
+  })
+
+  const buffer = await workbook.xlsx.writeBuffer()
+  return Buffer.from(buffer)
+}
+
+/**
+ * 날짜 포맷 (YYYYMMDD)
+ */
+export function formatDateForFileName(date: Date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}${month}${day}`
+}
+
+/**
+ * 발주서 파일명 생성
+ */
+export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
+  return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
+}
 
 /**
  * 제조사별 발주서 엑셀 파일 생성
@@ -224,55 +347,81 @@ export async function generateOrderSheet(options: OrderSheetOptions): Promise<Bu
 }
 
 /**
- * 날짜 포맷 (YYYYMMDD)
+ * 제조사별 템플릿을 사용하여 발주서 생성
  */
-export function formatDateForFileName(date: Date = new Date()): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}${month}${day}`
-}
+export async function generateTemplateBasedOrderSheet(
+  orders: ParsedOrder[],
+  templateBuffer: ArrayBuffer | null,
+  config: OrderTemplateConfig,
+  manufacturerName: string,
+  date: Date = new Date(),
+): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook()
 
-/**
- * 날짜 포맷 (YYYY년 MM월 DD일)
- */
-function formatDateForExcel(date: Date): string {
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  return `${year}년 ${month}월 ${day}일`
-}
-
-/**
- * 상품명 + 옵션명 조합
- */
-function formatProductNameWithOption(productName: string, optionName?: string): string {
-  if (!optionName || isEmptyOption(optionName)) {
-    return productName
+  // 템플릿이 있으면 로드, 없으면 새로 생성
+  if (templateBuffer) {
+    await workbook.xlsx.load(templateBuffer)
+  } else {
+    workbook.creator = '(주)다온에프앤씨'
+    workbook.created = date
   }
-  return `${productName} ${optionName}`
-}
 
-/**
- * 빈 옵션 판별
- */
-function isEmptyOption(optionName: string | undefined | null): boolean {
-  if (!optionName) return true
-  const normalized = optionName.trim().toLowerCase()
-  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
-  return emptyPatterns.some((pattern) => pattern.test(normalized))
-}
+  let worksheet = workbook.worksheets[0]
+  if (!worksheet) {
+    worksheet = workbook.addWorksheet('발주서')
+  }
 
-/**
- * 발주서 파일명 생성
- */
-export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
-  return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
+  // 데이터 시작 행부터 주문 데이터 입력
+  let currentRow = config.dataStartRow
+
+  for (const order of orders) {
+    const row = worksheet.getRow(currentRow)
+
+    // 컬럼 매핑에 따라 데이터 입력
+    for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
+      const colIndex = columnLetterToIndex(column) + 1
+      const value = getOrderValue(order, sabangnetKey)
+      row.getCell(colIndex).value = value
+    }
+
+    // 고정값 입력
+    if (config.fixedValues) {
+      for (const [column, value] of Object.entries(config.fixedValues)) {
+        const colIndex = columnLetterToIndex(column) + 1
+        row.getCell(colIndex).value = value
+      }
+    }
+
+    row.commit()
+    currentRow++
+  }
+
+  // 빈 행 삭제 (템플릿에 미리 있던 빈 행)
+  // 필요시 구현
+
+  const buffer = await workbook.xlsx.writeBuffer()
+  return Buffer.from(buffer)
 }
 
 // ============================================
 // 파싱 함수들
 // ============================================
+
+/**
+ * 제조사별로 주문 그룹화
+ */
+export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, ParsedOrder[]> {
+  const grouped = new Map<string, ParsedOrder[]>()
+
+  for (const order of orders) {
+    const manufacturer = order.manufacturer || '미지정'
+    const existing = grouped.get(manufacturer) || []
+    existing.push(order)
+    grouped.set(manufacturer, existing)
+  }
+
+  return grouped
+}
 
 /**
  * 사방넷 원본 파일 파싱 (다온발주양식.xlsx 기준)
@@ -394,170 +543,28 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   return { orders, errors, headers, totalRows: rowIndex }
 }
 
-/**
- * 템플릿 파일 구조 분석
- */
-export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<TemplateAnalysis> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(buffer)
-
-  const worksheet = workbook.worksheets[0]
-  if (!worksheet) {
-    throw new Error('워크시트를 찾을 수 없습니다')
-  }
-
-  // 헤더 행 찾기 (데이터가 있는 첫 번째 행)
-  let headerRow = 1
-  let headers: string[] = []
-  let dataStartRow = 2
-
-  worksheet.eachRow((row, rowNumber) => {
-    if (headers.length === 0) {
-      const rowValues: string[] = []
-      let hasContent = false
-
-      row.eachCell((cell, colNumber) => {
-        const value = getCellValue(cell)
-        rowValues[colNumber - 1] = value
-        if (value && value.trim()) hasContent = true
-      })
-
-      if (hasContent) {
-        // 첫 번째 데이터가 있는 행을 헤더로 간주
-        headers = rowValues.filter((v) => v !== undefined)
-        headerRow = rowNumber
-        dataStartRow = rowNumber + 1
-      }
-    }
-  })
-
-  // 자동 매핑 제안
-  const suggestedMappings: Record<string, string> = {}
-  headers.forEach((header, index) => {
-    if (!header) return
-    const sabangnetKey = findSabangnetKeyByLabel(header)
-    if (sabangnetKey) {
-      suggestedMappings[sabangnetKey] = indexToColumnLetter(index)
-    }
-  })
-
-  // 샘플 데이터 추출 (최대 3행)
-  const sampleData: Record<string, string>[] = []
-  let sampleCount = 0
-
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber <= headerRow || sampleCount >= 3) return
-
-    const rowData: Record<string, string> = {}
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      const col = indexToColumnLetter(colNumber - 1)
-      rowData[col] = getCellValue(cell)
-    })
-
-    // 빈 행이 아니면 추가
-    if (Object.values(rowData).some((v) => v && v.trim())) {
-      sampleData.push(rowData)
-      sampleCount++
-    }
-  })
-
-  return {
-    headers,
-    headerRow,
-    dataStartRow,
-    suggestedMappings,
-    sampleData,
-  }
-}
-
 // ============================================
 // 템플릿 기반 발주서 생성
 // ============================================
 
 /**
- * 제조사별 템플릿을 사용하여 발주서 생성
+ * 날짜 포맷 (YYYY년 MM월 DD일)
  */
-export async function generateTemplateBasedOrderSheet(
-  orders: ParsedOrder[],
-  templateBuffer: ArrayBuffer | null,
-  config: OrderTemplateConfig,
-  manufacturerName: string,
-  date: Date = new Date(),
-): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook()
-
-  // 템플릿이 있으면 로드, 없으면 새로 생성
-  if (templateBuffer) {
-    await workbook.xlsx.load(templateBuffer)
-  } else {
-    workbook.creator = '(주)다온에프앤씨'
-    workbook.created = date
-  }
-
-  let worksheet = workbook.worksheets[0]
-  if (!worksheet) {
-    worksheet = workbook.addWorksheet('발주서')
-  }
-
-  // 데이터 시작 행부터 주문 데이터 입력
-  let currentRow = config.dataStartRow
-
-  for (const order of orders) {
-    const row = worksheet.getRow(currentRow)
-
-    // 컬럼 매핑에 따라 데이터 입력
-    for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
-      const colIndex = columnLetterToIndex(column) + 1
-      const value = getOrderValue(order, sabangnetKey)
-      row.getCell(colIndex).value = value
-    }
-
-    // 고정값 입력
-    if (config.fixedValues) {
-      for (const [column, value] of Object.entries(config.fixedValues)) {
-        const colIndex = columnLetterToIndex(column) + 1
-        row.getCell(colIndex).value = value
-      }
-    }
-
-    row.commit()
-    currentRow++
-  }
-
-  // 빈 행 삭제 (템플릿에 미리 있던 빈 행)
-  // 필요시 구현
-
-  const buffer = await workbook.xlsx.writeBuffer()
-  return Buffer.from(buffer)
+function formatDateForExcel(date: Date): string {
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${year}년 ${month}월 ${day}일`
 }
 
 /**
- * 사방넷 양식으로 변환 (쇼핑몰 주문 -> 사방넷 업로드용)
+ * 상품명 + 옵션명 조합
  */
-export async function convertToSabangnetFormat(orders: ParsedOrder[]): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook()
-  workbook.creator = '(주)다온에프앤씨'
-  workbook.created = new Date()
-
-  const worksheet = workbook.addWorksheet('사방넷주문')
-
-  // 헤더 설정
-  const headers = SABANGNET_COLUMNS.map((col) => col.label)
-  worksheet.addRow(headers)
-
-  // 데이터 추가
-  for (const order of orders) {
-    const rowData = SABANGNET_COLUMNS.map((col) => getOrderValue(order, col.key))
-    worksheet.addRow(rowData)
+function formatProductNameWithOption(productName: string, optionName?: string): string {
+  if (!optionName || isEmptyOption(optionName)) {
+    return productName
   }
-
-  // 컬럼 너비 자동 조정
-  worksheet.columns.forEach((column) => {
-    column.width = 15
-  })
-
-  const buffer = await workbook.xlsx.writeBuffer()
-  return Buffer.from(buffer)
+  return `${productName} ${optionName}`
 }
 
 // ============================================
@@ -595,6 +602,34 @@ function getCellValue(cell: ExcelJS.Cell): string {
   }
 
   return String(value)
+}
+
+/**
+ * ParsedOrder에서 특정 키의 값 가져오기
+ */
+function getOrderValue(order: ParsedOrder, key: string): number | string {
+  const orderRecord = order as unknown as Record<string, unknown>
+  const value = orderRecord[key]
+
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  if (typeof value === 'number') {
+    return value
+  }
+
+  return String(value)
+}
+
+/**
+ * 빈 옵션 판별
+ */
+function isEmptyOption(optionName: string | null | undefined): boolean {
+  if (!optionName) return true
+  const normalized = optionName.trim().toLowerCase()
+  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
+  return emptyPatterns.some((pattern) => pattern.test(normalized))
 }
 
 /**
@@ -683,38 +718,4 @@ function mapShoppingMallRowToOrder(
     cost: parseFloat(getValue('cost')?.replace(/[^0-9.-]/g, '') || '0') || 0,
     rowIndex: rowNumber,
   }
-}
-
-/**
- * ParsedOrder에서 특정 키의 값 가져오기
- */
-function getOrderValue(order: ParsedOrder, key: string): string | number {
-  const orderRecord = order as unknown as Record<string, unknown>
-  const value = orderRecord[key]
-
-  if (value === null || value === undefined) {
-    return ''
-  }
-
-  if (typeof value === 'number') {
-    return value
-  }
-
-  return String(value)
-}
-
-/**
- * 제조사별로 주문 그룹화
- */
-export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, ParsedOrder[]> {
-  const grouped = new Map<string, ParsedOrder[]>()
-
-  for (const order of orders) {
-    const manufacturer = order.manufacturer || '미지정'
-    const existing = grouped.get(manufacturer) || []
-    existing.push(order)
-    grouped.set(manufacturer, existing)
-  }
-
-  return grouped
 }

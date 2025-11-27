@@ -1,5 +1,21 @@
 'use client'
 
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileSpreadsheet,
+  Loader2,
+  Mail,
+  MapPin,
+  Package,
+  Send,
+  User,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,26 +38,11 @@ import {
   getDaysDifference,
   type OrderBatch,
 } from '@/lib/mock-data'
-import {
-  AlertTriangle,
-  Calendar,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  FileSpreadsheet,
-  Loader2,
-  Mail,
-  MapPin,
-  Package,
-  Send,
-  User,
-} from 'lucide-react'
-import { useMemo, useState } from 'react'
 
 interface SendModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   batch: OrderBatch | null
+  onOpenChange: (open: boolean) => void
+  open: boolean
 }
 
 export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
@@ -139,7 +140,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
 
   if (isSent) {
     return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog onOpenChange={handleOpenChange} open={open}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center justify-center py-8">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
@@ -158,7 +159,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -179,7 +180,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <p className="font-semibold text-slate-900">{batch.manufacturerName}</p>
                 <p className="text-sm text-slate-500">{batch.email}</p>
               </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+              <Badge className="bg-blue-100 text-blue-700" variant="secondary">
                 수신
               </Badge>
             </div>
@@ -211,9 +212,9 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
 
             {/* Order Details Toggle */}
             <button
-              type="button"
-              onClick={() => setShowOrderDetails(!showOrderDetails)}
               className="mt-3 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+              onClick={() => setShowOrderDetails(!showOrderDetails)}
+              type="button"
             >
               <Package className="h-4 w-4" />
               주문 상세 {showOrderDetails ? '접기' : '보기'}
@@ -225,7 +226,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="mt-3 max-h-48 overflow-y-auto rounded-md border border-slate-100 bg-slate-50">
                 <div className="divide-y divide-slate-100">
                   {batch.orders.map((order) => (
-                    <div key={order.id} className="px-3 py-2 text-xs">
+                    <div className="px-3 py-2 text-xs" key={order.id}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-700 truncate">
@@ -264,11 +265,11 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="space-y-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">이전 발송 이력</p>
                 {duplicateCheck.duplicateLogs.slice(0, 3).map((log) => (
-                  <div key={log.id} className="rounded-md bg-white/70 border border-amber-200 p-3 text-sm">
+                  <div className="rounded-md bg-white/70 border border-amber-200 p-3 text-sm" key={log.id}>
                     <div className="flex items-center gap-2 text-amber-900">
                       <Calendar className="h-4 w-4" />
                       <span className="font-medium">{formatDateTime(log.sentAt)}</span>
-                      <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-xs">
+                      <Badge className="bg-amber-100 text-amber-700 text-xs" variant="secondary">
                         {getDaysDifference(log.sentAt)}일 전
                       </Badge>
                     </div>
@@ -276,7 +277,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                       <div className="text-xs">
                         {log.recipientAddresses.slice(0, 2).map((addr, idx) => (
-                          <p key={idx} className="truncate">
+                          <p className="truncate" key={idx}>
                             {addr}
                           </p>
                         ))}
@@ -297,7 +298,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <div className="rounded-md bg-white/70 border border-amber-200 p-3">
                   <div className="text-xs text-amber-700 space-y-1">
                     {duplicateCheck.matchedAddresses.slice(0, 3).map((addr, idx) => (
-                      <p key={idx} className="truncate">
+                      <p className="truncate" key={idx}>
                         {addr}
                       </p>
                     ))}
@@ -312,10 +313,10 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-amber-800">발송 사유 (필수)</label>
                 <Input
-                  value={duplicateReason}
+                  className="border-amber-300 bg-white focus:border-amber-500 focus:ring-amber-500"
                   onChange={(e) => setDuplicateReason(e.target.value)}
                   placeholder="예: 고객 요청으로 재발송, 이전 발주 취소 후 재주문 등"
-                  className="border-amber-300 bg-white focus:border-amber-500 focus:ring-amber-500"
+                  value={duplicateReason}
                 />
                 <p className="text-xs text-amber-600">입력한 사유는 발송 로그에 기록됩니다</p>
               </div>
@@ -326,15 +327,15 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           <div className="space-y-3">
             <div>
               <label className="text-sm font-medium text-slate-700">메일 제목</label>
-              <Input value={emailSubject} readOnly className="mt-1 bg-slate-50" />
+              <Input className="mt-1 bg-slate-50" readOnly value={emailSubject} />
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">메일 본문</label>
               <textarea
-                value={emailBody}
+                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                 readOnly
                 rows={4}
-                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                value={emailBody}
               />
             </div>
           </div>
@@ -354,13 +355,13 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0 shrink-0 pt-4 border-t border-slate-100">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
+          <Button disabled={isSending} onClick={() => onOpenChange(false)} variant="outline">
             취소
           </Button>
           <Button
-            onClick={handleSend}
-            disabled={isSending || !canSend}
             className="gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            disabled={isSending || !canSend}
+            onClick={handleSend}
           >
             {isSending ? (
               <>

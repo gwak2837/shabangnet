@@ -1,35 +1,36 @@
 'use client'
 
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, Download, Package } from 'lucide-react'
+import Link from 'next/link'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { AlertCircle, ArrowRight, Building2, CheckCircle2, Download, Package } from 'lucide-react'
-import Link from 'next/link'
 
 interface ManufacturerBreakdown {
+  amount: number
   name: string
   orders: number
-  amount: number
 }
 
 interface UploadError {
-  row: number
   message: string
   productCode?: string
   productName?: string
+  row: number
 }
 
 interface UploadResultData {
-  success: boolean
-  uploadId: string
+  errorOrders: number
+  errors: UploadError[]
   fileName: string
   mallName?: string
-  totalOrders: number
-  processedOrders: number
-  errorOrders: number
   manufacturerBreakdown: ManufacturerBreakdown[]
-  errors: UploadError[]
+  processedOrders: number
+  success: boolean
+  totalOrders: number
+  uploadId: string
 }
 
 interface UploadResultProps {
@@ -127,7 +128,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
               </TableHeader>
               <TableBody>
                 {data.manufacturerBreakdown.map((m) => (
-                  <TableRow key={m.name} className="hover:bg-slate-50 transition-colors">
+                  <TableRow className="hover:bg-slate-50 transition-colors" key={m.name}>
                     <TableCell className="font-medium text-slate-900">{m.name || '미지정'}</TableCell>
                     <TableCell className="text-right text-slate-700">{m.orders}건</TableCell>
                     <TableCell className="text-right text-slate-700">{m.amount.toLocaleString()}원</TableCell>
@@ -179,12 +180,12 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
               </TableHeader>
               <TableBody>
                 {data.errors.slice(0, 10).map((error, idx) => (
-                  <TableRow key={idx} className="hover:bg-rose-100/50 transition-colors border-rose-200">
+                  <TableRow className="hover:bg-rose-100/50 transition-colors border-rose-200" key={idx}>
                     <TableCell className="font-medium text-rose-900">{error.row}</TableCell>
                     <TableCell className="text-rose-800">{error.productCode || '-'}</TableCell>
                     <TableCell className="text-rose-800">{error.productName || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="bg-rose-200 text-rose-800 hover:bg-rose-200">
+                      <Badge className="bg-rose-200 text-rose-800 hover:bg-rose-200" variant="secondary">
                         {error.message}
                       </Badge>
                     </TableCell>
@@ -198,7 +199,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
 
             <div className="mt-4 flex items-center gap-4">
               <Link href="/products">
-                <Button variant="outline" size="sm" className="border-rose-300 text-rose-700 hover:bg-rose-100">
+                <Button className="border-rose-300 text-rose-700 hover:bg-rose-100" size="sm" variant="outline">
                   상품 매핑 관리로 이동
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -211,7 +212,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-3 pt-2">
         {uploadType === 'shopping_mall' && (
-          <Button variant="outline" onClick={handleDownloadSabangnetFormat} className="gap-2">
+          <Button className="gap-2" onClick={handleDownloadSabangnetFormat} variant="outline">
             <Download className="h-4 w-4" />
             사방넷 양식 다운로드
           </Button>

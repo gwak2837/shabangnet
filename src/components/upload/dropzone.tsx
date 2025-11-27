@@ -1,58 +1,55 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { FileSpreadsheet, Upload, X } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { Upload, FileSpreadsheet, X } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { formatFileSize } from '@/lib/mock-data'
+import { cn } from '@/lib/utils'
 
 interface DropzoneProps {
+  disabled?: boolean
+  isProcessing: boolean
+  onClear: () => void
   onFileSelect: (file: File) => void
   selectedFile: File | null
-  onClear: () => void
-  isProcessing: boolean
-  disabled?: boolean
 }
 
 export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, disabled = false }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
     setIsDragging(true)
-  }, [])
+  }
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  function handleDragLeave(e: React.DragEvent) {
     e.preventDefault()
     setIsDragging(false)
-  }, [])
+  }
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
 
-      if (disabled) return
+    if (disabled) {
+      return
+    }
 
-      const file = e.dataTransfer.files[0]
-      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-        onFileSelect(file)
-      }
-    },
-    [onFileSelect, disabled],
-  )
+    const file = e.dataTransfer.files[0]
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      onFileSelect(file)
+    }
+  }
 
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled) return
-      const file = e.target.files?.[0]
-      if (file) {
-        onFileSelect(file)
-      }
-    },
-    [onFileSelect, disabled],
-  )
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    if (disabled) return
+    const file = e.target.files?.[0]
+    if (file) {
+      onFileSelect(file)
+    }
+  }
 
   if (selectedFile) {
     return (
@@ -69,7 +66,7 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
               </div>
             </div>
             {!isProcessing && (
-              <Button variant="ghost" size="icon" onClick={onClear} className="text-slate-400 hover:text-slate-600">
+              <Button className="text-slate-400 hover:text-slate-600" onClick={onClear} size="icon" variant="ghost">
                 <X className="h-5 w-5" />
               </Button>
             )}
@@ -103,16 +100,16 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
                 ? 'border-blue-400 bg-blue-50'
                 : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
           )}
-          onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           <input
-            type="file"
             accept=".xlsx,.xls"
-            onChange={handleFileInput}
             className={cn('absolute inset-0 opacity-0', disabled ? 'cursor-not-allowed' : 'cursor-pointer')}
             disabled={disabled}
+            onChange={handleFileInput}
+            type="file"
           />
 
           <div

@@ -1,13 +1,14 @@
-import { sendEmail, type SendEmailOptions } from '@/lib/email'
 import { NextResponse } from 'next/server'
+
+import { sendEmail, type SendEmailOptions } from '@/lib/email'
 
 // 요청 본문 타입
 interface SendEmailRequest {
-  to: string | string[]
   cc?: string | string[]
+  html?: string
   subject: string
   text?: string
-  html?: string
+  to: string | string[]
 }
 
 export async function POST(request: Request) {

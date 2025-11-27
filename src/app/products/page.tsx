@@ -1,12 +1,13 @@
 'use client'
 
+import { AlertCircle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
 import { AppShell } from '@/components/layout'
 import { CostUploadModal, ProductFilters, ProductTable } from '@/components/products'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers, useProducts, useUpdateProduct } from '@/hooks'
-import { AlertCircle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
-import { useMemo, useState } from 'react'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -70,7 +71,7 @@ export default function ProductsPage() {
 
   if (isLoadingProducts) {
     return (
-      <AppShell title="상품 매핑" description="상품과 제조사 간의 매핑을 관리합니다">
+      <AppShell description="상품과 제조사 간의 매핑을 관리합니다" title="상품 매핑">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -79,7 +80,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <AppShell title="상품 매핑" description="상품과 제조사 간의 매핑을 관리합니다">
+    <AppShell description="상품과 제조사 간의 매핑을 관리합니다" title="상품 매핑">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card className="border-slate-200 bg-white shadow-sm">
@@ -122,12 +123,12 @@ export default function ProductsPage() {
       {/* Filters */}
       <div className="mb-6 flex items-center justify-between">
         <ProductFilters
-          searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          showUnmappedOnly={showUnmappedOnly}
           onShowUnmappedChange={setShowUnmappedOnly}
+          searchQuery={searchQuery}
+          showUnmappedOnly={showUnmappedOnly}
         />
-        <Button onClick={() => setIsCostUploadOpen(true)} className="gap-2">
+        <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
           <Upload className="h-4 w-4" />
           원가 일괄 업로드
         </Button>
@@ -135,14 +136,14 @@ export default function ProductsPage() {
 
       {/* Product Table */}
       <ProductTable
-        products={filteredProducts}
         manufacturers={manufacturers}
-        onUpdateManufacturer={handleUpdateManufacturer}
         onUpdateCost={handleUpdateCost}
+        onUpdateManufacturer={handleUpdateManufacturer}
+        products={filteredProducts}
       />
 
       {/* Cost Upload Modal */}
-      <CostUploadModal open={isCostUploadOpen} onOpenChange={setIsCostUploadOpen} onUpload={handleBulkCostUpload} />
+      <CostUploadModal onOpenChange={setIsCostUploadOpen} onUpload={handleBulkCostUpload} open={isCostUploadOpen} />
     </AppShell>
   )
 }

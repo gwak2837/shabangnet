@@ -1,5 +1,8 @@
 'use client'
 
+import { Building2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Trash2, Upload } from 'lucide-react'
+import { useCallback, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,20 +14,18 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { type Manufacturer, type InvoiceTemplate, defaultInvoiceTemplate, invoiceTemplates } from '@/lib/mock-data'
+import { Switch } from '@/components/ui/switch'
 import { SABANGNET_COLUMNS } from '@/lib/constants'
-import { Building2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Upload, Trash2 } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { defaultInvoiceTemplate, type InvoiceTemplate, invoiceTemplates, type Manufacturer } from '@/lib/mock-data'
 
 // 발주서 템플릿 타입
 interface OrderTemplate {
-  templateFileName?: string
-  headerRow: number
-  dataStartRow: number
   columnMappings: Record<string, string>
+  dataStartRow: number
   fixedValues: Record<string, string>
+  headerRow: number
+  templateFileName?: string
 }
 
 const defaultOrderTemplate: OrderTemplate = {
@@ -35,33 +36,15 @@ const defaultOrderTemplate: OrderTemplate = {
 }
 
 interface ManufacturerModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  isSaving?: boolean
   manufacturer: Manufacturer | null
+  onOpenChange: (open: boolean) => void
   onSave: (
     data: Partial<Manufacturer>,
     invoiceTemplate?: Partial<InvoiceTemplate>,
     orderTemplate?: Partial<OrderTemplate>,
   ) => void
-  isSaving?: boolean
-}
-
-function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
-  return {
-    name: manufacturer?.name ?? '',
-    contactName: manufacturer?.contactName ?? '',
-    email: manufacturer?.email ?? '',
-    ccEmail: manufacturer?.ccEmail ?? '',
-    phone: manufacturer?.phone ?? '',
-  }
-}
-
-function getInvoiceTemplateFromManufacturer(manufacturer: Manufacturer | null): Partial<InvoiceTemplate> {
-  if (!manufacturer) {
-    return { ...defaultInvoiceTemplate }
-  }
-  const existingTemplate = invoiceTemplates.find((t) => t.manufacturerId === manufacturer.id)
-  return existingTemplate || { ...defaultInvoiceTemplate }
+  open: boolean
 }
 
 export function ManufacturerModal({
@@ -195,20 +178,20 @@ export function ManufacturerModal({
   // 주요 사방넷 컬럼 (매핑 UI에 표시)
   const mainSabangnetColumns = SABANGNET_COLUMNS.filter((col) =>
     [
-      'recipientName',
-      'recipientMobile',
       'address',
-      'productName',
-      'quantity',
       'memo',
-      'orderNumber',
       'optionName',
       'orderName',
+      'orderNumber',
+      'productName',
+      'quantity',
+      'recipientMobile',
+      'recipientName',
     ].includes(col.key),
   )
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-lg max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -224,18 +207,18 @@ export function ManufacturerModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col">
+        <form className="flex flex-col" onSubmit={handleSubmit}>
           <div className="max-h-[55vh] overflow-y-auto space-y-4 pr-2">
             <div className="space-y-2">
               <Label htmlFor="name">
                 제조사명 <span className="text-rose-500">*</span>
               </Label>
               <Input
+                className={errors.name ? 'border-rose-500' : ''}
                 id="name"
-                value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="예: 농심식품"
-                className={errors.name ? 'border-rose-500' : ''}
+                value={formData.name}
               />
               {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
             </div>
@@ -244,9 +227,9 @@ export function ManufacturerModal({
               <Label htmlFor="contactName">담당자명</Label>
               <Input
                 id="contactName"
-                value={formData.contactName}
                 onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                 placeholder="예: 김영희"
+                value={formData.contactName}
               />
             </div>
 
@@ -255,12 +238,12 @@ export function ManufacturerModal({
                 이메일 <span className="text-rose-500">*</span>
               </Label>
               <Input
+                className={errors.email ? 'border-rose-500' : ''}
                 id="email"
-                type="email"
-                value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="예: contact@company.com"
-                className={errors.email ? 'border-rose-500' : ''}
+                type="email"
+                value={formData.email}
               />
               {errors.email && <p className="text-xs text-rose-500">{errors.email}</p>}
             </div>
@@ -268,12 +251,12 @@ export function ManufacturerModal({
             <div className="space-y-2">
               <Label htmlFor="ccEmail">참조 이메일 (CC)</Label>
               <Input
+                className={errors.ccEmail ? 'border-rose-500' : ''}
                 id="ccEmail"
-                type="email"
-                value={formData.ccEmail}
                 onChange={(e) => setFormData({ ...formData, ccEmail: e.target.value })}
                 placeholder="예: order@company.com"
-                className={errors.ccEmail ? 'border-rose-500' : ''}
+                type="email"
+                value={formData.ccEmail}
               />
               {errors.ccEmail && <p className="text-xs text-rose-500">{errors.ccEmail}</p>}
             </div>
@@ -282,19 +265,19 @@ export function ManufacturerModal({
               <Label htmlFor="phone">전화번호</Label>
               <Input
                 id="phone"
-                type="tel"
-                value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="예: 02-1234-5678"
+                type="tel"
+                value={formData.phone}
               />
             </div>
 
             {/* Order Template Settings (발주서 양식) - Collapsible */}
             <div className="border border-blue-200 rounded-lg overflow-hidden">
               <button
-                type="button"
-                onClick={() => setShowOrderTemplateSettings(!showOrderTemplateSettings)}
                 className="flex items-center justify-between w-full px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
+                onClick={() => setShowOrderTemplateSettings(!showOrderTemplateSettings)}
+                type="button"
               >
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="h-4 w-4 text-blue-600" />
@@ -318,7 +301,7 @@ export function ManufacturerModal({
                     <Label className="text-xs">양식 파일 업로드</Label>
                     <div className="flex items-center gap-2">
                       <label className="flex-1">
-                        <input type="file" accept=".xlsx,.xls" onChange={handleTemplateUpload} className="hidden" />
+                        <input accept=".xlsx,.xls" className="hidden" onChange={handleTemplateUpload} type="file" />
                         <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                           <Upload className="h-4 w-4 text-slate-400" />
                           <span className="text-sm text-slate-600">
@@ -335,27 +318,27 @@ export function ManufacturerModal({
                     <div className="space-y-1.5">
                       <Label className="text-xs">헤더 행 번호</Label>
                       <Input
-                        type="number"
+                        className="h-8 text-sm"
                         min={1}
-                        value={orderTemplate.headerRow}
                         onChange={(e) =>
                           setOrderTemplate({ ...orderTemplate, headerRow: parseInt(e.target.value) || 1 })
                         }
                         placeholder="1"
-                        className="h-8 text-sm"
+                        type="number"
+                        value={orderTemplate.headerRow}
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">데이터 시작 행</Label>
                       <Input
-                        type="number"
+                        className="h-8 text-sm"
                         min={1}
-                        value={orderTemplate.dataStartRow}
                         onChange={(e) =>
                           setOrderTemplate({ ...orderTemplate, dataStartRow: parseInt(e.target.value) || 2 })
                         }
                         placeholder="2"
-                        className="h-8 text-sm"
+                        type="number"
+                        value={orderTemplate.dataStartRow}
                       />
                     </div>
                   </div>
@@ -366,11 +349,10 @@ export function ManufacturerModal({
                     <p className="text-xs text-slate-400">사방넷 데이터를 제조사 양식의 어느 열에 넣을지 설정합니다.</p>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {mainSabangnetColumns.map((col) => (
-                        <div key={col.key} className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" key={col.key}>
                           <span className="text-xs text-slate-600 w-24 truncate">{col.label}</span>
                           <span className="text-slate-400">→</span>
                           <Select
-                            value={orderTemplate.columnMappings[col.key] || '__none__'}
                             onValueChange={(value) => {
                               if (value === '__none__') {
                                 removeMapping(col.key)
@@ -378,6 +360,7 @@ export function ManufacturerModal({
                                 updateMapping(col.key, value)
                               }
                             }}
+                            value={orderTemplate.columnMappings[col.key] || '__none__'}
                           >
                             <SelectTrigger className="h-7 text-xs flex-1">
                               <SelectValue placeholder="컬럼 선택" />
@@ -398,9 +381,9 @@ export function ManufacturerModal({
                           </Select>
                           {orderTemplate.columnMappings[col.key] && (
                             <button
-                              type="button"
-                              onClick={() => removeMapping(col.key)}
                               className="p-1 text-slate-400 hover:text-rose-500"
+                              onClick={() => removeMapping(col.key)}
+                              type="button"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -416,9 +399,9 @@ export function ManufacturerModal({
             {/* Invoice Template Settings (송장 양식) - Collapsible */}
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <button
-                type="button"
-                onClick={() => setShowInvoiceSettings(!showInvoiceSettings)}
                 className="flex items-center justify-between w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                onClick={() => setShowInvoiceSettings(!showInvoiceSettings)}
+                type="button"
               >
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="h-4 w-4 text-slate-500" />
@@ -456,30 +439,30 @@ export function ManufacturerModal({
                     <div className="space-y-1.5">
                       <Label className="text-xs">주문번호 컬럼</Label>
                       <Input
-                        value={invoiceTemplate.orderNumberColumn}
+                        className="h-8 text-sm"
                         onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, orderNumberColumn: e.target.value })}
                         placeholder={invoiceTemplate.useColumnIndex ? 'A' : '주문번호'}
-                        className="h-8 text-sm"
+                        value={invoiceTemplate.orderNumberColumn}
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">택배사 컬럼</Label>
                       <Input
-                        value={invoiceTemplate.courierColumn}
+                        className="h-8 text-sm"
                         onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, courierColumn: e.target.value })}
                         placeholder={invoiceTemplate.useColumnIndex ? 'B' : '택배사'}
-                        className="h-8 text-sm"
+                        value={invoiceTemplate.courierColumn}
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">송장번호 컬럼</Label>
                       <Input
-                        value={invoiceTemplate.trackingNumberColumn}
+                        className="h-8 text-sm"
                         onChange={(e) =>
                           setInvoiceTemplate({ ...invoiceTemplate, trackingNumberColumn: e.target.value })
                         }
                         placeholder={invoiceTemplate.useColumnIndex ? 'C' : '송장번호'}
-                        className="h-8 text-sm"
+                        value={invoiceTemplate.trackingNumberColumn}
                       />
                     </div>
                   </div>
@@ -489,22 +472,21 @@ export function ManufacturerModal({
                     <div className="space-y-1.5">
                       <Label className="text-xs">헤더 행 번호</Label>
                       <Input
-                        type="number"
+                        className="h-8 text-sm"
                         min={1}
-                        value={invoiceTemplate.headerRow}
                         onChange={(e) =>
                           setInvoiceTemplate({ ...invoiceTemplate, headerRow: parseInt(e.target.value) || 1 })
                         }
                         placeholder="1"
-                        className="h-8 text-sm"
+                        type="number"
+                        value={invoiceTemplate.headerRow}
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">데이터 시작 행</Label>
                       <Input
-                        type="number"
+                        className="h-8 text-sm"
                         min={1}
-                        value={invoiceTemplate.dataStartRow}
                         onChange={(e) =>
                           setInvoiceTemplate({
                             ...invoiceTemplate,
@@ -512,7 +494,8 @@ export function ManufacturerModal({
                           })
                         }
                         placeholder="2"
-                        className="h-8 text-sm"
+                        type="number"
+                        value={invoiceTemplate.dataStartRow}
                       />
                     </div>
                   </div>
@@ -522,10 +505,10 @@ export function ManufacturerModal({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-4 flex-shrink-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            <Button disabled={isSaving} onClick={() => onOpenChange(false)} type="button" variant="outline">
               취소
             </Button>
-            <Button type="submit" disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
+            <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving} type="submit">
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -542,4 +525,22 @@ export function ManufacturerModal({
       </DialogContent>
     </Dialog>
   )
+}
+
+function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
+  return {
+    name: manufacturer?.name ?? '',
+    contactName: manufacturer?.contactName ?? '',
+    email: manufacturer?.email ?? '',
+    ccEmail: manufacturer?.ccEmail ?? '',
+    phone: manufacturer?.phone ?? '',
+  }
+}
+
+function getInvoiceTemplateFromManufacturer(manufacturer: Manufacturer | null): Partial<InvoiceTemplate> {
+  if (!manufacturer) {
+    return { ...defaultInvoiceTemplate }
+  }
+  const existingTemplate = invoiceTemplates.find((t) => t.manufacturerId === manufacturer.id)
+  return existingTemplate || { ...defaultInvoiceTemplate }
 }

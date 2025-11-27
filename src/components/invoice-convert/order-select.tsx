@@ -1,16 +1,18 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import type { SendLog } from '@/lib/mock-data'
-import { formatDateTime, formatCurrency } from '@/lib/mock-data'
 import { CheckCircle2, Mail, Package } from 'lucide-react'
+
+import type { SendLog } from '@/lib/mock-data'
+
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCurrency, formatDateTime } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
 
 interface OrderSelectProps {
   logs: SendLog[]
-  selectedLog: SendLog | null
   onSelect: (log: SendLog) => void
+  selectedLog: SendLog | null
 }
 
 export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
@@ -40,20 +42,20 @@ export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
           ) : (
             completedLogs.map((log) => (
               <button
-                key={log.id}
-                onClick={() => onSelect(log)}
                 className={cn(
                   'w-full text-left rounded-lg border p-4 transition-all hover:shadow-sm',
                   selectedLog?.id === log.id
                     ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
                     : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
                 )}
+                key={log.id}
+                onClick={() => onSelect(log)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-900 truncate">{log.manufacturerName}</span>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                      <Badge className="bg-emerald-100 text-emerald-700" variant="secondary">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         발송완료
                       </Badge>

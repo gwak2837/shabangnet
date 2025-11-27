@@ -1,5 +1,11 @@
-import { testSMTPConnection } from '@/lib/email'
 import { NextResponse } from 'next/server'
+
+import { testSMTPConnection } from '@/lib/email'
+
+// GET 요청도 지원 (간단한 테스트용)
+export async function GET() {
+  return POST()
+}
 
 export async function POST() {
   try {
@@ -23,9 +29,4 @@ export async function POST() {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
-}
-
-// GET 요청도 지원 (간단한 테스트용)
-export async function GET() {
-  return POST()
 }

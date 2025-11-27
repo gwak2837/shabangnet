@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Loader2, Mail, RefreshCw } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
+import type { OrderBatch } from '@/lib/mock-data'
+
 import { AppShell } from '@/components/layout'
 import { ExcludedOrderTable, OrderFilters, OrderTable, SendModal } from '@/components/orders'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useOrderBatches, useExcludedOrderBatches } from '@/hooks'
-import type { OrderBatch } from '@/lib/mock-data'
-import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Mail, RefreshCw, Loader2 } from 'lucide-react'
+import { useExcludedOrderBatches, useOrderBatches } from '@/hooks'
 
-type TabType = 'sendable' | 'excluded'
+type TabType = 'excluded' | 'sendable'
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<TabType>('sendable')
@@ -82,7 +84,7 @@ export default function OrdersPage() {
 
   if (isLoadingBatches || isLoadingExcluded) {
     return (
-      <AppShell title="발주 생성/발송" description="제조사별 발주서를 생성하고 이메일로 발송하세요">
+      <AppShell description="제조사별 발주서를 생성하고 이메일로 발송하세요" title="발주 생성/발송">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -91,21 +93,21 @@ export default function OrdersPage() {
   }
 
   return (
-    <AppShell title="발주 생성/발송" description="제조사별 발주서를 생성하고 이메일로 발송하세요">
+    <AppShell description="제조사별 발주서를 생성하고 이메일로 발송하세요" title="발주 생성/발송">
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
         <button
-          onClick={() => setActiveTab('sendable')}
           className={`relative px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'sendable' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
           }`}
+          onClick={() => setActiveTab('sendable')}
         >
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
             발송 대상
             <Badge
-              variant="secondary"
               className={`${activeTab === 'sendable' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}
+              variant="secondary"
             >
               {stats.totalOrders}
             </Badge>
@@ -113,19 +115,19 @@ export default function OrdersPage() {
           {activeTab === 'sendable' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
         </button>
         <button
-          onClick={() => setActiveTab('excluded')}
           className={`relative px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'excluded' ? 'text-violet-600' : 'text-slate-500 hover:text-slate-700'
           }`}
+          onClick={() => setActiveTab('excluded')}
         >
           <div className="flex items-center gap-2">
             <Ban className="h-4 w-4" />
             발송 제외
             <Badge
-              variant="secondary"
               className={`${
                 activeTab === 'excluded' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
               }`}
+              variant="secondary"
             >
               {stats.excludedOrdersCount}
             </Badge>
@@ -191,15 +193,15 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between mb-6">
             <OrderFilters />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleRefresh}>
+              <Button className="gap-2" onClick={handleRefresh} size="sm" variant="outline">
                 <RefreshCw className="h-4 w-4" />
                 새로고침
               </Button>
               <Button
-                size="sm"
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
                 disabled={stats.pendingBatchesCount === 0}
                 onClick={handleSendAllPending}
+                size="sm"
               >
                 <Mail className="h-4 w-4" />
                 전체 발송 ({stats.pendingBatchesCount})
@@ -210,9 +212,9 @@ export default function OrdersPage() {
           {/* Order Table */}
           <OrderTable
             batches={orderBatches}
-            onSendEmail={handleSendEmail}
-            onPreview={handlePreview}
             onBatchSend={handleBatchSend}
+            onPreview={handlePreview}
+            onSendEmail={handleSendEmail}
           />
         </>
       ) : (
@@ -241,7 +243,7 @@ export default function OrdersPage() {
           발송 진행: {currentQueueIndex + 1} / {sendQueue.length}
         </div>
       )}
-      <SendModal open={isModalOpen} onOpenChange={handleModalClose} batch={selectedBatch} />
+      <SendModal batch={selectedBatch} onOpenChange={handleModalClose} open={isModalOpen} />
     </AppShell>
   )
 }

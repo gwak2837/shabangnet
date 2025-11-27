@@ -1,15 +1,16 @@
 'use client'
 
+import { AlertTriangle, CheckCircle2, Clock, FileSpreadsheet, Mail, User, XCircle } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { type SendLog, formatCurrency, formatDateTime } from '@/lib/mock-data'
-import { AlertTriangle, CheckCircle2, Clock, FileSpreadsheet, Mail, User, XCircle } from 'lucide-react'
+import { formatCurrency, formatDateTime, type SendLog } from '@/lib/mock-data'
 
 interface LogDetailModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   log: SendLog | null
+  onOpenChange: (open: boolean) => void
+  open: boolean
 }
 
 export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps) {
@@ -20,7 +21,7 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
   const isSuccess = log.status === 'success'
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -47,11 +48,11 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">상태</span>
             {isSuccess ? (
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+              <Badge className="bg-emerald-100 text-emerald-700" variant="secondary">
                 성공
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-rose-100 text-rose-700">
+              <Badge className="bg-rose-100 text-rose-700" variant="secondary">
                 실패
               </Badge>
             )}

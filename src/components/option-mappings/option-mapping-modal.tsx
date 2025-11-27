@@ -1,5 +1,10 @@
 'use client'
 
+import { Loader2, Settings2 } from 'lucide-react'
+import { useState } from 'react'
+
+import type { Manufacturer, OptionManufacturerMapping } from '@/lib/mock-data'
+
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,25 +17,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { OptionManufacturerMapping, Manufacturer } from '@/lib/mock-data'
-import { Loader2, Settings2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface OptionMappingModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  mapping: OptionManufacturerMapping | null
-  manufacturers: Manufacturer[]
-  onSave: (data: Omit<OptionManufacturerMapping, 'id' | 'createdAt' | 'updatedAt'>) => void
   isSaving?: boolean
-}
-
-function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
-  return {
-    productCode: mapping?.productCode ?? '',
-    optionName: mapping?.optionName ?? '',
-    manufacturerId: mapping?.manufacturerId ?? '',
-  }
+  manufacturers: Manufacturer[]
+  mapping: OptionManufacturerMapping | null
+  onOpenChange: (open: boolean) => void
+  onSave: (data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>) => void
+  open: boolean
 }
 
 export function OptionMappingModal({
@@ -91,7 +85,7 @@ export function OptionMappingModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -107,17 +101,17 @@ export function OptionMappingModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="productCode">
               상품코드 <span className="text-rose-500">*</span>
             </Label>
             <Input
+              className={errors.productCode ? 'border-rose-500' : ''}
               id="productCode"
-              value={formData.productCode}
               onChange={(e) => setFormData({ ...formData, productCode: e.target.value })}
               placeholder="예: OL-001"
-              className={errors.productCode ? 'border-rose-500' : ''}
+              value={formData.productCode}
             />
             {errors.productCode && <p className="text-xs text-rose-500">{errors.productCode}</p>}
           </div>
@@ -127,11 +121,11 @@ export function OptionMappingModal({
               옵션명 <span className="text-rose-500">*</span>
             </Label>
             <Input
+              className={errors.optionName ? 'border-rose-500' : ''}
               id="optionName"
-              value={formData.optionName}
               onChange={(e) => setFormData({ ...formData, optionName: e.target.value })}
               placeholder="예: 500ml x 2병"
-              className={errors.optionName ? 'border-rose-500' : ''}
+              value={formData.optionName}
             />
             {errors.optionName && <p className="text-xs text-rose-500">{errors.optionName}</p>}
             <p className="text-xs text-slate-500">사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력하세요</p>
@@ -142,8 +136,8 @@ export function OptionMappingModal({
               제조사 <span className="text-rose-500">*</span>
             </Label>
             <Select
-              value={formData.manufacturerId}
               onValueChange={(v) => setFormData({ ...formData, manufacturerId: v })}
+              value={formData.manufacturerId}
             >
               <SelectTrigger className={errors.manufacturerId ? 'border-rose-500' : ''}>
                 <SelectValue placeholder="제조사 선택" />
@@ -169,10 +163,10 @@ export function OptionMappingModal({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            <Button disabled={isSaving} onClick={() => onOpenChange(false)} type="button" variant="outline">
               취소
             </Button>
-            <Button type="submit" disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
+            <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving} type="submit">
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -189,4 +183,12 @@ export function OptionMappingModal({
       </DialogContent>
     </Dialog>
   )
+}
+
+function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
+  return {
+    productCode: mapping?.productCode ?? '',
+    optionName: mapping?.optionName ?? '',
+    manufacturerId: mapping?.manufacturerId ?? '',
+  }
 }

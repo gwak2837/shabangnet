@@ -9,16 +9,22 @@ function generateId(): string {
 const orderTemplates = new Map<string, OrderTemplateData>()
 
 interface OrderTemplateData {
+  columnMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
+  createdAt: string
+  dataStartRow: number
+  fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
+  headerRow: number
   id: string
   manufacturerId: string
   manufacturerName: string
   templateFileName?: string
-  headerRow: number
-  dataStartRow: number
-  columnMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
-  fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
-  createdAt: string
   updatedAt: string
+}
+
+// 전체 템플릿 목록 조회
+export async function GET(): Promise<NextResponse> {
+  const templates = Array.from(orderTemplates.values())
+  return NextResponse.json({ templates })
 }
 
 // 템플릿 생성/저장
@@ -72,10 +78,4 @@ export async function POST(request: Request): Promise<NextResponse> {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
-}
-
-// 전체 템플릿 목록 조회
-export async function GET(): Promise<NextResponse> {
-  const templates = Array.from(orderTemplates.values())
-  return NextResponse.json({ templates })
 }

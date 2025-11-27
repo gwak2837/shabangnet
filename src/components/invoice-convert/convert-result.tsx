@@ -1,17 +1,18 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { type InvoiceConvertResult } from '@/lib/mock-data'
-import { CheckCircle2, AlertCircle, Download, RefreshCw, FileSpreadsheet, AlertTriangle } from 'lucide-react'
 
 interface ConvertResultProps {
-  results: InvoiceConvertResult[]
   fileName: string
   onDownload: () => void
   onReset: () => void
+  results: InvoiceConvertResult[]
 }
 
 export function ConvertResult({ results, fileName, onDownload, onReset }: ConvertResultProps) {
@@ -111,10 +112,10 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                 </TableHeader>
                 <TableBody>
                   {successResults.slice(0, 5).map((result, idx) => (
-                    <TableRow key={idx} className="hover:bg-slate-50">
+                    <TableRow className="hover:bg-slate-50" key={idx}>
                       <TableCell className="font-mono text-sm">{result.orderNumber}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="font-mono">
+                        <Badge className="font-mono" variant="secondary">
                           {result.courierCode}
                         </Badge>
                       </TableCell>
@@ -153,17 +154,17 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                 </TableHeader>
                 <TableBody>
                   {[...courierErrors, ...orderErrors].map((result, idx) => (
-                    <TableRow key={idx} className="hover:bg-amber-100/50 border-amber-200">
+                    <TableRow className="hover:bg-amber-100/50 border-amber-200" key={idx}>
                       <TableCell className="font-mono text-sm text-amber-900">{result.orderNumber}</TableCell>
                       <TableCell className="font-mono text-sm text-amber-800">{result.trackingNumber}</TableCell>
                       <TableCell>
                         <Badge
-                          variant="secondary"
                           className={
                             result.status === 'courier_error'
                               ? 'bg-amber-200 text-amber-800'
                               : 'bg-rose-200 text-rose-800'
                           }
+                          variant="secondary"
                         >
                           {result.status === 'courier_error' ? '택배사 미등록' : '주문 미매칭'}
                         </Badge>
@@ -201,9 +202,9 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
               </div>
             </div>
             <Button
-              onClick={onDownload}
               className="bg-emerald-600 hover:bg-emerald-700"
               disabled={successResults.length === 0}
+              onClick={onDownload}
             >
               <Download className="mr-2 h-4 w-4" />
               다운로드
@@ -214,7 +215,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-3 pt-2">
-        <Button variant="outline" onClick={onReset}>
+        <Button onClick={onReset} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           새로 변환
         </Button>

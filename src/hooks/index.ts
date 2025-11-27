@@ -1,46 +1,46 @@
-// Manufacturers
-export {
-  useManufacturers,
-  useManufacturer,
-  useCreateManufacturer,
-  useUpdateManufacturer,
-  useDeleteManufacturer,
-} from './use-manufacturers'
-
-// Products
-export { useProducts, useProduct, useCreateProduct, useUpdateProduct, useDeleteProduct } from './use-products'
-
-// Orders
-export { useOrderBatches, useExcludedOrderBatches, useSendOrders, useCheckDuplicate } from './use-orders'
+// Dashboard
+export { useDashboardStats, useManufacturerChartData, useRecentUploads } from './use-dashboard'
 
 // Logs
-export { useSendLogs, useSendLog } from './use-logs'
+export { useSendLog, useSendLogs } from './use-logs'
+
+// Manufacturers
+export {
+  useCreateManufacturer,
+  useDeleteManufacturer,
+  useManufacturer,
+  useManufacturers,
+  useUpdateManufacturer,
+} from './use-manufacturers'
 
 // Option Mappings
 export {
-  useOptionMappings,
   useCreateOptionMapping,
-  useUpdateOptionMapping,
   useDeleteOptionMapping,
+  useOptionMappings,
+  useUpdateOptionMapping,
 } from './use-option-mappings'
 
-// Dashboard
-export { useDashboardStats, useRecentUploads, useManufacturerChartData } from './use-dashboard'
+// Orders
+export { useCheckDuplicate, useExcludedOrderBatches, useOrderBatches, useSendOrders } from './use-orders'
+
+// Products
+export { useCreateProduct, useDeleteProduct, useProduct, useProducts, useUpdateProduct } from './use-products'
 
 // Settings
 export {
-  useSmtpSettings,
-  useUpdateSmtpSettings,
-  useExclusionSettings,
-  useUpdateExclusionSettings,
-  useAddExclusionPattern,
-  useRemoveExclusionPattern,
-  useDuplicateCheckSettings,
-  useUpdateDuplicateCheckSettings,
-  useCourierMappings,
-  useUpdateCourierMapping,
   useAddCourierMapping,
+  useAddExclusionPattern,
+  useCourierMappings,
+  useDuplicateCheckSettings,
+  useExclusionSettings,
   useRemoveCourierMapping,
+  useRemoveExclusionPattern,
+  useSmtpSettings,
+  useUpdateCourierMapping,
+  useUpdateDuplicateCheckSettings,
+  useUpdateExclusionSettings,
+  useUpdateSmtpSettings,
 } from './use-settings'
 
 // Settlement

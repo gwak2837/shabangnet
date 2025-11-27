@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { AppShell } from '@/components/layout'
-import { LogFilters, LogTable, LogDetailModal } from '@/components/logs'
-import { Card, CardContent } from '@/components/ui/card'
-import { useSendLogs, useManufacturers } from '@/hooks'
+import { CheckCircle2, Loader2, Mail, XCircle } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
 import type { SendLog } from '@/lib/mock-data'
-import { Mail, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+
+import { AppShell } from '@/components/layout'
+import { LogDetailModal, LogFilters, LogTable } from '@/components/logs'
+import { Card, CardContent } from '@/components/ui/card'
+import { useManufacturers, useSendLogs } from '@/hooks'
 
 export default function LogsPage() {
   const [dateFrom, setDateFrom] = useState('')
@@ -90,7 +92,7 @@ export default function LogsPage() {
 
   if (isLoadingLogs) {
     return (
-      <AppShell title="발송 로그" description="이메일 발송 이력을 확인합니다">
+      <AppShell description="이메일 발송 이력을 확인합니다" title="발송 로그">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -99,7 +101,7 @@ export default function LogsPage() {
   }
 
   return (
-    <AppShell title="발송 로그" description="이메일 발송 이력을 확인합니다">
+    <AppShell description="이메일 발송 이력을 확인합니다" title="발송 로그">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card className="border-slate-200 bg-white shadow-sm">
@@ -142,23 +144,23 @@ export default function LogsPage() {
       {/* Filters */}
       <div className="mb-6">
         <LogFilters
-          manufacturers={manufacturers}
           dateFrom={dateFrom}
           dateTo={dateTo}
-          status={status}
           manufacturer={manufacturer}
+          manufacturers={manufacturers}
           onDateFromChange={setDateFrom}
           onDateToChange={setDateTo}
-          onStatusChange={setStatus}
           onManufacturerChange={setManufacturer}
+          onStatusChange={setStatus}
+          status={status}
         />
       </div>
 
       {/* Log Table */}
-      <LogTable logs={filteredLogs} onViewDetail={handleViewDetail} onDownloadExcel={handleDownloadExcel} />
+      <LogTable logs={filteredLogs} onDownloadExcel={handleDownloadExcel} onViewDetail={handleViewDetail} />
 
       {/* Detail Modal */}
-      <LogDetailModal open={isDetailOpen} onOpenChange={setIsDetailOpen} log={selectedLog} />
+      <LogDetailModal log={selectedLog} onOpenChange={setIsDetailOpen} open={isDetailOpen} />
     </AppShell>
   )
 }

@@ -1,17 +1,18 @@
 'use client'
 
-import { cn } from '@/lib/utils'
-import { Card, CardContent } from '@/components/ui/card'
 import { ArrowDown, ArrowUp, type LucideIcon } from 'lucide-react'
 
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
 interface StatCardProps {
-  title: string
-  value: string | number
   change?: number
   changeLabel?: string
   icon: LucideIcon
-  iconColor?: string
   iconBgColor?: string
+  iconColor?: string
+  title: string
+  value: number | string
 }
 
 export function StatCard({

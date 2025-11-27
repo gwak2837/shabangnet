@@ -1,36 +1,32 @@
 import { NextResponse } from 'next/server'
-import { parseSabangnetFile, groupOrdersByManufacturer, type ParsedOrder } from '@/lib/excel'
+
+import { groupOrdersByManufacturer, type ParsedOrder, parseSabangnetFile } from '@/lib/excel'
 import { setUploadedOrders } from '@/lib/stores/order-store'
 
-// 간단한 ID 생성 함수
-function generateId(): string {
-  return `upl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
+interface ManufacturerBreakdown {
+  amount: number
+  name: string
+  orders: number
+}
+
+interface UploadError {
+  message: string
+  productCode?: string
+  productName?: string
+  row: number
 }
 
 // 업로드 결과 타입
 interface UploadResult {
-  success: boolean
-  uploadId: string
-  fileName: string
-  totalOrders: number
-  processedOrders: number
   errorOrders: number
-  manufacturerBreakdown: ManufacturerBreakdown[]
   errors: UploadError[]
+  fileName: string
+  manufacturerBreakdown: ManufacturerBreakdown[]
   orders: ParsedOrder[]
-}
-
-interface ManufacturerBreakdown {
-  name: string
-  orders: number
-  amount: number
-}
-
-interface UploadError {
-  row: number
-  message: string
-  productCode?: string
-  productName?: string
+  processedOrders: number
+  success: boolean
+  totalOrders: number
+  uploadId: string
 }
 
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
@@ -106,4 +102,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
+}
+
+// 간단한 ID 생성 함수
+function generateId(): string {
+  return `upl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
 }

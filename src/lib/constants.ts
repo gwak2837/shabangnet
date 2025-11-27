@@ -113,12 +113,12 @@ Object.entries(COLUMN_SYNONYMS).forEach(([key, synonyms]) => {
 // ============================================
 
 export interface ShoppingMallConfig {
-  id: string
-  mallName: string
+  columnMappings: Record<string, string> // 쇼핑몰 컬럼명 -> 사방넷 key
+  dataStartRow: number
   displayName: string
   headerRow: number
-  dataStartRow: number
-  columnMappings: Record<string, string> // 쇼핑몰 컬럼명 -> 사방넷 key
+  id: string
+  mallName: string
 }
 
 export const SHOPPING_MALL_CONFIGS: ShoppingMallConfig[] = [
@@ -191,26 +191,6 @@ export const SHOPPING_MALL_CONFIGS: ShoppingMallConfig[] = [
 // ============================================
 
 /**
- * 컬럼명으로 사방넷 표준 키 찾기
- */
-export function findSabangnetKeyByLabel(label: string): string | null {
-  const normalized = label.trim().toLowerCase()
-
-  // 직접 매칭 시도
-  const directMatch = SYNONYM_TO_KEY_MAP.get(normalized)
-  if (directMatch) return directMatch
-
-  // 부분 매칭 시도 (포함 관계)
-  for (const [synonym, key] of SYNONYM_TO_KEY_MAP.entries()) {
-    if (normalized.includes(synonym) || synonym.includes(normalized)) {
-      return key
-    }
-  }
-
-  return null
-}
-
-/**
  * 두 컬럼명 배열 간 자동 매핑 수행
  * @returns { sourceColumn: targetColumn } 형태의 매핑
  */
@@ -237,6 +217,37 @@ export function autoMapColumns(sourceHeaders: string[], targetHeaders: string[])
 }
 
 /**
+ * 엑셀 컬럼 문자를 인덱스로 변환 (A -> 0, Z -> 25, AA -> 26)
+ */
+export function columnLetterToIndex(letter: string): number {
+  let index = 0
+  for (let i = 0; i < letter.length; i++) {
+    index = index * 26 + (letter.charCodeAt(i) - 64)
+  }
+  return index - 1
+}
+
+/**
+ * 컬럼명으로 사방넷 표준 키 찾기
+ */
+export function findSabangnetKeyByLabel(label: string): string | null {
+  const normalized = label.trim().toLowerCase()
+
+  // 직접 매칭 시도
+  const directMatch = SYNONYM_TO_KEY_MAP.get(normalized)
+  if (directMatch) return directMatch
+
+  // 부분 매칭 시도 (포함 관계)
+  for (const [synonym, key] of SYNONYM_TO_KEY_MAP.entries()) {
+    if (normalized.includes(synonym) || synonym.includes(normalized)) {
+      return key
+    }
+  }
+
+  return null
+}
+
+/**
  * 엑셀 컬럼 인덱스를 문자로 변환 (0 -> A, 25 -> Z, 26 -> AA)
  */
 export function indexToColumnLetter(index: number): string {
@@ -247,17 +258,6 @@ export function indexToColumnLetter(index: number): string {
     i = Math.floor(i / 26) - 1
   }
   return letter
-}
-
-/**
- * 엑셀 컬럼 문자를 인덱스로 변환 (A -> 0, Z -> 25, AA -> 26)
- */
-export function columnLetterToIndex(letter: string): number {
-  let index = 0
-  for (let i = 0; i < letter.length; i++) {
-    index = index * 26 + (letter.charCodeAt(i) - 64)
-  }
-  return index - 1
 }
 
 // ============================================

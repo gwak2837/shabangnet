@@ -1,15 +1,16 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { formatCurrency } from '@/lib/mock-data'
 import { DollarSign, Hash, Package } from 'lucide-react'
 
+import { Card, CardContent } from '@/components/ui/card'
+import { formatCurrency } from '@/lib/mock-data'
+
 interface SettlementSummaryProps {
-  totalOrders: number
-  totalQuantity: number
-  totalCost: number
   manufacturerName: string
   period: string
+  totalCost: number
+  totalOrders: number
+  totalQuantity: number
 }
 
 export function SettlementSummary({

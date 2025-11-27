@@ -1,5 +1,8 @@
 'use client'
 
+import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,14 +20,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDate, type Manufacturer } from '@/lib/mock-data'
-import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
-import { useState, useMemo } from 'react'
 
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]
-  onEdit: (manufacturer: Manufacturer) => void
   onAdd: () => void
   onDelete: (id: string) => void
+  onEdit: (manufacturer: Manufacturer) => void
 }
 
 export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: ManufacturerTableProps) {
@@ -56,14 +57,14 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                type="search"
-                placeholder="제조사명, 담당자, 이메일 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 bg-slate-50 border-slate-200"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="제조사명, 담당자, 이메일 검색..."
+                type="search"
+                value={searchQuery}
               />
             </div>
-            <Button onClick={onAdd} className="gap-2 bg-slate-900 hover:bg-slate-800">
+            <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAdd}>
               <Plus className="h-4 w-4" />
               제조사 추가
             </Button>
@@ -86,7 +87,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
             </TableHeader>
             <TableBody>
               {filteredManufacturers.map((manufacturer) => (
-                <TableRow key={manufacturer.id} className="hover:bg-slate-50 transition-colors">
+                <TableRow className="hover:bg-slate-50 transition-colors" key={manufacturer.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
@@ -112,7 +113,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                    <Badge className="bg-slate-100 text-slate-700" variant="secondary">
                       {manufacturer.orderCount.toLocaleString()}건
                     </Badge>
                   </TableCell>
@@ -120,7 +121,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                        <Button className="h-8 w-8 text-slate-400 hover:text-slate-600" size="icon" variant="ghost">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -130,8 +131,8 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                           수정
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => setDeleteTarget(manufacturer)}
                           className="text-rose-600 focus:text-rose-600"
+                          onClick={() => setDeleteTarget(manufacturer)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           삭제
@@ -143,7 +144,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
               ))}
               {filteredManufacturers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-slate-500">
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={6}>
                     검색 결과가 없습니다.
                   </TableCell>
                 </TableRow>
@@ -154,7 +155,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+      <AlertDialog onOpenChange={() => setDeleteTarget(null)} open={!!deleteTarget}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>제조사 삭제</AlertDialogTitle>
@@ -166,7 +167,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700">
+            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={handleDelete}>
               삭제
             </AlertDialogAction>
           </AlertDialogFooter>

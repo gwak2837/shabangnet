@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+
 import { analyzeTemplateStructure, type TemplateAnalysis } from '@/lib/excel'
 
 interface AnalyzeResponse {
-  success: boolean
   analysis?: TemplateAnalysis
   error?: string
+  success: boolean
 }
 
 // 템플릿 파일 구조 분석

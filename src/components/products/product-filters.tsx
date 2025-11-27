@@ -1,16 +1,17 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { Search, X } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
 interface ProductFiltersProps {
-  searchQuery: string
   onSearchChange: (value: string) => void
-  showUnmappedOnly: boolean
   onShowUnmappedChange: (value: boolean) => void
+  searchQuery: string
+  showUnmappedOnly: boolean
 }
 
 export function ProductFilters({
@@ -32,29 +33,29 @@ export function ProductFilters({
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
-          type="search"
-          placeholder="상품코드, 상품명 검색..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9 bg-white border-slate-200"
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="상품코드, 상품명 검색..."
+          type="search"
+          value={searchQuery}
         />
       </div>
 
       {/* Unmapped Only Filter */}
       <div className="flex items-center gap-2">
         <Checkbox
-          id="unmapped"
           checked={showUnmappedOnly}
+          id="unmapped"
           onCheckedChange={(checked) => onShowUnmappedChange(checked as boolean)}
         />
-        <Label htmlFor="unmapped" className="text-sm font-medium text-slate-700 cursor-pointer">
+        <Label className="text-sm font-medium text-slate-700 cursor-pointer" htmlFor="unmapped">
           미매핑 상품만 보기
         </Label>
       </div>
 
       {/* Clear Filters */}
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={handleClear} className="gap-1 text-slate-500 hover:text-slate-700">
+        <Button className="gap-1 text-slate-500 hover:text-slate-700" onClick={handleClear} size="sm" variant="ghost">
           <X className="h-4 w-4" />
           필터 초기화
         </Button>
