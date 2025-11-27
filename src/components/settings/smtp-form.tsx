@@ -27,6 +27,7 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
   })
   const [isTesting, setIsTesting] = useState(false)
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
+  const [testError, setTestError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -44,14 +45,27 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
   async function handleTest() {
     setIsTesting(true)
     setTestResult(null)
+    setTestError(null)
 
-    // Simulate connection test
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const response = await fetch('/api/email/test', {
+        method: 'POST',
+      })
 
-    // Simulate random success/failure for demo
-    const success = Math.random() > 0.3
-    setTestResult(success ? 'success' : 'error')
-    setIsTesting(false)
+      const data = await response.json()
+
+      if (data.success) {
+        setTestResult('success')
+      } else {
+        setTestResult('error')
+        setTestError(data.error || '연결 테스트에 실패했습니다.')
+      }
+    } catch {
+      setTestResult('error')
+      setTestError('서버와 통신 중 오류가 발생했습니다.')
+    } finally {
+      setIsTesting(false)
+    }
   }
 
   return (
@@ -176,19 +190,22 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
         {/* Test Result */}
         {testResult && (
           <div
-            className={`flex items-center gap-2 rounded-lg p-3 ${
+            className={`flex items-start gap-2 rounded-lg p-3 ${
               testResult === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
             }`}
           >
             {testResult === 'success' ? (
               <>
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <span className="font-medium">연결 테스트 성공! SMTP 서버에 정상적으로 연결되었습니다.</span>
               </>
             ) : (
               <>
-                <AlertCircle className="h-5 w-5" />
-                <span className="font-medium">연결 테스트 실패. 설정을 확인해주세요.</span>
+                <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="font-medium">연결 테스트 실패</span>
+                  {testError && <p className="text-sm mt-1 opacity-90">{testError}</p>}
+                </div>
               </>
             )}
           </div>

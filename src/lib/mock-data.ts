@@ -898,6 +898,7 @@ export interface Product {
   manufacturerId: string | null
   manufacturerName: string | null
   price: number
+  cost: number // 원가
   createdAt: string
   updatedAt: string
 }
@@ -1033,6 +1034,7 @@ export const products: Product[] = [
     manufacturerId: 'm1',
     manufacturerName: '농심식품',
     price: 7900,
+    cost: 5500,
     createdAt: '2024-01-15T10:00:00',
     updatedAt: '2024-11-20T14:30:00',
   },
@@ -1044,6 +1046,7 @@ export const products: Product[] = [
     manufacturerId: 'm1',
     manufacturerName: '농심식품',
     price: 6500,
+    cost: 4500,
     createdAt: '2024-01-15T10:00:00',
     updatedAt: '2024-11-20T14:30:00',
   },
@@ -1055,6 +1058,7 @@ export const products: Product[] = [
     manufacturerId: 'm2',
     manufacturerName: 'CJ제일제당',
     price: 15800,
+    cost: 11000,
     createdAt: '2024-02-10T09:00:00',
     updatedAt: '2024-11-18T11:00:00',
   },
@@ -1066,6 +1070,7 @@ export const products: Product[] = [
     manufacturerId: 'm2',
     manufacturerName: 'CJ제일제당',
     price: 12900,
+    cost: 9000,
     createdAt: '2024-02-10T09:00:00',
     updatedAt: '2024-11-18T11:00:00',
   },
@@ -1077,6 +1082,7 @@ export const products: Product[] = [
     manufacturerId: 'm3',
     manufacturerName: '오뚜기',
     price: 4500,
+    cost: 3100,
     createdAt: '2024-03-05T14:00:00',
     updatedAt: '2024-11-15T09:00:00',
   },
@@ -1088,6 +1094,7 @@ export const products: Product[] = [
     manufacturerId: 'm3',
     manufacturerName: '오뚜기',
     price: 2500,
+    cost: 1700,
     createdAt: '2024-03-05T14:00:00',
     updatedAt: '2024-11-15T09:00:00',
   },
@@ -1099,6 +1106,7 @@ export const products: Product[] = [
     manufacturerId: 'm4',
     manufacturerName: '동원F&B',
     price: 12900,
+    cost: 9000,
     createdAt: '2024-04-20T11:00:00',
     updatedAt: '2024-11-22T16:00:00',
   },
@@ -1110,6 +1118,7 @@ export const products: Product[] = [
     manufacturerId: 'm5',
     manufacturerName: '풀무원',
     price: 2800,
+    cost: 1900,
     createdAt: '2024-05-12T08:00:00',
     updatedAt: '2024-11-10T13:00:00',
   },
@@ -1121,6 +1130,7 @@ export const products: Product[] = [
     manufacturerId: 'm5',
     manufacturerName: '풀무원',
     price: 1500,
+    cost: 1000,
     createdAt: '2024-05-12T08:00:00',
     updatedAt: '2024-11-10T13:00:00',
   },
@@ -1132,6 +1142,7 @@ export const products: Product[] = [
     manufacturerId: null,
     manufacturerName: null,
     price: 5000,
+    cost: 0,
     createdAt: '2024-11-25T10:00:00',
     updatedAt: '2024-11-25T10:00:00',
   },
@@ -1143,6 +1154,7 @@ export const products: Product[] = [
     manufacturerId: null,
     manufacturerName: null,
     price: 8000,
+    cost: 0,
     createdAt: '2024-11-25T11:00:00',
     updatedAt: '2024-11-25T11:00:00',
   },
@@ -1154,6 +1166,7 @@ export const products: Product[] = [
     manufacturerId: null,
     manufacturerName: null,
     price: 15000,
+    cost: 0,
     createdAt: '2024-11-26T09:00:00',
     updatedAt: '2024-11-26T09:00:00',
   },
@@ -1165,6 +1178,7 @@ export const products: Product[] = [
     manufacturerId: 'm1',
     manufacturerName: '농심식품',
     price: 6800,
+    cost: 4700,
     createdAt: '2024-06-01T10:00:00',
     updatedAt: '2024-11-20T14:30:00',
   },
@@ -1176,6 +1190,7 @@ export const products: Product[] = [
     manufacturerId: 'm2',
     manufacturerName: 'CJ제일제당',
     price: 5900,
+    cost: 4100,
     createdAt: '2024-06-15T09:00:00',
     updatedAt: '2024-11-18T11:00:00',
   },
@@ -1187,6 +1202,7 @@ export const products: Product[] = [
     manufacturerId: 'm4',
     manufacturerName: '동원F&B',
     price: 4500,
+    cost: 3100,
     createdAt: '2024-07-10T11:00:00',
     updatedAt: '2024-11-22T16:00:00',
   },
@@ -1199,6 +1215,7 @@ export interface SendLogOrder {
   optionName: string
   quantity: number
   price: number
+  cost: number // 발주 시점 원가
   customerName: string
   address: string
 }
@@ -1240,61 +1257,61 @@ function formatDateForFileName(daysAgo: number): string {
 }
 
 // 주문 샘플 데이터 생성 헬퍼
-const sampleProducts: Record<string, { name: string; options: string[]; price: number }[]> = {
+const sampleProducts: Record<string, { name: string; options: string[]; price: number; cost: number }[]> = {
   m1: [
     // 농심식품
-    { name: '신라면 멀티팩', options: ['5개입', '10개입'], price: 4500 },
-    { name: '안성탕면', options: ['5개입'], price: 3800 },
-    { name: '새우깡', options: ['대용량', '소용량'], price: 2500 },
+    { name: '신라면 멀티팩', options: ['5개입', '10개입'], price: 4500, cost: 3100 },
+    { name: '안성탕면', options: ['5개입'], price: 3800, cost: 2600 },
+    { name: '새우깡', options: ['대용량', '소용량'], price: 2500, cost: 1700 },
   ],
   m2: [
     // CJ제일제당
-    { name: '햇반 210g', options: ['12개입', '24개입'], price: 12000 },
-    { name: '비비고 만두', options: ['고기만두', '김치만두'], price: 8900 },
-    { name: '스팸 클래식', options: ['200g', '340g'], price: 5500 },
+    { name: '햇반 210g', options: ['12개입', '24개입'], price: 12000, cost: 8400 },
+    { name: '비비고 만두', options: ['고기만두', '김치만두'], price: 8900, cost: 6200 },
+    { name: '스팸 클래식', options: ['200g', '340g'], price: 5500, cost: 3800 },
   ],
   m3: [
     // 오뚜기
-    { name: '진라면', options: ['매운맛', '순한맛'], price: 3200 },
-    { name: '오뚜기 카레', options: ['중간맛', '순한맛'], price: 2800 },
-    { name: '참깨라면', options: ['5개입'], price: 3500 },
+    { name: '진라면', options: ['매운맛', '순한맛'], price: 3200, cost: 2200 },
+    { name: '오뚜기 카레', options: ['중간맛', '순한맛'], price: 2800, cost: 1900 },
+    { name: '참깨라면', options: ['5개입'], price: 3500, cost: 2400 },
   ],
   m4: [
     // 동원F&B
-    { name: '동원참치', options: ['살코기', '고추참치'], price: 4200 },
-    { name: '리챔', options: ['200g', '340g'], price: 5800 },
-    { name: '양반김', options: ['도시락김', '전장김'], price: 6500 },
+    { name: '동원참치', options: ['살코기', '고추참치'], price: 4200, cost: 2900 },
+    { name: '리챔', options: ['200g', '340g'], price: 5800, cost: 4000 },
+    { name: '양반김', options: ['도시락김', '전장김'], price: 6500, cost: 4500 },
   ],
   m5: [
     // 풀무원
-    { name: '두부', options: ['찌개용', '부침용'], price: 2800 },
-    { name: '생면식감', options: ['짜장', '짬뽕'], price: 4500 },
-    { name: '콩나물', options: ['500g'], price: 1800 },
+    { name: '두부', options: ['찌개용', '부침용'], price: 2800, cost: 1900 },
+    { name: '생면식감', options: ['짜장', '짬뽕'], price: 4500, cost: 3100 },
+    { name: '콩나물', options: ['500g'], price: 1800, cost: 1200 },
   ],
   m6: [
     // 삼양식품
-    { name: '불닭볶음면', options: ['5개입', '까르보'], price: 4800 },
-    { name: '삼양라면', options: ['5개입'], price: 3200 },
+    { name: '불닭볶음면', options: ['5개입', '까르보'], price: 4800, cost: 3300 },
+    { name: '삼양라면', options: ['5개입'], price: 3200, cost: 2200 },
   ],
   m7: [
     // 해태제과
-    { name: '홈런볼', options: ['초코', '딸기'], price: 3500 },
-    { name: '맛동산', options: ['대용량'], price: 4200 },
+    { name: '홈런볼', options: ['초코', '딸기'], price: 3500, cost: 2400 },
+    { name: '맛동산', options: ['대용량'], price: 4200, cost: 2900 },
   ],
   m8: [
     // 롯데푸드
-    { name: '의성마늘햄', options: ['200g', '450g'], price: 6800 },
-    { name: '롯데햄', options: ['오리지널'], price: 5500 },
+    { name: '의성마늘햄', options: ['200g', '450g'], price: 6800, cost: 4700 },
+    { name: '롯데햄', options: ['오리지널'], price: 5500, cost: 3800 },
   ],
   m9: [
     // 청정원
-    { name: '순창고추장', options: ['500g', '1kg'], price: 8500 },
-    { name: '카레여왕', options: ['바몬드', '자바'], price: 4200 },
+    { name: '순창고추장', options: ['500g', '1kg'], price: 8500, cost: 5900 },
+    { name: '카레여왕', options: ['바몬드', '자바'], price: 4200, cost: 2900 },
   ],
   m10: [
     // 빙그레
-    { name: '바나나맛우유', options: ['240ml', '6개입'], price: 1800 },
-    { name: '요플레', options: ['딸기', '블루베리'], price: 3200 },
+    { name: '바나나맛우유', options: ['240ml', '6개입'], price: 1800, cost: 1200 },
+    { name: '요플레', options: ['딸기', '블루베리'], price: 3200, cost: 2200 },
   ],
 }
 
@@ -1321,6 +1338,7 @@ function generateSampleOrders(manufacturerId: string, count: number, totalAmount
     const option = product.options[i % product.options.length]
     const quantity = Math.floor(Math.random() * 3) + 1
     const price = i < count - 1 ? product.price * quantity : remainingAmount
+    const cost = product.cost * quantity
     remainingAmount -= price
 
     orders.push({
@@ -1329,6 +1347,7 @@ function generateSampleOrders(manufacturerId: string, count: number, totalAmount
       optionName: option,
       quantity,
       price: Math.max(price, product.price),
+      cost,
       customerName: sampleCustomers[i % sampleCustomers.length],
       address: sampleAddresses[i % sampleAddresses.length],
     })

@@ -3,24 +3,51 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { type Product, type Manufacturer, formatCurrency, formatDate } from '@/lib/mock-data'
-import { AlertCircle, Check, Package } from 'lucide-react'
+import { AlertCircle, Check, Package, Pencil } from 'lucide-react'
 import { useState } from 'react'
 
 interface ProductTableProps {
   products: Product[]
   manufacturers: Manufacturer[]
   onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void
+  onUpdateCost?: (productId: string, cost: number) => void
 }
 
-export function ProductTable({ products, manufacturers, onUpdateManufacturer }: ProductTableProps) {
+export function ProductTable({ products, manufacturers, onUpdateManufacturer, onUpdateCost }: ProductTableProps) {
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
+  const [editingCostProductId, setEditingCostProductId] = useState<string | null>(null)
+  const [costInputValue, setCostInputValue] = useState<string>('')
 
   function handleManufacturerChange(productId: string, value: string) {
     onUpdateManufacturer(productId, value === 'none' ? null : value)
     setEditingProductId(null)
+  }
+
+  function handleCostEdit(productId: string, currentCost: number) {
+    setEditingCostProductId(productId)
+    setCostInputValue(currentCost.toString())
+  }
+
+  function handleCostSave(productId: string) {
+    const cost = parseFloat(costInputValue) || 0
+    if (onUpdateCost) {
+      onUpdateCost(productId, cost)
+    }
+    setEditingCostProductId(null)
+    setCostInputValue('')
+  }
+
+  function handleCostKeyDown(e: React.KeyboardEvent, productId: string) {
+    if (e.key === 'Enter') {
+      handleCostSave(productId)
+    } else if (e.key === 'Escape') {
+      setEditingCostProductId(null)
+      setCostInputValue('')
+    }
   }
 
   return (
@@ -33,7 +60,10 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer }: 
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                가격
+                판매가
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                원가
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수정일</TableHead>
@@ -61,6 +91,29 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer }: 
                   <TableCell className="text-slate-600">{product.optionName}</TableCell>
                   <TableCell className="text-right font-medium text-slate-900">
                     {formatCurrency(product.price)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {editingCostProductId === product.id ? (
+                      <Input
+                        type="number"
+                        value={costInputValue}
+                        onChange={(e) => setCostInputValue(e.target.value)}
+                        onKeyDown={(e) => handleCostKeyDown(e, product.id)}
+                        onBlur={() => handleCostSave(product.id)}
+                        className="w-24 h-8 text-right"
+                        autoFocus
+                      />
+                    ) : (
+                      <div
+                        className="flex items-center justify-end gap-1 cursor-pointer group"
+                        onClick={() => handleCostEdit(product.id, product.cost)}
+                      >
+                        <span className={`font-medium ${product.cost > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
+                          {product.cost > 0 ? formatCurrency(product.cost) : '미등록'}
+                        </span>
+                        <Pencil className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     {isEditing ? (
@@ -110,7 +163,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer }: 
             })}
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-slate-500">
+                <TableCell colSpan={7} className="h-32 text-center text-slate-500">
                   상품이 없습니다.
                 </TableCell>
               </TableRow>

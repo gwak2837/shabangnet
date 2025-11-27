@@ -47,6 +47,7 @@ interface SendModalProps {
 export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
   const [isSending, setIsSending] = useState(false)
   const [isSent, setIsSent] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
   const [duplicateReason, setDuplicateReason] = useState('')
   const [showOrderDetails, setShowOrderDetails] = useState(false)
 
@@ -65,29 +66,68 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
 
   const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0
 
-  // 모달 닫힐 때 사유 초기화를 위한 핸들러
+  // 모달 닫힐 때 상태 초기화를 위한 핸들러
   function handleOpenChange(newOpen: boolean) {
     if (!newOpen) {
       setDuplicateReason('')
+      setSendError(null)
     }
     onOpenChange(newOpen)
   }
 
   async function handleSend() {
-    if (!canSend) return
+    if (!canSend || !batch) return
 
-    // Simulate sending email
     setIsSending(true)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSending(false)
-    setIsSent(true)
+    setSendError(null)
 
-    // Auto close after success
-    setTimeout(() => {
-      setIsSent(false)
-      setDuplicateReason('')
-      handleOpenChange(false)
-    }, 2000)
+    try {
+      // API 요청 데이터 준비
+      const requestData = {
+        manufacturerId: batch.manufacturerId,
+        manufacturerName: batch.manufacturerName,
+        email: batch.email,
+        orders: batch.orders.map((order) => ({
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          phone: order.phone,
+          address: order.address,
+          productCode: order.productCode,
+          productName: order.productName,
+          optionName: order.optionName,
+          quantity: order.quantity,
+          price: order.price,
+        })),
+        duplicateReason: duplicateCheck?.hasDuplicate ? duplicateReason : undefined,
+      }
+
+      const response = await fetch('/api/orders/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIsSent(true)
+        // Auto close after success
+        setTimeout(() => {
+          setIsSent(false)
+          setDuplicateReason('')
+          setSendError(null)
+          handleOpenChange(false)
+        }, 2000)
+      } else {
+        setSendError(result.error || '이메일 발송에 실패했습니다.')
+      }
+    } catch {
+      setSendError('서버와 통신 중 오류가 발생했습니다.')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
@@ -298,6 +338,19 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               />
             </div>
           </div>
+
+          {/* Error Message */}
+          {sendError && (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+                <div>
+                  <p className="font-semibold text-rose-800">발송 실패</p>
+                  <p className="mt-1 text-sm text-rose-700">{sendError}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0 shrink-0 pt-4 border-t border-slate-100">

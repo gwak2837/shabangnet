@@ -29,5 +29,9 @@ export const queryKeys = {
     duplicateCheck: ['settings', 'duplicate-check'] as const,
     courier: ['settings', 'courier'] as const,
   },
+  settlement: {
+    data: (filters: { manufacturerId: string; periodType: string; month?: string; startDate?: string; endDate?: string }) =>
+      ['settlement', filters] as const,
+  },
 } as const
 

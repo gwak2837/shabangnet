@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
 import { AppShell } from '@/components/layout'
-import { ProductFilters, ProductTable } from '@/components/products'
+import { CostUploadModal, ProductFilters, ProductTable } from '@/components/products'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useProducts, useManufacturers, useUpdateProduct } from '@/hooks'
-import type { Product } from '@/lib/mock-data'
-import { Package, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { useManufacturers, useProducts, useUpdateProduct } from '@/hooks'
+import { AlertCircle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
+  const [isCostUploadOpen, setIsCostUploadOpen] = useState(false)
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
@@ -36,6 +37,26 @@ export default function ProductsPage() {
         manufacturerId,
         manufacturerName: manufacturer?.name ?? null,
       },
+    })
+  }
+
+  const handleUpdateCost = (productId: string, cost: number) => {
+    updateProductMutation.mutate({
+      id: productId,
+      data: { cost },
+    })
+  }
+
+  const handleBulkCostUpload = (data: { productCode: string; cost: number }[]) => {
+    // Find product IDs by product codes and update costs
+    data.forEach(({ productCode, cost }) => {
+      const product = products.find((p) => p.productCode === productCode)
+      if (product) {
+        updateProductMutation.mutate({
+          id: product.id,
+          data: { cost },
+        })
+      }
     })
   }
 
@@ -99,13 +120,17 @@ export default function ProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <ProductFilters
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           showUnmappedOnly={showUnmappedOnly}
           onShowUnmappedChange={setShowUnmappedOnly}
         />
+        <Button onClick={() => setIsCostUploadOpen(true)} className="gap-2">
+          <Upload className="h-4 w-4" />
+          원가 일괄 업로드
+        </Button>
       </div>
 
       {/* Product Table */}
@@ -113,7 +138,11 @@ export default function ProductsPage() {
         products={filteredProducts}
         manufacturers={manufacturers}
         onUpdateManufacturer={handleUpdateManufacturer}
+        onUpdateCost={handleUpdateCost}
       />
+
+      {/* Cost Upload Modal */}
+      <CostUploadModal open={isCostUploadOpen} onOpenChange={setIsCostUploadOpen} onUpload={handleBulkCostUpload} />
     </AppShell>
   )
 }
