@@ -28,13 +28,8 @@ export function useUpdateOptionMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string
-      data: Partial<Omit<OptionManufacturerMapping, 'id' | 'createdAt'>>
-    }) => api.optionMappings.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<OptionManufacturerMapping, 'id' | 'createdAt'>> }) =>
+      api.optionMappings.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.optionMappings.all })
     },
@@ -51,4 +46,3 @@ export function useDeleteOptionMapping() {
     },
   })
 }
-

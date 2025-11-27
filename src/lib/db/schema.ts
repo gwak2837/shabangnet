@@ -22,7 +22,7 @@ export const manufacturers = pgTable('manufacturers', {
   // 이메일 템플릿
   emailSubjectTemplate: text('email_subject_template').default('[다온에프앤씨 발주서]_{제조사명}_{날짜}'),
   emailBodyTemplate: text('email_body_template').default(
-    '안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다. 감사합니다.'
+    '안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다. 감사합니다.',
   ),
   // 통계
   orderCount: integer('order_count').default(0),
@@ -257,4 +257,3 @@ export type NewCourierMapping = typeof courierMappings.$inferInsert
 
 export type InvoiceTemplate = typeof invoiceTemplates.$inferSelect
 export type NewInvoiceTemplate = typeof invoiceTemplates.$inferInsert
-

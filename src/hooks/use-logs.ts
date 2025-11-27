@@ -18,4 +18,3 @@ export function useSendLog(id: string) {
     enabled: !!id,
   })
 }
-

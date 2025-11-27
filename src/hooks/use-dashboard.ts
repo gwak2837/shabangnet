@@ -24,4 +24,3 @@ export function useManufacturerChartData() {
     queryFn: api.dashboard.getChartData,
   })
 }
-

@@ -198,4 +198,3 @@ function isEmptyOption(optionName: string | undefined | null): boolean {
 export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
   return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
 }
-

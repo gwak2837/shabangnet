@@ -46,4 +46,3 @@ export async function remove(id: string): Promise<void> {
   await delay(300)
   productsData = productsData.filter((p) => p.id !== id)
 }
-

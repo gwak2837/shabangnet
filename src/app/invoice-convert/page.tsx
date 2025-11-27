@@ -6,12 +6,7 @@ import { OrderSelect, InvoiceDropzone, ConvertResult } from '@/components/invoic
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks'
-import {
-  type SendLog,
-  type InvoiceConvertResult,
-  getInvoiceTemplate,
-  getCourierCode,
-} from '@/lib/mock-data'
+import { type SendLog, type InvoiceConvertResult, getInvoiceTemplate, getCourierCode } from '@/lib/mock-data'
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
 
 type Step = 'select' | 'upload' | 'result'
@@ -145,9 +140,7 @@ export default function InvoiceConvertPage() {
                   >
                     {selectedLog ? <CheckCircle2 className="h-5 w-5" /> : '1'}
                   </div>
-                  <span
-                    className={`text-sm font-medium ${selectedLog ? 'text-emerald-600' : 'text-slate-900'}`}
-                  >
+                  <span className={`text-sm font-medium ${selectedLog ? 'text-emerald-600' : 'text-slate-900'}`}>
                     발주 선택
                   </span>
                 </div>
@@ -225,9 +218,7 @@ export default function InvoiceConvertPage() {
                           </span>
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
                             택배사:{' '}
-                            {template.useColumnIndex
-                              ? `${template.courierColumn}열`
-                              : `"${template.courierColumn}"`}
+                            {template.useColumnIndex ? `${template.courierColumn}열` : `"${template.courierColumn}"`}
                           </span>
                           <span className="px-2 py-1 bg-white rounded border border-slate-200">
                             송장번호:{' '}
@@ -261,9 +252,7 @@ export default function InvoiceConvertPage() {
                     <p className="text-sm text-emerald-700 mt-1">
                       파일명: <span className="font-mono">{outputFileName}</span>
                     </p>
-                    <p className="text-sm text-emerald-600 mt-1">
-                      컬럼: 사방넷주문번호, 택배사코드, 송장번호
-                    </p>
+                    <p className="text-sm text-emerald-600 mt-1">컬럼: 사방넷주문번호, 택배사코드, 송장번호</p>
                   </div>
                 </div>
               </CardContent>

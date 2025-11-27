@@ -16,11 +16,13 @@ export function useSettlement(filters: SettlementFilters | null) {
     }),
     queryFn: () => {
       if (!filters?.manufacturerId) {
-        return Promise.resolve({ orders: [], summary: { totalOrders: 0, totalQuantity: 0, totalCost: 0, manufacturerName: '', period: '' } })
+        return Promise.resolve({
+          orders: [],
+          summary: { totalOrders: 0, totalQuantity: 0, totalCost: 0, manufacturerName: '', period: '' },
+        })
       }
       return api.settlement.getSettlementData(filters)
     },
     enabled: !!filters?.manufacturerId,
   })
 }
-

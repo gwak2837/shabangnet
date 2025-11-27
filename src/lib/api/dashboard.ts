@@ -29,4 +29,3 @@ export async function getChartData(): Promise<ChartDataItem[]> {
   await delay(300)
   return mockChartData
 }
-

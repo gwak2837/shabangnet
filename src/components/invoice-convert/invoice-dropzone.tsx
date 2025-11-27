@@ -89,12 +89,7 @@ export function InvoiceDropzone({
                 </div>
               </div>
               {!isProcessing && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onClear}
-                  className="text-slate-400 hover:text-slate-600"
-                >
+                <Button variant="ghost" size="icon" onClick={onClear} className="text-slate-400 hover:text-slate-600">
                   <X className="h-5 w-5" />
                 </Button>
               )}
@@ -106,10 +101,7 @@ export function InvoiceDropzone({
                   <span className="text-sm font-medium text-slate-700">파일 분석 중...</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-amber-500 animate-pulse"
-                    style={{ width: '60%' }}
-                  />
+                  <div className="h-full rounded-full bg-amber-500 animate-pulse" style={{ width: '60%' }} />
                 </div>
               </div>
             )}
@@ -151,17 +143,10 @@ export function InvoiceDropzone({
               />
             </div>
 
-            <p
-              className={cn(
-                'mt-4 text-base font-semibold',
-                disabled ? 'text-slate-400' : 'text-slate-900',
-              )}
-            >
+            <p className={cn('mt-4 text-base font-semibold', disabled ? 'text-slate-400' : 'text-slate-900')}>
               {disabled ? '먼저 발주 이력을 선택하세요' : '파일을 드래그하거나 클릭하여 업로드'}
             </p>
-            <p className="mt-1 text-sm text-slate-500">
-              거래처에서 받은 송장 파일 (.xlsx, .xls)
-            </p>
+            <p className="mt-1 text-sm text-slate-500">거래처에서 받은 송장 파일 (.xlsx, .xls)</p>
 
             {!disabled && (
               <div className="mt-4 flex items-center gap-3">
@@ -181,4 +166,3 @@ export function InvoiceDropzone({
     </Card>
   )
 }
-

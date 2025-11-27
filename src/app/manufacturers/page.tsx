@@ -100,12 +100,7 @@ export default function ManufacturersPage() {
       </div>
 
       {/* Manufacturer Table */}
-      <ManufacturerTable
-        manufacturers={manufacturers}
-        onEdit={handleEdit}
-        onAdd={handleAdd}
-        onDelete={handleDelete}
-      />
+      <ManufacturerTable manufacturers={manufacturers} onEdit={handleEdit} onAdd={handleAdd} onDelete={handleDelete} />
 
       {/* Add/Edit Modal */}
       <ManufacturerModal

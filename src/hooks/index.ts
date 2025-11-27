@@ -8,21 +8,10 @@ export {
 } from './use-manufacturers'
 
 // Products
-export {
-  useProducts,
-  useProduct,
-  useCreateProduct,
-  useUpdateProduct,
-  useDeleteProduct,
-} from './use-products'
+export { useProducts, useProduct, useCreateProduct, useUpdateProduct, useDeleteProduct } from './use-products'
 
 // Orders
-export {
-  useOrderBatches,
-  useExcludedOrderBatches,
-  useSendOrders,
-  useCheckDuplicate,
-} from './use-orders'
+export { useOrderBatches, useExcludedOrderBatches, useSendOrders, useCheckDuplicate } from './use-orders'
 
 // Logs
 export { useSendLogs, useSendLog } from './use-logs'
@@ -36,11 +25,7 @@ export {
 } from './use-option-mappings'
 
 // Dashboard
-export {
-  useDashboardStats,
-  useRecentUploads,
-  useManufacturerChartData,
-} from './use-dashboard'
+export { useDashboardStats, useRecentUploads, useManufacturerChartData } from './use-dashboard'
 
 // Settings
 export {
@@ -60,4 +45,3 @@ export {
 
 // Settlement
 export { useSettlement } from './use-settlement'
-

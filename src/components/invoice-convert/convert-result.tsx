@@ -5,14 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { type InvoiceConvertResult } from '@/lib/mock-data'
-import {
-  CheckCircle2,
-  AlertCircle,
-  Download,
-  RefreshCw,
-  FileSpreadsheet,
-  AlertTriangle,
-} from 'lucide-react'
+import { CheckCircle2, AlertCircle, Download, RefreshCw, FileSpreadsheet, AlertTriangle } from 'lucide-react'
 
 interface ConvertResultProps {
   results: InvoiceConvertResult[]
@@ -90,10 +83,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
             <span className="text-sm font-semibold text-slate-900">{successRate}%</span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full transition-all bg-emerald-500"
-              style={{ width: `${successRate}%` }}
-            />
+            <div className="h-full rounded-full transition-all bg-emerald-500" style={{ width: `${successRate}%` }} />
           </div>
         </CardContent>
       </Card>
@@ -135,9 +125,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
               </Table>
             </div>
             {successResults.length > 5 && (
-              <p className="mt-3 text-sm text-slate-500 text-center">
-                외 {successResults.length - 5}건...
-              </p>
+              <p className="mt-3 text-sm text-slate-500 text-center">외 {successResults.length - 5}건...</p>
             )}
           </CardContent>
         </Card>
@@ -149,9 +137,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
           <CardHeader className="pb-3 pt-4 px-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
-              <CardTitle className="text-base font-semibold text-amber-900">
-                오류 목록 ({totalErrors}건)
-              </CardTitle>
+              <CardTitle className="text-base font-semibold text-amber-900">오류 목록 ({totalErrors}건)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-4">
@@ -168,12 +154,8 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                 <TableBody>
                   {[...courierErrors, ...orderErrors].map((result, idx) => (
                     <TableRow key={idx} className="hover:bg-amber-100/50 border-amber-200">
-                      <TableCell className="font-mono text-sm text-amber-900">
-                        {result.orderNumber}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-amber-800">
-                        {result.trackingNumber}
-                      </TableCell>
+                      <TableCell className="font-mono text-sm text-amber-900">{result.orderNumber}</TableCell>
+                      <TableCell className="font-mono text-sm text-amber-800">{result.trackingNumber}</TableCell>
                       <TableCell>
                         <Badge
                           variant="secondary"
@@ -187,9 +169,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-amber-800">
-                        {result.status === 'courier_error'
-                          ? `원본: ${result.originalCourier}`
-                          : result.errorMessage}
+                        {result.status === 'courier_error' ? `원본: ${result.originalCourier}` : result.errorMessage}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -199,8 +179,8 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
 
             <div className="mt-4 p-3 rounded-lg bg-amber-100 text-sm text-amber-800">
               <p>
-                <strong>참고:</strong> 오류가 있는 건은 변환 결과 파일에서 제외됩니다.
-                택배사 오류는 설정 &gt; 택배사 관리에서 별칭을 추가하여 해결할 수 있습니다.
+                <strong>참고:</strong> 오류가 있는 건은 변환 결과 파일에서 제외됩니다. 택배사 오류는 설정 &gt; 택배사
+                관리에서 별칭을 추가하여 해결할 수 있습니다.
               </p>
             </div>
           </CardContent>
@@ -217,9 +197,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
               </div>
               <div>
                 <p className="font-semibold text-emerald-900">{fileName}</p>
-                <p className="text-sm text-emerald-700">
-                  사방넷 송장 업로드 양식 (성공 {successResults.length}건)
-                </p>
+                <p className="text-sm text-emerald-700">사방넷 송장 업로드 양식 (성공 {successResults.length}건)</p>
               </div>
             </div>
             <Button
@@ -244,4 +222,3 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
     </div>
   )
 }
-

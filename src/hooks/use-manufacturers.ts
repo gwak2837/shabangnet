@@ -24,8 +24,7 @@ export function useCreateManufacturer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>) =>
-      api.manufacturers.create(data),
+    mutationFn: (data: Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>) => api.manufacturers.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
     },
@@ -36,8 +35,7 @@ export function useUpdateManufacturer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Manufacturer> }) =>
-      api.manufacturers.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Manufacturer> }) => api.manufacturers.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.detail(variables.id) })
@@ -55,4 +53,3 @@ export function useDeleteManufacturer() {
     },
   })
 }
-

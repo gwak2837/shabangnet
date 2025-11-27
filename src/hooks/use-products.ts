@@ -24,8 +24,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) =>
-      api.products.create(data),
+    mutationFn: (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => api.products.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
     },
@@ -36,8 +35,7 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) =>
-      api.products.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) => api.products.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(variables.id) })
@@ -55,4 +53,3 @@ export function useDeleteProduct() {
     },
   })
 }
-

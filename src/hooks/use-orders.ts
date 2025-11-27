@@ -44,4 +44,3 @@ export function useCheckDuplicate() {
     }) => api.orders.checkDuplicate(manufacturerId, recipientAddresses, periodDays),
   })
 }
-

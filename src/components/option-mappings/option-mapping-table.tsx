@@ -110,4 +110,3 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
     </Card>
   )
 }
-

@@ -83,8 +83,7 @@ export function useUpdateDuplicateCheckSettings() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Partial<DuplicateCheckSettings>) =>
-      api.settings.updateDuplicateCheckSettings(data),
+    mutationFn: (data: Partial<DuplicateCheckSettings>) => api.settings.updateDuplicateCheckSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.duplicateCheck })
     },
@@ -132,4 +131,3 @@ export function useRemoveCourierMapping() {
     },
   })
 }
-

@@ -12,12 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  type Manufacturer,
-  type InvoiceTemplate,
-  defaultInvoiceTemplate,
-  invoiceTemplates,
-} from '@/lib/mock-data'
+import { type Manufacturer, type InvoiceTemplate, defaultInvoiceTemplate, invoiceTemplates } from '@/lib/mock-data'
 import { Building2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -224,9 +219,7 @@ export function ManufacturerModal({
                     </div>
                     <Switch
                       checked={invoiceTemplate.useColumnIndex}
-                      onCheckedChange={(checked) =>
-                        setInvoiceTemplate({ ...invoiceTemplate, useColumnIndex: checked })
-                      }
+                      onCheckedChange={(checked) => setInvoiceTemplate({ ...invoiceTemplate, useColumnIndex: checked })}
                     />
                   </div>
 
@@ -236,9 +229,7 @@ export function ManufacturerModal({
                       <Label className="text-xs">주문번호 컬럼</Label>
                       <Input
                         value={invoiceTemplate.orderNumberColumn}
-                        onChange={(e) =>
-                          setInvoiceTemplate({ ...invoiceTemplate, orderNumberColumn: e.target.value })
-                        }
+                        onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, orderNumberColumn: e.target.value })}
                         placeholder={invoiceTemplate.useColumnIndex ? 'A' : '주문번호'}
                         className="h-8 text-sm"
                       />
@@ -247,9 +238,7 @@ export function ManufacturerModal({
                       <Label className="text-xs">택배사 컬럼</Label>
                       <Input
                         value={invoiceTemplate.courierColumn}
-                        onChange={(e) =>
-                          setInvoiceTemplate({ ...invoiceTemplate, courierColumn: e.target.value })
-                        }
+                        onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, courierColumn: e.target.value })}
                         placeholder={invoiceTemplate.useColumnIndex ? 'B' : '택배사'}
                         className="h-8 text-sm"
                       />

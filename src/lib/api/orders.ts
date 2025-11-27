@@ -63,4 +63,3 @@ export async function checkDuplicate(
   await delay(200)
   return checkDuplicateSend(manufacturerId, recipientAddresses, periodDays)
 }
-

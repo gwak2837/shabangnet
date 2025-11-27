@@ -64,7 +64,9 @@ export async function getDuplicateCheckSettings(): Promise<DuplicateCheckSetting
   return duplicateCheckData
 }
 
-export async function updateDuplicateCheckSettings(data: Partial<DuplicateCheckSettings>): Promise<DuplicateCheckSettings> {
+export async function updateDuplicateCheckSettings(
+  data: Partial<DuplicateCheckSettings>,
+): Promise<DuplicateCheckSettings> {
   await delay(500)
   duplicateCheckData = { ...duplicateCheckData, ...data }
   return duplicateCheckData
@@ -99,4 +101,3 @@ export async function removeCourierMapping(id: string): Promise<void> {
   await delay(300)
   courierData = courierData.filter((c) => c.id !== id)
 }
-

@@ -1,7 +1,4 @@
-import {
-  optionManufacturerMappings as mockMappings,
-  type OptionManufacturerMapping,
-} from '@/lib/mock-data'
+import { optionManufacturerMappings as mockMappings, type OptionManufacturerMapping } from '@/lib/mock-data'
 
 // 메모리에 데이터 복사
 let mappingsData = [...mockMappings]
@@ -54,4 +51,3 @@ export async function remove(id: string): Promise<void> {
   await delay(300)
   mappingsData = mappingsData.filter((m) => m.id !== id)
 }
-

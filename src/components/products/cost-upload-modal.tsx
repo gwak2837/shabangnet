@@ -2,13 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Download, X } from 'lucide-react'
@@ -46,28 +40,35 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
       const workbook = XLSX.read(data)
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
-      const jsonData = XLSX.utils.sheet_to_json<{ 상품코드?: string; productCode?: string; 원가?: number; cost?: number }>(worksheet)
+      const jsonData = XLSX.utils.sheet_to_json<{
+        상품코드?: string
+        productCode?: string
+        원가?: number
+        cost?: number
+      }>(worksheet)
 
       // Transform data
-      const parsedData: CostUploadData[] = jsonData.map((row) => {
-        const productCode = row['상품코드'] || row['productCode'] || ''
-        const cost = row['원가'] || row['cost'] || 0
+      const parsedData: CostUploadData[] = jsonData
+        .map((row) => {
+          const productCode = row['상품코드'] || row['productCode'] || ''
+          const cost = row['원가'] || row['cost'] || 0
 
-        if (!productCode) {
-          return {
-            productCode: '',
-            cost: 0,
-            status: 'error' as const,
-            message: '상품코드가 없습니다',
+          if (!productCode) {
+            return {
+              productCode: '',
+              cost: 0,
+              status: 'error' as const,
+              message: '상품코드가 없습니다',
+            }
           }
-        }
 
-        return {
-          productCode: String(productCode),
-          cost: Number(cost) || 0,
-          status: 'success' as const,
-        }
-      }).filter(item => item.productCode)
+          return {
+            productCode: String(productCode),
+            cost: Number(cost) || 0,
+            status: 'success' as const,
+          }
+        })
+        .filter((item) => item.productCode)
 
       setUploadedData(parsedData)
     } catch (error) {
@@ -101,7 +102,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
   }
 
   const handleApply = () => {
-    const validData = uploadedData.filter(item => item.status === 'success')
+    const validData = uploadedData.filter((item) => item.status === 'success')
     onUpload(validData)
     handleClose()
   }
@@ -112,8 +113,8 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
     onOpenChange(false)
   }
 
-  const successCount = uploadedData.filter(d => d.status === 'success').length
-  const errorCount = uploadedData.filter(d => d.status === 'error').length
+  const successCount = uploadedData.filter((d) => d.status === 'success').length
+  const errorCount = uploadedData.filter((d) => d.status === 'error').length
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -123,9 +124,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
             <Upload className="h-5 w-5" />
             원가 일괄 업로드
           </DialogTitle>
-          <DialogDescription>
-            엑셀 파일(.xlsx)을 업로드하여 상품 원가를 일괄 등록합니다.
-          </DialogDescription>
+          <DialogDescription>엑셀 파일(.xlsx)을 업로드하여 상품 원가를 일괄 등록합니다.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto space-y-4">
@@ -228,9 +227,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                   </TableBody>
                 </Table>
                 {uploadedData.length > 50 && (
-                  <p className="text-center text-sm text-slate-500 py-2">
-                    외 {uploadedData.length - 50}건 더 있음
-                  </p>
+                  <p className="text-center text-sm text-slate-500 py-2">외 {uploadedData.length - 50}건 더 있음</p>
                 )}
               </div>
             </div>
@@ -242,11 +239,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
           <Button variant="outline" onClick={handleClose}>
             취소
           </Button>
-          <Button
-            onClick={handleApply}
-            disabled={successCount === 0}
-            className="gap-2"
-          >
+          <Button onClick={handleApply} disabled={successCount === 0} className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
             {successCount}건 적용
           </Button>
@@ -255,4 +248,3 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
     </Dialog>
   )
 }
-

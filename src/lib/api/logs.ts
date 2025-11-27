@@ -37,4 +37,3 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
     return true
   })
 }
-

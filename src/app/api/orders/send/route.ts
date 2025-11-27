@@ -105,7 +105,10 @@ export async function POST(request: Request): Promise<NextResponse<SendOrderResp
       })
     } else {
       // 발송 실패
-      return NextResponse.json({ success: false, error: result.error || '이메일 발송에 실패했습니다.' }, { status: 500 })
+      return NextResponse.json(
+        { success: false, error: result.error || '이메일 발송에 실패했습니다.' },
+        { status: 500 },
+      )
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -129,4 +132,3 @@ function formatDateKorean(date: Date): string {
     day: 'numeric',
   })
 }
-

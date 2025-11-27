@@ -30,8 +30,12 @@ export const queryKeys = {
     courier: ['settings', 'courier'] as const,
   },
   settlement: {
-    data: (filters: { manufacturerId: string; periodType: string; month?: string; startDate?: string; endDate?: string }) =>
-      ['settlement', filters] as const,
+    data: (filters: {
+      manufacturerId: string
+      periodType: string
+      month?: string
+      startDate?: string
+      endDate?: string
+    }) => ['settlement', filters] as const,
   },
 } as const
-

@@ -6,13 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import {
-  formatCurrency,
-  formatDateTime,
-  getStatusColor,
-  getStatusLabel,
-  type OrderBatch,
-} from '@/lib/mock-data'
+import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel, type OrderBatch } from '@/lib/mock-data'
 import { CheckCircle2, Download, Eye, Mail, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 

@@ -1,8 +1,4 @@
-import {
-  manufacturers as mockManufacturers,
-  type Manufacturer,
-  type InvoiceTemplate,
-} from '@/lib/mock-data'
+import { manufacturers as mockManufacturers, type Manufacturer, type InvoiceTemplate } from '@/lib/mock-data'
 
 // 메모리에 데이터 복사 (CRUD 시뮬레이션용)
 let manufacturersData = [...mockManufacturers]
@@ -20,9 +16,7 @@ export async function getById(id: string): Promise<Manufacturer | undefined> {
   return manufacturersData.find((m) => m.id === id)
 }
 
-export async function create(
-  data: Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>,
-): Promise<Manufacturer> {
+export async function create(data: Omit<Manufacturer, 'id' | 'orderCount' | 'lastOrderDate'>): Promise<Manufacturer> {
   await delay(500)
   const newManufacturer: Manufacturer = {
     ...data,
@@ -62,4 +56,3 @@ export async function updateInvoiceTemplate(
   await delay(500)
   return template
 }
-

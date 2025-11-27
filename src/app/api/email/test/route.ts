@@ -16,7 +16,7 @@ export async function POST() {
           success: false,
           error: result.error || 'SMTP 연결에 실패했습니다.',
         },
-        { status: 500 }
+        { status: 500 },
       )
     }
   } catch (error) {
@@ -29,4 +29,3 @@ export async function POST() {
 export async function GET() {
   return POST()
 }
-

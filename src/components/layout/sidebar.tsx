@@ -3,7 +3,19 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Upload, FileSpreadsheet, Building2, Package, FileText, Settings, LogOut, Settings2, Truck, Calculator } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Upload,
+  FileSpreadsheet,
+  Building2,
+  Package,
+  FileText,
+  Settings,
+  LogOut,
+  Settings2,
+  Truck,
+  Calculator,
+} from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
