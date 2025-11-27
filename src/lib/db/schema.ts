@@ -1,5 +1,5 @@
-import { pgTable, text, integer, boolean, timestamp, varchar, decimal, pgEnum } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
+import { boolean, decimal, integer, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 
 // ============================================
 // Enums
@@ -7,6 +7,7 @@ import { relations } from 'drizzle-orm'
 
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'processing', 'completed', 'error'])
 export const emailStatusEnum = pgEnum('email_status', ['success', 'failed', 'pending'])
+export const uploadTypeEnum = pgEnum('upload_type', ['sabangnet', 'shopping_mall'])
 
 // ============================================
 // 제조사 (Manufacturers)
@@ -116,6 +117,8 @@ export const uploads = pgTable('uploads', {
   id: text('id').primaryKey(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
   fileSize: integer('file_size').default(0),
+  fileType: uploadTypeEnum('file_type').default('sabangnet'), // 파일 유형
+  shoppingMallId: text('shopping_mall_id').references(() => shoppingMallTemplates.id), // 쇼핑몰 템플릿
   totalOrders: integer('total_orders').default(0),
   processedOrders: integer('processed_orders').default(0),
   errorOrders: integer('error_orders').default(0),
@@ -161,6 +164,77 @@ export const courierMappings = pgTable('courier_mappings', {
 })
 
 // ============================================
+// 제조사별 발주서 템플릿 (Order Templates)
+// ============================================
+
+export const orderTemplates = pgTable('order_templates', {
+  id: text('id').primaryKey(),
+  manufacturerId: text('manufacturer_id')
+    .references(() => manufacturers.id)
+    .notNull()
+    .unique(),
+  templateFileName: varchar('template_file_name', { length: 255 }),
+  headerRow: integer('header_row').default(1),
+  dataStartRow: integer('data_start_row').default(2),
+  columnMappings: text('column_mappings'), // JSON: { "recipientName": "D", "address": "F" }
+  fixedValues: text('fixed_values'), // JSON: 고정값 설정 { "A": "다온에프앤씨", "B": "032-237-6933" }
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
+// 쇼핑몰별 파일 템플릿 (Shopping Mall Templates)
+// ============================================
+
+export const shoppingMallTemplates = pgTable('shopping_mall_templates', {
+  id: text('id').primaryKey(),
+  mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 매핑
+  headerRow: integer('header_row').default(1),
+  dataStartRow: integer('data_start_row').default(2),
+  enabled: boolean('enabled').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
+// 주문 데이터 (Orders) - 실제 주문 저장
+// ============================================
+
+export const orders = pgTable('orders', {
+  id: text('id').primaryKey(),
+  uploadId: text('upload_id').references(() => uploads.id),
+  // 사방넷 표준 컬럼
+  orderNumber: varchar('order_number', { length: 100 }).notNull(),
+  productName: varchar('product_name', { length: 500 }),
+  quantity: integer('quantity').default(1),
+  orderName: varchar('order_name', { length: 255 }), // 주문인
+  recipientName: varchar('recipient_name', { length: 255 }), // 받는인
+  orderPhone: varchar('order_phone', { length: 50 }), // 주문인 연락처
+  orderMobile: varchar('order_mobile', { length: 50 }), // 주문인 핸드폰
+  recipientPhone: varchar('recipient_phone', { length: 50 }), // 받는인 연락처
+  recipientMobile: varchar('recipient_mobile', { length: 50 }), // 받는인 핸드폰
+  postalCode: varchar('postal_code', { length: 20 }), // 우편번호
+  address: text('address'), // 배송지
+  memo: text('memo'), // 전언/배송메시지
+  shoppingMall: varchar('shopping_mall', { length: 100 }), // 쇼핑몰/사이트
+  manufacturerName: varchar('manufacturer_name', { length: 255 }), // 제조사 (원본)
+  courier: varchar('courier', { length: 100 }), // 택배사
+  trackingNumber: varchar('tracking_number', { length: 100 }), // 송장번호
+  optionName: varchar('option_name', { length: 255 }), // 옵션
+  paymentAmount: decimal('payment_amount', { precision: 12, scale: 2 }), // 결제금액
+  productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
+  productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
+  cost: decimal('cost', { precision: 12, scale: 2 }), // 원가
+  // 시스템 필드
+  manufacturerId: text('manufacturer_id').references(() => manufacturers.id),
+  status: orderStatusEnum('status').default('pending'),
+  excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
 // 송장 변환 템플릿 (Invoice Templates)
 // ============================================
 
@@ -184,11 +258,13 @@ export const invoiceTemplates = pgTable('invoice_templates', {
 // Relations (관계 정의)
 // ============================================
 
-export const manufacturersRelations = relations(manufacturers, ({ many }) => ({
+export const manufacturersRelations = relations(manufacturers, ({ many, one }) => ({
   products: many(products),
   optionMappings: many(optionMappings),
   emailLogs: many(emailLogs),
   invoiceTemplate: many(invoiceTemplates),
+  orderTemplate: one(orderTemplates),
+  orders: many(orders),
 }))
 
 export const productsRelations = relations(products, ({ one }) => ({
@@ -227,6 +303,36 @@ export const invoiceTemplatesRelations = relations(invoiceTemplates, ({ one }) =
   }),
 }))
 
+export const orderTemplatesRelations = relations(orderTemplates, ({ one }) => ({
+  manufacturer: one(manufacturers, {
+    fields: [orderTemplates.manufacturerId],
+    references: [manufacturers.id],
+  }),
+}))
+
+export const shoppingMallTemplatesRelations = relations(shoppingMallTemplates, ({ many }) => ({
+  uploads: many(uploads),
+}))
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  upload: one(uploads, {
+    fields: [orders.uploadId],
+    references: [uploads.id],
+  }),
+  manufacturer: one(manufacturers, {
+    fields: [orders.manufacturerId],
+    references: [manufacturers.id],
+  }),
+}))
+
+export const uploadsRelations = relations(uploads, ({ one, many }) => ({
+  shoppingMallTemplate: one(shoppingMallTemplates, {
+    fields: [uploads.shoppingMallId],
+    references: [shoppingMallTemplates.id],
+  }),
+  orders: many(orders),
+}))
+
 // ============================================
 // Type Exports
 // ============================================
@@ -257,3 +363,12 @@ export type NewCourierMapping = typeof courierMappings.$inferInsert
 
 export type InvoiceTemplate = typeof invoiceTemplates.$inferSelect
 export type NewInvoiceTemplate = typeof invoiceTemplates.$inferInsert
+
+export type OrderTemplate = typeof orderTemplates.$inferSelect
+export type NewOrderTemplate = typeof orderTemplates.$inferInsert
+
+export type ShoppingMallTemplate = typeof shoppingMallTemplates.$inferSelect
+export type NewShoppingMallTemplate = typeof shoppingMallTemplates.$inferInsert
+
+export type Order = typeof orders.$inferSelect
+export type NewOrder = typeof orders.$inferInsert

@@ -12,9 +12,10 @@ interface DropzoneProps {
   selectedFile: File | null
   onClear: () => void
   isProcessing: boolean
+  disabled?: boolean
 }
 
-export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing }: DropzoneProps) {
+export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, disabled = false }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -32,22 +33,25 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing }: 
       e.preventDefault()
       setIsDragging(false)
 
+      if (disabled) return
+
       const file = e.dataTransfer.files[0]
       if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
         onFileSelect(file)
       }
     },
-    [onFileSelect],
+    [onFileSelect, disabled],
   )
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return
       const file = e.target.files?.[0]
       if (file) {
         onFileSelect(file)
       }
     },
-    [onFileSelect],
+    [onFileSelect, disabled],
   )
 
   if (selectedFile) {
@@ -88,12 +92,16 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing }: 
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className={cn('border-slate-200 bg-white shadow-sm', disabled && 'opacity-60')}>
       <CardContent className="p-4">
         <div
           className={cn(
             'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 transition-all',
-            isDragging ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+            disabled
+              ? 'border-slate-200 bg-slate-50 cursor-not-allowed'
+              : isDragging
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -103,7 +111,8 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing }: 
             type="file"
             accept=".xlsx,.xls"
             onChange={handleFileInput}
-            className="absolute inset-0 cursor-pointer opacity-0"
+            className={cn('absolute inset-0 opacity-0', disabled ? 'cursor-not-allowed' : 'cursor-pointer')}
+            disabled={disabled}
           />
 
           <div
