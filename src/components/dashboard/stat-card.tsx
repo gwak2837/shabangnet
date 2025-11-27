@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, type LucideIcon } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface StatCardProps {
   change?: number

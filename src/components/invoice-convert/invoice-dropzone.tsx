@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatFileSize } from '@/lib/mock-data'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface InvoiceDropzoneProps {
   disabled?: boolean

@@ -7,7 +7,6 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Perfectionist - natural sorting
   perfectionist.configs['recommended-natural'],
   {
     rules: {

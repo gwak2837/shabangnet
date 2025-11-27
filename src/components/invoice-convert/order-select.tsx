@@ -7,7 +7,7 @@ import type { SendLog } from '@/lib/mock-data'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDateTime } from '@/lib/mock-data'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface OrderSelectProps {
   logs: SendLog[]

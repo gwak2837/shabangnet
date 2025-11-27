@@ -18,7 +18,7 @@ import { usePathname } from 'next/navigation'
 
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 const mainNavItems = [
   {

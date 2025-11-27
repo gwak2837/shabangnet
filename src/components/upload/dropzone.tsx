@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatFileSize } from '@/lib/mock-data'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface DropzoneProps {
   disabled?: boolean
