@@ -1192,6 +1192,17 @@ export const products: Product[] = [
   },
 ]
 
+// Send Log Order (발송 로그에 포함된 주문 상세)
+export interface SendLogOrder {
+  orderNumber: string
+  productName: string
+  optionName: string
+  quantity: number
+  price: number
+  customerName: string
+  address: string
+}
+
 // Send Log interface and mock data
 export interface SendLog {
   id: string
@@ -1210,6 +1221,8 @@ export interface SendLog {
   recipientAddresses: string[]
   // 중복 발송 시 입력한 사유
   duplicateReason?: string
+  // 발송에 포함된 주문 상세
+  orders: SendLogOrder[]
 }
 
 // 현재 날짜 기준 상대적 날짜 생성 헬퍼
@@ -1226,6 +1239,104 @@ function formatDateForFileName(daysAgo: number): string {
   return date.toISOString().slice(0, 10).replace(/-/g, '')
 }
 
+// 주문 샘플 데이터 생성 헬퍼
+const sampleProducts: Record<string, { name: string; options: string[]; price: number }[]> = {
+  m1: [
+    // 농심식품
+    { name: '신라면 멀티팩', options: ['5개입', '10개입'], price: 4500 },
+    { name: '안성탕면', options: ['5개입'], price: 3800 },
+    { name: '새우깡', options: ['대용량', '소용량'], price: 2500 },
+  ],
+  m2: [
+    // CJ제일제당
+    { name: '햇반 210g', options: ['12개입', '24개입'], price: 12000 },
+    { name: '비비고 만두', options: ['고기만두', '김치만두'], price: 8900 },
+    { name: '스팸 클래식', options: ['200g', '340g'], price: 5500 },
+  ],
+  m3: [
+    // 오뚜기
+    { name: '진라면', options: ['매운맛', '순한맛'], price: 3200 },
+    { name: '오뚜기 카레', options: ['중간맛', '순한맛'], price: 2800 },
+    { name: '참깨라면', options: ['5개입'], price: 3500 },
+  ],
+  m4: [
+    // 동원F&B
+    { name: '동원참치', options: ['살코기', '고추참치'], price: 4200 },
+    { name: '리챔', options: ['200g', '340g'], price: 5800 },
+    { name: '양반김', options: ['도시락김', '전장김'], price: 6500 },
+  ],
+  m5: [
+    // 풀무원
+    { name: '두부', options: ['찌개용', '부침용'], price: 2800 },
+    { name: '생면식감', options: ['짜장', '짬뽕'], price: 4500 },
+    { name: '콩나물', options: ['500g'], price: 1800 },
+  ],
+  m6: [
+    // 삼양식품
+    { name: '불닭볶음면', options: ['5개입', '까르보'], price: 4800 },
+    { name: '삼양라면', options: ['5개입'], price: 3200 },
+  ],
+  m7: [
+    // 해태제과
+    { name: '홈런볼', options: ['초코', '딸기'], price: 3500 },
+    { name: '맛동산', options: ['대용량'], price: 4200 },
+  ],
+  m8: [
+    // 롯데푸드
+    { name: '의성마늘햄', options: ['200g', '450g'], price: 6800 },
+    { name: '롯데햄', options: ['오리지널'], price: 5500 },
+  ],
+  m9: [
+    // 청정원
+    { name: '순창고추장', options: ['500g', '1kg'], price: 8500 },
+    { name: '카레여왕', options: ['바몬드', '자바'], price: 4200 },
+  ],
+  m10: [
+    // 빙그레
+    { name: '바나나맛우유', options: ['240ml', '6개입'], price: 1800 },
+    { name: '요플레', options: ['딸기', '블루베리'], price: 3200 },
+  ],
+}
+
+const sampleCustomers = ['김철수', '이영희', '박민수', '최지현', '정대호', '강서연', '윤미래', '조성민']
+const sampleAddresses = [
+  '서울시 강남구 테헤란로 123',
+  '경기도 성남시 분당구 판교로 456',
+  '인천시 연수구 송도대로 789',
+  '부산시 해운대구 해운대로 101',
+  '대전시 유성구 대학로 202',
+  '대구시 중구 동성로 55',
+  '서울시 서초구 반포대로 200',
+  '서울시 강서구 화곡로 268',
+]
+
+function generateSampleOrders(manufacturerId: string, count: number, totalAmount: number): SendLogOrder[] {
+  const products = sampleProducts[manufacturerId] || sampleProducts['m1']
+  const orders: SendLogOrder[] = []
+  let remainingAmount = totalAmount
+
+  for (let i = 0; i < Math.min(count, 5); i++) {
+    // 최대 5개 샘플만 생성
+    const product = products[i % products.length]
+    const option = product.options[i % product.options.length]
+    const quantity = Math.floor(Math.random() * 3) + 1
+    const price = i < count - 1 ? product.price * quantity : remainingAmount
+    remainingAmount -= price
+
+    orders.push({
+      orderNumber: `ORD-${Date.now().toString().slice(-6)}-${i + 1}`,
+      productName: product.name,
+      optionName: option,
+      quantity,
+      price: Math.max(price, product.price),
+      customerName: sampleCustomers[i % sampleCustomers.length],
+      address: sampleAddresses[i % sampleAddresses.length],
+    })
+  }
+
+  return orders
+}
+
 export const sendLogs: SendLog[] = [
   {
     id: 'log1',
@@ -1240,6 +1351,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(0, 11, 30), // 오늘
     sentBy: '관리자',
     recipientAddresses: ['서울시 강남구 테헤란로 123', '경기도 성남시 분당구 판교로 456'],
+    orders: generateSampleOrders('m1', 45, 892000),
   },
   {
     id: 'log2',
@@ -1254,6 +1366,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(0, 11, 32), // 오늘
     sentBy: '관리자',
     recipientAddresses: ['경기도 성남시 분당구 판교로 456', '인천시 연수구 송도대로 789'],
+    orders: generateSampleOrders('m2', 38, 756000),
   },
   {
     id: 'log3',
@@ -1268,6 +1381,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(0, 11, 35), // 오늘
     sentBy: '관리자',
     recipientAddresses: ['인천시 연수구 송도대로 789', '부산시 해운대구 해운대로 101'],
+    orders: generateSampleOrders('m3', 32, 584000),
   },
   {
     id: 'log4',
@@ -1283,6 +1397,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(1, 10, 15), // 1일 전
     sentBy: '관리자',
     recipientAddresses: ['부산시 해운대구 해운대로 101'],
+    orders: generateSampleOrders('m4', 25, 498000),
   },
   {
     id: 'log5',
@@ -1297,6 +1412,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(1, 10, 20), // 1일 전
     sentBy: '관리자',
     recipientAddresses: ['대전시 유성구 대학로 202'],
+    orders: generateSampleOrders('m5', 16, 312000),
   },
   {
     id: 'log6',
@@ -1311,6 +1427,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(1, 10, 10), // 1일 전
     sentBy: '관리자',
     recipientAddresses: ['서울시 강남구 테헤란로 123', '서울시 서초구 반포대로 200'],
+    orders: generateSampleOrders('m1', 52, 1024000),
   },
   {
     id: 'log7',
@@ -1325,6 +1442,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(2, 11, 0), // 2일 전
     sentBy: '관리자',
     recipientAddresses: ['경기도 성남시 분당구 판교로 456'],
+    orders: generateSampleOrders('m2', 41, 820000),
   },
   {
     id: 'log8',
@@ -1340,6 +1458,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(2, 10, 45), // 2일 전
     sentBy: '관리자',
     recipientAddresses: ['인천시 연수구 송도대로 789'],
+    orders: generateSampleOrders('m3', 28, 456000),
   },
   {
     id: 'log9',
@@ -1354,6 +1473,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(2, 10, 30), // 2일 전
     sentBy: '관리자',
     recipientAddresses: ['부산시 해운대구 해운대로 101', '대구시 중구 동성로 55'],
+    orders: generateSampleOrders('m4', 19, 380000),
   },
   {
     id: 'log10',
@@ -1368,6 +1488,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(3, 9, 45), // 3일 전
     sentBy: '관리자',
     recipientAddresses: ['대전시 유성구 대학로 202'],
+    orders: generateSampleOrders('m5', 14, 280000),
   },
   // 삼양식품 발송 이력 (발송완료 상태용)
   {
@@ -1383,6 +1504,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(0, 9, 0), // 오늘
     sentBy: '관리자',
     recipientAddresses: ['서울시 강서구 화곡로 268', '서울시 노원구 동일로 1414'],
+    orders: generateSampleOrders('m6', 22, 356000),
   },
   // 청정원 발송 이력 (발송완료 상태용)
   {
@@ -1398,6 +1520,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(0, 8, 30), // 오늘
     sentBy: '관리자',
     recipientAddresses: ['대전시 서구 둔산로 100', '대전시 중구 대종로 480'],
+    orders: generateSampleOrders('m9', 14, 198000),
   },
   // 롯데푸드 발송 이력
   {
@@ -1413,6 +1536,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(1, 14, 0), // 1일 전
     sentBy: '관리자',
     recipientAddresses: ['인천시 부평구 부평대로 283'],
+    orders: generateSampleOrders('m8', 28, 412000),
   },
   // 빙그레 발송 이력
   {
@@ -1428,6 +1552,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(2, 15, 30), // 2일 전
     sentBy: '관리자',
     recipientAddresses: ['경기도 파주시 문산읍 통일로 1680'],
+    orders: generateSampleOrders('m10', 20, 324000),
   },
   // 해태제과 발송 실패 이력
   {
@@ -1444,6 +1569,7 @@ export const sendLogs: SendLog[] = [
     sentAt: getRelativeDate(1, 11, 0), // 1일 전
     sentBy: '관리자',
     recipientAddresses: ['경기도 안양시 동안구 시민대로 235'],
+    orders: generateSampleOrders('m7', 18, 248000),
   },
 ]
 
