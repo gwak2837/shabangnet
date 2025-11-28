@@ -41,7 +41,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-x-auto">
         {/* Bulk Actions */}
         {selectedBatches.length > 0 && (
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3">

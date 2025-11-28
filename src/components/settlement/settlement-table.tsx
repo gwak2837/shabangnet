@@ -36,7 +36,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
-        <div className="overflow-auto max-h-[500px]">
+        <div className="overflow-auto max-h-[500px] overflow-x-auto">
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="hover:bg-transparent">

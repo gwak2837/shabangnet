@@ -53,7 +53,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

@@ -12,6 +12,7 @@ import {
   Settings2,
   Truck,
   Upload,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -71,22 +72,46 @@ const managementNavItems = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
     <TooltipProvider delayDuration={0}>
-      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 bg-sidebar">
+      {/* Overlay for mobile */}
+      {isOpen && <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
+
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-sidebar',
+          'transition-transform duration-300 ease-in-out',
+          'md:z-40 md:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-6">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
-              <FileSpreadsheet className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
+                <FileSpreadsheet className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-slate-900">사방넷 발주</span>
+                <span className="text-xs text-slate-500">자동화 시스템</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-slate-900">사방넷 발주</span>
-              <span className="text-xs text-slate-500">자동화 시스템</span>
-            </div>
+            {/* Close button for mobile */}
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Navigation */}
@@ -104,6 +129,7 @@ export function Sidebar() {
                     )}
                     href={item.href}
                     key={item.href}
+                    onClick={onClose}
                   >
                     <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
                     {item.title}
@@ -129,6 +155,7 @@ export function Sidebar() {
                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                         )}
                         href={item.href}
+                        onClick={onClose}
                       >
                         <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
                         {item.title}
@@ -159,6 +186,7 @@ export function Sidebar() {
               <Link
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                 href="/settings"
+                onClick={onClose}
               >
                 <Settings className="h-4 w-4" />
                 설정
