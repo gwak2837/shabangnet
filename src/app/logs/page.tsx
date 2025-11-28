@@ -5,10 +5,13 @@ import { useMemo, useState } from 'react'
 
 import type { SendLog } from '@/lib/mock-data'
 
-import { AppShell } from '@/components/layout'
-import { LogDetailModal, LogFilters, LogTable } from '@/components/logs'
+import { AppShell } from '@/components/layout/app-shell'
+import { LogDetailModal } from '@/components/logs/log-detail-modal'
+import { LogFilters } from '@/components/logs/log-filters'
+import { LogTable } from '@/components/logs/log-table'
 import { Card, CardContent } from '@/components/ui/card'
-import { useManufacturers, useSendLogs } from '@/hooks'
+import { useSendLogs } from '@/hooks/use-logs'
+import { useManufacturers } from '@/hooks/use-manufacturers'
 
 export default function LogsPage() {
   const [dateFrom, setDateFrom] = useState('')

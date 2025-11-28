@@ -3,11 +3,14 @@
 import { AlertCircle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { AppShell } from '@/components/layout'
-import { CostUploadModal, ProductFilters, ProductTable } from '@/components/products'
+import { AppShell } from '@/components/layout/app-shell'
+import { CostUploadModal } from '@/components/products/cost-upload-modal'
+import { ProductFilters } from '@/components/products/product-filters'
+import { ProductTable } from '@/components/products/product-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useManufacturers, useProducts, useUpdateProduct } from '@/hooks'
+import { useManufacturers } from '@/hooks/use-manufacturers'
+import { useProducts, useUpdateProduct } from '@/hooks/use-products'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')

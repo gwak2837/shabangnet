@@ -5,16 +5,18 @@ import { useMemo, useState } from 'react'
 
 import type { OptionManufacturerMapping } from '@/lib/mock-data'
 
-import { AppShell } from '@/components/layout'
-import { OptionMappingFilters, OptionMappingModal, OptionMappingTable } from '@/components/option-mappings'
+import { AppShell } from '@/components/layout/app-shell'
+import { OptionMappingFilters } from '@/components/option-mappings/option-mapping-filters'
+import { OptionMappingModal } from '@/components/option-mappings/option-mapping-modal'
+import { OptionMappingTable } from '@/components/option-mappings/option-mapping-table'
 import { Card, CardContent } from '@/components/ui/card'
+import { useManufacturers } from '@/hooks/use-manufacturers'
 import {
   useCreateOptionMapping,
   useDeleteOptionMapping,
-  useManufacturers,
   useOptionMappings,
   useUpdateOptionMapping,
-} from '@/hooks'
+} from '@/hooks/use-option-mappings'
 
 export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')

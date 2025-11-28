@@ -5,10 +5,16 @@ import { useMemo, useState } from 'react'
 
 import type { InvoiceTemplate, Manufacturer } from '@/lib/mock-data'
 
-import { AppShell } from '@/components/layout'
-import { ManufacturerModal, ManufacturerTable } from '@/components/manufacturers'
+import { AppShell } from '@/components/layout/app-shell'
+import { ManufacturerModal } from '@/components/manufacturers/manufacturer-modal'
+import { ManufacturerTable } from '@/components/manufacturers/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
-import { useCreateManufacturer, useDeleteManufacturer, useManufacturers, useUpdateManufacturer } from '@/hooks'
+import {
+  useCreateManufacturer,
+  useDeleteManufacturer,
+  useManufacturers,
+  useUpdateManufacturer,
+} from '@/hooks/use-manufacturers'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)

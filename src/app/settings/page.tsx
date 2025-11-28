@@ -2,8 +2,12 @@
 
 import { Loader2 } from 'lucide-react'
 
-import { AppShell } from '@/components/layout'
-import { CourierForm, DuplicateCheckForm, ExclusionForm, ShoppingMallForm, SMTPForm } from '@/components/settings'
+import { AppShell } from '@/components/layout/app-shell'
+import { CourierForm } from '@/components/settings/courier-form'
+import { DuplicateCheckForm } from '@/components/settings/duplicate-check-form'
+import { ExclusionForm } from '@/components/settings/exclusion-form'
+import { ShoppingMallForm } from '@/components/settings/shopping-mall-form'
+import { SMTPForm } from '@/components/settings/smtp-form'
 import {
   useAddCourierMapping,
   useAddExclusionPattern,
@@ -22,7 +26,7 @@ import {
   useUpdateExclusionSettings,
   useUpdateShoppingMallTemplate,
   useUpdateSmtpSettings,
-} from '@/hooks'
+} from '@/hooks/use-settings'
 
 export default function SettingsPage() {
   // SMTP Settings

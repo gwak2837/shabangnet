@@ -3,11 +3,13 @@
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { ConvertResult, InvoiceDropzone, OrderSelect } from '@/components/invoice-convert'
-import { AppShell } from '@/components/layout'
+import { ConvertResult } from '@/components/invoice-convert/convert-result'
+import { InvoiceDropzone } from '@/components/invoice-convert/invoice-dropzone'
+import { OrderSelect } from '@/components/invoice-convert/order-select'
+import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useSendLogs } from '@/hooks'
+import { useSendLogs } from '@/hooks/use-logs'
 import { getCourierCode, getInvoiceTemplate, type InvoiceConvertResult, type SendLog } from '@/lib/mock-data'
 
 type Step = 'result' | 'select' | 'upload'

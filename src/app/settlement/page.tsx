@@ -5,10 +5,13 @@ import { useState } from 'react'
 
 import type { SettlementFilters as SettlementFiltersType } from '@/lib/api/settlement'
 
-import { AppShell } from '@/components/layout'
-import { SettlementFilters, SettlementSummary, SettlementTable } from '@/components/settlement'
+import { AppShell } from '@/components/layout/app-shell'
+import { SettlementFilters } from '@/components/settlement/settlement-filters'
+import { SettlementSummary } from '@/components/settlement/settlement-summary'
+import { SettlementTable } from '@/components/settlement/settlement-table'
 import { Button } from '@/components/ui/button'
-import { useManufacturers, useSettlement } from '@/hooks'
+import { useManufacturers } from '@/hooks/use-manufacturers'
+import { useSettlement } from '@/hooks/use-settlement'
 import { api } from '@/lib/api'
 import { downloadExcel } from '@/lib/excel-client'
 

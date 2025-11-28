@@ -2,9 +2,12 @@
 
 import { AlertCircle, CheckCircle2, Clock, Loader2, ShoppingCart } from 'lucide-react'
 
-import { ManufacturerChart, QuickActions, RecentUploads, StatCard } from '@/components/dashboard'
-import { AppShell } from '@/components/layout'
-import { useDashboardStats, useManufacturerChartData, useRecentUploads } from '@/hooks'
+import { ManufacturerChart } from '@/components/dashboard/manufacturer-chart'
+import { QuickActions } from '@/components/dashboard/quick-actions'
+import { RecentUploads } from '@/components/dashboard/recent-uploads'
+import { StatCard } from '@/components/dashboard/stat-card'
+import { AppShell } from '@/components/layout/app-shell'
+import { useDashboardStats, useManufacturerChartData, useRecentUploads } from '@/hooks/use-dashboard'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats()

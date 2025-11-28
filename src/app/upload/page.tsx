@@ -3,12 +3,13 @@
 import { FileSpreadsheet, Loader2, Store } from 'lucide-react'
 import { useState } from 'react'
 
-import { AppShell } from '@/components/layout'
+import { AppShell } from '@/components/layout/app-shell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dropzone, UploadResult } from '@/components/upload'
-import { useShoppingMallTemplates } from '@/hooks'
+import { Dropzone } from '@/components/upload/dropzone'
+import { UploadResult } from '@/components/upload/upload-result'
+import { useShoppingMallTemplates } from '@/hooks/use-settings'
 
 interface UploadResultData {
   errorOrders: number

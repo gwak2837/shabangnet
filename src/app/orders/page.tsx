@@ -5,12 +5,15 @@ import { useMemo, useState } from 'react'
 
 import type { OrderBatch } from '@/lib/mock-data'
 
-import { AppShell } from '@/components/layout'
-import { ExcludedOrderTable, OrderFilters, OrderTable, SendModal } from '@/components/orders'
+import { AppShell } from '@/components/layout/app-shell'
+import { ExcludedOrderTable } from '@/components/orders/excluded-order-table'
+import { OrderFilters } from '@/components/orders/order-filters'
+import { OrderTable } from '@/components/orders/order-table'
+import { SendModal } from '@/components/orders/send-modal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useExcludedOrderBatches, useOrderBatches } from '@/hooks'
+import { useExcludedOrderBatches, useOrderBatches } from '@/hooks/use-orders'
 
 type TabType = 'excluded' | 'sendable'
 
