@@ -44,7 +44,7 @@ export function StatusIndicator() {
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-slate-900 transition-all duration-700 ease-in-out"
+            className="h-full rounded-full bg-slate-900 transition-all duration-700 ease-in-out motion-reduce:duration-0"
             style={{ width: `${progress}%` }}
           />
         </div>

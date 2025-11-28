@@ -21,7 +21,7 @@ interface HeaderProps {
 
 export function Header({ title, description, onMenuToggle }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-background/80 px-4 backdrop-blur-sm md:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur glass-fallback-header md:px-8">
       <div className="flex items-center gap-3">
         <button
           className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden"
@@ -30,8 +30,8 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
           <Menu className="h-6 w-6" />
         </button>
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
-          {description && <p className="hidden text-xs text-slate-500 sm:block md:text-sm">{description}</p>}
+          <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+          {description && <p className="hidden text-xs text-slate-500 sm:block">{description}</p>}
         </div>
       </div>
       <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">

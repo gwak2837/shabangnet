@@ -90,14 +90,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {isOpen && <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-sidebar',
-          'transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 z-50 h-screen w-64 border-r bg-sidebar',
+          'transition-transform duration-300 ease-in-out motion-reduce:transition-none',
           'md:z-40 md:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
+          <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
                 <FileSpreadsheet className="h-5 w-5 text-primary-foreground" />
@@ -166,7 +166,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               })}
             </div>
           </nav>
-          <div className="border-t border-slate-200 p-4">
+          <div className="border-t p-4">
             <div className="flex items-center gap-3 rounded-lg px-3 py-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
                 <span className="text-sm font-medium text-slate-700">관</span>
