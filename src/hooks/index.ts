@@ -31,15 +31,21 @@ export { useCreateProduct, useDeleteProduct, useProduct, useProducts, useUpdateP
 export {
   useAddCourierMapping,
   useAddExclusionPattern,
+  useAnalyzeShoppingMallFile,
   useCourierMappings,
+  useCreateShoppingMallTemplate,
+  useDeleteShoppingMallTemplate,
   useDuplicateCheckSettings,
   useExclusionSettings,
   useRemoveCourierMapping,
   useRemoveExclusionPattern,
+  useShoppingMallTemplate,
+  useShoppingMallTemplates,
   useSmtpSettings,
   useUpdateCourierMapping,
   useUpdateDuplicateCheckSettings,
   useUpdateExclusionSettings,
+  useUpdateShoppingMallTemplate,
   useUpdateSmtpSettings,
 } from './use-settings'
 

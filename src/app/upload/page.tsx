@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSpreadsheet, Store } from 'lucide-react'
+import { FileSpreadsheet, Loader2, Store } from 'lucide-react'
 import { useState } from 'react'
 
 import { AppShell } from '@/components/layout'
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dropzone, UploadResult } from '@/components/upload'
-import { SHOPPING_MALL_CONFIGS } from '@/lib/constants'
+import { useShoppingMallTemplates } from '@/hooks'
 
 interface UploadResultData {
   errorOrders: number
@@ -31,6 +31,12 @@ export default function UploadPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [uploadResult, setUploadResult] = useState<UploadResultData | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // 쇼핑몰 템플릿 목록 조회
+  const { data: shoppingMallTemplates, isLoading: isLoadingTemplates } = useShoppingMallTemplates()
+
+  // 활성화된 템플릿만 필터링
+  const enabledTemplates = shoppingMallTemplates?.filter((t) => t.enabled) ?? []
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file)
@@ -133,18 +139,29 @@ export default function UploadPage() {
                 <p className="text-sm text-violet-700 mt-1 mb-3">
                   업로드할 파일의 출처 쇼핑몰을 선택하세요. 선택한 쇼핑몰의 양식에 맞게 파일을 파싱합니다.
                 </p>
-                <Select onValueChange={setSelectedMall} value={selectedMall}>
-                  <SelectTrigger className="w-full bg-background">
-                    <SelectValue placeholder="쇼핑몰을 선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SHOPPING_MALL_CONFIGS.map((mall) => (
-                      <SelectItem key={mall.id} value={mall.id}>
-                        {mall.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isLoadingTemplates ? (
+                  <div className="flex items-center gap-2 text-violet-600">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">쇼핑몰 목록 로딩 중...</span>
+                  </div>
+                ) : enabledTemplates.length === 0 ? (
+                  <div className="text-sm text-violet-700">
+                    등록된 쇼핑몰이 없습니다. 설정 페이지에서 쇼핑몰 템플릿을 추가해주세요.
+                  </div>
+                ) : (
+                  <Select onValueChange={setSelectedMall} value={selectedMall}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="쇼핑몰을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {enabledTemplates.map((mall) => (
+                        <SelectItem key={mall.id} value={mall.id}>
+                          {mall.displayName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
           </div>
@@ -155,7 +172,7 @@ export default function UploadPage() {
       <div className="max-w-2xl mx-auto">
         {!uploadResult && (
           <Dropzone
-            disabled={uploadType === 'shopping_mall' && !selectedMall}
+            disabled={uploadType === 'shopping_mall' && (!selectedMall || enabledTemplates.length === 0)}
             isProcessing={isProcessing}
             onClear={handleClear}
             onFileSelect={handleFileSelect}

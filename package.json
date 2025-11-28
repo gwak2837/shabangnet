@@ -1,5 +1,5 @@
 {
-  "name": "shabangnet",
+  "name": "sabangnet",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:seed:shopping-malls": "npx tsx src/db/seed-shopping-mall-templates.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

@@ -38,4 +38,8 @@ export const queryKeys = {
       endDate?: string
     }) => ['settlement', filters] as const,
   },
+  shoppingMallTemplates: {
+    all: ['shopping-mall-templates'] as const,
+    detail: (id: string) => ['shopping-mall-templates', id] as const,
+  },
 } as const

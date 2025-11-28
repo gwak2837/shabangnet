@@ -3,19 +3,24 @@
 import { Loader2 } from 'lucide-react'
 
 import { AppShell } from '@/components/layout'
-import { CourierForm, DuplicateCheckForm, ExclusionForm, SMTPForm } from '@/components/settings'
+import { CourierForm, DuplicateCheckForm, ExclusionForm, ShoppingMallForm, SMTPForm } from '@/components/settings'
 import {
   useAddCourierMapping,
   useAddExclusionPattern,
+  useAnalyzeShoppingMallFile,
   useCourierMappings,
+  useCreateShoppingMallTemplate,
+  useDeleteShoppingMallTemplate,
   useDuplicateCheckSettings,
   useExclusionSettings,
   useRemoveCourierMapping,
   useRemoveExclusionPattern,
+  useShoppingMallTemplates,
   useSmtpSettings,
   useUpdateCourierMapping,
   useUpdateDuplicateCheckSettings,
   useUpdateExclusionSettings,
+  useUpdateShoppingMallTemplate,
   useUpdateSmtpSettings,
 } from '@/hooks'
 
@@ -40,7 +45,15 @@ export default function SettingsPage() {
   const addCourierMappingMutation = useAddCourierMapping()
   const removeCourierMappingMutation = useRemoveCourierMapping()
 
-  const isLoading = isLoadingSmtp || isLoadingExclusion || isLoadingDuplicateCheck || isLoadingCourier
+  // Shopping Mall Templates
+  const { data: shoppingMallTemplates, isLoading: isLoadingShoppingMall } = useShoppingMallTemplates()
+  const createShoppingMallTemplateMutation = useCreateShoppingMallTemplate()
+  const updateShoppingMallTemplateMutation = useUpdateShoppingMallTemplate()
+  const deleteShoppingMallTemplateMutation = useDeleteShoppingMallTemplate()
+  const analyzeShoppingMallFileMutation = useAnalyzeShoppingMallFile()
+
+  const isLoading =
+    isLoadingSmtp || isLoadingExclusion || isLoadingDuplicateCheck || isLoadingCourier || isLoadingShoppingMall
 
   if (isLoading) {
     return (
@@ -66,6 +79,15 @@ export default function SettingsPage() {
           onAdd={(data) => addCourierMappingMutation.mutate(data)}
           onRemove={(id) => removeCourierMappingMutation.mutate(id)}
           onUpdate={(id, data) => updateCourierMappingMutation.mutate({ id, data })}
+        />
+        <ShoppingMallForm
+          isDeleting={deleteShoppingMallTemplateMutation.isPending}
+          isSaving={createShoppingMallTemplateMutation.isPending || updateShoppingMallTemplateMutation.isPending}
+          onAnalyze={(file, headerRow) => analyzeShoppingMallFileMutation.mutateAsync({ file, headerRow })}
+          onCreate={(data) => createShoppingMallTemplateMutation.mutate(data)}
+          onDelete={(id) => deleteShoppingMallTemplateMutation.mutate(id)}
+          onUpdate={(id, data) => updateShoppingMallTemplateMutation.mutate({ id, data })}
+          templates={shoppingMallTemplates ?? []}
         />
         <DuplicateCheckForm
           isSaving={updateDuplicateCheckMutation.isPending}

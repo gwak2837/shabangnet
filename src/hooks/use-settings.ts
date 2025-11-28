@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import type { CreateTemplateData, UpdateTemplateData } from '@/lib/api/shopping-mall-templates'
 import type {
   CourierMapping,
   DuplicateCheckSettings,
@@ -35,11 +36,43 @@ export function useAddExclusionPattern() {
   })
 }
 
+// 샘플 파일 분석
+export function useAnalyzeShoppingMallFile() {
+  return useMutation({
+    mutationFn: ({ file, headerRow }: { file: File; headerRow?: number }) =>
+      api.shoppingMallTemplates.analyzeShoppingMallFile(file, headerRow),
+  })
+}
+
 // Courier Mappings
 export function useCourierMappings() {
   return useQuery({
     queryKey: queryKeys.settings.courier,
     queryFn: api.settings.getCourierMappings,
+  })
+}
+
+// 쇼핑몰 템플릿 생성
+export function useCreateShoppingMallTemplate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTemplateData) => api.shoppingMallTemplates.createShoppingMallTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
+    },
+  })
+}
+
+// 쇼핑몰 템플릿 삭제
+export function useDeleteShoppingMallTemplate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => api.shoppingMallTemplates.deleteShoppingMallTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
+    },
   })
 }
 
@@ -81,6 +114,27 @@ export function useRemoveExclusionPattern() {
   })
 }
 
+// 쇼핑몰 템플릿 상세 조회
+export function useShoppingMallTemplate(id: string) {
+  return useQuery({
+    queryKey: queryKeys.shoppingMallTemplates.detail(id),
+    queryFn: () => api.shoppingMallTemplates.getShoppingMallTemplate(id),
+    enabled: !!id,
+  })
+}
+
+// 쇼핑몰 템플릿 목록 조회
+export function useShoppingMallTemplates() {
+  return useQuery({
+    queryKey: queryKeys.shoppingMallTemplates.all,
+    queryFn: api.shoppingMallTemplates.getShoppingMallTemplates,
+  })
+}
+
+// ============================================
+// Shopping Mall Templates
+// ============================================
+
 // SMTP Settings
 export function useSmtpSettings() {
   return useQuery({
@@ -119,6 +173,19 @@ export function useUpdateExclusionSettings() {
     mutationFn: (data: Partial<ExclusionSettings>) => api.settings.updateExclusionSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.exclusion })
+    },
+  })
+}
+
+// 쇼핑몰 템플릿 수정
+export function useUpdateShoppingMallTemplate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateTemplateData }) =>
+      api.shoppingMallTemplates.updateShoppingMallTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
     },
   })
 }

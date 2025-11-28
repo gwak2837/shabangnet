@@ -3,7 +3,7 @@ import { SITE_CONFIG } from './constants'
 /**
  * 현재 환경에 맞는 앱 origin URL을 반환합니다.
  *
- * - 프로덕션: SITE_CONFIG.url (https://shabangnet.com)
+ * - 프로덕션: SITE_CONFIG.url (https://shabangnet.vercel.app)
  * - Vercel 프리뷰: https://{VERCEL_URL}
  * - 개발: http://localhost:3000
  */

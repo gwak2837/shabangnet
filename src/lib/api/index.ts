@@ -6,6 +6,7 @@ import * as orders from './orders'
 import * as products from './products'
 import * as settings from './settings'
 import * as settlement from './settlement'
+import * as shoppingMallTemplates from './shopping-mall-templates'
 
 export const api = {
   manufacturers,
@@ -16,6 +17,7 @@ export const api = {
   dashboard,
   settings,
   settlement,
+  shoppingMallTemplates,
 }
 
 export type { ChartDataItem } from './dashboard'

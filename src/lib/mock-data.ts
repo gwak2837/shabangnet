@@ -1,4 +1,4 @@
-// Mock data for the Shabangnet Order Automation System
+// Mock data for the Sabangnet Order Automation System
 
 export interface DashboardStats {
   completedOrders: number
@@ -1038,9 +1038,7 @@ export function getExclusionLabel(fulfillmentType?: string): string | null {
     return null
   }
 
-  const matchedPattern = exclusionSettings.patterns.find(
-    (p) => p.enabled && fulfillmentType.includes(p.pattern)
-  )
+  const matchedPattern = exclusionSettings.patterns.find((p) => p.enabled && fulfillmentType.includes(p.pattern))
 
   if (!matchedPattern) {
     return null

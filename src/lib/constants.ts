@@ -121,6 +121,11 @@ export interface ShoppingMallConfig {
   mallName: string
 }
 
+/**
+ * 쇼핑몰 템플릿 기본 설정
+ * DB 연동 전까지 mock 데이터로 사용됩니다.
+ * DB 연동 후에는 shopping_mall_templates 테이블에서 관리됩니다.
+ */
 export const SHOPPING_MALL_CONFIGS: ShoppingMallConfig[] = [
   {
     id: 'sk-stoa',
