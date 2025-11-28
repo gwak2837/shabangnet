@@ -108,7 +108,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
 
   return (
     <>
-      <Card className="border-slate-200 bg-white shadow-sm py-6">
+      <Card className="border-slate-200 bg-card shadow-sm py-6">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

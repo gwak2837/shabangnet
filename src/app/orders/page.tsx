@@ -140,7 +140,7 @@ export default function OrdersPage() {
         <>
           {/* Summary Stats */}
           <div className="grid gap-4 md:grid-cols-4 mb-8">
-            <Card className="border-slate-200 bg-white shadow-sm">
+            <Card className="border-slate-200 bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                   <FileSpreadsheet className="h-5 w-5 text-slate-600" />
@@ -152,7 +152,7 @@ export default function OrdersPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 bg-white shadow-sm">
+            <Card className="border-slate-200 bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
                   <Clock className="h-5 w-5 text-amber-600" />
@@ -164,7 +164,7 @@ export default function OrdersPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 bg-white shadow-sm">
+            <Card className="border-slate-200 bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -176,7 +176,7 @@ export default function OrdersPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 bg-white shadow-sm">
+            <Card className="border-slate-200 bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
                   <AlertCircle className="h-5 w-5 text-rose-600" />

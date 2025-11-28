@@ -40,7 +40,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
         {/* Bulk Actions */}
         {selectedBatches.length > 0 && (

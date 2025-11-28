@@ -27,7 +27,7 @@ interface OptionMappingTableProps {
 
 export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMappingTableProps) {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
         <Table>
           <TableHeader>

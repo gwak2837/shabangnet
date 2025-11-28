@@ -173,7 +173,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           {/* Recipient */}
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card">
                 <User className="h-5 w-5 text-slate-600" />
               </div>
               <div className="flex-1">
@@ -265,7 +265,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="space-y-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">이전 발송 이력</p>
                 {duplicateCheck.duplicateLogs.slice(0, 3).map((log) => (
-                  <div className="rounded-md bg-white/70 border border-amber-200 p-3 text-sm" key={log.id}>
+                  <div className="rounded-md bg-background/70 border border-amber-200 p-3 text-sm" key={log.id}>
                     <div className="flex items-center gap-2 text-amber-900">
                       <Calendar className="h-4 w-4" />
                       <span className="font-medium">{formatDateTime(log.sentAt)}</span>
@@ -295,7 +295,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">
                   중복 주소 ({duplicateCheck.matchedAddresses.length}건)
                 </p>
-                <div className="rounded-md bg-white/70 border border-amber-200 p-3">
+                <div className="rounded-md bg-background/70 border border-amber-200 p-3">
                   <div className="text-xs text-amber-700 space-y-1">
                     {duplicateCheck.matchedAddresses.slice(0, 3).map((addr, idx) => (
                       <p className="truncate" key={idx}>
@@ -313,7 +313,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-amber-800">발송 사유 (필수)</label>
                 <Input
-                  className="border-amber-300 bg-white focus:border-amber-500 focus:ring-amber-500"
+                  className="border-amber-300 bg-background focus:border-amber-500 focus:ring-amber-500"
                   onChange={(e) => setDuplicateReason(e.target.value)}
                   placeholder="예: 고객 요청으로 재발송, 이전 발주 취소 후 재주문 등"
                   value={duplicateReason}

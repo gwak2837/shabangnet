@@ -14,7 +14,7 @@ interface RecentUploadsProps {
 
 export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm py-6">
+    <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">최근 업로드</CardTitle>

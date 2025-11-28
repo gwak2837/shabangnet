@@ -25,7 +25,7 @@ interface SettlementTableProps {
 export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
   if (isLoading) {
     return (
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-card shadow-sm">
         <CardContent className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </CardContent>
@@ -34,11 +34,11 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
         <div className="overflow-auto max-h-[500px]">
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">주문번호</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발주일</TableHead>

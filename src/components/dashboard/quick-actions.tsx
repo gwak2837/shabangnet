@@ -32,7 +32,7 @@ const actions = [
 
 export function QuickActions() {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm py-6">
+    <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold text-slate-900">빠른 실행</CardTitle>
       </CardHeader>

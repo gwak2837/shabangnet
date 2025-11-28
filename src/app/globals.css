@@ -51,10 +51,6 @@
   --color-sidebar-border: light-dark(oklch(0.922 0 0), oklch(0.25 0 0));
   --color-sidebar-ring: light-dark(oklch(0.708 0 0), oklch(0.4 0 0));
 
-  /* Override Tailwind default colors for dark mode */
-  --color-white: light-dark(oklch(1 0 0), oklch(0.16 0 0));
-  --color-black: light-dark(oklch(0 0 0), oklch(0.93 0 0));
-
   /* Slate - Light/Dark adaptive */
   --color-slate-50: light-dark(oklch(0.984 0.003 247.858), oklch(0.18 0.005 247.858));
   --color-slate-100: light-dark(oklch(0.968 0.007 247.896), oklch(0.2 0.006 247.896));

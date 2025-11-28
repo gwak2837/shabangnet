@@ -64,7 +64,7 @@ export default function ManufacturersPage() {
     <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Building2 className="h-5 w-5 text-blue-600" />
@@ -76,7 +76,7 @@ export default function ManufacturersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <TrendingUp className="h-5 w-5 text-emerald-600" />
@@ -88,7 +88,7 @@ export default function ManufacturersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50">
               <Users className="h-5 w-5 text-purple-600" />

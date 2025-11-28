@@ -27,7 +27,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
     <div className="space-y-5">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
               <FileSpreadsheet className="h-5 w-5 text-slate-600" />
@@ -39,7 +39,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -51,7 +51,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -63,7 +63,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
               <AlertCircle className="h-5 w-5 text-rose-600" />
@@ -91,7 +91,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
 
       {/* Success Results Preview */}
       {successResults.length > 0 && (
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardHeader className="pb-3 pt-4 px-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />

@@ -15,7 +15,7 @@ interface ExcludedOrderTableProps {
 export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
   if (batches.length === 0) {
     return (
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-card shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-16">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-4">
             <Ban className="h-6 w-6 text-slate-400" />
@@ -28,7 +28,7 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
         <Table>
           <TableHeader>

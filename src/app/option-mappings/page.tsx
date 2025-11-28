@@ -84,7 +84,7 @@ export default function OptionMappingsPage() {
     <AppShell description="상품코드 + 옵션 조합별로 제조사를 매핑합니다" title="옵션 매핑">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Settings2 className="h-5 w-5 text-blue-600" />
@@ -96,7 +96,7 @@ export default function OptionMappingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <Package className="h-5 w-5 text-emerald-600" />
@@ -108,7 +108,7 @@ export default function OptionMappingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
               <Building2 className="h-5 w-5 text-amber-600" />

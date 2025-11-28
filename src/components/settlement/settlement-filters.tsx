@@ -39,7 +39,7 @@ export function SettlementFilters({
   onSearch,
 }: SettlementFiltersProps) {
   return (
-    <div className="space-y-4 bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+    <div className="space-y-4 bg-card rounded-lg border border-slate-200 p-6 shadow-sm">
       {/* Manufacturer Select */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-slate-700">제조사 선택</Label>

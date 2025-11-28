@@ -28,7 +28,7 @@ export function StatCard({
   const isNegative = change && change < 0
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Card className="border-slate-200 bg-card shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">

@@ -33,7 +33,7 @@ export function ProductFilters({
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
-          className="pl-9 bg-white border-slate-200"
+          className="pl-9 bg-background border-slate-200"
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="상품코드, 상품명 검색..."
           type="search"

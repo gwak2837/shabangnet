@@ -34,7 +34,7 @@ interface ManufacturerChartProps {
 
 export function ManufacturerChart({ data, isLoading }: ManufacturerChartProps) {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm py-6">
+    <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">제조사별 발주 현황</CardTitle>
@@ -92,7 +92,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     const data = payload[0].payload
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+      <div className="rounded-lg border border-slate-200 bg-card p-3 shadow-lg">
         <p className="font-semibold text-slate-900">{data.name}</p>
         <p className="text-sm text-slate-600">
           주문 수: <span className="font-medium">{data.orders}건</span>

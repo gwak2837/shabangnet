@@ -83,7 +83,7 @@ function TabsTrigger({ value, children, className }: TabsTriggerProps) {
     <button
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
-        isSelected ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900',
+        isSelected ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
         className,
       )}
       onClick={() => onValueChange(value)}

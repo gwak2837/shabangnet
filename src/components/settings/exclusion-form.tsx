@@ -81,7 +81,7 @@ export function ExclusionForm({
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm py-6">
+    <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
@@ -118,7 +118,7 @@ export function ExclusionForm({
             {formData.patterns.map((pattern) => (
               <div
                 className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-                  pattern.enabled ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50'
+                  pattern.enabled ? 'border-slate-200 bg-card' : 'border-slate-100 bg-slate-50'
                 }`}
                 key={pattern.id}
               >
@@ -158,13 +158,13 @@ export function ExclusionForm({
           <div className="flex gap-2">
             <div className="flex-1 space-y-2">
               <Input
-                className="bg-white font-mono text-sm"
+                className="bg-card font-mono text-sm"
                 onChange={(e) => setNewPattern(e.target.value)}
                 placeholder="예: [30002002]주문_센터택배"
                 value={newPattern}
               />
               <Input
-                className="bg-white text-sm"
+                className="bg-card text-sm"
                 onChange={(e) => setNewDescription(e.target.value)}
                 placeholder="설명 (선택사항)"
                 value={newDescription}

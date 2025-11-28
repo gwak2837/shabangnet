@@ -38,7 +38,7 @@ export function OptionMappingFilters({
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
-          className="pl-9 bg-white border-slate-200"
+          className="pl-9 bg-background border-slate-200"
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="상품코드, 옵션명 검색..."
           type="search"
@@ -48,7 +48,7 @@ export function OptionMappingFilters({
 
       {/* Manufacturer Filter */}
       <Select onValueChange={onManufacturerChange} value={selectedManufacturer}>
-        <SelectTrigger className="w-[180px] bg-white border-slate-200">
+        <SelectTrigger className="w-[180px] bg-background border-slate-200">
           <SelectValue placeholder="제조사 선택" />
         </SelectTrigger>
         <SelectContent>

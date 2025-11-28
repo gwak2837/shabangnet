@@ -50,7 +50,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
 
   return (
     <>
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-card shadow-sm">
         <CardContent className="p-0">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 p-4">

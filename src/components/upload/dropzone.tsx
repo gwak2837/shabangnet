@@ -53,7 +53,7 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
 
   if (selectedFile) {
     return (
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-card shadow-sm">
         <CardContent className="p-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -89,7 +89,7 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
   }
 
   return (
-    <Card className={cn('border-slate-200 bg-white shadow-sm', disabled && 'opacity-60')}>
+    <Card className={cn('border-slate-200 bg-card shadow-sm', disabled && 'opacity-60')}>
       <CardContent className="p-4">
         <div
           className={cn(

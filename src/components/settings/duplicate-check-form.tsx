@@ -48,7 +48,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
   ]
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm py-6">
+    <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">

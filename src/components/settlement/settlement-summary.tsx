@@ -30,7 +30,7 @@ export function SettlementSummary({
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Hash className="h-5 w-5 text-blue-600" />
@@ -42,7 +42,7 @@ export function SettlementSummary({
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <Package className="h-5 w-5 text-emerald-600" />
@@ -54,7 +54,7 @@ export function SettlementSummary({
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
               <DollarSign className="h-5 w-5 text-amber-600" />

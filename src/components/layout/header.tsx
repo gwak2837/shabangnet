@@ -21,7 +21,7 @@ interface HeaderProps {
 
 export function Header({ title, description }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-8 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-background/80 px-8 backdrop-blur-sm">
       <div>
         <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
         {description && <p className="text-sm text-slate-500">{description}</p>}
@@ -32,7 +32,7 @@ export function Header({ title, description }: HeaderProps) {
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="w-64 pl-9 bg-slate-50 border-slate-200 focus:bg-white"
+            className="w-64 pl-9 bg-slate-50 border-slate-200 focus:bg-background"
             placeholder="검색..."
             type="search"
           />

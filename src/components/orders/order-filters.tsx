@@ -64,7 +64,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="pl-9 bg-white border-slate-200"
+            className="pl-9 bg-background border-slate-200"
             onChange={(e) => setSearch(e.target.value)}
             placeholder="제조사명, 주문번호 검색..."
             type="search"
@@ -74,7 +74,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
 
         {/* Manufacturer Select */}
         <Select onValueChange={setManufacturer} value={manufacturer}>
-          <SelectTrigger className="w-[180px] bg-white border-slate-200">
+          <SelectTrigger className="w-[180px] bg-background border-slate-200">
             <SelectValue placeholder="제조사 선택" />
           </SelectTrigger>
           <SelectContent>
@@ -88,7 +88,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
 
         {/* Status Select */}
         <Select onValueChange={setStatus} value={status}>
-          <SelectTrigger className="w-[150px] bg-white border-slate-200">
+          <SelectTrigger className="w-[150px] bg-background border-slate-200">
             <SelectValue placeholder="상태 선택" />
           </SelectTrigger>
           <SelectContent>
@@ -105,7 +105,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              className="w-[150px] pl-9 bg-white border-slate-200"
+              className="w-[150px] pl-9 bg-background border-slate-200"
               onChange={(e) => setDateFrom(e.target.value)}
               type="date"
               value={dateFrom}
@@ -115,7 +115,7 @@ export function OrderFilters({ onFilterChange }: OrderFiltersProps) {
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              className="w-[150px] pl-9 bg-white border-slate-200"
+              className="w-[150px] pl-9 bg-background border-slate-200"
               onChange={(e) => setDateTo(e.target.value)}
               type="date"
               value={dateTo}

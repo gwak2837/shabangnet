@@ -88,7 +88,7 @@ export default function InvoiceConvertPage() {
       ) : (
         <div className="space-y-6">
           {/* Progress Steps */}
-          <Card className="border-slate-200 bg-white shadow-sm">
+          <Card className="border-slate-200 bg-card shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-center gap-4">
                 <div className="flex items-center gap-2">
@@ -169,26 +169,26 @@ export default function InvoiceConvertPage() {
                       const template = getInvoiceTemplate(selectedLog.manufacturerId)
                       return (
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                          <span className="px-2 py-1 bg-white rounded border border-slate-200">
+                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
                             주문번호:{' '}
                             {template.useColumnIndex
                               ? `${template.orderNumberColumn}열`
                               : `"${template.orderNumberColumn}"`}
                           </span>
-                          <span className="px-2 py-1 bg-white rounded border border-slate-200">
+                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
                             택배사:{' '}
                             {template.useColumnIndex ? `${template.courierColumn}열` : `"${template.courierColumn}"`}
                           </span>
-                          <span className="px-2 py-1 bg-white rounded border border-slate-200">
+                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
                             송장번호:{' '}
                             {template.useColumnIndex
                               ? `${template.trackingNumberColumn}열`
                               : `"${template.trackingNumberColumn}"`}
                           </span>
-                          <span className="px-2 py-1 bg-white rounded border border-slate-200">
+                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
                             헤더: {template.headerRow}행
                           </span>
-                          <span className="px-2 py-1 bg-white rounded border border-slate-200">
+                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
                             데이터: {template.dataStartRow}행부터
                           </span>
                         </div>

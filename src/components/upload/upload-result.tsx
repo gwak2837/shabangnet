@@ -50,7 +50,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
     <div className="space-y-5">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Package className="h-5 w-5 text-blue-600" />
@@ -62,7 +62,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <Building2 className="h-5 w-5 text-emerald-600" />
@@ -74,7 +74,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
               <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -106,7 +106,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
 
       {/* Manufacturer Breakdown */}
       {data.manufacturerBreakdown.length > 0 && (
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardHeader className="pb-3 pt-4 px-4">
             <CardTitle className="text-base font-semibold text-slate-900">제조사별 분류 결과</CardTitle>
           </CardHeader>
