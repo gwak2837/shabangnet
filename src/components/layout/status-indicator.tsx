@@ -23,7 +23,9 @@ export function StatusIndicator() {
     )
   }
 
-  if (!stats) return null
+  if (!stats) {
+    return null
+  }
 
   const total = stats.todayOrders || 0
   const completed = stats.completedOrders || 0
@@ -35,7 +37,6 @@ export function StatusIndicator() {
 
   return (
     <div className="hidden items-center gap-6 px-2 lg:flex">
-      {/* Progress Section - Clean & Minimal */}
       <div className="flex min-w-[160px] flex-col justify-center gap-1.5">
         <div className="flex items-end justify-between leading-none">
           <span className="text-[11px] font-medium tracking-tight text-slate-500">오늘 처리율</span>
@@ -48,11 +49,7 @@ export function StatusIndicator() {
           />
         </div>
       </div>
-
-      {/* Divider - Subtle separation */}
       <div className="h-8 w-px bg-slate-100" />
-
-      {/* Stats Section - Glanceable Information */}
       <div className="flex items-center gap-5">
         <StatItem label="대기" status="warning" value={pending} />
         <StatItem isActive={error > 0} label="오류" status="error" value={error} />

@@ -21,7 +21,7 @@ interface HeaderProps {
 
 export function Header({ title, description, onMenuToggle }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-background/80 px-4 md:px-8 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-background/80 px-4 backdrop-blur-sm md:px-8">
       <div className="flex items-center gap-3">
         <button
           className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden"
@@ -30,15 +30,18 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
           <Menu className="h-6 w-6" />
         </button>
         <div>
-          <h1 className="text-lg md:text-xl font-semibold text-slate-900">{title}</h1>
-          {description && <p className="text-xs md:text-sm text-slate-500 hidden sm:block">{description}</p>}
+          <h1 className="text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
+          {description && <p className="hidden text-xs text-slate-500 sm:block md:text-sm">{description}</p>}
         </div>
+      </div>
+      <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
+        <StatusIndicator />
       </div>
       <div className="flex items-center gap-2 md:gap-4">
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="w-64 pl-9 bg-slate-50 border-slate-200 focus:bg-background"
+            className="w-64 border-slate-200 bg-slate-50 pl-9 focus:bg-background"
             placeholder="검색..."
             type="search"
           />
@@ -47,7 +50,7 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button className="relative text-slate-600 hover:text-slate-900" size="icon" variant="ghost">
               <Bell className="h-5 w-5" />
-              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center bg-rose-500 text-primary-foreground border-0">
+              <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-0 bg-rose-500 p-0 text-xs text-primary-foreground">
                 3
               </Badge>
             </Button>
@@ -74,7 +77,6 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <StatusIndicator />
       </div>
     </header>
   )

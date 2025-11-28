@@ -107,7 +107,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <span className="text-xs text-slate-500">자동화 시스템</span>
               </div>
             </div>
-            {/* Close button for mobile */}
             <button
               className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden"
               onClick={onClose}
@@ -115,8 +114,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <X className="h-5 w-5" />
             </button>
           </div>
-
-          {/* Navigation */}
           <nav className="flex-1 space-y-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {mainNavItems.map((item) => {
@@ -139,9 +136,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 )
               })}
             </div>
-
             <Separator className="my-4" />
-
             <div className="space-y-1">
               <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-slate-400">관리</p>
               {managementNavItems.map((item) => {
@@ -171,8 +166,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               })}
             </div>
           </nav>
-
-          {/* Footer */}
           <div className="border-t border-slate-200 p-4">
             <div className="flex items-center gap-3 rounded-lg px-3 py-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
@@ -183,7 +176,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <p className="truncate text-xs text-slate-500">admin@daonfnc.com</p>
               </div>
             </div>
-
             <div className="mt-2 flex gap-1">
               <Link
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
