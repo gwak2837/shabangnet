@@ -198,12 +198,12 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
           >
             {testResult === 'success' ? (
               <>
-                <CheckCircle2 className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
                 <span className="font-medium">연결 테스트 성공! SMTP 서버에 정상적으로 연결되었습니다.</span>
               </>
             ) : (
               <>
-                <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium">연결 테스트 실패</span>
                   {testError && <p className="text-sm mt-1 opacity-90">{testError}</p>}
