@@ -48,7 +48,9 @@ export default function ProductsPage() {
     })
   }
 
-  const handleBulkCostUpload = (data: { productCode: string; cost: number }[]) => {
+  const handleBulkCostUpload = (
+    data: { productCode: string; productName: string; cost: number; shippingFee: number }[],
+  ) => {
     // Find product IDs by product codes and update costs
     data.forEach(({ productCode, cost }) => {
       const product = products.find((p) => p.productCode === productCode)

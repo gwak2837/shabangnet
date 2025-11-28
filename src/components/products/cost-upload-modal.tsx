@@ -14,6 +14,8 @@ interface CostUploadData {
   cost: number
   message?: string
   productCode: string
+  productName: string
+  shippingFee: number
   status: 'error' | 'not_found' | 'success'
 }
 
@@ -40,20 +42,28 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
       const jsonData = await parseExcelToJson<{
         상품코드?: string
         productCode?: string
+        상품명?: string
+        productName?: string
         원가?: number
         cost?: number
+        택배비?: number
+        shippingFee?: number
       }>(file)
 
       // Transform data
       const parsedData: CostUploadData[] = jsonData
         .map((row) => {
           const productCode = row['상품코드'] || row['productCode'] || ''
+          const productName = row['상품명'] || row['productName'] || ''
           const cost = row['원가'] || row['cost'] || 0
+          const shippingFee = row['택배비'] || row['shippingFee'] || 0
 
           if (!productCode) {
             return {
               productCode: '',
+              productName: '',
               cost: 0,
+              shippingFee: 0,
               status: 'error' as const,
               message: '상품코드가 없습니다',
             }
@@ -61,7 +71,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
           return {
             productCode: String(productCode),
+            productName: String(productName),
             cost: Number(cost) || 0,
+            shippingFee: Number(shippingFee) || 0,
             status: 'success' as const,
           }
         })
@@ -87,9 +99,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
   const handleDownloadTemplate = async () => {
     const templateData = [
-      { 상품코드: 'NS-001', 원가: 5500 },
-      { 상품코드: 'CJ-101', 원가: 11000 },
-      { 상품코드: 'OT-201', 원가: 3100 },
+      { 상품코드: 'NS-001', 상품명: '', 원가: 5500, 택배비: '' },
+      { 상품코드: 'CJ-101', 상품명: '', 원가: 11000, 택배비: '' },
+      { 상품코드: 'OT-201', 상품명: '', 원가: 3100, 택배비: '' },
     ]
     await downloadExcel(templateData, {
       fileName: '원가_일괄등록_템플릿.xlsx',
@@ -199,7 +211,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">상품코드</TableHead>
+                      <TableHead className="text-xs">상품명</TableHead>
                       <TableHead className="text-xs text-right">원가</TableHead>
+                      <TableHead className="text-xs text-right">택배비</TableHead>
                       <TableHead className="text-xs">상태</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -207,7 +221,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                     {uploadedData.slice(0, 50).map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-mono text-sm">{item.productCode}</TableCell>
+                        <TableCell className="text-sm">{item.productName}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                        <TableCell className="text-right">{item.shippingFee ? formatCurrency(item.shippingFee) : '-'}</TableCell>
                         <TableCell>
                           {item.status === 'success' ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
