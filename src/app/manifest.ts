@@ -18,6 +18,12 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/web-app-manifest-144x144.png',
         sizes: '144x144',
         type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/web-app-manifest-144x144.png',
+        sizes: '144x144',
+        type: 'image/png',
         purpose: 'maskable',
       },
       {
@@ -31,6 +37,22 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
+      },
+    ],
+    screenshots: [
+      {
+        src: '/web-app-manifest-dashboard.webp',
+        sizes: '1392x855',
+        type: 'image/webp',
+        form_factor: 'wide',
+        label: '대시보드',
+      },
+      {
+        src: '/web-app-manifest-orders.webp',
+        sizes: '1392x855',
+        type: 'image/webp',
+        form_factor: 'narrow',
+        label: '발주 생성/발송',
       },
     ],
   }
