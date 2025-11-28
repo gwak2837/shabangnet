@@ -1,7 +1,6 @@
-'use client'
-
 import { Bell, Menu, Search } from 'lucide-react'
 
+import { StatusIndicator } from '@/components/layout/status-indicator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -75,18 +74,7 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Today's date */}
-        <div className="hidden items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 lg:flex">
-          <span className="text-sm font-medium text-slate-600">
-            {new Date().toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'short',
-            })}
-          </span>
-        </div>
+        <StatusIndicator />
       </div>
     </header>
   )
