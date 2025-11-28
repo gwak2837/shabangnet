@@ -47,7 +47,7 @@ export function LogFilters({
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="w-[150px] pl-9 bg-white border-slate-200"
+            className="w-[150px] pl-9 bg-background border-slate-200"
             onChange={(e) => onDateFromChange(e.target.value)}
             type="date"
             value={dateFrom}
@@ -57,7 +57,7 @@ export function LogFilters({
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="w-[150px] pl-9 bg-white border-slate-200"
+            className="w-[150px] pl-9 bg-background border-slate-200"
             onChange={(e) => onDateToChange(e.target.value)}
             type="date"
             value={dateTo}
@@ -67,7 +67,7 @@ export function LogFilters({
 
       {/* Status Select */}
       <Select onValueChange={onStatusChange} value={status}>
-        <SelectTrigger className="w-[140px] bg-white border-slate-200">
+        <SelectTrigger className="w-[140px] bg-background border-slate-200">
           <SelectValue placeholder="상태 선택" />
         </SelectTrigger>
         <SelectContent>
@@ -79,7 +79,7 @@ export function LogFilters({
 
       {/* Manufacturer Select */}
       <Select onValueChange={onManufacturerChange} value={manufacturer}>
-        <SelectTrigger className="w-[160px] bg-white border-slate-200">
+        <SelectTrigger className="w-[160px] bg-background border-slate-200">
           <SelectValue placeholder="제조사 선택" />
         </SelectTrigger>
         <SelectContent>

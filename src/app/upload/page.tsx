@@ -134,7 +134,7 @@ export default function UploadPage() {
                   업로드할 파일의 출처 쇼핑몰을 선택하세요. 선택한 쇼핑몰의 양식에 맞게 파일을 파싱합니다.
                 </p>
                 <Select onValueChange={setSelectedMall} value={selectedMall}>
-                  <SelectTrigger className="w-full bg-white">
+                  <SelectTrigger className="w-full bg-background">
                     <SelectValue placeholder="쇼핑몰을 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>

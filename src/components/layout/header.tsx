@@ -43,7 +43,7 @@ export function Header({ title, description }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button className="relative text-slate-600 hover:text-slate-900" size="icon" variant="ghost">
               <Bell className="h-5 w-5" />
-              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center bg-rose-500 text-white border-0">
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center bg-rose-500 text-primary-foreground border-0">
                 3
               </Badge>
             </Button>

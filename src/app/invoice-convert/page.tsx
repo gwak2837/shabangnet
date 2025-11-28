@@ -94,7 +94,7 @@ export default function InvoiceConvertPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                      selectedLog ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
+                      selectedLog ? 'bg-emerald-500 text-primary-foreground' : 'bg-blue-500 text-primary-foreground'
                     }`}
                   >
                     {selectedLog ? <CheckCircle2 className="h-5 w-5" /> : '1'}
@@ -110,9 +110,9 @@ export default function InvoiceConvertPage() {
                   <div
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
                       selectedFile
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-emerald-500 text-primary-foreground'
                         : selectedLog
-                          ? 'bg-blue-500 text-white'
+                          ? 'bg-blue-500 text-primary-foreground'
                           : 'bg-slate-200 text-slate-500'
                     }`}
                   >

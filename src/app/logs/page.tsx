@@ -104,7 +104,7 @@ export default function LogsPage() {
     <AppShell description="이메일 발송 이력을 확인합니다" title="발송 로그">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Mail className="h-5 w-5 text-blue-600" />
@@ -116,7 +116,7 @@ export default function LogsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -128,7 +128,7 @@ export default function LogsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
               <XCircle className="h-5 w-5 text-rose-600" />

@@ -291,7 +291,7 @@ export function ManufacturerModal({
               </button>
 
               {showOrderTemplateSettings && (
-                <div className="p-4 space-y-4 bg-white">
+                <div className="p-4 space-y-4 bg-background/50">
                   <p className="text-xs text-slate-500">
                     제조사의 발주서 양식 파일을 업로드하면 컬럼 구조를 자동으로 분석합니다.
                   </p>
@@ -415,7 +415,7 @@ export function ManufacturerModal({
               </button>
 
               {showInvoiceSettings && (
-                <div className="p-4 space-y-4 bg-white">
+                <div className="p-4 space-y-4 bg-background/50">
                   <p className="text-xs text-slate-500">
                     거래처에서 받은 송장 파일의 컬럼 위치를 설정합니다. 기본값으로 대부분의 양식에 대응됩니다.
                   </p>

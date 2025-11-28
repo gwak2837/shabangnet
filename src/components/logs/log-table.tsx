@@ -16,7 +16,7 @@ interface LogTableProps {
 
 export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps) {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
         <Table>
           <TableHeader>
@@ -36,7 +36,7 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
           </TableHeader>
           <TableBody>
             {logs.map((log) => (
-              <TableRow className="hover:bg-slate-50 transition-colors" key={log.id}>
+              <TableRow className="hover:bg-muted/50 transition-colors" key={log.id}>
                 <TableCell className="text-sm text-slate-600">{formatDateTime(log.sentAt)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

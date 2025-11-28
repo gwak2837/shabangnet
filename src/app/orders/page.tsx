@@ -239,7 +239,7 @@ export default function OrdersPage() {
 
       {/* Send Modal */}
       {sendQueue.length > 1 && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-slate-900 px-4 py-2 text-sm text-primary-foreground shadow-lg">
           발송 진행: {currentQueueIndex + 1} / {sendQueue.length}
         </div>
       )}

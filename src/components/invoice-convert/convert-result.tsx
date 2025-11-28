@@ -77,7 +77,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
       </div>
 
       {/* Success Rate */}
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 bg-card shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-slate-700">변환 성공률</span>
