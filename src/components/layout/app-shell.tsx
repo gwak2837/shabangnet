@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 
 import { Header } from './header'
 import { Sidebar } from './sidebar'
 
 interface AppShellProps {
-  children: React.ReactNode
+  children: ReactNode
   description?: string
   title: string
 }

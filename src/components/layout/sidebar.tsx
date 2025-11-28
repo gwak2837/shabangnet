@@ -47,26 +47,31 @@ const mainNavItems = [
 const managementNavItems = [
   {
     title: '제조사 관리',
+    description: '거래처 연락처, 이메일, 발주 양식 설정',
     href: '/manufacturers',
     icon: Building2,
   },
   {
     title: '상품 매핑',
+    description: '상품코드 → 제조사 기본 연결',
     href: '/products',
     icon: Package,
   },
   {
     title: '옵션 매핑',
+    description: '상품코드, 옵션명 → 제조사 우선 연결',
     href: '/option-mappings',
     icon: Settings2,
   },
   {
     title: '발송 로그',
+    description: '이메일 발송 성공/실패 이력 조회',
     href: '/logs',
     icon: FileText,
   },
   {
     title: '정산 관리',
+    description: '제조사별 발주 내역 및 정산서 다운로드',
     href: '/settlement',
     icon: Calculator,
   },
@@ -81,10 +86,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <TooltipProvider delayDuration={0}>
-      {/* Overlay for mobile */}
+    <TooltipProvider>
       {isOpen && <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
-
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-sidebar',
@@ -94,7 +97,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
@@ -162,7 +164,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
-                      <p>{item.title}</p>
+                      <p>{item.description}</p>
                     </TooltipContent>
                   </Tooltip>
                 )

@@ -30,15 +30,12 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
         >
           <Menu className="h-6 w-6" />
         </button>
-
         <div>
           <h1 className="text-lg md:text-xl font-semibold text-slate-900">{title}</h1>
           {description && <p className="text-xs md:text-sm text-slate-500 hidden sm:block">{description}</p>}
         </div>
       </div>
-
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Search */}
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
@@ -47,8 +44,6 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
             type="search"
           />
         </div>
-
-        {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button className="relative text-slate-600 hover:text-slate-900" size="icon" variant="ghost">
