@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { shoppingMallTemplates } from './schema'
+import { shoppingMallTemplates } from '../src/db/schema'
 
 // 기존 SHOPPING_MALL_CONFIGS에서 가져온 시드 데이터
 const SHOPPING_MALL_SEED_DATA = [
@@ -95,7 +95,9 @@ async function seed() {
   const client = postgres(databaseUrl, {
     prepare: false,
     max: 1,
-    ssl: process.env.SUPABASE_CERTIFICATE ? { ca: process.env.SUPABASE_CERTIFICATE, rejectUnauthorized: true } : 'prefer',
+    ssl: process.env.SUPABASE_CERTIFICATE
+      ? { ca: process.env.SUPABASE_CERTIFICATE, rejectUnauthorized: true }
+      : 'prefer',
   })
 
   const db = drizzle(client)
@@ -138,4 +140,3 @@ async function seed() {
 }
 
 seed()
-

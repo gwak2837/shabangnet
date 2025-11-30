@@ -1,4 +1,7 @@
+import dotenv from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
+
+dotenv.config({ path: process.env.DB_ENV === 'production' ? '.env.production' : '.env.local' })
 
 console.log('👀 - DATABASE_URL:', process.env.DATABASE_URL)
 

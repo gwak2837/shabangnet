@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
       'perfectionist/sort-object-types': 'off',
       'perfectionist/sort-objects': 'off',
       'perfectionist/sort-union-types': ['error', { groups: ['keyword', 'literal', 'named', 'operator'] }],
+      'react/no-unescaped-entities': 'off',
     },
   },
   // Prettier config - disables ESLint rules that conflict with Prettier
