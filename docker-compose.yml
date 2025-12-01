@@ -1,16 +1,16 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: shabangnet-db
+    container_name: daonfnc
     ports:
       - '12194:5432'
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: shabangnet
+      POSTGRES_DB: daonfnc
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - daonfnc_data:/var/lib/postgresql/data
     restart: always
 
 volumes:
-  postgres_data:
+  daonfnc_data:

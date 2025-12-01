@@ -1,0 +1,93 @@
+# Cursor Rules for Shabangnet
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript 5
+- Tailwind CSS 4
+- Drizzle ORM
+- TanStack Query
+- Radix UI
+
+---
+
+## Design Principles
+
+Design with the principles of minimalist aesthetic, intuitive interfaces, and functional beauty as a senior designer's perspective. Follow Apple's design philosophy:
+
+### Core Principles
+
+1. **Clarity** - Text is legible at every size, icons are precise and lucid, adornments are subtle and appropriate. Focus on functionality drives design.
+
+2. **Deference** - Fluid motion and crisp interface help users understand and interact with content while never competing with it.
+
+3. **Depth** - Visual layers and realistic motion convey hierarchy, impart vitality, and facilitate understanding.
+
+### Visual Guidelines
+
+- **Whitespace**: Embrace generous whitespace. Let content breathe.
+- **Typography**: Use clean, readable fonts with clear hierarchy.
+- **Colors**: Use a restrained color palette. Primary colors should be purposeful, not decorative.
+- **Animations**: Subtle, meaningful transitions that enhance UX without distraction.
+- **Consistency**: Maintain visual harmony across all components and pages.
+
+### Implementation
+
+- Prefer simple, flat UI over complex gradients or shadows
+- Use consistent spacing (Tailwind's spacing scale)
+- Ensure sufficient contrast for accessibility
+- Design mobile-first, then enhance for larger screens
+
+---
+
+## Code Style
+
+### TypeScript
+
+- **Never use `any` type.** Use `unknown` and narrow the type, or define proper interfaces/types.
+- Prefer type inference where possible, but be explicit for function parameters and return types.
+- Use strict TypeScript configuration.
+
+```typescript
+// ❌ Bad
+function process(data: any) {
+  return data.value
+}
+
+// ✅ Good
+interface Data {
+  value: string
+}
+
+function process(data: Data): string {
+  return data.value
+}
+
+// ✅ Also good - use unknown and narrow
+function process(data: unknown): string {
+  if (typeof data === 'object' && data !== null && 'value' in data) {
+    return String((data as { value: unknown }).value)
+  }
+  throw new Error('Invalid data')
+}
+```
+
+### File Structure
+
+- **Do not create barrel files (index.ts that re-exports).** Import directly from the source file.
+
+```typescript
+// ❌ Bad - barrel file
+// src/components/index.ts
+export * from './Button'
+export * from './Input'
+export * from './Modal'
+
+// ❌ Bad - importing from barrel
+import { Button, Input } from '@/components'
+
+// ✅ Good - direct imports
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+```
