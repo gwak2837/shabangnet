@@ -21,11 +21,12 @@ export function LoginForm() {
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">비밀번호</Label>
-            <div className="text-sm">
-              <Link className="font-medium text-primary hover:text-primary/90" href="/forgot-password">
-                비밀번호를 잊으셨나요?
-              </Link>
-            </div>
+            <Link
+              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              href="/forgot-password"
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
           </div>
           <Input
             autoComplete="current-password"
@@ -41,12 +42,12 @@ export function LoginForm() {
           {isPending ? '처리 중' : '로그인'}
         </Button>
       </form>
-      <div className="text-center text-sm">
-        <span className="text-muted-foreground">계정이 없으신가요? </span>
-        <Link className="font-medium text-primary hover:text-primary/90" href="/register">
+      <p className="text-center text-sm text-muted-foreground">
+        계정이 없으신가요?{' '}
+        <Link className="text-foreground underline-offset-4 hover:underline" href="/register">
           회원가입
         </Link>
-      </div>
+      </p>
     </div>
   )
 }
