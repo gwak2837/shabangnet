@@ -13,7 +13,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { TEST_ACCOUNTS } from '@/common/constants'
+import { TEST_ACCOUNTS } from '@/common/constants/server'
 
 import { roles, users, usersToRoles } from '../src/db/schema/auth'
 
