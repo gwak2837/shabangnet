@@ -3,13 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { CreateTemplateData, UpdateTemplateData } from '@/lib/api/shopping-mall-templates'
-import type {
-  CourierMapping,
-  DuplicateCheckSettings,
-  ExclusionPattern,
-  ExclusionSettings,
-  SMTPSettings,
-} from '@/lib/mock-data'
+import type { CourierMapping, DuplicateCheckSettings, ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
 
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
@@ -149,14 +143,6 @@ export function useShoppingMallTemplates() {
 // Shopping Mall Templates
 // ============================================
 
-// SMTP Settings
-export function useSmtpSettings() {
-  return useQuery({
-    queryKey: queryKeys.settings.smtp,
-    queryFn: api.settings.getSmtpSettings,
-  })
-}
-
 export function useUpdateCourierMapping() {
   const queryClient = useQueryClient()
 
@@ -200,17 +186,6 @@ export function useUpdateShoppingMallTemplate() {
       api.shoppingMallTemplates.updateShoppingMallTemplate(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
-    },
-  })
-}
-
-export function useUpdateSmtpSettings() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data: Partial<SMTPSettings>) => api.settings.updateSmtpSettings(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings.smtp })
     },
   })
 }

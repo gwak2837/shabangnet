@@ -53,6 +53,7 @@ export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 26, key: 'selfProductCode', label: '자체상품코드' },
   { index: 27, key: 'modelNumber', label: '모델번호' },
   { index: 28, key: 'cost', label: '원가(상품)' },
+  { index: 29, key: 'shippingCost', label: '택배비' },
 ]
 
 // 컬럼 키로 빠르게 찾기 위한 맵
@@ -98,6 +99,7 @@ export const COLUMN_SYNONYMS: Record<string, string[]> = {
   paymentAmount: ['결제금액', '판매가', '금액', '결제금액(부가세포함)'],
   productCode: ['품번코드', '상품코드', '자체상품코드', '단품코드'],
   cost: ['원가(상품)', '원가', '공급금액', '매입가'],
+  shippingCost: ['택배비', '배송비', '배송료', '운송비'],
 }
 
 // 역방향 동의어 맵 (동의어 -> 표준 key)

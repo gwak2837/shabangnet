@@ -218,4 +218,3 @@ export async function verifyPasskeyAuthentication(
     return { success: false, error: errorMessage }
   }
 }
-

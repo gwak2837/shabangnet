@@ -50,6 +50,7 @@ export const orders = pgTable('orders', {
   productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
   productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
   cost: decimal('cost', { precision: 12, scale: 2 }), // 원가
+  shippingCost: decimal('shipping_cost', { precision: 12, scale: 2 }).default('0'), // 택배비
   // 시스템 필드
   manufacturerId: text('manufacturer_id').references(() => manufacturers.id),
   status: orderStatusEnum('status').default('pending'),
@@ -97,6 +98,7 @@ export const emailLogOrders = pgTable('email_log_orders', {
   quantity: integer('quantity').default(1),
   price: decimal('price', { precision: 12, scale: 2 }).default('0'),
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 원가
+  shippingCost: decimal('shipping_cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 택배비
   customerName: varchar('customer_name', { length: 255 }),
   address: text('address'),
 }).enableRLS()

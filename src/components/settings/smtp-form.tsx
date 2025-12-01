@@ -1,49 +1,102 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Lock, Mail, Server, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
-
-import type { SMTPSettings } from '@/lib/mock-data'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 
-import { testSMTPConnectionAction } from './actions/smtp'
+import type { SMTPSettingsDisplay } from './actions/smtp'
 
-interface SMTPFormProps {
-  isSaving?: boolean
-  onSave: (data: Partial<SMTPSettings>) => void
-  settings?: SMTPSettings
+import { getSmtpSettingsAction, testSMTPConnectionAction, updateSmtpSettingsAction } from './actions/smtp'
+
+interface SMTPFormData {
+  fromEmail: string
+  fromName: string
+  host: string
+  password: string
+  port: number
+  username: string
 }
 
-export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) {
-  const [formData, setFormData] = useState<SMTPSettings>({
+export function SMTPForm() {
+  const [formData, setFormData] = useState<SMTPFormData>({
     host: '',
     port: 587,
     username: '',
     password: '',
-    secure: true,
     fromName: '',
     fromEmail: '',
   })
+  const [hasExistingPassword, setHasExistingPassword] = useState(false)
+  const [maskedPassword, setMaskedPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [testResult, setTestResult] = useState<'error' | 'success' | null>(null)
   const [testError, setTestError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
+  // 초기 설정 로드
   useEffect(() => {
-    if (settings) {
-      setFormData(settings)
+    loadSettings()
+  }, [])
+
+  async function loadSettings() {
+    setIsLoading(true)
+    try {
+      const result = await getSmtpSettingsAction()
+      if (result.success && result.settings) {
+        const settings: SMTPSettingsDisplay = result.settings
+        setFormData({
+          host: settings.host,
+          port: settings.port,
+          username: settings.username,
+          password: '', // 비밀번호는 마스킹된 값만 표시
+          fromName: settings.fromName,
+          fromEmail: settings.fromEmail,
+        })
+        setHasExistingPassword(settings.hasPassword)
+        setMaskedPassword(settings.maskedPassword)
+      }
+    } catch {
+      // 로드 실패 시 기본값 유지
+    } finally {
+      setIsLoading(false)
     }
-  }, [settings])
+  }
 
   async function handleSave() {
-    onSave(formData)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setIsSaving(true)
+    setSaveError(null)
+
+    try {
+      const result = await updateSmtpSettingsAction({
+        host: formData.host,
+        port: formData.port,
+        username: formData.username,
+        password: formData.password || undefined, // 빈 문자열이면 undefined로 전달
+        fromName: formData.fromName,
+        fromEmail: formData.fromEmail,
+      })
+
+      if (result.success) {
+        setSaved(true)
+        // 저장 후 설정 다시 로드 (마스킹된 비밀번호 업데이트)
+        await loadSettings()
+        setFormData((prev) => ({ ...prev, password: '' }))
+        setTimeout(() => setSaved(false), 3000)
+      } else {
+        setSaveError(result.error || '저장에 실패했습니다.')
+      }
+    } catch {
+      setSaveError('서버와 통신 중 오류가 발생했습니다.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   async function handleTest() {
@@ -66,6 +119,17 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
     } finally {
       setIsTesting(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <Card className="border-slate-200 bg-card shadow-sm py-6">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          <span className="ml-2 text-slate-500">설정을 불러오는 중...</span>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -112,6 +176,7 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
               type="number"
               value={formData.port}
             />
+            <p className="text-xs text-slate-500">587 (STARTTLS) 또는 465 (SSL) 권장</p>
           </div>
         </div>
 
@@ -140,11 +205,14 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
                 className="pl-9"
                 id="password"
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="••••••••••••••••"
+                placeholder={hasExistingPassword ? maskedPassword : '앱 비밀번호 입력'}
                 type="password"
                 value={formData.password}
               />
             </div>
+            {hasExistingPassword && (
+              <p className="text-xs text-slate-500">비밀번호를 변경하려면 새 비밀번호를 입력하세요</p>
+            )}
           </div>
         </div>
 
@@ -172,19 +240,17 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
           </div>
         </div>
 
-        {/* Security */}
-        <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-          <div className="space-y-0.5">
-            <Label className="text-base" htmlFor="secure">
-              보안 연결 (TLS/SSL)
-            </Label>
-            <p className="text-sm text-slate-500">대부분의 이메일 서비스에서 권장됩니다</p>
+        {/* Security Notice */}
+        <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-emerald-800">보안 연결 활성화됨</p>
+            <p className="text-xs text-emerald-700">
+              모든 이메일은 TLS/SSL 암호화 연결을 통해 안전하게 발송됩니다.
+              <br />
+              포트 587은 STARTTLS, 포트 465는 Implicit TLS를 자동으로 사용합니다.
+            </p>
           </div>
-          <Switch
-            checked={formData.secure}
-            id="secure"
-            onCheckedChange={(checked) => setFormData({ ...formData, secure: checked })}
-          />
         </div>
 
         {/* Test Result */}
@@ -208,6 +274,17 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Save Error */}
+        {saveError && (
+          <div className="flex items-start gap-2 rounded-lg bg-rose-50 p-3 text-rose-700">
+            <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+            <div>
+              <span className="font-medium">저장 실패</span>
+              <p className="text-sm mt-1 opacity-90">{saveError}</p>
+            </div>
           </div>
         )}
 

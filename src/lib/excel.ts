@@ -15,9 +15,10 @@ import {
 // 발주서에 포함될 주문 데이터 타입
 export interface OrderData {
   address: string
-  customerName: string
+  customerName: string // 수취인명
   memo?: string
   optionName: string
+  orderName?: string // 주문자명
   orderNumber: string
   phone: string
   price: number
@@ -64,6 +65,7 @@ export interface ParsedOrder {
   recipientPhone: string
   // 원본 행 번호 (에러 추적용)
   rowIndex: number
+  shippingCost: number
   shoppingMall: string
   trackingNumber: string
 }
@@ -222,6 +224,24 @@ export function formatDateForFileName(date: Date = new Date()): string {
 }
 
 /**
+ * 수취인명 표기 형식화
+ * 주문자와 수취인이 다르면 "수취인 (주문자 XXX)" 형식으로 표시
+ */
+export function formatRecipientName(recipientName: string, orderName?: string): string {
+  if (!recipientName) {
+    return orderName || ''
+  }
+
+  // 주문자가 없거나, 수취인과 주문자가 동일하면 수취인명만 표시
+  if (!orderName || orderName.trim() === recipientName.trim()) {
+    return recipientName
+  }
+
+  // 다르면 "수취인 (주문자 XXX)" 형식으로 표시
+  return `${recipientName} (주문자 ${orderName})`
+}
+
+/**
  * 발주서 파일명 생성
  */
 export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
@@ -297,9 +317,12 @@ export async function generateOrderSheet(options: OrderSheetOptions): Promise<Bu
 
   // 데이터 행 추가
   orders.forEach((order) => {
+    // 수취인명 표기: 주문자와 다르면 "수취인 (주문자 XXX)" 형식
+    const displayCustomerName = formatRecipientName(order.customerName, order.orderName)
+
     const row = worksheet.addRow([
       order.orderNumber,
-      order.customerName,
+      displayCustomerName,
       order.phone,
       order.address,
       formatProductNameWithOption(order.productName, order.optionName),
@@ -345,6 +368,10 @@ export async function generateOrderSheet(options: OrderSheetOptions): Promise<Bu
   const buffer = await workbook.xlsx.writeBuffer()
   return Buffer.from(buffer)
 }
+
+// ============================================
+// 파싱 함수들
+// ============================================
 
 /**
  * 제조사별 템플릿을 사용하여 발주서 생성
@@ -402,10 +429,6 @@ export async function generateTemplateBasedOrderSheet(
   const buffer = await workbook.xlsx.writeBuffer()
   return Buffer.from(buffer)
 }
-
-// ============================================
-// 파싱 함수들
-// ============================================
 
 /**
  * 제조사별로 주문 그룹화
@@ -480,6 +503,10 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   return { orders, errors, headers, totalRows: rowIndex }
 }
 
+// ============================================
+// 템플릿 기반 발주서 생성
+// ============================================
+
 /**
  * 쇼핑몰 파일 파싱
  */
@@ -543,10 +570,6 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   return { orders, errors, headers, totalRows: rowIndex }
 }
 
-// ============================================
-// 템플릿 기반 발주서 생성
-// ============================================
-
 /**
  * 날짜 포맷 (YYYY년 MM월 DD일)
  */
@@ -609,6 +632,12 @@ function getCellValue(cell: ExcelJS.Cell): string {
  */
 function getOrderValue(order: ParsedOrder, key: string): number | string {
   const orderRecord = order as unknown as Record<string, unknown>
+
+  // 수취인명은 주문자와 다르면 "수취인 (주문자 XXX)" 형식으로 표시
+  if (key === 'recipientName') {
+    return formatRecipientName(order.recipientName, order.orderName)
+  }
+
   const value = orderRecord[key]
 
   if (value === null || value === undefined) {
@@ -664,6 +693,7 @@ function mapRowToOrder(rowData: string[], rowNumber: number): ParsedOrder | null
     productAbbr: rowData[20]?.trim() || '',
     productCode: rowData[25]?.trim() || rowData[26]?.trim() || '',
     cost: parseFloat(rowData[28]?.replace(/[^0-9.-]/g, '') || '0') || 0,
+    shippingCost: parseFloat(rowData[29]?.replace(/[^0-9.-]/g, '') || '0') || 0,
     rowIndex: rowNumber,
   }
 }
@@ -716,6 +746,7 @@ function mapShoppingMallRowToOrder(
     productAbbr: getValue('productAbbr'),
     productCode: getValue('productCode'),
     cost: parseFloat(getValue('cost')?.replace(/[^0-9.-]/g, '') || '0') || 0,
+    shippingCost: parseFloat(getValue('shippingCost')?.replace(/[^0-9.-]/g, '') || '0') || 0,
     rowIndex: rowNumber,
   }
 }

@@ -1,11 +1,7 @@
 'use server'
 
 import { auth } from '@/auth'
-import {
-  getPasskeyCredentials,
-  getRemainingRecoveryCodesCount,
-  getUserMfaSettings,
-} from '@/lib/mfa'
+import { getPasskeyCredentials, getRemainingRecoveryCodesCount, getUserMfaSettings } from '@/lib/mfa'
 
 // ============================================================================
 // Types
@@ -66,4 +62,3 @@ export async function getMfaSettings(): Promise<MfaSettingsResult> {
     return { success: false, error: errorMessage }
   }
 }
-

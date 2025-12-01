@@ -1,25 +1,31 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import type { Product } from '@/lib/mock-data'
+
 import { AppShell } from '@/components/layout/app-shell'
+import { BulkUploadModal } from '@/components/products/bulk-upload-modal'
 import { CostUploadModal } from '@/components/products/cost-upload-modal'
 import { ProductFilters } from '@/components/products/product-filters'
 import { ProductTable } from '@/components/products/product-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
-import { useProducts, useUpdateProduct } from '@/hooks/use-products'
+import { useCreateProduct, useProducts, useUpdateProduct } from '@/hooks/use-products'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
+  const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
   const [isCostUploadOpen, setIsCostUploadOpen] = useState(false)
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false)
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
   const updateProductMutation = useUpdateProduct()
+  const createProductMutation = useCreateProduct()
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -28,10 +34,11 @@ export default function ProductsPage() {
         p.productName.toLowerCase().includes(searchQuery.toLowerCase())
 
       const matchesUnmapped = showUnmappedOnly ? !p.manufacturerId : true
+      const matchesPriceError = showPriceErrorsOnly ? hasPriceValidationError(p) : true
 
-      return matchesSearch && matchesUnmapped
+      return matchesSearch && matchesUnmapped && matchesPriceError
     })
-  }, [products, searchQuery, showUnmappedOnly])
+  }, [products, searchQuery, showUnmappedOnly, showPriceErrorsOnly])
 
   const handleUpdateManufacturer = (productId: string, manufacturerId: string | null) => {
     const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
@@ -66,12 +73,52 @@ export default function ProductsPage() {
     })
   }
 
+  const handleBulkMappingUpload = (
+    data: {
+      productCode: string
+      productName: string
+      optionName: string
+      manufacturerId: string | null
+      manufacturerName: string
+    }[],
+  ) => {
+    data.forEach(({ productCode, productName, optionName, manufacturerId, manufacturerName }) => {
+      const existingProduct = products.find((p) => p.productCode === productCode)
+      const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
+
+      if (existingProduct) {
+        // 기존 상품 업데이트
+        updateProductMutation.mutate({
+          id: existingProduct.id,
+          data: {
+            productName,
+            optionName,
+            manufacturerId,
+            manufacturerName: manufacturer?.name ?? null,
+          },
+        })
+      } else {
+        // 새 상품 생성
+        createProductMutation.mutate({
+          productCode,
+          productName,
+          optionName,
+          manufacturerId,
+          manufacturerName: manufacturer?.name ?? null,
+          price: 0,
+          cost: 0,
+        })
+      }
+    })
+  }
+
   // Calculate stats
   const stats = useMemo(() => {
     const totalProducts = products.length
     const unmappedProducts = products.filter((p) => !p.manufacturerId).length
     const mappedProducts = totalProducts - unmappedProducts
-    return { totalProducts, unmappedProducts, mappedProducts }
+    const priceErrorProducts = products.filter(hasPriceValidationError).length
+    return { totalProducts, unmappedProducts, mappedProducts, priceErrorProducts }
   }, [products])
 
   if (isLoadingProducts) {
@@ -87,7 +134,7 @@ export default function ProductsPage() {
   return (
     <AppShell description="상품과 제조사 간의 매핑을 관리합니다" title="상품 매핑">
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+      <div className="grid gap-4 md:grid-cols-4 mb-8">
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -123,6 +170,25 @@ export default function ProductsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card
+          className={`border-slate-200 bg-card shadow-sm cursor-pointer transition-colors ${showPriceErrorsOnly ? 'ring-2 ring-rose-500' : ''} ${stats.priceErrorProducts > 0 ? 'hover:border-rose-200' : ''}`}
+          onClick={() => stats.priceErrorProducts > 0 && setShowPriceErrorsOnly(!showPriceErrorsOnly)}
+        >
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
+              <AlertTriangle className="h-5 w-5 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">원가 이상</p>
+              <p
+                className={`text-xl font-semibold ${stats.priceErrorProducts > 0 ? 'text-rose-600' : 'text-slate-900'}`}
+              >
+                {stats.priceErrorProducts}개
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -133,10 +199,16 @@ export default function ProductsPage() {
           searchQuery={searchQuery}
           showUnmappedOnly={showUnmappedOnly}
         />
-        <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
-          <Upload className="h-4 w-4" />
-          원가 일괄 업로드
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button className="gap-2" onClick={() => setIsBulkUploadOpen(true)} variant="outline">
+            <Upload className="h-4 w-4" />
+            매핑 일괄 업로드
+          </Button>
+          <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
+            <Upload className="h-4 w-4" />
+            원가 일괄 업로드
+          </Button>
+        </div>
       </div>
 
       {/* Product Table */}
@@ -149,6 +221,19 @@ export default function ProductsPage() {
 
       {/* Cost Upload Modal */}
       <CostUploadModal onOpenChange={setIsCostUploadOpen} onUpload={handleBulkCostUpload} open={isCostUploadOpen} />
+
+      {/* Bulk Mapping Upload Modal */}
+      <BulkUploadModal
+        manufacturers={manufacturers}
+        onOpenChange={setIsBulkUploadOpen}
+        onUpload={handleBulkMappingUpload}
+        open={isBulkUploadOpen}
+      />
     </AppShell>
   )
+}
+
+// 원가가 판매가보다 높은지 검증
+function hasPriceValidationError(product: Product): boolean {
+  return product.cost > 0 && product.price > 0 && product.cost > product.price
 }

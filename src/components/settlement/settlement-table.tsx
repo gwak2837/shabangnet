@@ -1,19 +1,26 @@
 'use client'
 
+import { Ban, Check } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatCurrency, formatDateTime } from '@/lib/mock-data'
 
 export interface SettlementOrder {
   address: string
   cost: number
   customerName: string
+  excludedFromEmail?: boolean
+  excludedReason?: string
   id: string
   optionName: string
   orderNumber: string
   productName: string
   quantity: number
   sentAt: string
+  shippingCost: number
   totalCost: number
 }
 
@@ -53,31 +60,68 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                   총원가
                 </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                  택배비
+                </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">고객명</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">배송지</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                  발송상태
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow className="hover:bg-slate-50" key={order.id}>
-                  <TableCell className="font-mono text-sm text-slate-700">{order.orderNumber}</TableCell>
-                  <TableCell className="text-sm text-slate-600">{formatDateTime(order.sentAt)}</TableCell>
-                  <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
-                  <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>
-                  <TableCell className="text-right text-slate-900">{order.quantity}</TableCell>
-                  <TableCell className="text-right text-slate-700">{formatCurrency(order.cost)}</TableCell>
-                  <TableCell className="text-right font-medium text-slate-900">
-                    {formatCurrency(order.totalCost)}
-                  </TableCell>
-                  <TableCell className="text-slate-700">{order.customerName}</TableCell>
-                  <TableCell className="text-slate-600 max-w-[200px] truncate" title={order.address}>
-                    {order.address}
-                  </TableCell>
-                </TableRow>
-              ))}
+              <TooltipProvider>
+                {orders.map((order) => (
+                  <TableRow
+                    className={`hover:bg-slate-50 ${order.excludedFromEmail ? 'bg-amber-50/50' : ''}`}
+                    key={order.id}
+                  >
+                    <TableCell className="font-mono text-sm text-slate-700">{order.orderNumber}</TableCell>
+                    <TableCell className="text-sm text-slate-600">{formatDateTime(order.sentAt)}</TableCell>
+                    <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
+                    <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>
+                    <TableCell className="text-right text-slate-900">{order.quantity}</TableCell>
+                    <TableCell className="text-right text-slate-700">{formatCurrency(order.cost)}</TableCell>
+                    <TableCell className="text-right font-medium text-slate-900">
+                      {formatCurrency(order.totalCost)}
+                    </TableCell>
+                    <TableCell className="text-right text-slate-700">
+                      {order.shippingCost > 0 ? formatCurrency(order.shippingCost) : '-'}
+                    </TableCell>
+                    <TableCell className="text-slate-700">{order.customerName}</TableCell>
+                    <TableCell className="text-slate-600 max-w-[200px] truncate" title={order.address}>
+                      {order.address}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {order.excludedFromEmail ? (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 gap-1" variant="secondary">
+                              <Ban className="h-3 w-3" />
+                              제외
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">제외 사유: {order.excludedReason || '미지정'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Badge
+                          className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 gap-1"
+                          variant="secondary"
+                        >
+                          <Check className="h-3 w-3" />
+                          발송
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TooltipProvider>
               {orders.length === 0 && (
                 <TableRow>
-                  <TableCell className="h-32 text-center text-slate-500" colSpan={9}>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={11}>
                     조회된 발주 내역이 없습니다.
                   </TableCell>
                 </TableRow>

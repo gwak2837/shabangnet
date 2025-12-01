@@ -36,4 +36,3 @@ export async function analyzeOrderTemplate(fileBuffer: ArrayBuffer): Promise<Ana
     return { success: false, error: errorMessage }
   }
 }
-

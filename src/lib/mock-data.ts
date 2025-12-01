@@ -25,13 +25,14 @@ export interface Manufacturer {
 export interface Order {
   address: string
   createdAt: string
-  customerName: string
+  customerName: string // 수취인명
   // F열 값 (발송 제외 판단용)
   fulfillmentType?: string
   id: string
   manufacturerId: string
   manufacturerName: string
   optionName: string
+  orderName?: string // 주문자명 (수취인과 다를 경우)
   orderNumber: string
   phone: string
   price: number
@@ -1241,6 +1242,22 @@ export function formatProductNameWithOption(productName: string, optionName: str
     return productName
   }
   return `${productName} ${optionName}`
+}
+
+// 수취인명 표기 형식화 헬퍼 함수
+// 주문자와 수취인이 다르면 "수취인 (주문자 XXX)" 형식으로 표시
+export function formatRecipientName(recipientName: string, orderName?: string | null): string {
+  if (!recipientName) {
+    return orderName || ''
+  }
+
+  // 주문자가 없거나, 수취인과 주문자가 동일하면 수취인명만 표시
+  if (!orderName || orderName.trim() === recipientName.trim()) {
+    return recipientName
+  }
+
+  // 다르면 "수취인 (주문자 XXX)" 형식으로 표시
+  return `${recipientName} (주문자 ${orderName})`
 }
 
 // 제조사 결정 함수 (우선순위: 옵션매핑 → 상품매핑 → null)

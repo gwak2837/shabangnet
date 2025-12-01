@@ -22,21 +22,15 @@ import {
   useRemoveCourierMapping,
   useRemoveExclusionPattern,
   useShoppingMallTemplates,
-  useSmtpSettings,
   useUpdateCourierMapping,
   useUpdateDuplicateCheckSettings,
   useUpdateExclusionSettings,
   useUpdateShoppingMallTemplate,
-  useUpdateSmtpSettings,
 } from '@/hooks/use-settings'
 
 export default function SettingsPage() {
   // MFA Settings
   const { data: mfaSettings, isLoading: isLoadingMfa } = useMfaSettings()
-
-  // SMTP Settings
-  const { data: smtpSettings, isLoading: isLoadingSmtp } = useSmtpSettings()
-  const updateSmtpMutation = useUpdateSmtpSettings()
 
   // Exclusion Settings
   const { data: exclusionSettings, isLoading: isLoadingExclusion } = useExclusionSettings()
@@ -62,12 +56,7 @@ export default function SettingsPage() {
   const analyzeShoppingMallFileMutation = useAnalyzeShoppingMallFile()
 
   const isLoading =
-    isLoadingSmtp ||
-    isLoadingExclusion ||
-    isLoadingDuplicateCheck ||
-    isLoadingCourier ||
-    isLoadingShoppingMall ||
-    isLoadingMfa
+    isLoadingExclusion || isLoadingDuplicateCheck || isLoadingCourier || isLoadingShoppingMall || isLoadingMfa
 
   if (isLoading) {
     return (
@@ -83,11 +72,7 @@ export default function SettingsPage() {
     <AppShell description="시스템 설정을 관리합니다" title="설정">
       <div className="max-w-3xl space-y-6">
         <MfaForm settings={mfaSettings} />
-        <SMTPForm
-          isSaving={updateSmtpMutation.isPending}
-          onSave={(data) => updateSmtpMutation.mutate(data)}
-          settings={smtpSettings}
-        />
+        <SMTPForm />
         <CourierForm
           isSaving={updateCourierMappingMutation.isPending || addCourierMappingMutation.isPending}
           mappings={courierMappings ?? []}

@@ -148,4 +148,3 @@ function getCellValue(cell: ExcelJS.Cell): string {
 
   return String(value)
 }
-

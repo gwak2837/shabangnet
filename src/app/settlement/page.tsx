@@ -49,6 +49,8 @@ export default function SettlementPage() {
     totalOrders: 0,
     totalQuantity: 0,
     totalCost: 0,
+    totalShippingCost: 0,
+    excludedOrderCount: 0,
     manufacturerName: '',
     period: '',
   }
@@ -71,6 +73,7 @@ export default function SettlementPage() {
       수량: downloadSummary.totalQuantity,
       원가: '',
       총원가: downloadSummary.totalCost,
+      택배비: downloadSummary.totalShippingCost,
       고객명: '',
       배송지: '',
     } as Record<string, unknown>)
@@ -79,7 +82,7 @@ export default function SettlementPage() {
     await downloadExcel(data, {
       fileName,
       sheetName: '정산내역',
-      columnWidths: [20, 12, 30, 15, 8, 12, 12, 10, 40],
+      columnWidths: [20, 12, 30, 15, 8, 12, 12, 12, 10, 40],
     })
   }
 
@@ -109,11 +112,13 @@ export default function SettlementPage() {
           {/* Summary */}
           {selectedManufacturer && !isLoading && (
             <SettlementSummary
+              excludedOrderCount={summary.excludedOrderCount}
               manufacturerName={summary.manufacturerName || selectedManufacturer.name}
               period={summary.period}
               totalCost={summary.totalCost}
               totalOrders={summary.totalOrders}
               totalQuantity={summary.totalQuantity}
+              totalShippingCost={summary.totalShippingCost}
             />
           )}
 

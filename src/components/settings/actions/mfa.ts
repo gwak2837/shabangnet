@@ -405,4 +405,3 @@ export async function verifyTotpSetup(code: string): Promise<TotpVerifyResult> {
     return { success: false, error: errorMessage }
   }
 }
-

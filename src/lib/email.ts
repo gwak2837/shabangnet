@@ -1,8 +1,12 @@
 import type { Attachment } from 'nodemailer/lib/mailer'
 
+import { eq } from 'drizzle-orm'
 import nodemailer from 'nodemailer'
 
 import { env } from '@/common/env'
+import { db } from '@/db/client'
+import { settings } from '@/db/schema/settings'
+import { decrypt } from '@/utils/crypto'
 
 // 이메일 발송 옵션 타입
 export interface SendEmailOptions {
@@ -27,10 +31,23 @@ interface SMTPConfig {
     user: string
     pass: string
   }
+  fromEmail: string
+  fromName: string
   host: string
   port: number
+  requireTLS: boolean
   secure: boolean
 }
+
+// SMTP 설정 키 상수
+const SMTP_KEYS = {
+  fromEmail: 'smtp.fromEmail',
+  fromName: 'smtp.fromName',
+  host: 'smtp.host',
+  pass: 'smtp.pass',
+  port: 'smtp.port',
+  user: 'smtp.user',
+} as const
 
 /**
  * 이메일 발송 함수
@@ -39,8 +56,8 @@ interface SMTPConfig {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
   try {
-    const transporter = createTransporter()
-    const from = getFromAddress()
+    const transporter = await createTransporter()
+    const from = await getFromAddress()
 
     const mailOptions = {
       from,
@@ -78,7 +95,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
  */
 export async function sendOrderEmail(
   manufacturerEmail: string,
-  manufacturerName: string,
+  _manufacturerName: string,
   subject: string,
   body: string,
   attachments?: Attachment[],
@@ -97,7 +114,7 @@ export async function sendOrderEmail(
  */
 export async function testSMTPConnection(): Promise<{ success: boolean; error?: string }> {
   try {
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
 
     // SMTP 서버 연결 확인
     await transporter.verify()
@@ -114,34 +131,100 @@ export async function testSMTPConnection(): Promise<{ success: boolean; error?: 
 }
 
 // Nodemailer transporter 생성
-function createTransporter() {
-  const config = getSMTPConfig()
+async function createTransporter() {
+  // DB 설정 우선, 없으면 환경 변수 사용
+  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
 
   return nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
+    requireTLS: config.requireTLS,
     auth: config.auth,
+    // TLS 옵션: 자체 서명 인증서 거부 (프로덕션 권장)
+    tls: {
+      rejectUnauthorized: true,
+    },
   })
 }
 
 // 발신자 정보 가져오기
-function getFromAddress(): string {
-  const fromName = env.SMTP_FROM_NAME || ''
-  const fromEmail = env.SMTP_FROM_EMAIL || env.SMTP_USER
+async function getFromAddress(): Promise<string> {
+  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
 
-  return fromName ? `"${fromName}" <${fromEmail}>` : fromEmail
+  return config.fromName ? `"${config.fromName}" <${config.fromEmail}>` : config.fromEmail
 }
 
-// 환경변수에서 SMTP 설정 가져오기
-function getSMTPConfig(): SMTPConfig {
+/**
+ * 환경변수에서 SMTP 설정을 가져옵니다. (fallback)
+ */
+function getSMTPConfigFromEnv(): SMTPConfig {
+  const port = env.SMTP_PORT
+
   return {
     host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465, // 465 포트는 SSL, 587은 TLS(STARTTLS)
+    port,
+    // 포트 465는 Implicit TLS, 그 외는 STARTTLS
+    secure: port === 465,
+    requireTLS: port !== 465,
     auth: {
       user: env.SMTP_USER,
       pass: env.SMTP_PASS,
     },
+    fromName: env.SMTP_FROM_NAME || '',
+    fromEmail: env.SMTP_FROM_EMAIL || env.SMTP_USER,
+  }
+}
+
+/**
+ * DB에서 SMTP 설정을 로드합니다.
+ * DB에 설정이 없으면 환경 변수를 fallback으로 사용합니다.
+ */
+async function loadSMTPConfigFromDB(): Promise<SMTPConfig | null> {
+  try {
+    const rows = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, SMTP_KEYS.host))
+      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.port)))
+      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.user)))
+      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.pass)))
+      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromName)))
+      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromEmail)))
+
+    if (rows.length === 0) {
+      return null
+    }
+
+    const settingsMap = new Map(rows.map((r) => [r.key, r.value]))
+
+    const host = settingsMap.get(SMTP_KEYS.host)
+    const portStr = settingsMap.get(SMTP_KEYS.port)
+    const user = settingsMap.get(SMTP_KEYS.user)
+    const encryptedPass = settingsMap.get(SMTP_KEYS.pass)
+
+    // 필수 설정이 없으면 null 반환
+    if (!host || !user || !encryptedPass) {
+      return null
+    }
+
+    const port = parseInt(portStr || '587', 10)
+    const pass = decrypt(encryptedPass)
+    const fromName = settingsMap.get(SMTP_KEYS.fromName) || ''
+    const fromEmail = settingsMap.get(SMTP_KEYS.fromEmail) || user
+
+    return {
+      host,
+      port,
+      // 포트 465는 Implicit TLS (secure: true)
+      // 포트 587은 STARTTLS (secure: false, requireTLS: true)
+      secure: port === 465,
+      requireTLS: port !== 465, // 465가 아닌 경우 STARTTLS 강제
+      auth: { user, pass },
+      fromName,
+      fromEmail,
+    }
+  } catch {
+    return null
   }
 }

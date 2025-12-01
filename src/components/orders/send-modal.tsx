@@ -35,6 +35,7 @@ import {
   formatCurrency,
   formatDateTime,
   formatProductNameWithOption,
+  formatRecipientName,
   getDaysDifference,
   type OrderBatch,
 } from '@/lib/mock-data'
@@ -224,7 +225,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                             {formatProductNameWithOption(order.productName, order.optionName)}
                           </p>
                           <p className="text-slate-500 truncate">
-                            {order.customerName} · {order.address}
+                            {formatRecipientName(order.customerName, order.orderName)} · {order.address}
                           </p>
                         </div>
                         <div className="text-right shrink-0">

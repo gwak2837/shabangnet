@@ -1,22 +1,26 @@
 'use client'
 
-import { DollarSign, Hash, Package } from 'lucide-react'
+import { Ban, DollarSign, Hash, Package, Truck } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/mock-data'
 
 interface SettlementSummaryProps {
+  excludedOrderCount?: number
   manufacturerName: string
   period: string
   totalCost: number
   totalOrders: number
   totalQuantity: number
+  totalShippingCost?: number
 }
 
 export function SettlementSummary({
   totalOrders,
   totalQuantity,
   totalCost,
+  totalShippingCost = 0,
+  excludedOrderCount = 0,
   manufacturerName,
   period,
 }: SettlementSummaryProps) {
@@ -29,7 +33,7 @@ export function SettlementSummary({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -65,6 +69,32 @@ export function SettlementSummary({
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
+              <Truck className="h-5 w-5 text-violet-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">총 택배비</p>
+              <p className="text-xl font-semibold text-slate-900">{formatCurrency(totalShippingCost)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {excludedOrderCount > 0 && (
+          <Card className="border-slate-200 bg-card shadow-sm">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
+                <Ban className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">이메일 제외</p>
+                <p className="text-xl font-semibold text-slate-900">{excludedOrderCount.toLocaleString()}건</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
