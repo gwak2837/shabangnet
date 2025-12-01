@@ -9,6 +9,7 @@ export async function login(_prevState: unknown, formData: FormData) {
     await signIn('credentials', {
       email: formData.get('email'),
       password: formData.get('password'),
+      rememberMe: formData.get('rememberMe') === 'on' ? 'true' : 'false',
       redirectTo: '/dashboard',
     })
   } catch (error) {

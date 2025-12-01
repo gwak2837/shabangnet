@@ -33,3 +33,4 @@ export const db = drizzle(client, { schema })
 
 // 타입 export
 export type Database = typeof db
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]

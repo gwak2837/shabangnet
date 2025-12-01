@@ -5,6 +5,7 @@ import { useActionState } from 'react'
 
 import { login } from '@/app/(auth)/login/actions'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -36,6 +37,12 @@ export function LoginForm() {
             required
             type="password"
           />
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox id="rememberMe" name="rememberMe" />
+          <Label className="cursor-pointer font-normal" htmlFor="rememberMe">
+            로그인 유지 (30일)
+          </Label>
         </div>
         {state?.error && <div className="text-sm text-destructive">{state.error}</div>}
         <Button className="w-full" disabled={isPending} type="submit">
