@@ -1,15 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 
 import { register } from '@/app/(auth)/register/actions'
+import { COMMON_PASSWORDS } from '@/common/constants/common-passwords'
+import { PasswordStrengthIndicator } from '@/components/auth/password-strength'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
 export function RegisterForm() {
   const [state, dispatch, isPending] = useActionState(register, undefined)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordTouched, setPasswordTouched] = useState(false)
+  const [confirmTouched, setConfirmTouched] = useState(false)
+  const validation = validatePassword(password, COMMON_PASSWORDS)
+  const passwordsMatch = password === confirmPassword
+  const showMismatchError = confirmTouched && confirmPassword && !passwordsMatch
 
   return (
     <div className="mt-8 space-y-6">
@@ -24,14 +34,43 @@ export function RegisterForm() {
         </div>
         <div>
           <Label htmlFor="password">비밀번호</Label>
-          <Input autoComplete="new-password" className="mt-2" id="password" name="password" required type="password" />
+          <Input
+            autoComplete="new-password"
+            className="mt-2"
+            id="password"
+            name="password"
+            onBlur={() => setPasswordTouched(true)}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            type="password"
+            value={password}
+          />
+          {password && (
+            <PasswordStrengthIndicator password={password} showChecklist={passwordTouched} validation={validation} />
+          )}
         </div>
-
+        <div>
+          <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+          <Input
+            autoComplete="new-password"
+            className="mt-2"
+            id="confirmPassword"
+            name="confirmPassword"
+            onBlur={() => setConfirmTouched(true)}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            type="password"
+            value={confirmPassword}
+          />
+          {showMismatchError && <p className="mt-1 text-sm text-destructive">{PASSWORD_ERROR_MESSAGES.mismatch}</p>}
+          {confirmTouched && passwordsMatch && confirmPassword && (
+            <p className="mt-1 text-sm text-emerald-500">비밀번호가 일치해요</p>
+          )}
+        </div>
         {state && 'error' in state && <div className="text-sm text-destructive">{state.error}</div>}
         {state && 'success' in state && <div className="text-sm text-emerald-500">{state.success}</div>}
-
-        <Button className="w-full" disabled={isPending} type="submit">
-          {isPending ? '계정 생성 중...' : '계정 생성'}
+        <Button className="w-full" disabled={isPending || !validation.isValid || !passwordsMatch} type="submit">
+          {isPending ? '생성 중...' : '계정 생성'}
         </Button>
       </form>
 

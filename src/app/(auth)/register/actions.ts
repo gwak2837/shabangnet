@@ -4,22 +4,35 @@ import bcrypt from 'bcryptjs'
 import ms from 'ms'
 import { z } from 'zod'
 
+import { isCommonPassword } from '@/common/constants/common-passwords'
 import { PostgresErrorCodes } from '@/common/constants/db-errors'
 import { db } from '@/db'
 import { roles, users, usersToRoles, verificationTokens } from '@/db/schema'
 import { sendEmail } from '@/lib/email'
+import { PASSWORD_ERROR_MESSAGES, passwordSchema } from '@/utils/password'
 
-const RegisterSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
-  name: z.string().min(2),
-})
+const RegisterSchema = z
+  .object({
+    email: z.email('올바른 이메일 형식이 아니에요'),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+    name: z.string().min(2, '이름은 2자 이상이어야 해요').max(100, '이름은 100자 이하여야 해요'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: PASSWORD_ERROR_MESSAGES.mismatch,
+    path: ['confirmPassword'],
+  })
+  .refine((data) => !isCommonPassword(data.password), {
+    message: PASSWORD_ERROR_MESSAGES.isCommon,
+    path: ['password'],
+  })
 
-export async function register(prevState: unknown, formData: FormData) {
+export async function register(_prevState: unknown, formData: FormData) {
   const validatedFields = RegisterSchema.safeParse(Object.fromEntries(formData))
 
   if (!validatedFields.success) {
-    return { error: '유효하지 않은 값이에요' }
+    const firstError = validatedFields.error.issues[0]
+    return { error: firstError?.message || '유효하지 않은 값이에요' }
   }
 
   const { email, password, name } = validatedFields.data

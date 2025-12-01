@@ -40,7 +40,7 @@ export function LoginForm() {
         {state?.error && <div className="text-sm text-destructive">{state.error}</div>}
 
         <Button className="w-full" disabled={isPending} type="submit">
-          {isPending ? '로그인 중...' : '로그인'}
+          {isPending ? '처리 중' : '로그인'}
         </Button>
       </form>
 

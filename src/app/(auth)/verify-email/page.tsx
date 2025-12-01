@@ -7,8 +7,8 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
   if (!token) {
     return (
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-red-600">잘못된 요청</h1>
-        <p className="mt-2 text-gray-600">인증 토큰이 없습니다.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">잘못된 요청</h1>
+        <p className="mt-3 text-muted-foreground">인증 토큰이 없습니다.</p>
       </div>
     )
   }
@@ -16,20 +16,18 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
   const result = await verifyEmailToken(token)
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-      <h1 className="text-2xl font-bold">이메일 인증</h1>
+    <div className="flex flex-col items-center justify-center text-center">
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">이메일 인증</h1>
       {result.error ? (
-        <div className="rounded-md bg-red-50 p-4 text-red-700">
-          <p>{result.error}</p>
-        </div>
+        <p className="mt-4 text-sm text-destructive">{result.error}</p>
       ) : (
-        <div className="rounded-md bg-green-50 p-4 text-green-700">
-          <p>{result.success}</p>
-          <p className="text-sm mt-2">계정이 인증되었습니다.</p>
+        <div className="mt-4 space-y-1">
+          <p className="text-sm text-emerald-600">{result.success}</p>
+          <p className="text-sm text-muted-foreground">계정이 인증되었습니다.</p>
         </div>
       )}
       <a
-        className="mt-4 inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        className="mt-8 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-80 active:opacity-70"
         href="/login"
       >
         로그인으로 이동
