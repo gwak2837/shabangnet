@@ -6,8 +6,8 @@ import { z } from 'zod'
 
 import { isCommonPassword } from '@/common/constants/common-passwords'
 import { PostgresErrorCodes } from '@/common/constants/db-errors'
-import { db } from '@/db'
-import { roles, users, usersToRoles, verificationTokens } from '@/db/schema'
+import { db } from '@/db/client'
+import { roles, users, usersToRoles, verificationTokens } from '@/db/schema/auth'
 import { sendEmail } from '@/lib/email'
 import { PASSWORD_ERROR_MESSAGES, passwordSchema } from '@/utils/password'
 

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
-import { db } from '@/db'
-import { shoppingMallTemplates } from '@/db/schema'
+import { db } from '@/db/client'
+import { shoppingMallTemplates } from '@/db/schema/settings'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -101,4 +101,3 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
     return NextResponse.json({ error: '템플릿 수정에 실패했습니다' }, { status: 500 })
   }
 }
-

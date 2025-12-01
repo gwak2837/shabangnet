@@ -2,8 +2,8 @@
 
 import { and, eq, gt } from 'drizzle-orm'
 
-import { db } from '@/db'
-import { users, verificationTokens } from '@/db/schema'
+import { db } from '@/db/client'
+import { users, verificationTokens } from '@/db/schema/auth'
 
 export async function verifyEmailToken(token: string) {
   try {

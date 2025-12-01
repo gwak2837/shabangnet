@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
-import { db } from '@/db'
-import { shoppingMallTemplates } from '@/db/schema'
+import { db } from '@/db/client'
+import { shoppingMallTemplates } from '@/db/schema/settings'
 
 // 쇼핑몰 템플릿 목록 조회
 export async function GET(): Promise<NextResponse> {
@@ -69,4 +69,3 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: '템플릿 생성에 실패했습니다' }, { status: 500 })
   }
 }
-

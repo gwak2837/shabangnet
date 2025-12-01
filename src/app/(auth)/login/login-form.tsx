@@ -22,9 +22,9 @@ export function LoginForm() {
           <div className="flex items-center justify-between">
             <Label htmlFor="password">비밀번호</Label>
             <div className="text-sm">
-              <a className="font-medium text-primary hover:text-primary/90" href="#">
+              <Link className="font-medium text-primary hover:text-primary/90" href="/forgot-password">
                 비밀번호를 잊으셨나요?
-              </a>
+              </Link>
             </div>
           </div>
           <Input
@@ -36,14 +36,11 @@ export function LoginForm() {
             type="password"
           />
         </div>
-
         {state?.error && <div className="text-sm text-destructive">{state.error}</div>}
-
         <Button className="w-full" disabled={isPending} type="submit">
           {isPending ? '처리 중' : '로그인'}
         </Button>
       </form>
-
       <div className="text-center text-sm">
         <span className="text-muted-foreground">계정이 없으신가요? </span>
         <Link className="font-medium text-primary hover:text-primary/90" href="/register">
