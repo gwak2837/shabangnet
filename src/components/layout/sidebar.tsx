@@ -6,7 +6,6 @@ import {
   FileSpreadsheet,
   FileText,
   LayoutDashboard,
-  LogOut,
   Package,
   Settings,
   Settings2,
@@ -17,6 +16,7 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { LogoutDialog } from '@/components/layout/logout-dialog'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/utils/cn'
@@ -185,10 +185,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Settings className="h-4 w-4" />
                 설정
               </Link>
-              <button className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
-                <LogOut className="h-4 w-4" />
-                로그아웃
-              </button>
+              <LogoutDialog />
             </div>
           </div>
         </div>
