@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 
+import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
 import { register } from '@/app/(auth)/register/actions'
 import { COMMON_PASSWORDS } from '@/common/constants/common-passwords'
-import { PasswordStrengthIndicator } from '@/components/auth/password-strength'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

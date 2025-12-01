@@ -105,7 +105,7 @@ export const passwordResetTokens = pgTable('password_reset_token', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  email: varchar('email', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
   token: text('token').notNull().unique(),
   expires: timestamp('expires', { mode: 'date' }).notNull(),
   usedAt: timestamp('used_at', { mode: 'date' }),
