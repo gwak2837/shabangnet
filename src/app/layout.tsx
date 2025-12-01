@@ -79,7 +79,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ko">
       <head>
-        <meta content="사방넷" name="apple-mobile-web-app-title" />
+        <meta content="다온" name="apple-mobile-web-app-title" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${notoSansKr.variable} font-sans antialiased`}>
         <QueryProvider>{children}</QueryProvider>

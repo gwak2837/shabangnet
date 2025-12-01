@@ -3,9 +3,9 @@
 // ============================================
 
 export const SITE_CONFIG = {
-  url: 'https://shabangnet.vercel.app',
-  name: '사방넷 발주 자동화',
-  shortName: '사방넷',
+  url: 'https://daonfnc.vercel.app',
+  name: '다온 발주 자동화',
+  shortName: '다온',
   description: '주문 취합 및 제조사별 발주 자동화 시스템',
   locale: 'ko_KR',
   themeColor: '#171717',

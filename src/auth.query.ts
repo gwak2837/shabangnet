@@ -151,7 +151,7 @@ async function sendLockEmail(email: string, unlockToken: string): Promise<boolea
 
   const result = await sendEmail({
     to: email,
-    subject: '[샤방넷] 계정이 일시적으로 잠겼어요',
+    subject: '[다온 OMS] 계정이 일시적으로 잠겼어요',
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">계정 보안 알림</h2>

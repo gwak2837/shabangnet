@@ -69,7 +69,7 @@ export async function requestPasswordReset(prevState: unknown, formData: FormDat
 
   await sendEmail({
     to: normalizedEmail,
-    subject: '[샤방넷] 비밀번호 재설정',
+    subject: '[다온 OMS] 비밀번호 재설정',
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">비밀번호 재설정</h2>
