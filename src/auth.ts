@@ -9,10 +9,10 @@ import Kakao from 'next-auth/providers/kakao'
 import Naver from 'next-auth/providers/naver'
 import { z } from 'zod'
 
+import { getUserRoles, getUserWithRoles, processLoginAttempt } from '@/auth.query'
 import { env } from '@/common/env'
 import { db } from '@/db/client'
-import { roles, users, usersToRoles } from '@/db/schema/auth'
-import { processLoginAttempt } from '@/lib/auth/login-limiter'
+import { users } from '@/db/schema/auth'
 
 import { sec } from './utils/sec'
 
@@ -34,52 +34,6 @@ const schema = z.object({
   password: z.string().min(1),
   rememberMe: z.string().optional(),
 })
-
-async function getUserRoles(userId: string) {
-  try {
-    const userRoles = await db
-      .select({
-        name: roles.name,
-      })
-      .from(usersToRoles)
-      .innerJoin(roles, eq(usersToRoles.roleId, roles.id))
-      .where(eq(usersToRoles.userId, userId))
-
-    return userRoles.map((r) => r.name)
-  } catch (error) {
-    console.error('getUserRoles:', error)
-    return []
-  }
-}
-
-async function getUserWithRoles(userId: string) {
-  try {
-    const result = await db
-      .select({
-        user: users,
-        roleName: roles.name,
-      })
-      .from(users)
-      .leftJoin(usersToRoles, eq(users.id, usersToRoles.userId))
-      .leftJoin(roles, eq(usersToRoles.roleId, roles.id))
-      .where(eq(users.id, userId))
-
-    if (result.length === 0) {
-      return null
-    }
-
-    const user = result[0].user
-    const userRoles = result.filter((r) => r.roleName !== null).map((r) => r.roleName!)
-
-    return {
-      ...user,
-      roles: userRoles,
-    }
-  } catch (error) {
-    console.error('getUserWithRoles:', error)
-    return null
-  }
-}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
