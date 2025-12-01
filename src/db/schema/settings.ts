@@ -9,7 +9,7 @@ export const settings = pgTable('settings', {
   value: text('value'),
   description: text('description'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 택배사 코드 매핑 (Courier Mappings)
@@ -22,7 +22,7 @@ export const courierMappings = pgTable('courier_mappings', {
   aliases: text('aliases').array(), // 별칭 배열
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 발송 제외 패턴 (Exclusion Patterns)
@@ -35,7 +35,7 @@ export const exclusionPatterns = pgTable('exclusion_patterns', {
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 쇼핑몰별 파일 템플릿 (Shopping Mall Templates)
@@ -51,4 +51,4 @@ export const shoppingMallTemplates = pgTable('shopping_mall_templates', {
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()

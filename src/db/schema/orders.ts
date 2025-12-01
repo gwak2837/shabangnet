@@ -19,7 +19,7 @@ export const uploads = pgTable('uploads', {
   errorOrders: integer('error_orders').default(0),
   status: varchar('status', { length: 50 }).default('processing'),
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 주문 데이터 (Orders) - 실제 주문 저장
@@ -55,7 +55,7 @@ export const orders = pgTable('orders', {
   status: orderStatusEnum('status').default('pending'),
   excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 이메일 발송 로그 (Email Logs)
@@ -79,7 +79,7 @@ export const emailLogs = pgTable('email_logs', {
   sentAt: timestamp('sent_at', { withTimezone: true }),
   sentBy: varchar('sent_by', { length: 255 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 이메일 발송 로그 상세 (Email Log Orders)
@@ -99,4 +99,4 @@ export const emailLogOrders = pgTable('email_log_orders', {
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 원가
   customerName: varchar('customer_name', { length: 255 }),
   address: text('address'),
-})
+}).enableRLS()

@@ -18,7 +18,7 @@ export const users = pgTable('user', {
   invalidateSessionsBefore: timestamp('invalidate_sessions_before', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 계정 (Accounts) - OAuth 연동
@@ -42,7 +42,7 @@ export const accounts = pgTable(
     session_state: text('session_state'),
   },
   (account) => [primaryKey({ columns: [account.provider, account.providerAccountId] })],
-)
+).enableRLS()
 
 // ============================================
 // 세션 (Sessions)
@@ -54,7 +54,7 @@ export const sessions = pgTable('session', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   expires: timestamp('expires', { mode: 'date' }).notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 이메일 인증 토큰 (Verification Tokens)
@@ -68,7 +68,7 @@ export const verificationTokens = pgTable(
     expires: timestamp('expires', { mode: 'date' }).notNull(),
   },
   (verificationToken) => [primaryKey({ columns: [verificationToken.identifier, verificationToken.token] })],
-)
+).enableRLS()
 
 // ============================================
 // 로그인 시도 기록 (Login Attempts)
@@ -82,7 +82,7 @@ export const loginAttempts = pgTable('login_attempts', {
   ipAddress: varchar('ip_address', { length: 45 }), // IPv6 지원
   success: boolean('success').notNull(),
   attemptedAt: timestamp('attempted_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 계정 잠금 (Account Locks)
@@ -96,7 +96,7 @@ export const accountLocks = pgTable('account_locks', {
   unlockToken: text('unlock_token').notNull(),
   lockedAt: timestamp('locked_at', { withTimezone: true }).defaultNow().notNull(),
   unlockedAt: timestamp('unlocked_at', { withTimezone: true }),
-})
+}).enableRLS()
 
 // ============================================
 // 비밀번호 재설정 토큰 (Password Reset Tokens)
@@ -111,7 +111,7 @@ export const passwordResetTokens = pgTable('password_reset_token', {
   expires: timestamp('expires', { mode: 'date' }).notNull(),
   usedAt: timestamp('used_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 역할 (Roles)
@@ -125,7 +125,7 @@ export const roles = pgTable('role', {
   description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 사용자-역할 매핑 (Users to Roles)
@@ -142,4 +142,4 @@ export const usersToRoles = pgTable(
       .references(() => roles.id, { onDelete: 'cascade' }),
   },
   (t) => [primaryKey({ columns: [t.userId, t.roleId] })],
-)
+).enableRLS()

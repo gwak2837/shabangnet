@@ -22,7 +22,7 @@ export const manufacturers = pgTable('manufacturers', {
   // 타임스탬프
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 상품 (Products) - 상품-제조사 매핑
@@ -38,7 +38,7 @@ export const products = pgTable('products', {
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 원가
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 옵션-제조사 매핑 (Option Manufacturer Mappings)
@@ -54,7 +54,7 @@ export const optionMappings = pgTable('option_mappings', {
     .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 제조사별 발주서 템플릿 (Order Templates)
@@ -73,7 +73,7 @@ export const orderTemplates = pgTable('order_templates', {
   fixedValues: text('fixed_values'), // JSON: 고정값 설정 { "A": "다온에프앤씨", "B": "032-237-6933" }
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
 
 // ============================================
 // 송장 변환 템플릿 (Invoice Templates)
@@ -93,4 +93,4 @@ export const invoiceTemplates = pgTable('invoice_templates', {
   useColumnIndex: boolean('use_column_index').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}).enableRLS()
