@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ms from 'ms'
+import { SessionProvider } from 'next-auth/react'
 import { type ReactNode, useState } from 'react'
 
 interface QueryProviderProps {
@@ -23,5 +24,9 @@ export function QueryProvider({ children }: QueryProviderProps) {
       }),
   )
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return (
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </SessionProvider>
+  )
 }

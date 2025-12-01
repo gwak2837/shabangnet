@@ -4,21 +4,25 @@
  * 실행 방법:
  * npm run db:seed:users
  *
+ * 기능:
+ * - 기존 테스트 사용자를 삭제하고 새로 생성
+ * - 관리자 계정에 복구 코드 생성
+ *
  * 주의: Production 환경에서는 절대 실행되지 않습니다.
  */
 
+// ⚠️ This MUST be the first import - loads .env.local
+import './env-loader'
+
 import bcrypt from 'bcryptjs'
-import dotenv from 'dotenv'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
 import { TEST_ACCOUNTS } from '@/common/constants/server'
+import { generateRecoveryCode } from '@/lib/mfa/crypto'
 
-import { roles, users, usersToRoles } from '../src/db/schema/auth'
-
-// Load environment variables
-dotenv.config({ path: '.env.local' })
+import { recoveryCodes, roles, users, usersToRoles } from '../src/db/schema/auth'
 
 async function seed() {
   // 1. 안전장치: Production 환경 실행 차단
@@ -54,6 +58,28 @@ async function seed() {
   const db = drizzle(client)
 
   try {
+    // 기존 테스트 사용자 삭제
+    const testEmails = TEST_ACCOUNTS.map((account) => account.email)
+
+    // 삭제할 사용자 ID 조회
+    const existingUsers = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(inArray(users.email, testEmails))
+
+    if (existingUsers.length > 0) {
+      const userIds = existingUsers.map((u) => u.id)
+
+      // 사용자-역할 매핑 삭제 (cascade가 없는 관계)
+      await db.delete(usersToRoles).where(inArray(usersToRoles.userId, userIds))
+
+      // 사용자 삭제 (관련 accounts, sessions, MFA credentials 등은 cascade로 자동 삭제)
+      await db.delete(users).where(inArray(users.id, userIds))
+      console.log(`  🗑️  Deleted ${existingUsers.length} test users: ${existingUsers.map((u) => u.email).join(', ')}`)
+    } else {
+      console.log('  ℹ️  No existing test users to delete')
+    }
+
     // 3. 역할(Role) 생성 및 확인
     const roleNames = ['admin', 'staff', 'user']
     const roleMap: Record<string, string> = {}
@@ -82,63 +108,61 @@ async function seed() {
 
     // 4. 테스트 유저 생성
     const hashedPassword = await bcrypt.hash(testUserPassword, 10)
+    const adminRecoveryCodes: string[] = []
 
     for (const account of TEST_ACCOUNTS) {
-      // 유저 존재 여부 확인
-      let user = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, account.email))
-        .limit(1)
-        .then((rows) => rows[0])
-
-      if (!user) {
-        console.log(`Creating user: ${account.email} (${account.name})`)
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            email: account.email,
-            name: account.name,
-            password: hashedPassword,
-            emailVerified: new Date(),
-          })
-          .returning()
-        user = newUser
-      } else {
-        console.log(`Updating user password: ${account.email}`)
-        // 비밀번호 업데이트 (환경변수가 바뀌었을 수 있으므로)
-        const [updatedUser] = await db
-          .update(users)
-          .set({ password: hashedPassword })
-          .where(eq(users.id, user.id))
-          .returning()
-        user = updatedUser
-      }
+      // 새 유저 생성 (기존 유저는 위에서 삭제됨)
+      console.log(`Creating user: ${account.email} (${account.name})`)
+      const [user] = await db
+        .insert(users)
+        .values({
+          email: account.email,
+          name: account.name,
+          password: hashedPassword,
+          emailVerified: new Date(),
+        })
+        .returning()
 
       // 5. 유저-권한 매핑
       const roleId = roleMap[account.role]
       if (roleId) {
-        const userRole = await db
-          .select()
-          .from(usersToRoles)
-          .where(eq(usersToRoles.userId, user.id))
-          .limit(1)
-          .then((rows) => rows[0])
+        console.log(`  → Assigning role: ${account.role}`)
+        await db.insert(usersToRoles).values({
+          userId: user.id,
+          roleId: roleId,
+        })
+      }
 
-        if (!userRole) {
-          console.log(`Assigning role ${account.role} to ${account.email}`)
-          await db.insert(usersToRoles).values({
+      // 6. Admin 사용자에게 복구 코드 생성
+      if (account.role === 'admin') {
+        const codeCount = 10
+        for (let i = 0; i < codeCount; i++) {
+          const code = generateRecoveryCode()
+          const hashedCode = await bcrypt.hash(code, 10)
+
+          await db.insert(recoveryCodes).values({
             userId: user.id,
-            roleId: roleId,
+            code: hashedCode,
           })
-        } else if (userRole.roleId !== roleId) {
-          console.log(`Updating role for ${account.email} to ${account.role}`)
-          await db.update(usersToRoles).set({ roleId: roleId }).where(eq(usersToRoles.userId, user.id))
+
+          adminRecoveryCodes.push(code)
         }
+        console.log(`  → Generated ${codeCount} recovery codes for admin`)
       }
     }
 
-    console.log('🎉 Test users seeding completed!')
+    console.log('\n🎉 Test users seeding completed!')
+    console.log('\n📋 Test Accounts:')
+    for (const account of TEST_ACCOUNTS) {
+      console.log(`  - ${account.email} (${account.role})`)
+    }
+
+    if (adminRecoveryCodes.length > 0) {
+      console.log('\n🔐 Admin Recovery Codes (save these!):')
+      adminRecoveryCodes.forEach((code, i) => {
+        console.log(`  ${i + 1}. ${code}`)
+      })
+    }
   } catch (error) {
     console.error('❌ Seeding failed:', error)
     process.exit(1)

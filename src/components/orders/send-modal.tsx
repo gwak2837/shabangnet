@@ -39,6 +39,8 @@ import {
   type OrderBatch,
 } from '@/lib/mock-data'
 
+import { sendOrder } from './actions'
+
 interface SendModalProps {
   batch: OrderBatch | null
   onOpenChange: (open: boolean) => void
@@ -83,8 +85,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     setSendError(null)
 
     try {
-      // API 요청 데이터 준비
-      const requestData = {
+      const result = await sendOrder({
         manufacturerId: batch.manufacturerId,
         manufacturerName: batch.manufacturerName,
         email: batch.email,
@@ -100,17 +101,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           price: order.price,
         })),
         duplicateReason: duplicateCheck?.hasDuplicate ? duplicateReason : undefined,
-      }
-
-      const response = await fetch('/api/orders/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
       })
-
-      const result = await response.json()
 
       if (result.success) {
         setIsSent(true)

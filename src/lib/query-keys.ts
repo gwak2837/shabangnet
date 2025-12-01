@@ -28,6 +28,7 @@ export const queryKeys = {
     exclusion: ['settings', 'exclusion'] as const,
     duplicateCheck: ['settings', 'duplicate-check'] as const,
     courier: ['settings', 'courier'] as const,
+    mfa: ['settings', 'mfa'] as const,
   },
   settlement: {
     data: (filters: {

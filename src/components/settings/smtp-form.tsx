@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 
+import { testSMTPConnectionAction } from './actions/smtp'
+
 interface SMTPFormProps {
   isSaving?: boolean
   onSave: (data: Partial<SMTPSettings>) => void
@@ -50,17 +52,13 @@ export function SMTPForm({ settings, onSave, isSaving = false }: SMTPFormProps) 
     setTestError(null)
 
     try {
-      const response = await fetch('/api/email/test', {
-        method: 'POST',
-      })
+      const result = await testSMTPConnectionAction()
 
-      const data = await response.json()
-
-      if (data.success) {
+      if (result.success) {
         setTestResult('success')
       } else {
         setTestResult('error')
-        setTestError(data.error || '연결 테스트에 실패했습니다.')
+        setTestError(result.error || '연결 테스트에 실패했습니다.')
       }
     } catch {
       setTestResult('error')

@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { defaultInvoiceTemplate, type InvoiceTemplate, invoiceTemplates, type Manufacturer } from '@/lib/mock-data'
 
+import { analyzeOrderTemplate } from './actions'
+
 // 발주서 템플릿 타입
 interface OrderTemplate {
   columnMappings: Record<string, string>
@@ -89,24 +91,17 @@ export function ManufacturerModal({
       setIsAnalyzing(true)
 
       try {
-        const formData = new FormData()
-        formData.append('file', file)
+        const fileBuffer = await file.arrayBuffer()
+        const result = await analyzeOrderTemplate(fileBuffer)
 
-        const response = await fetch('/api/templates/analyze', {
-          method: 'POST',
-          body: formData,
-        })
-
-        const data = await response.json()
-
-        if (data.success && data.analysis) {
-          setTemplateHeaders(data.analysis.headers || [])
+        if (result.success && result.analysis) {
+          setTemplateHeaders(result.analysis.headers || [])
           setOrderTemplate({
             ...orderTemplate,
             templateFileName: file.name,
-            headerRow: data.analysis.headerRow,
-            dataStartRow: data.analysis.dataStartRow,
-            columnMappings: data.analysis.suggestedMappings || {},
+            headerRow: result.analysis.headerRow,
+            dataStartRow: result.analysis.dataStartRow,
+            columnMappings: result.analysis.suggestedMappings || {},
           })
         }
       } catch (error) {

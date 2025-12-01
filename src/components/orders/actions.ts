@@ -1,12 +1,19 @@
-import { NextResponse } from 'next/server'
+'use server'
 
 import { sendEmail } from '@/lib/email'
 import { generateOrderFileName, generateOrderSheet, type OrderData } from '@/lib/excel'
 
-// 발주 발송 요청 타입
-interface SendOrderRequest {
+// ============================================================================
+// Types
+// ============================================================================
+
+interface ActionResult {
+  error?: string
+  success: boolean
+}
+
+interface SendOrderInput {
   ccEmail?: string
-  // 중복 발송 시 사유
   duplicateReason?: string
   email: string
   manufacturerId: string
@@ -14,35 +21,37 @@ interface SendOrderRequest {
   orders: OrderData[]
 }
 
-// 응답 타입
-interface SendOrderResponse {
-  error?: string
+interface SendOrderResult extends ActionResult {
   fileName?: string
   messageId?: string
   orderCount?: number
-  success: boolean
   totalAmount?: number
 }
 
-export async function POST(request: Request): Promise<NextResponse<SendOrderResponse>> {
+// ============================================================================
+// Orders Actions
+// ============================================================================
+
+/**
+ * 발주서를 이메일로 발송합니다.
+ */
+export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult> {
   try {
-    const body: SendOrderRequest = await request.json()
-
     // 필수 필드 검증
-    if (!body.manufacturerId) {
-      return NextResponse.json({ success: false, error: '제조사 ID는 필수입니다.' }, { status: 400 })
+    if (!input.manufacturerId) {
+      return { success: false, error: '제조사 ID는 필수입니다.' }
     }
 
-    if (!body.manufacturerName) {
-      return NextResponse.json({ success: false, error: '제조사명은 필수입니다.' }, { status: 400 })
+    if (!input.manufacturerName) {
+      return { success: false, error: '제조사명은 필수입니다.' }
     }
 
-    if (!body.email) {
-      return NextResponse.json({ success: false, error: '이메일 주소는 필수입니다.' }, { status: 400 })
+    if (!input.email) {
+      return { success: false, error: '이메일 주소는 필수입니다.' }
     }
 
-    if (!body.orders || body.orders.length === 0) {
-      return NextResponse.json({ success: false, error: '발송할 주문이 없습니다.' }, { status: 400 })
+    if (!input.orders || input.orders.length === 0) {
+      return { success: false, error: '발송할 주문이 없습니다.' }
     }
 
     // 날짜 정보
@@ -51,15 +60,15 @@ export async function POST(request: Request): Promise<NextResponse<SendOrderResp
 
     // 엑셀 파일 생성
     const excelBuffer = await generateOrderSheet({
-      manufacturerName: body.manufacturerName,
-      orders: body.orders,
+      manufacturerName: input.manufacturerName,
+      orders: input.orders,
       date: now,
     })
 
-    const fileName = generateOrderFileName(body.manufacturerName, now)
+    const fileName = generateOrderFileName(input.manufacturerName, now)
 
     // 이메일 제목 및 본문
-    const subject = `[다온에프앤씨 발주서]_${body.manufacturerName}_${dateStr}`
+    const subject = `[다온에프앤씨 발주서]_${input.manufacturerName}_${dateStr}`
     const htmlBody = `
       <div style="font-family: 'Malgun Gothic', sans-serif; line-height: 1.6;">
         <p>안녕하세요.</p>
@@ -67,8 +76,8 @@ export async function POST(request: Request): Promise<NextResponse<SendOrderResp
         <br/>
         <p><strong>발주 정보</strong></p>
         <ul>
-          <li>제조사: ${body.manufacturerName}</li>
-          <li>주문 건수: ${body.orders.length}건</li>
+          <li>제조사: ${input.manufacturerName}</li>
+          <li>주문 건수: ${input.orders.length}건</li>
           <li>발주일: ${formatDateKorean(now)}</li>
         </ul>
         <br/>
@@ -80,8 +89,8 @@ export async function POST(request: Request): Promise<NextResponse<SendOrderResp
 
     // 이메일 발송
     const result = await sendEmail({
-      to: body.email,
-      cc: body.ccEmail,
+      to: input.email,
+      cc: input.ccEmail,
       subject,
       html: htmlBody,
       attachments: [
@@ -95,27 +104,28 @@ export async function POST(request: Request): Promise<NextResponse<SendOrderResp
 
     if (result.success) {
       // 발송 성공
-      const totalAmount = body.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
+      const totalAmount = input.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
 
-      return NextResponse.json({
+      return {
         success: true,
         messageId: result.messageId,
         fileName,
-        orderCount: body.orders.length,
+        orderCount: input.orders.length,
         totalAmount,
-      })
+      }
     } else {
       // 발송 실패
-      return NextResponse.json(
-        { success: false, error: result.error || '이메일 발송에 실패했습니다.' },
-        { status: 500 },
-      )
+      return { success: false, error: result.error || '이메일 발송에 실패했습니다.' }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
+    return { success: false, error: errorMessage }
   }
 }
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 // 날짜 포맷 (YYYYMMDD)
 function formatDate(date: Date): string {
@@ -133,3 +143,4 @@ function formatDateKorean(date: Date): string {
     day: 'numeric',
   })
 }
+

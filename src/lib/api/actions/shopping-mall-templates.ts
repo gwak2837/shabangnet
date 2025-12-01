@@ -1,42 +1,42 @@
-import ExcelJS from 'exceljs'
-import { NextResponse } from 'next/server'
+'use server'
 
-interface AnalyzeResult {
-  detectedHeaderRow: number
-  headers: string[]
-  previewRows: string[][]
-  totalRows: number
+import ExcelJS from 'exceljs'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface ActionResult {
+  error?: string
+  success: boolean
 }
 
-// 샘플 파일 분석 - 헤더 자동 감지
-export async function POST(request: Request): Promise<NextResponse<AnalyzeResult | { error: string }>> {
+interface AnalyzeShoppingMallResult extends ActionResult {
+  detectedHeaderRow?: number
+  headers?: string[]
+  previewRows?: string[][]
+  totalRows?: number
+}
+
+// ============================================================================
+// Shopping Mall File Analysis
+// ============================================================================
+
+/**
+ * 쇼핑몰 샘플 파일을 분석하여 헤더를 감지합니다.
+ */
+export async function analyzeShoppingMallFile(
+  fileBuffer: ArrayBuffer,
+  manualHeaderRow?: number,
+): Promise<AnalyzeShoppingMallResult> {
   try {
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    const manualHeaderRow = formData.get('headerRow') as string | null
-
-    if (!file) {
-      return NextResponse.json({ error: '파일이 없습니다' }, { status: 400 })
-    }
-
-    // 파일 유효성 검사
-    const validExtensions = ['.xlsx', '.xls']
-    const fileName = file.name
-    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-
-    if (!validExtensions.includes(ext)) {
-      return NextResponse.json({ error: '엑셀 파일(.xlsx, .xls)만 업로드 가능합니다' }, { status: 400 })
-    }
-
-    // 파일 읽기
-    const buffer = await file.arrayBuffer()
     const workbook = new ExcelJS.Workbook()
-    await workbook.xlsx.load(buffer)
+    await workbook.xlsx.load(fileBuffer)
 
     // 첫 번째 시트 사용
     const worksheet = workbook.worksheets[0]
     if (!worksheet) {
-      return NextResponse.json({ error: '워크시트를 찾을 수 없습니다' }, { status: 400 })
+      return { success: false, error: '워크시트를 찾을 수 없습니다' }
     }
 
     // 시트를 2D 배열로 변환
@@ -53,17 +53,17 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeResult
     })
 
     if (data.length === 0) {
-      return NextResponse.json({ error: '파일에 데이터가 없습니다' }, { status: 400 })
+      return { success: false, error: '파일에 데이터가 없습니다' }
     }
 
     // 헤더 행 감지
     let headerRowIndex: number
 
-    if (manualHeaderRow) {
+    if (manualHeaderRow !== undefined) {
       // 사용자가 지정한 헤더 행 (1-based → 0-based)
-      headerRowIndex = parseInt(manualHeaderRow, 10) - 1
+      headerRowIndex = manualHeaderRow - 1
       if (headerRowIndex < 0 || headerRowIndex >= data.length) {
-        return NextResponse.json({ error: '잘못된 헤더 행 번호입니다' }, { status: 400 })
+        return { success: false, error: '잘못된 헤더 행 번호입니다' }
       }
     } else {
       // 자동 감지: 첫 번째 비어있지 않은 행
@@ -78,18 +78,23 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeResult
       .slice(previewStartIndex, previewStartIndex + 5)
       .map((row) => (row || []).map((cell) => String(cell ?? '').trim()))
 
-    return NextResponse.json({
+    return {
+      success: true,
       detectedHeaderRow: headerRowIndex + 1, // 1-based로 반환
       headers,
       previewRows,
       totalRows: rowCount,
-    })
+    }
   } catch (error) {
     console.error('File analysis error:', error)
     const errorMessage = error instanceof Error ? error.message : '파일 분석 중 오류가 발생했습니다'
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return { success: false, error: errorMessage }
   }
 }
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 /**
  * 헤더 행 자동 감지
@@ -143,3 +148,4 @@ function getCellValue(cell: ExcelJS.Cell): string {
 
   return String(value)
 }
+

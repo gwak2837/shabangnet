@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { CourierForm } from '@/components/settings/courier-form'
 import { DuplicateCheckForm } from '@/components/settings/duplicate-check-form'
 import { ExclusionForm } from '@/components/settings/exclusion-form'
+import { MfaForm } from '@/components/settings/mfa-form'
 import { ShoppingMallForm } from '@/components/settings/shopping-mall-form'
 import { SMTPForm } from '@/components/settings/smtp-form'
 import {
@@ -17,6 +18,7 @@ import {
   useDeleteShoppingMallTemplate,
   useDuplicateCheckSettings,
   useExclusionSettings,
+  useMfaSettings,
   useRemoveCourierMapping,
   useRemoveExclusionPattern,
   useShoppingMallTemplates,
@@ -29,6 +31,9 @@ import {
 } from '@/hooks/use-settings'
 
 export default function SettingsPage() {
+  // MFA Settings
+  const { data: mfaSettings, isLoading: isLoadingMfa } = useMfaSettings()
+
   // SMTP Settings
   const { data: smtpSettings, isLoading: isLoadingSmtp } = useSmtpSettings()
   const updateSmtpMutation = useUpdateSmtpSettings()
@@ -57,7 +62,12 @@ export default function SettingsPage() {
   const analyzeShoppingMallFileMutation = useAnalyzeShoppingMallFile()
 
   const isLoading =
-    isLoadingSmtp || isLoadingExclusion || isLoadingDuplicateCheck || isLoadingCourier || isLoadingShoppingMall
+    isLoadingSmtp ||
+    isLoadingExclusion ||
+    isLoadingDuplicateCheck ||
+    isLoadingCourier ||
+    isLoadingShoppingMall ||
+    isLoadingMfa
 
   if (isLoading) {
     return (
@@ -72,6 +82,7 @@ export default function SettingsPage() {
   return (
     <AppShell description="시스템 설정을 관리합니다" title="설정">
       <div className="max-w-3xl space-y-6">
+        <MfaForm settings={mfaSettings} />
         <SMTPForm
           isSaving={updateSmtpMutation.isPending}
           onSave={(data) => updateSmtpMutation.mutate(data)}

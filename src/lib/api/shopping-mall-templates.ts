@@ -1,3 +1,5 @@
+import { analyzeShoppingMallFile as analyzeShoppingMallFileAction } from './actions/shopping-mall-templates'
+
 export interface AnalyzeResult {
   detectedHeaderRow: number
   headers: string[]
@@ -115,25 +117,21 @@ let mockTemplates = [...INITIAL_MOCK_TEMPLATES]
 // API 지연 시뮬레이션
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 샘플 파일 분석 (실제 API 호출 - 파일 파싱은 서버에서만 가능)
+// 샘플 파일 분석 (Server Action 사용)
 export async function analyzeShoppingMallFile(file: File, headerRow?: number): Promise<AnalyzeResult> {
-  const formData = new FormData()
-  formData.append('file', file)
-  if (headerRow !== undefined) {
-    formData.append('headerRow', String(headerRow))
+  const fileBuffer = await file.arrayBuffer()
+  const result = await analyzeShoppingMallFileAction(fileBuffer, headerRow)
+
+  if (!result.success) {
+    throw new Error(result.error || '파일 분석에 실패했습니다')
   }
 
-  const response = await fetch('/api/shopping-mall-templates/analyze', {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || '파일 분석에 실패했습니다')
+  return {
+    detectedHeaderRow: result.detectedHeaderRow!,
+    headers: result.headers!,
+    previewRows: result.previewRows!,
+    totalRows: result.totalRows!,
   }
-
-  return response.json()
 }
 
 // 새 템플릿 생성

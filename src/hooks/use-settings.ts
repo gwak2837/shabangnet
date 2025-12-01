@@ -14,6 +14,8 @@ import type {
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
 
+import { getMfaSettings } from './queries/mfa'
+
 export function useAddCourierMapping() {
   const queryClient = useQueryClient()
 
@@ -89,6 +91,18 @@ export function useExclusionSettings() {
   return useQuery({
     queryKey: queryKeys.settings.exclusion,
     queryFn: api.settings.getExclusionSettings,
+  })
+}
+
+// MFA Settings
+export function useMfaSettings() {
+  return useQuery({
+    queryKey: queryKeys.settings.mfa,
+    queryFn: async () => {
+      const result = await getMfaSettings()
+      if (!result.success) throw new Error(result.error)
+      return result.settings
+    },
   })
 }
 

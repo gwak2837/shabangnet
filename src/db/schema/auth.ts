@@ -16,6 +16,8 @@ export const users = pgTable('user', {
   image: text('image'),
   password: text('password'), // For Credentials provider
   invalidateSessionsBefore: timestamp('invalidate_sessions_before', { withTimezone: true }),
+  totpEnabled: boolean('totp_enabled').default(false).notNull(),
+  passkeyEnabled: boolean('passkey_enabled').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
@@ -143,3 +145,88 @@ export const usersToRoles = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.roleId] })],
 ).enableRLS()
+
+// ============================================
+// TOTP 자격 증명 (TOTP Credentials)
+// ============================================
+
+export const totpCredentials = pgTable('totp_credentials', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(), // AES-256-GCM 암호화 저장
+  verified: boolean('verified').default(false).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}).enableRLS()
+
+// ============================================
+// 패스키 자격 증명 (Passkey Credentials - WebAuthn)
+// ============================================
+
+export const passkeyCredentials = pgTable('passkey_credentials', {
+  id: text('id').primaryKey(), // credential ID (base64url)
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  publicKey: text('public_key').notNull(), // 공개키 (base64)
+  counter: integer('counter').notNull().default(0),
+  deviceType: text('device_type'), // 'singleDevice' | 'multiDevice'
+  backedUp: boolean('backed_up').default(false),
+  transports: text('transports'), // JSON array of transports
+  name: varchar('name', { length: 100 }), // 사용자가 지정한 이름 (예: "MacBook Pro")
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+}).enableRLS()
+
+// ============================================
+// 복구 코드 (Recovery Codes)
+// ============================================
+
+export const recoveryCodes = pgTable('recovery_codes', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  code: text('code').notNull(), // bcrypt 해시 저장
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}).enableRLS()
+
+// ============================================
+// 신뢰할 수 있는 기기 (Trusted Devices) - 일반 사용자용
+// ============================================
+
+export const trustedDevices = pgTable('trusted_devices', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  deviceFingerprint: text('device_fingerprint').notNull(), // 기기 식별자
+  userAgent: text('user_agent'),
+  ipAddress: varchar('ip_address', { length: 45 }), // IPv6 지원
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}).enableRLS()
+
+// ============================================
+// WebAuthn 챌린지 (임시 저장용)
+// ============================================
+
+export const webauthnChallenges = pgTable('webauthn_challenges', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  challenge: text('challenge').notNull(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // 'registration' | 'authentication'
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}).enableRLS()
