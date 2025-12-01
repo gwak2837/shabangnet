@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react'
 
 import type { AnalyzeResult, ShoppingMallTemplate } from '@/lib/api/shopping-mall-templates'
 
+import { SABANGNET_COLUMNS } from '@/common/constants'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,7 +22,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { SABANGNET_COLUMNS } from '@/lib/constants'
 import { cn } from '@/utils/cn'
 
 // 사방넷 필드 옵션 (필수 필드 표시)

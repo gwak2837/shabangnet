@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
 
-import { getOrigin } from '@/lib/config'
-import { SITE_CONFIG } from '@/lib/constants'
+import { getOrigin } from '@/common/config'
+import { SITE_CONFIG } from '@/common/constants'
 import { QueryProvider } from '@/providers/query-provider'
 
 import './globals.css'

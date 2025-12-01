@@ -2,7 +2,7 @@ import type { Attachment } from 'nodemailer/lib/mailer'
 
 import nodemailer from 'nodemailer'
 
-import { env } from '@/lib/env'
+import { env } from '@/common/env'
 
 // 이메일 발송 옵션 타입
 export interface SendEmailOptions {

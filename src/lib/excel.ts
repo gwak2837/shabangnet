@@ -6,7 +6,7 @@ import {
   indexToColumnLetter,
   SABANGNET_COLUMNS,
   type ShoppingMallConfig,
-} from './constants'
+} from '../common/constants'
 
 // ============================================
 // 타입 정의

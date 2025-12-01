@@ -3,6 +3,7 @@
 import { Building2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Trash2, Upload } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
+import { SABANGNET_COLUMNS } from '@/common/constants'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,7 +17,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { SABANGNET_COLUMNS } from '@/lib/constants'
 import { defaultInvoiceTemplate, type InvoiceTemplate, invoiceTemplates, type Manufacturer } from '@/lib/mock-data'
 
 // 발주서 템플릿 타입

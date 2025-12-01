@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { SHOPPING_MALL_CONFIGS } from '@/lib/constants'
+import { SHOPPING_MALL_CONFIGS } from '@/common/constants'
 import { groupOrdersByManufacturer, type ParsedOrder, parseShoppingMallFile } from '@/lib/excel'
 import { setUploadedOrders } from '@/lib/stores/order-store'
 
