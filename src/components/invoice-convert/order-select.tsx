@@ -2,12 +2,12 @@
 
 import { CheckCircle2, Mail, Package } from 'lucide-react'
 
-import type { SendLog } from '@/lib/mock-data'
+import type { SendLog } from '@/services/db/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency, formatDateTime } from '@/lib/mock-data'
 import { cn } from '@/utils/cn'
+import { formatCurrency, formatDateTime } from '@/utils/format'
 
 interface OrderSelectProps {
   logs: SendLog[]

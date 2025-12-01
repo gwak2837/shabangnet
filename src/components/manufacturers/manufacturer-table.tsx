@@ -3,6 +3,8 @@
 import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import type { Manufacturer } from '@/services/db/manufacturers'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate, type Manufacturer } from '@/lib/mock-data'
+import { formatDate } from '@/utils/format'
 
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]

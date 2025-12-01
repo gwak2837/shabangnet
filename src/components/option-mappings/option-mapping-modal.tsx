@@ -3,7 +3,8 @@
 import { Loader2, Settings2 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { Manufacturer, OptionManufacturerMapping } from '@/lib/mock-data'
+import type { Manufacturer } from '@/services/db/manufacturers'
+import type { OptionManufacturerMapping } from '@/services/db/option-mappings'
 
 import { Button } from '@/components/ui/button'
 import {

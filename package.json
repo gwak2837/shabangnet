@@ -8,9 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "prepare": "husky",
-    "db:seed:shopping-malls": "pnpm dlx tsx tools/seed-shopping-mall-templates.ts",
-    "db:seed:users": "pnpm dlx tsx tools/seed-test-users.ts"
+    "prepare": "husky"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",

@@ -2,17 +2,14 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { OptionManufacturerMapping } from '@/lib/mock-data'
-
-import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
+import { create, getAll, type OptionManufacturerMapping, remove, update } from '@/services/db/option-mappings'
 
 export function useCreateOptionMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>) =>
-      api.optionMappings.create(data),
+    mutationFn: (data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>) => create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.optionMappings.all })
     },
@@ -23,7 +20,7 @@ export function useDeleteOptionMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.optionMappings.remove(id),
+    mutationFn: (id: string) => remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.optionMappings.all })
     },
@@ -33,7 +30,7 @@ export function useDeleteOptionMapping() {
 export function useOptionMappings() {
   return useQuery({
     queryKey: queryKeys.optionMappings.all,
-    queryFn: api.optionMappings.getAll,
+    queryFn: getAll,
   })
 }
 
@@ -41,8 +38,8 @@ export function useUpdateOptionMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
-      api.optionMappings.update(id, data),
+    mutationFn: ({ id, data }: { data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>>; id: string }) =>
+      update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.optionMappings.all })
     },

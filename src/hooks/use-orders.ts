@@ -2,10 +2,15 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { DuplicateCheckPeriod } from '@/lib/mock-data'
-
-import { api, type SendOrdersParams } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
+import {
+  checkDuplicate,
+  type DuplicateCheckPeriod,
+  getBatches,
+  getExcludedBatches,
+  sendOrders,
+  type SendOrdersParams,
+} from '@/services/db/orders'
 
 export function useCheckDuplicate() {
   return useMutation({
@@ -15,23 +20,23 @@ export function useCheckDuplicate() {
       periodDays,
     }: {
       manufacturerId: string
-      recipientAddresses: string[]
       periodDays?: DuplicateCheckPeriod
-    }) => api.orders.checkDuplicate(manufacturerId, recipientAddresses, periodDays),
+      recipientAddresses: string[]
+    }) => checkDuplicate(manufacturerId, recipientAddresses, periodDays),
   })
 }
 
 export function useExcludedOrderBatches() {
   return useQuery({
     queryKey: queryKeys.orders.excluded,
-    queryFn: api.orders.getExcludedBatches,
+    queryFn: getExcludedBatches,
   })
 }
 
 export function useOrderBatches() {
   return useQuery({
     queryKey: queryKeys.orders.batches,
-    queryFn: api.orders.getBatches,
+    queryFn: getBatches,
   })
 }
 
@@ -39,7 +44,7 @@ export function useSendOrders() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: SendOrdersParams) => api.orders.sendOrders(params),
+    mutationFn: (params: SendOrdersParams) => sendOrders(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.batches })
       queryClient.invalidateQueries({ queryKey: queryKeys.logs.all })

@@ -3,6 +3,8 @@
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
+import type { InvoiceConvertResult, SendLog } from '@/services/db/logs'
+
 import { ConvertResult } from '@/components/invoice-convert/convert-result'
 import { InvoiceDropzone } from '@/components/invoice-convert/invoice-dropzone'
 import { OrderSelect } from '@/components/invoice-convert/order-select'
@@ -10,7 +12,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks/use-logs'
-import { getCourierCode, getInvoiceTemplate, type InvoiceConvertResult, type SendLog } from '@/lib/mock-data'
+import { defaultInvoiceTemplate } from '@/services/db/manufacturers'
 
 type Step = 'result' | 'select' | 'upload'
 
@@ -168,7 +170,7 @@ export default function InvoiceConvertPage() {
                       {selectedLog.manufacturerName}의 송장 템플릿이 적용됩니다.
                     </p>
                     {(() => {
-                      const template = getInvoiceTemplate(selectedLog.manufacturerId)
+                      const template = defaultInvoiceTemplate // TODO: Fetch actual template async
                       return (
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
                           <span className="px-2 py-1 bg-card rounded border border-slate-200">
@@ -257,7 +259,7 @@ function simulateInvoiceParsing(log: SendLog): InvoiceConvertResult[] {
   log.orders.forEach((order, idx) => {
     if (idx < log.orderCount - 2) {
       // 대부분 성공
-      const courierCode = getCourierCode('CJ대한통운') || '04'
+      const courierCode = '04' // CJ대한통운 default code
       results.push({
         orderNumber: order.orderNumber,
         courierCode,

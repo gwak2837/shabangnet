@@ -3,7 +3,7 @@
 import { CheckCircle2, Loader2, Mail, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { SendLog } from '@/lib/mock-data'
+import type { SendLog } from '@/services/db/logs'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { LogDetailModal } from '@/components/logs/log-detail-modal'

@@ -2,11 +2,13 @@
 
 import { Ban } from 'lucide-react'
 
+import type { OrderBatch } from '@/services/db/orders'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { formatCurrency, getExclusionLabel, type OrderBatch } from '@/lib/mock-data'
+import { formatCurrency, getExclusionLabelSync } from '@/utils/format'
 
 interface ExcludedOrderTableProps {
   batches: OrderBatch[]
@@ -50,7 +52,7 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
               const exclusionLabels = [
                 ...new Set(
                   batch.orders
-                    .map((o) => getExclusionLabel(o.fulfillmentType))
+                    .map((o) => getExclusionLabelSync(o.fulfillmentType))
                     .filter((label): label is string => label !== null),
                 ),
               ]

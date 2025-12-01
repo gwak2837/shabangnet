@@ -2,26 +2,26 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
+import { getChartData, getRecentUploads, getStats } from '@/services/db/dashboard'
 
 export function useDashboardStats() {
   return useQuery({
     queryKey: queryKeys.dashboard.stats,
-    queryFn: api.dashboard.getStats,
+    queryFn: getStats,
   })
 }
 
 export function useManufacturerChartData() {
   return useQuery({
     queryKey: queryKeys.dashboard.chartData,
-    queryFn: api.dashboard.getChartData,
+    queryFn: getChartData,
   })
 }
 
 export function useRecentUploads() {
   return useQuery({
     queryKey: queryKeys.dashboard.recentUploads,
-    queryFn: api.dashboard.getRecentUploads,
+    queryFn: getRecentUploads,
   })
 }

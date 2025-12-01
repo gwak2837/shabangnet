@@ -2,10 +2,12 @@
 
 import { AlertTriangle, CheckCircle2, Clock, FileSpreadsheet, Mail, User, XCircle } from 'lucide-react'
 
+import type { SendLog } from '@/services/db/logs'
+
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { formatCurrency, formatDateTime, type SendLog } from '@/lib/mock-data'
+import { formatCurrency, formatDateTime } from '@/utils/format'
 
 interface LogDetailModalProps {
   log: SendLog | null

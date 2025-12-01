@@ -112,6 +112,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
 
         const { email, password, rememberMe } = parsedCredentials.data
+
         const [user] = await db.select().from(users).where(eq(users.email, email))
 
         if (!user || !user.password) {

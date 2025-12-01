@@ -3,7 +3,7 @@
 import { Building2, Loader2, Package, Settings2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { OptionManufacturerMapping } from '@/lib/mock-data'
+import type { OptionManufacturerMapping } from '@/services/db/option-mappings'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { OptionMappingFilters } from '@/components/option-mappings/option-mapping-filters'

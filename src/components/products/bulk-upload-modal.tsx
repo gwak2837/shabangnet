@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
-import type { Manufacturer } from '@/lib/mock-data'
+import type { Manufacturer } from '@/services/db/manufacturers'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'

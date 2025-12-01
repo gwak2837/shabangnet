@@ -3,10 +3,10 @@
 import { Loader2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { ChartDataItem } from '@/lib/api'
+import type { ChartDataItem } from '@/services/db/dashboard'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency } from '@/lib/mock-data'
+import { formatCurrency } from '@/utils/format'
 
 const COLORS = [
   'oklch(0.65 0.15 250)',

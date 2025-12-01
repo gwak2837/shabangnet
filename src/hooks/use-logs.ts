@@ -2,13 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { api, type LogFilters } from '@/lib/api'
 import { queryKeys } from '@/lib/query-keys'
+import { getAll, getById, getFiltered, type LogFilters } from '@/services/db/logs'
 
 export function useSendLog(id: string) {
   return useQuery({
     queryKey: queryKeys.logs.detail(id),
-    queryFn: () => api.logs.getById(id),
+    queryFn: () => getById(id),
     enabled: !!id,
   })
 }
@@ -16,6 +16,6 @@ export function useSendLog(id: string) {
 export function useSendLogs(filters?: LogFilters) {
   return useQuery({
     queryKey: [...queryKeys.logs.all, filters],
-    queryFn: () => (filters ? api.logs.getFiltered(filters) : api.logs.getAll()),
+    queryFn: () => (filters ? getFiltered(filters) : getAll()),
   })
 }

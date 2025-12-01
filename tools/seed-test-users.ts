@@ -19,10 +19,17 @@ import { eq, inArray } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { TEST_ACCOUNTS } from '@/common/constants/server'
 import { generateRecoveryCode } from '@/lib/mfa/crypto'
 
 import { recoveryCodes, roles, users, usersToRoles } from '../src/db/schema/auth'
+
+function getTestAccounts(adminEmail: string) {
+  return [
+    { email: adminEmail, name: 'Test Admin', role: 'admin' },
+    { email: 'staff@test.com', name: 'Test Staff', role: 'staff' },
+    { email: 'user@test.com', name: 'Test User', role: 'user' },
+  ]
+}
 
 async function seed() {
   // 1. 안전장치: Production 환경 실행 차단
@@ -33,6 +40,7 @@ async function seed() {
 
   // 2. 환경변수 확인
   const databaseUrl = process.env.DATABASE_URL
+  const testUserEmail = process.env.TEST_USER_EMAIL
   const testUserPassword = process.env.TEST_USER_PASSWORD
 
   if (!databaseUrl) {
@@ -40,10 +48,17 @@ async function seed() {
     process.exit(1)
   }
 
+  if (!testUserEmail) {
+    console.error('❌ TEST_USER_EMAIL environment variable is not set')
+    process.exit(1)
+  }
+
   if (!testUserPassword) {
     console.error('❌ TEST_USER_PASSWORD environment variable is not set')
     process.exit(1)
   }
+
+  const testAccounts = getTestAccounts(testUserEmail)
 
   console.log('🌱 Seeding test users...')
 
@@ -59,7 +74,7 @@ async function seed() {
 
   try {
     // 기존 테스트 사용자 삭제
-    const testEmails = TEST_ACCOUNTS.map((account) => account.email)
+    const testEmails = testAccounts.map((account) => account.email)
 
     // 삭제할 사용자 ID 조회
     const existingUsers = await db
@@ -110,7 +125,7 @@ async function seed() {
     const hashedPassword = await bcrypt.hash(testUserPassword, 10)
     const adminRecoveryCodes: string[] = []
 
-    for (const account of TEST_ACCOUNTS) {
+    for (const account of testAccounts) {
       // 새 유저 생성 (기존 유저는 위에서 삭제됨)
       console.log(`Creating user: ${account.email} (${account.name})`)
       const [user] = await db
@@ -153,7 +168,7 @@ async function seed() {
 
     console.log('\n🎉 Test users seeding completed!')
     console.log('\n📋 Test Accounts:')
-    for (const account of TEST_ACCOUNTS) {
+    for (const account of testAccounts) {
       console.log(`  - ${account.email} (${account.role})`)
     }
 

@@ -132,8 +132,7 @@ export async function testSMTPConnection(): Promise<{ success: boolean; error?: 
 
 // Nodemailer transporter 생성
 async function createTransporter() {
-  // DB 설정 우선, 없으면 환경 변수 사용
-  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+  const config = await loadSMTPConfig()
 
   return nodemailer.createTransport({
     host: config.host,
@@ -150,30 +149,48 @@ async function createTransporter() {
 
 // 발신자 정보 가져오기
 async function getFromAddress(): Promise<string> {
-  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+  const config = await loadSMTPConfig()
 
   return config.fromName ? `"${config.fromName}" <${config.fromEmail}>` : config.fromEmail
 }
 
 /**
  * 환경변수에서 SMTP 설정을 가져옵니다. (fallback)
+ * 필수 환경변수가 없으면 null 반환
  */
-function getSMTPConfigFromEnv(): SMTPConfig {
-  const port = env.SMTP_PORT
+function getSMTPConfigFromEnv(): SMTPConfig | null {
+  const host = env.SMTP_HOST
+  const user = env.SMTP_USER
+  const pass = env.SMTP_PASS
+
+  // 필수 설정이 없으면 null 반환
+  if (!host || !user || !pass) {
+    return null
+  }
+
+  const port = env.SMTP_PORT ?? 587
 
   return {
-    host: env.SMTP_HOST,
+    host,
     port,
     // 포트 465는 Implicit TLS, 그 외는 STARTTLS
     secure: port === 465,
     requireTLS: port !== 465,
-    auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS,
-    },
+    auth: { user, pass },
     fromName: env.SMTP_FROM_NAME || '',
-    fromEmail: env.SMTP_FROM_EMAIL || env.SMTP_USER,
+    fromEmail: env.SMTP_FROM_EMAIL || user,
   }
+}
+
+// SMTP 설정 로드 (DB 우선, 환경변수 fallback)
+async function loadSMTPConfig(): Promise<SMTPConfig> {
+  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+
+  if (!config) {
+    throw new Error('SMTP 설정이 없습니다. 설정 페이지에서 SMTP를 설정해주세요.')
+  }
+
+  return config
 }
 
 /**
