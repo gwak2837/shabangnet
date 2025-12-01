@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { shoppingMallTemplates } from '../src/db/schema'
+import { shoppingMallTemplates } from '../src/db/schema/settings'
 
 // 기존 SHOPPING_MALL_CONFIGS에서 가져온 시드 데이터
 const SHOPPING_MALL_SEED_DATA = [

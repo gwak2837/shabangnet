@@ -1,0 +1,102 @@
+import { decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+
+import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
+import { manufacturers } from './manufacturers'
+import { shoppingMallTemplates } from './settings'
+
+// ============================================
+// 업로드 기록 (Uploads)
+// ============================================
+
+export const uploads = pgTable('uploads', {
+  id: text('id').primaryKey(),
+  fileName: varchar('file_name', { length: 500 }).notNull(),
+  fileSize: integer('file_size').default(0),
+  fileType: uploadTypeEnum('file_type').default('sabangnet'), // 파일 유형
+  shoppingMallId: text('shopping_mall_id').references(() => shoppingMallTemplates.id), // 쇼핑몰 템플릿
+  totalOrders: integer('total_orders').default(0),
+  processedOrders: integer('processed_orders').default(0),
+  errorOrders: integer('error_orders').default(0),
+  status: varchar('status', { length: 50 }).default('processing'),
+  uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
+// 주문 데이터 (Orders) - 실제 주문 저장
+// ============================================
+
+export const orders = pgTable('orders', {
+  id: text('id').primaryKey(),
+  uploadId: text('upload_id').references(() => uploads.id),
+  // 사방넷 표준 컬럼
+  orderNumber: varchar('order_number', { length: 100 }).notNull(),
+  productName: varchar('product_name', { length: 500 }),
+  quantity: integer('quantity').default(1),
+  orderName: varchar('order_name', { length: 255 }), // 주문인
+  recipientName: varchar('recipient_name', { length: 255 }), // 받는인
+  orderPhone: varchar('order_phone', { length: 50 }), // 주문인 연락처
+  orderMobile: varchar('order_mobile', { length: 50 }), // 주문인 핸드폰
+  recipientPhone: varchar('recipient_phone', { length: 50 }), // 받는인 연락처
+  recipientMobile: varchar('recipient_mobile', { length: 50 }), // 받는인 핸드폰
+  postalCode: varchar('postal_code', { length: 20 }), // 우편번호
+  address: text('address'), // 배송지
+  memo: text('memo'), // 전언/배송메시지
+  shoppingMall: varchar('shopping_mall', { length: 100 }), // 쇼핑몰/사이트
+  manufacturerName: varchar('manufacturer_name', { length: 255 }), // 제조사 (원본)
+  courier: varchar('courier', { length: 100 }), // 택배사
+  trackingNumber: varchar('tracking_number', { length: 100 }), // 송장번호
+  optionName: varchar('option_name', { length: 255 }), // 옵션
+  paymentAmount: decimal('payment_amount', { precision: 12, scale: 2 }), // 결제금액
+  productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
+  productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
+  cost: decimal('cost', { precision: 12, scale: 2 }), // 원가
+  // 시스템 필드
+  manufacturerId: text('manufacturer_id').references(() => manufacturers.id),
+  status: orderStatusEnum('status').default('pending'),
+  excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
+// 이메일 발송 로그 (Email Logs)
+// ============================================
+
+export const emailLogs = pgTable('email_logs', {
+  id: text('id').primaryKey(),
+  manufacturerId: text('manufacturer_id').references(() => manufacturers.id),
+  manufacturerName: varchar('manufacturer_name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  subject: text('subject').notNull(),
+  fileName: varchar('file_name', { length: 500 }),
+  orderCount: integer('order_count').default(0),
+  totalAmount: decimal('total_amount', { precision: 15, scale: 2 }).default('0'),
+  status: emailStatusEnum('status').default('pending').notNull(),
+  errorMessage: text('error_message'),
+  // 중복 발송 관련
+  recipientAddresses: text('recipient_addresses').array(), // 수취인 주소 배열
+  duplicateReason: text('duplicate_reason'), // 중복 발송 시 입력한 사유
+  // 발송 정보
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  sentBy: varchar('sent_by', { length: 255 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ============================================
+// 이메일 발송 로그 상세 (Email Log Orders)
+// 발송에 포함된 주문 상세
+// ============================================
+
+export const emailLogOrders = pgTable('email_log_orders', {
+  id: text('id').primaryKey(),
+  emailLogId: text('email_log_id')
+    .references(() => emailLogs.id)
+    .notNull(),
+  orderNumber: varchar('order_number', { length: 100 }).notNull(),
+  productName: varchar('product_name', { length: 500 }).notNull(),
+  optionName: varchar('option_name', { length: 255 }),
+  quantity: integer('quantity').default(1),
+  price: decimal('price', { precision: 12, scale: 2 }).default('0'),
+  cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 원가
+  customerName: varchar('customer_name', { length: 255 }),
+  address: text('address'),
+})

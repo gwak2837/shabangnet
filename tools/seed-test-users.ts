@@ -15,7 +15,7 @@ import postgres from 'postgres'
 
 import { TEST_ACCOUNTS } from '@/common/constants'
 
-import { roles, users, usersToRoles } from '../src/db/schema'
+import { roles, users, usersToRoles } from '../src/db/schema/auth'
 
 // Load environment variables
 dotenv.config({ path: '.env.local' })
