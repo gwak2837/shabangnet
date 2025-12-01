@@ -132,14 +132,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.lastCheckedAt = Date.now()
         token.rememberMe = user.rememberMe
         token.iat = Math.floor(Date.now() / 1000)
-      }
-
-      if (!token.rememberMe) {
-        const tokenAge = Date.now() / 1000 - (token.iat ?? 0)
-
-        if (tokenAge > sec('12 hours')) {
-          return null
-        }
+        token.exp = token.iat + (token.rememberMe ? sec('30d') : sec('12h'))
       }
 
       if (token.id && Date.now() - (token.lastCheckedAt ?? 0) > ms('12 hours')) {
