@@ -5,4 +5,3 @@ export const PostgresErrorCodes = {
 } as const
 
 export type PostgresErrorCode = (typeof PostgresErrorCodes)[keyof typeof PostgresErrorCodes]
-

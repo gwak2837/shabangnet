@@ -223,7 +223,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                         <TableCell className="font-mono text-sm">{item.productCode}</TableCell>
                         <TableCell className="text-sm">{item.productName}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
-                        <TableCell className="text-right">{item.shippingFee ? formatCurrency(item.shippingFee) : '-'}</TableCell>
+                        <TableCell className="text-right">
+                          {item.shippingFee ? formatCurrency(item.shippingFee) : '-'}
+                        </TableCell>
                         <TableCell>
                           {item.status === 'success' ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
