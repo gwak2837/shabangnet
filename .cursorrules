@@ -91,3 +91,177 @@ import { Button, Input } from '@/components'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 ```
+
+### Colocation
+
+- **Keep non-reusable logic close to where it's used.** Types, utilities, and constants used only in a specific component or page should be defined in that file or the same folder.
+
+```typescript
+// ❌ Bad - separating non-reusable types into a separate file
+// src/types/order-form.ts
+export interface OrderFormData {
+  productId: string
+  quantity: number
+}
+
+// src/app/orders/page.tsx
+import { OrderFormData } from '@/types/order-form'
+
+// ✅ Good - define types used only in this page within the same file
+// src/app/orders/page.tsx
+interface OrderFormData {
+  productId: string
+  quantity: number
+}
+
+export default function OrdersPage() {
+  // ...
+}
+```
+
+```typescript
+// ❌ Bad - separating single-use utilities into lib folder
+// src/lib/utils/format-order-id.ts
+export function formatOrderId(id: string): string {
+  return `ORD-${id.toUpperCase()}`
+}
+
+// ✅ Good - define within the component file
+// src/components/orders/order-table.tsx
+function formatOrderId(id: string): string {
+  return `ORD-${id.toUpperCase()}`
+}
+
+export function OrderTable() {
+  // uses formatOrderId
+}
+```
+
+- Only move to shared folders (`lib/`, `utils/`, `types/`) when reused across multiple files.
+
+### File Size & Feature-based Splitting
+
+- **When a file becomes too large (500+ lines), split by feature/topic** while still keeping logic close to where it's called.
+- Group related functions into feature-specific files within the same directory.
+
+```typescript
+// ❌ Bad - one massive actions.ts file with 1000+ lines
+// src/actions/actions.ts
+export async function createOrder() {
+  /* ... */
+}
+export async function updateOrder() {
+  /* ... */
+}
+export async function deleteOrder() {
+  /* ... */
+}
+export async function sendEmail() {
+  /* ... */
+}
+export async function setupMfa() {
+  /* ... */
+}
+export async function validateTotp() {
+  /* ... */
+}
+// ... 50 more functions
+
+// ✅ Good - split by feature/topic into separate files
+// src/actions/orders.ts
+export async function createOrder() {
+  /* ... */
+}
+export async function updateOrder() {
+  /* ... */
+}
+export async function deleteOrder() {
+  /* ... */
+}
+
+// src/actions/email.ts
+export async function sendEmail() {
+  /* ... */
+}
+export async function testEmailConnection() {
+  /* ... */
+}
+
+// src/actions/mfa.ts
+export async function setupMfa() {
+  /* ... */
+}
+export async function validateTotp() {
+  /* ... */
+}
+```
+
+- Keep the split files in the same directory to maintain proximity to the feature area.
+- Name files descriptively by their feature domain.
+
+---
+
+## API Patterns
+
+### Server Actions vs API Routes
+
+- **Use Server Actions (`"use server"`) for mutations** - creating, updating, or deleting data.
+- **Use GET API Routes for data fetching** that requires user interaction or real-time data.
+
+```typescript
+// ✅ Good - Server Action for mutations
+// src/actions/orders.ts
+'use server'
+
+export async function createOrder(data: CreateOrderInput) {
+  // Create order in database
+  return { success: true, orderId: '...' }
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+  // Update order status
+  return { success: true }
+}
+
+export async function deleteOrder(orderId: string) {
+  // Delete order
+  return { success: true }
+}
+```
+
+```typescript
+// ✅ Good - GET Route for data fetching with query params
+// src/app/api/orders/route.ts
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const status = searchParams.get('status')
+  const page = searchParams.get('page')
+
+  // Fetch and return orders
+  return Response.json({ orders, total })
+}
+```
+
+```typescript
+// ❌ Bad - Using POST API Route for mutations
+// src/app/api/orders/create/route.ts
+export async function POST(request: Request) {
+  const data = await request.json()
+  // This should be a Server Action instead
+}
+
+// ❌ Bad - Using Server Action for complex data fetching with caching needs
+// This is better suited for a GET route with proper caching headers
+```
+
+### When to Use Which
+
+| Use Case                          | Pattern       |
+| --------------------------------- | ------------- |
+| Create/Update/Delete data         | Server Action |
+| Form submissions                  | Server Action |
+| User authentication actions       | Server Action |
+| List data with filters/pagination | GET API Route |
+| Search with query parameters      | GET API Route |
+| Data that needs HTTP caching      | GET API Route |
+| Real-time data fetching           | GET API Route |
