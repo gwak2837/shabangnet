@@ -1,9 +1,10 @@
 'use client'
 
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { InvoiceConvertResult, SendLog } from '@/services/logs'
+import type { InvoiceConvertResultItem } from '@/services/invoice-convert'
+import type { SendLog } from '@/services/logs'
 
 import { ConvertResult } from '@/components/invoice-convert/convert-result'
 import { InvoiceDropzone } from '@/components/invoice-convert/invoice-dropzone'
@@ -12,7 +13,9 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks/use-logs'
-import { defaultInvoiceTemplate } from '@/services/manufacturers.types'
+import { convertInvoiceFile, generateInvoiceDownload } from '@/services/invoice-convert'
+import { getInvoiceTemplateOrDefault } from '@/services/manufacturers'
+import { defaultInvoiceTemplate, type InvoiceTemplate } from '@/services/manufacturers.types'
 
 type Step = 'result' | 'select' | 'upload'
 
@@ -21,9 +24,36 @@ export default function InvoiceConvertPage() {
   const [selectedLog, setSelectedLog] = useState<SendLog | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [convertResults, setConvertResults] = useState<InvoiceConvertResult[]>([])
+  const [convertResults, setConvertResults] = useState<InvoiceConvertResultItem[]>([])
+  const [currentTemplate, setCurrentTemplate] = useState<InvoiceTemplate | null>(null)
+  const [outputFileName, setOutputFileName] = useState('')
+
+  // 다운로드 버퍼 저장용 ref
+  const downloadBufferRef = useRef<Buffer | null>(null)
 
   const { data: logs = [], isLoading: isLoadingLogs } = useSendLogs()
+
+  // 제조사 선택 시 템플릿 로드
+  const loadTemplate = useCallback(async (manufacturerId: string) => {
+    try {
+      const template = await getInvoiceTemplateOrDefault(manufacturerId)
+      setCurrentTemplate(template)
+    } catch (error) {
+      console.error('Failed to load template:', error)
+      setCurrentTemplate({
+        ...defaultInvoiceTemplate,
+        id: 'default',
+        manufacturerId,
+        manufacturerName: '알 수 없음',
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (selectedLog?.manufacturerId) {
+      loadTemplate(selectedLog.manufacturerId)
+    }
+  }, [selectedLog?.manufacturerId, loadTemplate])
 
   const handleSelectLog = (log: SendLog) => {
     setSelectedLog(log)
@@ -38,25 +68,72 @@ export default function InvoiceConvertPage() {
   }
 
   const handleConvert = async () => {
-    if (!selectedLog || !selectedFile) return
+    if (!selectedLog || !selectedFile || !currentTemplate) return
 
     setIsProcessing(true)
 
-    // 실제로는 여기서 파일 파싱 및 변환 수행
-    // 시뮬레이션을 위해 딜레이 추가
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      // 파일을 ArrayBuffer로 변환
+      const arrayBuffer = await selectedFile.arrayBuffer()
 
-    const results = simulateInvoiceParsing(selectedLog)
-    setConvertResults(results)
-    setIsProcessing(false)
-    setStep('result')
+      // 실제 변환 수행
+      const result = await convertInvoiceFile({
+        file: arrayBuffer,
+        manufacturerId: selectedLog.manufacturerId,
+        manufacturerName: selectedLog.manufacturerName,
+        template: currentTemplate,
+      })
+
+      setConvertResults(result.results)
+      setOutputFileName(result.fileName)
+      downloadBufferRef.current = result.downloadBuffer || null
+
+      if (!result.success && result.errors.length > 0) {
+        console.error('Conversion errors:', result.errors)
+      }
+
+      setStep('result')
+    } catch (error) {
+      console.error('Conversion failed:', error)
+      alert('변환 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
-  const handleDownload = () => {
-    // 실제로는 여기서 엑셀 파일 생성 및 다운로드
-    // 시뮬레이션을 위해 alert
-    const successCount = convertResults.filter((r) => r.status === 'success').length
-    alert(`사방넷 송장 업로드 파일 다운로드 (${successCount}건)`)
+  const handleDownload = async () => {
+    const successResults = convertResults.filter((r) => r.status === 'success')
+    if (successResults.length === 0) return
+
+    try {
+      // 버퍼가 이미 있으면 사용, 없으면 새로 생성
+      let buffer = downloadBufferRef.current
+      let fileName = outputFileName
+
+      if (!buffer && selectedLog) {
+        const result = await generateInvoiceDownload(convertResults, selectedLog.manufacturerName)
+        buffer = result.buffer
+        fileName = result.fileName
+      }
+
+      if (!buffer) return
+
+      // Blob 생성 및 다운로드 (Buffer를 Uint8Array로 변환)
+      const blob = new Blob([new Uint8Array(buffer)], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('다운로드 중 오류가 발생했습니다.')
+    }
   }
 
   const handleReset = () => {
@@ -64,11 +141,16 @@ export default function InvoiceConvertPage() {
     setSelectedLog(null)
     setSelectedFile(null)
     setConvertResults([])
+    setCurrentTemplate(null)
+    setOutputFileName('')
+    downloadBufferRef.current = null
   }
 
-  const outputFileName = selectedLog
-    ? `사방넷_송장업로드_${selectedLog.manufacturerName}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
-    : ''
+  const displayFileName =
+    outputFileName ||
+    (selectedLog
+      ? `사방넷_송장업로드_${selectedLog.manufacturerName}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
+      : '')
 
   if (isLoadingLogs) {
     return (
@@ -84,7 +166,7 @@ export default function InvoiceConvertPage() {
     <AppShell description="거래처 송장 파일을 사방넷 업로드 양식으로 변환합니다" title="송장 변환">
       {step === 'result' ? (
         <ConvertResult
-          fileName={outputFileName}
+          fileName={displayFileName}
           onDownload={handleDownload}
           onReset={handleReset}
           results={convertResults}
@@ -169,35 +251,34 @@ export default function InvoiceConvertPage() {
                     <p className="text-sm text-slate-600 mt-1">
                       {selectedLog.manufacturerName}의 송장 템플릿이 적용됩니다.
                     </p>
-                    {(() => {
-                      const template = defaultInvoiceTemplate // TODO: Fetch actual template async
-                      return (
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
-                            주문번호:{' '}
-                            {template.useColumnIndex
-                              ? `${template.orderNumberColumn}열`
-                              : `"${template.orderNumberColumn}"`}
-                          </span>
-                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
-                            택배사:{' '}
-                            {template.useColumnIndex ? `${template.courierColumn}열` : `"${template.courierColumn}"`}
-                          </span>
-                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
-                            송장번호:{' '}
-                            {template.useColumnIndex
-                              ? `${template.trackingNumberColumn}열`
-                              : `"${template.trackingNumberColumn}"`}
-                          </span>
-                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
-                            헤더: {template.headerRow}행
-                          </span>
-                          <span className="px-2 py-1 bg-card rounded border border-slate-200">
-                            데이터: {template.dataStartRow}행부터
-                          </span>
-                        </div>
-                      )
-                    })()}
+                    {currentTemplate && (
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        <span className="px-2 py-1 bg-card rounded border border-slate-200">
+                          주문번호:{' '}
+                          {currentTemplate.useColumnIndex
+                            ? `${currentTemplate.orderNumberColumn}열`
+                            : `"${currentTemplate.orderNumberColumn}"`}
+                        </span>
+                        <span className="px-2 py-1 bg-card rounded border border-slate-200">
+                          택배사:{' '}
+                          {currentTemplate.useColumnIndex
+                            ? `${currentTemplate.courierColumn}열`
+                            : `"${currentTemplate.courierColumn}"`}
+                        </span>
+                        <span className="px-2 py-1 bg-card rounded border border-slate-200">
+                          송장번호:{' '}
+                          {currentTemplate.useColumnIndex
+                            ? `${currentTemplate.trackingNumberColumn}열`
+                            : `"${currentTemplate.trackingNumberColumn}"`}
+                        </span>
+                        <span className="px-2 py-1 bg-card rounded border border-slate-200">
+                          헤더: {currentTemplate.headerRow}행
+                        </span>
+                        <span className="px-2 py-1 bg-card rounded border border-slate-200">
+                          데이터: {currentTemplate.dataStartRow}행부터
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -213,7 +294,7 @@ export default function InvoiceConvertPage() {
                   <div className="flex-1">
                     <p className="font-medium text-emerald-900">출력 파일 정보</p>
                     <p className="text-sm text-emerald-700 mt-1">
-                      파일명: <span className="font-mono">{outputFileName}</span>
+                      파일명: <span className="font-mono">{displayFileName}</span>
                     </p>
                     <p className="text-sm text-emerald-600 mt-1">컬럼: 사방넷주문번호, 택배사코드, 송장번호</p>
                   </div>
@@ -246,46 +327,4 @@ export default function InvoiceConvertPage() {
       )}
     </AppShell>
   )
-}
-
-// 데모용 송장 파일 파싱 시뮬레이션
-function simulateInvoiceParsing(log: SendLog): InvoiceConvertResult[] {
-  // 실제로는 엑셀 파싱 후 처리
-  // 여기서는 발주 로그의 주문 정보를 기반으로 시뮬레이션
-
-  const results: InvoiceConvertResult[] = []
-
-  // 성공 케이스 - 발주 로그의 주문 사용
-  log.orders.forEach((order, idx) => {
-    if (idx < log.orderCount - 2) {
-      // 대부분 성공
-      const courierCode = '04' // CJ대한통운 default code
-      results.push({
-        orderNumber: order.orderNumber,
-        courierCode,
-        trackingNumber: `${Math.floor(100000000000 + Math.random() * 900000000000)}`,
-        status: 'success',
-      })
-    }
-  })
-
-  // 택배사 오류 케이스 추가
-  results.push({
-    orderNumber: 'SB20241126099',
-    courierCode: '',
-    trackingNumber: '111222333444',
-    status: 'courier_error',
-    originalCourier: '알수없는택배',
-  })
-
-  // 주문 미매칭 케이스 추가
-  results.push({
-    orderNumber: 'UNKNOWN-001',
-    courierCode: '',
-    trackingNumber: '555666777888',
-    status: 'order_not_found',
-    errorMessage: '주문번호를 찾을 수 없습니다',
-  })
-
-  return results
 }

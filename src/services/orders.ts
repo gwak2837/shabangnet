@@ -3,8 +3,18 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers } from '@/db/schema/manufacturers'
-import { emailLogs, orders } from '@/db/schema/orders'
+import { manufacturers, orderTemplates } from '@/db/schema/manufacturers'
+import { emailLogOrders, emailLogs, orders } from '@/db/schema/orders'
+import { sendEmail } from '@/lib/email'
+import {
+  formatDateForFileName,
+  generateOrderFileName,
+  generateOrderSheet,
+  generateTemplateBasedOrderSheet,
+  type OrderData,
+  type OrderTemplateConfig,
+  type ParsedOrder,
+} from '@/lib/excel'
 
 import { getExclusionSettings } from './settings'
 
@@ -112,6 +122,103 @@ export async function checkDuplicate(
     duplicateLogs,
     matchedAddresses: uniqueMatchedAddresses,
   }
+}
+
+/**
+ * 발주서 엑셀 파일 생성 (다운로드용)
+ * 이메일 발송 없이 엑셀 파일만 생성
+ */
+export async function generateOrderExcel(params: {
+  manufacturerId: string
+  orderIds: string[]
+}): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
+  const manufacturer = await db.query.manufacturers.findFirst({
+    where: eq(manufacturers.id, params.manufacturerId),
+  })
+
+  if (!manufacturer) {
+    return { error: '제조사를 찾을 수 없습니다' }
+  }
+
+  const ordersToExport = await db.query.orders.findMany({
+    where: inArray(orders.id, params.orderIds),
+  })
+
+  if (ordersToExport.length === 0) {
+    return { error: '내보낼 주문이 없습니다' }
+  }
+
+  const date = new Date()
+
+  // 제조사별 발주서 템플릿 조회
+  const template = await db.query.orderTemplates.findFirst({
+    where: eq(orderTemplates.manufacturerId, params.manufacturerId),
+  })
+
+  let excelBuffer: Buffer
+
+  if (template?.columnMappings) {
+    // 템플릿 설정이 있으면 템플릿 기반으로 생성
+    const templateConfig: OrderTemplateConfig = {
+      headerRow: template.headerRow || 1,
+      dataStartRow: template.dataStartRow || 2,
+      columnMappings: JSON.parse(template.columnMappings) as Record<string, string>,
+      fixedValues: template.fixedValues ? (JSON.parse(template.fixedValues) as Record<string, string>) : undefined,
+    }
+
+    const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
+      orderNumber: o.orderNumber,
+      productName: o.productName || '',
+      quantity: o.quantity || 1,
+      orderName: o.orderName || '',
+      recipientName: o.recipientName || '',
+      orderPhone: o.orderPhone || '',
+      orderMobile: o.orderMobile || '',
+      recipientPhone: o.recipientPhone || '',
+      recipientMobile: o.recipientMobile || '',
+      postalCode: o.postalCode || '',
+      address: o.address || '',
+      memo: o.memo || '',
+      shoppingMall: o.shoppingMall || '',
+      manufacturer: manufacturer.name,
+      courier: o.courier || '',
+      trackingNumber: o.trackingNumber || '',
+      optionName: o.optionName || '',
+      paymentAmount: Number(o.paymentAmount || 0),
+      productAbbr: o.productAbbr || '',
+      productCode: o.productCode || '',
+      cost: Number(o.cost || 0),
+      shippingCost: Number(o.shippingCost || 0),
+      rowIndex: idx + 1,
+    }))
+
+    excelBuffer = await generateTemplateBasedOrderSheet(parsedOrders, null, templateConfig, manufacturer.name, date)
+  } else {
+    // 기본 양식으로 생성
+    const orderData: OrderData[] = ordersToExport.map((o) => ({
+      orderNumber: o.orderNumber,
+      customerName: o.recipientName || '',
+      orderName: o.orderName || undefined,
+      phone: o.recipientMobile || o.recipientPhone || '',
+      address: o.address || '',
+      productCode: o.productCode || '',
+      productName: o.productName || '',
+      optionName: o.optionName || '',
+      quantity: o.quantity || 1,
+      price: Number(o.paymentAmount || 0),
+      memo: o.memo || undefined,
+    }))
+
+    excelBuffer = await generateOrderSheet({
+      manufacturerName: manufacturer.name,
+      orders: orderData,
+      date,
+    })
+  }
+
+  const fileName = generateOrderFileName(manufacturer.name, date)
+
+  return { buffer: excelBuffer, fileName }
 }
 
 export async function getBatches(): Promise<OrderBatch[]> {
@@ -258,35 +365,244 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
   })
 
   if (!manufacturer) {
-    return { success: false, sentCount: 0, errorMessage: 'Manufacturer not found' }
+    return { success: false, sentCount: 0, errorMessage: '제조사를 찾을 수 없습니다' }
   }
 
   const ordersToSend = await db.query.orders.findMany({
     where: inArray(orders.id, params.orderIds),
   })
 
+  if (ordersToSend.length === 0) {
+    return { success: false, sentCount: 0, errorMessage: '발송할 주문이 없습니다' }
+  }
+
   const totalAmount = ordersToSend.reduce((sum, o) => sum + Number(o.paymentAmount || 0) * (o.quantity || 1), 0)
+  const totalQuantity = ordersToSend.reduce((sum, o) => sum + (o.quantity || 1), 0)
   const recipientAddresses = ordersToSend.map((o) => o.address || '').filter(Boolean)
+  const date = new Date()
+
+  // 1. 제조사별 발주서 템플릿 조회
+  const template = await db.query.orderTemplates.findFirst({
+    where: eq(orderTemplates.manufacturerId, params.manufacturerId),
+  })
+
+  // 2. 발주서 엑셀 파일 생성
+  let excelBuffer: Buffer
+
+  if (template?.columnMappings) {
+    // 템플릿 설정이 있으면 템플릿 기반으로 생성
+    const templateConfig: OrderTemplateConfig = {
+      headerRow: template.headerRow || 1,
+      dataStartRow: template.dataStartRow || 2,
+      columnMappings: JSON.parse(template.columnMappings) as Record<string, string>,
+      fixedValues: template.fixedValues ? (JSON.parse(template.fixedValues) as Record<string, string>) : undefined,
+    }
+
+    const parsedOrders: ParsedOrder[] = ordersToSend.map((o, idx) => ({
+      orderNumber: o.orderNumber,
+      productName: o.productName || '',
+      quantity: o.quantity || 1,
+      orderName: o.orderName || '',
+      recipientName: o.recipientName || '',
+      orderPhone: o.orderPhone || '',
+      orderMobile: o.orderMobile || '',
+      recipientPhone: o.recipientPhone || '',
+      recipientMobile: o.recipientMobile || '',
+      postalCode: o.postalCode || '',
+      address: o.address || '',
+      memo: o.memo || '',
+      shoppingMall: o.shoppingMall || '',
+      manufacturer: manufacturer.name,
+      courier: o.courier || '',
+      trackingNumber: o.trackingNumber || '',
+      optionName: o.optionName || '',
+      paymentAmount: Number(o.paymentAmount || 0),
+      productAbbr: o.productAbbr || '',
+      productCode: o.productCode || '',
+      cost: Number(o.cost || 0),
+      shippingCost: Number(o.shippingCost || 0),
+      rowIndex: idx + 1,
+    }))
+
+    excelBuffer = await generateTemplateBasedOrderSheet(
+      parsedOrders,
+      null, // 템플릿 파일 없이 동적 생성
+      templateConfig,
+      manufacturer.name,
+      date,
+    )
+  } else {
+    // 기본 양식으로 생성
+    const orderData: OrderData[] = ordersToSend.map((o) => ({
+      orderNumber: o.orderNumber,
+      customerName: o.recipientName || '',
+      orderName: o.orderName || undefined,
+      phone: o.recipientMobile || o.recipientPhone || '',
+      address: o.address || '',
+      productCode: o.productCode || '',
+      productName: o.productName || '',
+      optionName: o.optionName || '',
+      quantity: o.quantity || 1,
+      price: Number(o.paymentAmount || 0),
+      memo: o.memo || undefined,
+    }))
+
+    excelBuffer = await generateOrderSheet({
+      manufacturerName: manufacturer.name,
+      orders: orderData,
+      date,
+    })
+  }
+
+  // 3. 이메일 제목/본문 생성
+  const emailSubject = (manufacturer.emailSubjectTemplate || '[다온에프앤씨 발주서]_{제조사명}_{날짜}')
+    .replace('{제조사명}', manufacturer.name)
+    .replace('{날짜}', formatDateForFileName(date))
+
+  const emailBody = generateEmailBody(
+    manufacturer.emailBodyTemplate || '안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다. 감사합니다.',
+    {
+      manufacturerName: manufacturer.name,
+      orderCount: ordersToSend.length,
+      totalQuantity,
+      totalAmount,
+      date,
+    },
+  )
+
+  // 4. CC 이메일 처리 (콤마로 구분된 복수 이메일 지원)
+  const ccEmails = manufacturer.ccEmail
+    ? manufacturer.ccEmail
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean)
+    : undefined
+
+  // 5. 이메일 발송
+  const fileName = generateOrderFileName(manufacturer.name, date)
+  const emailResult = await sendEmail({
+    to: manufacturer.email,
+    cc: ccEmails,
+    subject: emailSubject,
+    html: emailBody,
+    attachments: [
+      {
+        filename: fileName,
+        content: excelBuffer,
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    ],
+  })
+
+  // 6. DB 트랜잭션으로 로그 저장 및 주문 상태 업데이트
+  const logId = `log_${Date.now()}`
 
   return await db.transaction(async (tx) => {
+    // 이메일 로그 저장
     await tx.insert(emailLogs).values({
-      id: `log_${Date.now()}`,
+      id: logId,
       manufacturerId: manufacturer.id,
       manufacturerName: manufacturer.name,
       email: manufacturer.email,
-      subject: `[발주서] ${manufacturer.name} ${new Date().toISOString().split('T')[0]}`,
+      subject: emailSubject,
+      fileName,
       orderCount: ordersToSend.length,
       totalAmount: totalAmount.toString(),
-      status: 'success',
-      recipientAddresses: recipientAddresses,
+      status: emailResult.success ? 'success' : 'failed',
+      errorMessage: emailResult.error || null,
+      recipientAddresses,
+      duplicateReason: params.duplicateReason || null,
       sentAt: new Date(),
       sentBy: 'system',
     })
 
-    await tx.update(orders).set({ status: 'completed' }).where(inArray(orders.id, params.orderIds))
+    // 이메일 로그 상세 (주문 정보) 저장
+    for (const order of ordersToSend) {
+      await tx.insert(emailLogOrders).values({
+        id: `elo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        emailLogId: logId,
+        orderNumber: order.orderNumber,
+        productName: order.productName || '',
+        optionName: order.optionName || null,
+        quantity: order.quantity || 1,
+        price: order.paymentAmount?.toString() || '0',
+        cost: order.cost?.toString() || '0',
+        shippingCost: order.shippingCost?.toString() || '0',
+        customerName: order.recipientName || null,
+        address: order.address || null,
+      })
+    }
 
-    return { success: true, sentCount: ordersToSend.length }
+    // 주문 상태 업데이트
+    if (emailResult.success) {
+      await tx.update(orders).set({ status: 'completed' }).where(inArray(orders.id, params.orderIds))
+    } else {
+      await tx.update(orders).set({ status: 'error' }).where(inArray(orders.id, params.orderIds))
+    }
+
+    if (emailResult.success) {
+      return { success: true, sentCount: ordersToSend.length }
+    } else {
+      return { success: false, sentCount: 0, errorMessage: emailResult.error || '이메일 발송 실패' }
+    }
   })
+}
+
+/**
+ * 이메일 본문 생성 (주문 요약 포함)
+ */
+function generateEmailBody(
+  template: string,
+  data: {
+    date: Date
+    manufacturerName: string
+    orderCount: number
+    totalAmount: number
+    totalQuantity: number
+  },
+): string {
+  const { manufacturerName, orderCount, totalQuantity, totalAmount, date } = data
+
+  const formattedDate = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`
+  const formattedAmount = totalAmount.toLocaleString('ko-KR')
+
+  // 기본 본문 치환
+  const body = template.replace('{제조사명}', manufacturerName).replace('{날짜}', formattedDate)
+
+  // 주문 요약 HTML 추가
+  const summaryHtml = `
+    <div style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
+      <h3 style="margin: 0 0 10px 0; color: #333;">📦 발주 요약</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 5px 0; color: #666;">발주일</td>
+          <td style="padding: 5px 0; text-align: right; font-weight: bold;">${formattedDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0; color: #666;">총 주문 건수</td>
+          <td style="padding: 5px 0; text-align: right; font-weight: bold;">${orderCount}건</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0; color: #666;">총 수량</td>
+          <td style="padding: 5px 0; text-align: right; font-weight: bold;">${totalQuantity}개</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0; color: #666;">총 금액</td>
+          <td style="padding: 5px 0; text-align: right; font-weight: bold;">${formattedAmount}원</td>
+        </tr>
+      </table>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #999;">
+      ※ 상세 내역은 첨부된 엑셀 파일을 확인해 주세요.
+    </p>
+  `
+
+  return `
+    <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 600px; margin: 0 auto;">
+      <p style="margin: 0 0 10px 0; line-height: 1.6;">${body}</p>
+      ${summaryHtml}
+    </div>
+  `
 }
 
 // Helper function to normalize address for comparison

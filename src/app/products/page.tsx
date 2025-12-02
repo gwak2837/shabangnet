@@ -2,9 +2,11 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 import type { Product } from '@/services/products'
 
+import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { BulkUploadModal } from '@/components/products/bulk-upload-modal'
 import { CostUploadModal } from '@/components/products/cost-upload-modal'
@@ -13,7 +15,9 @@ import { ProductTable } from '@/components/products/product-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
-import { useCreateProduct, useProducts, useUpdateProduct } from '@/hooks/use-products'
+import { useProducts } from '@/hooks/use-products'
+import { useServerAction } from '@/hooks/use-server-action'
+import { create, update } from '@/services/products'
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,8 +28,20 @@ export default function ProductsPage() {
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
-  const updateProductMutation = useUpdateProduct()
-  const createProductMutation = useCreateProduct()
+
+  const { execute: updateProduct } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<Product> }) => update(id, data),
+    {
+      invalidateKeys: [queryKeys.products.all],
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: createProduct } = useServerAction(create, {
+    invalidateKeys: [queryKeys.products.all],
+    onSuccess: () => toast.success('상품이 등록되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -42,7 +58,7 @@ export default function ProductsPage() {
 
   const handleUpdateManufacturer = (productId: string, manufacturerId: string | null) => {
     const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
-    updateProductMutation.mutate({
+    updateProduct({
       id: productId,
       data: {
         manufacturerId,
@@ -52,7 +68,7 @@ export default function ProductsPage() {
   }
 
   const handleUpdateCost = (productId: string, cost: number) => {
-    updateProductMutation.mutate({
+    updateProduct({
       id: productId,
       data: { cost },
     })
@@ -65,7 +81,7 @@ export default function ProductsPage() {
     data.forEach(({ productCode, cost }) => {
       const product = products.find((p) => p.productCode === productCode)
       if (product) {
-        updateProductMutation.mutate({
+        updateProduct({
           id: product.id,
           data: { cost },
         })
@@ -82,13 +98,13 @@ export default function ProductsPage() {
       manufacturerName: string
     }[],
   ) => {
-    data.forEach(({ productCode, productName, optionName, manufacturerId, manufacturerName }) => {
+    data.forEach(({ productCode, productName, optionName, manufacturerId }) => {
       const existingProduct = products.find((p) => p.productCode === productCode)
       const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
 
       if (existingProduct) {
         // 기존 상품 업데이트
-        updateProductMutation.mutate({
+        updateProduct({
           id: existingProduct.id,
           data: {
             productName,
@@ -99,7 +115,7 @@ export default function ProductsPage() {
         })
       } else {
         // 새 상품 생성
-        createProductMutation.mutate({
+        createProduct({
           productCode,
           productName,
           optionName,

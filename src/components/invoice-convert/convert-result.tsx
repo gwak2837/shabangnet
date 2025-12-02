@@ -2,7 +2,7 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw } from 'lucide-react'
 
-import type { InvoiceConvertResult } from '@/services/logs'
+import type { InvoiceConvertResultItem } from '@/services/invoice-convert'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ interface ConvertResultProps {
   fileName: string
   onDownload: () => void
   onReset: () => void
-  results: InvoiceConvertResult[]
+  results: InvoiceConvertResultItem[]
 }
 
 export function ConvertResult({ results, fileName, onDownload, onReset }: ConvertResultProps) {

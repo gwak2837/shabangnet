@@ -4,6 +4,7 @@ import { Check, Clock, Loader2, RotateCcw, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,8 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useApproveUser, useReinstateUser, useRejectUser } from '@/hooks/use-users'
+import { useServerAction } from '@/hooks/use-server-action'
 import { type UserListItem, type UserStatus } from '@/services/users'
+
+import { approveUser, reinstateUser, rejectUser } from './actions'
 
 interface UserTableProps {
   isLoading?: boolean
@@ -48,38 +51,57 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     user: UserListItem
   } | null>(null)
 
-  const approveMutation = useApproveUser()
-  const rejectMutation = useRejectUser()
-  const reinstateMutation = useReinstateUser()
+  const { execute: executeApprove, isPending: isApproving } = useServerAction(approveUser, {
+    invalidateKeys: [queryKeys.users.all],
+    onSuccess: (result) => {
+      if (result.success) toast.success(result.success)
+      setConfirmDialog(null)
+    },
+    onError: (error) => {
+      toast.error(error)
+      setConfirmDialog(null)
+    },
+  })
 
-  const handleAction = async () => {
+  const { execute: executeReject, isPending: isRejecting } = useServerAction(rejectUser, {
+    invalidateKeys: [queryKeys.users.all],
+    onSuccess: (result) => {
+      if (result.success) toast.success(result.success)
+      setConfirmDialog(null)
+    },
+    onError: (error) => {
+      toast.error(error)
+      setConfirmDialog(null)
+    },
+  })
+
+  const { execute: executeReinstate, isPending: isReinstating } = useServerAction(reinstateUser, {
+    invalidateKeys: [queryKeys.users.all],
+    onSuccess: (result) => {
+      if (result.success) toast.success(result.success)
+      setConfirmDialog(null)
+    },
+    onError: (error) => {
+      toast.error(error)
+      setConfirmDialog(null)
+    },
+  })
+
+  const handleAction = () => {
     if (!confirmDialog) return
 
     const { type, user } = confirmDialog
 
-    try {
-      let result
-      switch (type) {
-        case 'approve':
-          result = await approveMutation.mutateAsync(user.id)
-          break
-        case 'reinstate':
-          result = await reinstateMutation.mutateAsync(user.id)
-          break
-        case 'reject':
-          result = await rejectMutation.mutateAsync(user.id)
-          break
-      }
-
-      if (result.error) {
-        toast.error(result.error)
-      } else if (result.success) {
-        toast.success(result.success)
-      }
-    } catch {
-      toast.error('작업에 실패했어요. 다시 시도해주세요.')
-    } finally {
-      setConfirmDialog(null)
+    switch (type) {
+      case 'approve':
+        executeApprove(user.id)
+        break
+      case 'reinstate':
+        executeReinstate(user.id)
+        break
+      case 'reject':
+        executeReject(user.id)
+        break
     }
   }
 
@@ -91,7 +113,7 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     })
   }
 
-  const isPending = approveMutation.isPending || rejectMutation.isPending || reinstateMutation.isPending
+  const isPending = isApproving || isRejecting || isReinstating
 
   if (isLoading) {
     return (

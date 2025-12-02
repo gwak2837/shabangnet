@@ -5,15 +5,6 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { emailLogs } from '@/db/schema/orders'
 
-export interface InvoiceConvertResult {
-  courierCode: string
-  errorMessage?: string
-  orderNumber: string
-  originalCourier?: string
-  status: 'courier_error' | 'order_not_found' | 'success'
-  trackingNumber: string
-}
-
 export interface LogFilters {
   endDate?: string
   manufacturerId?: string

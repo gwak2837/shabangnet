@@ -1,5 +1,7 @@
 import ExcelJS from 'exceljs'
 
+import type { InvoiceTemplate } from '../services/manufacturers.types'
+
 import {
   columnLetterToIndex,
   findSabangnetKeyByLabel,
@@ -10,6 +12,24 @@ import {
 // ============================================
 // 타입 정의
 // ============================================
+
+// 송장 변환 결과 (개별 건)
+export interface InvoiceConvertResultItem {
+  courierCode: string // 변환된 택배사 코드
+  errorMessage?: string // 에러 메시지
+  orderNumber: string // 사방넷 주문번호
+  originalCourier?: string // 원본 택배사명 (에러 시)
+  status: 'courier_error' | 'order_not_found' | 'success'
+  trackingNumber: string // 송장번호
+}
+
+// 송장 파싱 결과 (개별 건)
+export interface InvoiceRow {
+  courierName: string // 원본 택배사명
+  orderNumber: string // 주문번호
+  rowIndex: number // 원본 행 번호
+  trackingNumber: string // 송장번호
+}
 
 // 발주서에 포함될 주문 데이터 타입
 export interface OrderData {
@@ -251,11 +271,22 @@ export function formatRecipientName(recipientName: string, orderName?: string): 
 }
 
 /**
+ * 송장 업로드 파일명 생성
+ */
+export function generateInvoiceFileName(manufacturerName: string, date: Date = new Date()): string {
+  return `사방넷_송장업로드_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
+}
+
+/**
  * 발주서 파일명 생성
  */
 export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
   return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
 }
+
+// ============================================
+// 파싱 함수들
+// ============================================
 
 /**
  * 제조사별 발주서 엑셀 파일 생성
@@ -378,9 +409,52 @@ export async function generateOrderSheet(options: OrderSheetOptions): Promise<Bu
   return Buffer.from(buffer)
 }
 
-// ============================================
-// 파싱 함수들
-// ============================================
+/**
+ * 사방넷 송장 업로드 양식 엑셀 생성
+ * @param results 변환된 송장 데이터 (성공 건만)
+ * @returns 엑셀 파일 버퍼
+ */
+export async function generateSabangnetInvoiceFile(results: InvoiceConvertResultItem[]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = '(주)다온에프앤씨'
+  workbook.created = new Date()
+
+  const worksheet = workbook.addWorksheet('송장업로드')
+
+  // 헤더 설정
+  worksheet.addRow(['사방넷주문번호', '택배사코드', '송장번호'])
+
+  // 헤더 스타일
+  const headerRow = worksheet.getRow(1)
+  headerRow.font = { bold: true }
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    }
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    }
+  })
+
+  // 성공한 데이터만 추가
+  const successResults = results.filter((r) => r.status === 'success')
+  for (const result of successResults) {
+    worksheet.addRow([result.orderNumber, result.courierCode, result.trackingNumber])
+  }
+
+  // 컬럼 너비 설정
+  worksheet.getColumn(1).width = 25 // 사방넷주문번호
+  worksheet.getColumn(2).width = 12 // 택배사코드
+  worksheet.getColumn(3).width = 20 // 송장번호
+
+  const buffer = await workbook.xlsx.writeBuffer()
+  return Buffer.from(buffer)
+}
 
 /**
  * 제조사별 템플릿을 사용하여 발주서 생성
@@ -439,6 +513,10 @@ export async function generateTemplateBasedOrderSheet(
   return Buffer.from(buffer)
 }
 
+// ============================================
+// 템플릿 기반 발주서 생성
+// ============================================
+
 /**
  * 제조사별로 주문 그룹화
  */
@@ -453,6 +531,112 @@ export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, Pa
   }
 
   return grouped
+}
+
+/**
+ * 제조사 송장 파일 파싱
+ * @param buffer 엑셀 파일 버퍼
+ * @param template 제조사별 송장 템플릿 설정
+ * @returns 파싱된 송장 데이터 배열
+ */
+export async function parseInvoiceFile(
+  buffer: ArrayBuffer,
+  template: InvoiceTemplate,
+): Promise<{ errors: ParseError[]; invoices: InvoiceRow[] }> {
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(buffer)
+
+  const worksheet = workbook.worksheets[0]
+  if (!worksheet) {
+    return {
+      invoices: [],
+      errors: [{ row: 0, message: '워크시트를 찾을 수 없습니다' }],
+    }
+  }
+
+  const invoices: InvoiceRow[] = []
+  const errors: ParseError[] = []
+
+  // 컬럼 인덱스 계산
+  const orderNumberColIdx = template.useColumnIndex ? columnLetterToIndex(template.orderNumberColumn) + 1 : -1
+  const courierColIdx = template.useColumnIndex ? columnLetterToIndex(template.courierColumn) + 1 : -1
+  const trackingNumberColIdx = template.useColumnIndex ? columnLetterToIndex(template.trackingNumberColumn) + 1 : -1
+
+  // 헤더명 기반일 경우 헤더 행에서 컬럼 인덱스 찾기
+  const headerMap: Map<string, number> = new Map()
+  if (!template.useColumnIndex) {
+    const headerRow = worksheet.getRow(template.headerRow)
+    headerRow.eachCell((cell, colNumber) => {
+      const value = getCellValue(cell).toLowerCase().trim()
+      headerMap.set(value, colNumber)
+    })
+  }
+
+  worksheet.eachRow((row, rowNumber) => {
+    // 헤더 행 및 그 이전 행 스킵
+    if (rowNumber < template.dataStartRow) {
+      return
+    }
+
+    try {
+      let orderNumber: string
+      let courierName: string
+      let trackingNumber: string
+
+      if (template.useColumnIndex) {
+        orderNumber = getCellValue(row.getCell(orderNumberColIdx)).trim()
+        courierName = getCellValue(row.getCell(courierColIdx)).trim()
+        trackingNumber = getCellValue(row.getCell(trackingNumberColIdx)).trim()
+      } else {
+        const orderNumberCol = headerMap.get(template.orderNumberColumn.toLowerCase())
+        const courierCol = headerMap.get(template.courierColumn.toLowerCase())
+        const trackingNumberCol = headerMap.get(template.trackingNumberColumn.toLowerCase())
+
+        orderNumber = orderNumberCol ? getCellValue(row.getCell(orderNumberCol)).trim() : ''
+        courierName = courierCol ? getCellValue(row.getCell(courierCol)).trim() : ''
+        trackingNumber = trackingNumberCol ? getCellValue(row.getCell(trackingNumberCol)).trim() : ''
+      }
+
+      // 빈 행 스킵
+      if (!orderNumber && !trackingNumber) {
+        return
+      }
+
+      // 주문번호가 없으면 에러
+      if (!orderNumber) {
+        errors.push({
+          row: rowNumber,
+          message: '주문번호가 없습니다',
+          data: { trackingNumber },
+        })
+        return
+      }
+
+      // 송장번호가 없으면 에러
+      if (!trackingNumber) {
+        errors.push({
+          row: rowNumber,
+          message: '송장번호가 없습니다',
+          data: { orderNumber },
+        })
+        return
+      }
+
+      invoices.push({
+        orderNumber,
+        courierName,
+        trackingNumber,
+        rowIndex: rowNumber,
+      })
+    } catch (error) {
+      errors.push({
+        row: rowNumber,
+        message: error instanceof Error ? error.message : '알 수 없는 오류',
+      })
+    }
+  })
+
+  return { invoices, errors }
 }
 
 /**
@@ -513,7 +697,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
 }
 
 // ============================================
-// 템플릿 기반 발주서 생성
+// 헬퍼 함수들
 // ============================================
 
 /**
@@ -599,10 +783,6 @@ function formatProductNameWithOption(productName: string, optionName?: string): 
   return `${productName} ${optionName}`
 }
 
-// ============================================
-// 헬퍼 함수들
-// ============================================
-
 /**
  * 셀 값을 문자열로 변환
  */
@@ -659,6 +839,10 @@ function getOrderValue(order: ParsedOrder, key: string): number | string {
 
   return String(value)
 }
+
+// ============================================
+// 송장 변환 관련 함수들
+// ============================================
 
 /**
  * 빈 옵션 판별

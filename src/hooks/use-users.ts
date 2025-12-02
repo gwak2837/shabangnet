@@ -1,41 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { approveUser, reinstateUser, rejectUser } from '@/components/users/actions'
 import { type UserListParams, type UserListResult } from '@/services/users'
-
-export function useApproveUser() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (userId: string) => approveUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
-    },
-  })
-}
-
-export function useReinstateUser() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (userId: string) => reinstateUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
-    },
-  })
-}
-
-export function useRejectUser() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (userId: string) => rejectUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
-    },
-  })
-}
 
 export function useUsers(params: UserListParams = {}) {
   return useQuery({

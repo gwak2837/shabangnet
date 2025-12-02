@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { settings } from '@/db/schema/settings'
-import { testSMTPConnection } from '@/lib/email'
+import { LEGACY_SMTP_KEYS, testSMTPConnection } from '@/lib/email'
 import { decrypt, encrypt, maskPassword } from '@/utils/crypto'
 
 // ============================================================================
@@ -35,14 +35,6 @@ interface SettingToSave {
   value: string
 }
 
-// SMTP 설정 키 상수
-const SMTP_KEYS = {
-  fromName: 'smtp.fromName',
-  host: 'smtp.host',
-  pass: 'smtp.pass',
-  user: 'smtp.user',
-} as const
-
 // ============================================================================
 // SMTP Actions
 // ============================================================================
@@ -60,10 +52,10 @@ export async function getSmtpSettingsAction(): Promise<{
     const rows = await db
       .select()
       .from(settings)
-      .where(eq(settings.key, SMTP_KEYS.host))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.user)))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.pass)))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromName)))
+      .where(eq(settings.key, LEGACY_SMTP_KEYS.host))
+      .union(db.select().from(settings).where(eq(settings.key, LEGACY_SMTP_KEYS.user)))
+      .union(db.select().from(settings).where(eq(settings.key, LEGACY_SMTP_KEYS.pass)))
+      .union(db.select().from(settings).where(eq(settings.key, LEGACY_SMTP_KEYS.fromName)))
 
     // 설정이 없으면 null 반환
     if (rows.length === 0) {
@@ -73,10 +65,10 @@ export async function getSmtpSettingsAction(): Promise<{
     // key-value를 객체로 변환
     const settingsMap = new Map(rows.map((r) => [r.key, r.value]))
 
-    const host = settingsMap.get(SMTP_KEYS.host) || ''
-    const username = settingsMap.get(SMTP_KEYS.user) || ''
-    const encryptedPassword = settingsMap.get(SMTP_KEYS.pass) || ''
-    const fromName = settingsMap.get(SMTP_KEYS.fromName) || ''
+    const host = settingsMap.get(LEGACY_SMTP_KEYS.host) || ''
+    const username = settingsMap.get(LEGACY_SMTP_KEYS.user) || ''
+    const encryptedPassword = settingsMap.get(LEGACY_SMTP_KEYS.pass) || ''
+    const fromName = settingsMap.get(LEGACY_SMTP_KEYS.fromName) || ''
 
     // 비밀번호 마스킹 처리
     let maskedPassword = ''
@@ -120,10 +112,10 @@ export async function saveSmtpSettingsAction(data: SMTPSettingsData): Promise<Ac
 
     // 각 설정을 upsert
     const settingsToSave = [
-      { key: SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
-      { key: SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
-      { key: SMTP_KEYS.pass, value: encryptedPassword, description: 'SMTP 비밀번호 (암호화됨)' },
-      { key: SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
+      { key: LEGACY_SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
+      { key: LEGACY_SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
+      { key: LEGACY_SMTP_KEYS.pass, value: encryptedPassword, description: 'SMTP 비밀번호 (암호화됨)' },
+      { key: LEGACY_SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
     ]
 
     for (const setting of settingsToSave) {
@@ -189,16 +181,16 @@ export async function updateSmtpSettingsAction(
   try {
     // 비밀번호가 제공되지 않으면 기존 값 유지
     const settingsToSave: SettingToSave[] = [
-      { key: SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
-      { key: SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
-      { key: SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
+      { key: LEGACY_SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
+      { key: LEGACY_SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
+      { key: LEGACY_SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
     ]
 
     // 비밀번호가 제공된 경우에만 업데이트
     if (data.password) {
       const encryptedPassword = encrypt(data.password)
       settingsToSave.push({
-        key: SMTP_KEYS.pass,
+        key: LEGACY_SMTP_KEYS.pass,
         value: encryptedPassword,
         description: 'SMTP 비밀번호 (암호화됨)',
       })

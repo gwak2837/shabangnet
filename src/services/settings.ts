@@ -34,30 +34,10 @@ export interface ExclusionSettings {
   patterns: ExclusionPattern[]
 }
 
-export interface SMTPSettings {
-  fromEmail: string
-  fromName: string
-  host: string
-  password: string
-  port: number
-  secure: boolean
-  username: string
-}
-
 // Default values
 const defaultDuplicateCheckSettings: DuplicateCheckSettings = {
   enabled: true,
   periodDays: 10,
-}
-
-const defaultSmtpSettings: SMTPSettings = {
-  host: 'smtp.gmail.com',
-  port: 587,
-  username: '',
-  password: '',
-  secure: true,
-  fromName: '',
-  fromEmail: '',
 }
 
 // Courier Mappings
@@ -160,11 +140,6 @@ export async function getExclusionSettings(): Promise<ExclusionSettings> {
   }
 }
 
-// SMTP Settings
-export async function getSmtpSettings(): Promise<SMTPSettings> {
-  return getSetting<SMTPSettings>('smtp', defaultSmtpSettings)
-}
-
 export async function removeCourierMapping(id: string): Promise<void> {
   await db.delete(courierMappings).where(eq(courierMappings.id, id))
 }
@@ -204,18 +179,37 @@ export async function updateDuplicateCheckSettings(
   return setSetting('duplicate_check', updated)
 }
 
+export async function updateExclusionPattern(
+  id: string,
+  data: Partial<Omit<ExclusionPattern, 'id'>>,
+): Promise<ExclusionPattern> {
+  const [updated] = await db
+    .update(exclusionPatterns)
+    .set({
+      pattern: data.pattern,
+      description: data.description,
+      enabled: data.enabled,
+      updatedAt: new Date(),
+    })
+    .where(eq(exclusionPatterns.id, id))
+    .returning()
+
+  if (!updated) throw new Error('Exclusion pattern not found')
+
+  return {
+    id: updated.id,
+    pattern: updated.pattern,
+    description: updated.description || undefined,
+    enabled: updated.enabled || false,
+  }
+}
+
 export async function updateExclusionSettings(data: Partial<ExclusionSettings>): Promise<ExclusionSettings> {
   if (data.enabled !== undefined) {
     await setSetting('exclusion_enabled', data.enabled)
   }
 
   return getExclusionSettings()
-}
-
-export async function updateSmtpSettings(data: Partial<SMTPSettings>): Promise<SMTPSettings> {
-  const current = await getSmtpSettings()
-  const updated = { ...current, ...data }
-  return setSetting('smtp', updated)
 }
 
 // Helper to get generic setting

@@ -2,28 +2,67 @@
 
 import { Building2, Loader2, TrendingUp, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
+import type { OrderTemplate } from '@/services/manufacturers'
 import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
 
+import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { ManufacturerModal } from '@/components/manufacturers/manufacturer-modal'
 import { ManufacturerTable } from '@/components/manufacturers/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  useCreateManufacturer,
-  useDeleteManufacturer,
-  useManufacturers,
-  useUpdateManufacturer,
-} from '@/hooks/use-manufacturers'
+import { useManufacturers } from '@/hooks/use-manufacturers'
+import { useServerAction } from '@/hooks/use-server-action'
+import { create, remove, update, updateInvoiceTemplate, updateOrderTemplate } from '@/services/manufacturers'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null)
 
   const { data: manufacturers = [], isLoading } = useManufacturers()
-  const createMutation = useCreateManufacturer()
-  const updateMutation = useUpdateManufacturer()
-  const deleteMutation = useDeleteManufacturer()
+
+  const { execute: createManufacturer, isPending: isCreating } = useServerAction(create, {
+    invalidateKeys: [queryKeys.manufacturers.all],
+    onSuccess: () => toast.success('제조사가 등록되었습니다'),
+    onError: (error) => toast.error(error),
+  })
+
+  const { execute: updateManufacturer, isPending: isUpdating } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<Manufacturer> }) => update(id, data),
+    {
+      invalidateKeys: [queryKeys.manufacturers.all],
+      onSuccess: () => toast.success('제조사 정보가 수정되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: deleteManufacturer, isPending: isDeleting } = useServerAction(remove, {
+    invalidateKeys: [queryKeys.manufacturers.all],
+    onSuccess: () => toast.success('제조사가 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
+
+  const { execute: saveInvoiceTemplate, isPending: isSavingInvoice } = useServerAction(
+    ({ manufacturerId, template }: { manufacturerId: string; template: InvoiceTemplate }) =>
+      updateInvoiceTemplate(manufacturerId, template),
+    {
+      invalidateKeys: [['invoiceTemplate']],
+    },
+  )
+
+  const { execute: saveOrderTemplate, isPending: isSavingOrder } = useServerAction(
+    ({
+      manufacturerId,
+      template,
+    }: {
+      manufacturerId: string
+      template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>
+    }) => updateOrderTemplate(manufacturerId, template),
+    {
+      invalidateKeys: [['orderTemplate']],
+    },
+  )
 
   const handleAdd = () => {
     setEditingManufacturer(null)
@@ -36,17 +75,57 @@ export default function ManufacturersPage() {
   }
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id)
+    deleteManufacturer(id)
   }
 
-  const handleSave = (data: Partial<Manufacturer>, invoiceTemplate?: Partial<InvoiceTemplate>) => {
+  const handleSave = (
+    data: Partial<Manufacturer>,
+    invoiceTemplate?: Partial<InvoiceTemplate>,
+    orderTemplate?: Partial<OrderTemplate>,
+  ) => {
     if (editingManufacturer) {
-      updateMutation.mutate({ id: editingManufacturer.id, data })
+      // 제조사 정보 업데이트
+      updateManufacturer({ id: editingManufacturer.id, data })
+
+      // 송장 템플릿 업데이트
+      if (invoiceTemplate) {
+        saveInvoiceTemplate({
+          manufacturerId: editingManufacturer.id,
+          template: {
+            id: `it_${editingManufacturer.id}`,
+            manufacturerId: editingManufacturer.id,
+            manufacturerName: data.name || editingManufacturer.name,
+            orderNumberColumn: invoiceTemplate.orderNumberColumn || 'A',
+            courierColumn: invoiceTemplate.courierColumn || 'B',
+            trackingNumberColumn: invoiceTemplate.trackingNumberColumn || 'C',
+            headerRow: invoiceTemplate.headerRow || 1,
+            dataStartRow: invoiceTemplate.dataStartRow || 2,
+            useColumnIndex: invoiceTemplate.useColumnIndex ?? true,
+          },
+        })
+      }
+
+      // 발주서 템플릿 업데이트
+      if (orderTemplate && Object.keys(orderTemplate.columnMappings || {}).length > 0) {
+        saveOrderTemplate({
+          manufacturerId: editingManufacturer.id,
+          template: {
+            headerRow: orderTemplate.headerRow || 1,
+            dataStartRow: orderTemplate.dataStartRow || 2,
+            columnMappings: orderTemplate.columnMappings || {},
+            fixedValues: orderTemplate.fixedValues,
+            templateFileName: orderTemplate.templateFileName,
+          },
+        })
+      }
     } else {
-      createMutation.mutate(data as Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>)
+      // 새 제조사 생성
+      createManufacturer(data as Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>)
+      // 새로 생성된 제조사에 대한 템플릿은 나중에 수정 시 설정
     }
-    console.log('Save invoice template:', invoiceTemplate)
   }
+
+  const isSaving = isCreating || isUpdating || isSavingInvoice || isSavingOrder
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -112,7 +191,7 @@ export default function ManufacturersPage() {
 
       {/* Add/Edit Modal */}
       <ManufacturerModal
-        isSaving={createMutation.isPending || updateMutation.isPending}
+        isSaving={isSaving}
         manufacturer={editingManufacturer}
         onOpenChange={setIsModalOpen}
         onSave={handleSave}

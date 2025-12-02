@@ -1,33 +1,9 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
-import type { Manufacturer } from '@/services/manufacturers.types'
+import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { create, getAll, getById, remove, update } from '@/services/manufacturers'
-
-export function useCreateManufacturer() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>) => create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
-    },
-  })
-}
-
-export function useDeleteManufacturer() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => remove(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
-    },
-  })
-}
+import { getAll, getById, getOrderTemplateOrDefault } from '@/services/manufacturers'
 
 export function useManufacturer(id: string) {
   return useQuery({
@@ -44,14 +20,10 @@ export function useManufacturers() {
   })
 }
 
-export function useUpdateManufacturer() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Manufacturer> }) => update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.detail(variables.id) })
-    },
+export function useOrderTemplate(manufacturerId: string | undefined) {
+  return useQuery({
+    queryKey: ['orderTemplate', manufacturerId],
+    queryFn: () => (manufacturerId ? getOrderTemplateOrDefault(manufacturerId) : null),
+    enabled: !!manufacturerId,
   })
 }

@@ -2,21 +2,20 @@
 
 import { Building2, Loader2, Package, Settings2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
+import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { OptionMappingFilters } from '@/components/option-mappings/option-mapping-filters'
 import { OptionMappingModal } from '@/components/option-mappings/option-mapping-modal'
 import { OptionMappingTable } from '@/components/option-mappings/option-mapping-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
-import {
-  useCreateOptionMapping,
-  useDeleteOptionMapping,
-  useOptionMappings,
-  useUpdateOptionMapping,
-} from '@/hooks/use-option-mappings'
+import { useOptionMappings } from '@/hooks/use-option-mappings'
+import { useServerAction } from '@/hooks/use-server-action'
+import { create, remove, update } from '@/services/option-mappings'
 
 export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,9 +25,34 @@ export default function OptionMappingsPage() {
 
   const { data: mappings = [], isLoading: isLoadingMappings } = useOptionMappings()
   const { data: manufacturers = [] } = useManufacturers()
-  const createMutation = useCreateOptionMapping()
-  const updateMutation = useUpdateOptionMapping()
-  const deleteMutation = useDeleteOptionMapping()
+
+  const { execute: createMapping, isPending: isCreating } = useServerAction(create, {
+    invalidateKeys: [queryKeys.optionMappings.all],
+    onSuccess: () => {
+      toast.success('매핑이 추가되었습니다')
+      setIsModalOpen(false)
+    },
+    onError: (error) => toast.error(error),
+  })
+
+  const { execute: updateMapping, isPending: isUpdating } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
+      update(id, data),
+    {
+      invalidateKeys: [queryKeys.optionMappings.all],
+      onSuccess: () => {
+        toast.success('매핑이 수정되었습니다')
+        setIsModalOpen(false)
+      },
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: deleteMapping } = useServerAction(remove, {
+    invalidateKeys: [queryKeys.optionMappings.all],
+    onSuccess: () => toast.success('매핑이 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
   const filteredMappings = useMemo(() => {
     return mappings.filter((m) => {
@@ -53,16 +77,18 @@ export default function OptionMappingsPage() {
   }
 
   const handleDelete = (mappingId: string) => {
-    deleteMutation.mutate(mappingId)
+    deleteMapping(mappingId)
   }
 
   const handleSave = (data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>) => {
     if (editingMapping) {
-      updateMutation.mutate({ id: editingMapping.id, data })
+      updateMapping({ id: editingMapping.id, data })
     } else {
-      createMutation.mutate(data)
+      createMapping(data)
     }
   }
+
+  const isSaving = isCreating || isUpdating
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -155,7 +181,7 @@ export default function OptionMappingsPage() {
 
       {/* Modal */}
       <OptionMappingModal
-        isSaving={createMutation.isPending || updateMutation.isPending}
+        isSaving={isSaving}
         manufacturers={manufacturers}
         mapping={editingMapping}
         onOpenChange={setIsModalOpen}
