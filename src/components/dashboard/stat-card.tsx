@@ -31,7 +31,7 @@ export function StatCard({
     <Card className="border-slate-200 bg-card shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <p className="text-sm font-medium text-slate-500">{title}</p>
             <p className="text-3xl font-semibold tracking-tight text-slate-900">
               {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}

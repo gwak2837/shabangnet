@@ -182,7 +182,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           <DialogDescription>아래 내용으로 발주서 이메일을 발송합니다.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+        <div className="flex flex-col gap-4 overflow-y-auto flex-1 pr-2">
           {/* Recipient */}
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
 
           {/* Duplicate Warning */}
           {duplicateCheck?.hasDuplicate && (
-            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 space-y-4">
+            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 flex flex-col gap-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div className="flex-1">
@@ -273,7 +273,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               </div>
 
               {/* Previous Send History */}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">이전 발송 이력</p>
                 {duplicateCheck.duplicateLogs.slice(0, 3).map((log) => (
                   <div className="rounded-md bg-background/70 border border-amber-200 p-3 text-sm" key={log.id}>
@@ -302,12 +302,12 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               </div>
 
               {/* Matched Addresses */}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">
                   중복 주소 ({duplicateCheck.matchedAddresses.length}건)
                 </p>
                 <div className="rounded-md bg-background/70 border border-amber-200 p-3">
-                  <div className="text-xs text-amber-700 space-y-1">
+                  <div className="text-xs text-amber-700 flex flex-col gap-1">
                     {duplicateCheck.matchedAddresses.slice(0, 3).map((addr, idx) => (
                       <p className="truncate" key={idx}>
                         {addr}
@@ -321,7 +321,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               </div>
 
               {/* Reason Input */}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-amber-800">발송 사유 (필수)</label>
                 <Input
                   className="border-amber-300 bg-background focus:border-amber-500 focus:ring-amber-500"
@@ -335,7 +335,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           )}
 
           {/* Email Content */}
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <div>
               <label className="text-sm font-medium text-slate-700">메일 제목</label>
               <Input className="mt-1 bg-slate-50" readOnly value={emailSubject} />

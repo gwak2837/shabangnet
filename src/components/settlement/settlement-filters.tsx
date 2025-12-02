@@ -40,9 +40,9 @@ export function SettlementFilters({
   onSearch,
 }: SettlementFiltersProps) {
   return (
-    <div className="space-y-4 bg-card rounded-lg border border-slate-200 p-6 shadow-sm">
+    <div className="flex flex-col gap-4 bg-card rounded-lg border border-slate-200 p-6 shadow-sm">
       {/* Manufacturer Select */}
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label className="text-sm font-medium text-slate-700">제조사 선택</Label>
         <Select onValueChange={onManufacturerChange} value={selectedManufacturerId}>
           <SelectTrigger className="w-full md:w-[300px]">
@@ -59,7 +59,7 @@ export function SettlementFilters({
       </div>
 
       {/* Period Selection */}
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <Label className="text-sm font-medium text-slate-700">기간 선택</Label>
 
         <Tabs onValueChange={(v) => onPeriodTypeChange(v as 'month' | 'range')} value={periodType}>

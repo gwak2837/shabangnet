@@ -232,13 +232,13 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6 flex flex-col gap-6">
       {/* Step 1: MFA 방식 선택 */}
       {step === 'choose-method' && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {hasExistingPasskey ? (
             <>
-              <div className="text-center space-y-2">
+              <div className="text-center flex flex-col gap-2">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100">
                   <Check className="h-6 w-6 text-emerald-600" />
                 </div>
@@ -299,14 +299,14 @@ export function OnboardingFlow() {
 
       {/* Step 2-A: TOTP 설정 */}
       {step === 'setup-totp' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <button className="text-xs text-primary hover:underline" onClick={handleBack} type="button">
               ← 다른 방식 선택
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-4">인증 앱에서 QR 코드를 스캔하세요</p>
               {totpUri && (
@@ -362,14 +362,14 @@ export function OnboardingFlow() {
 
       {/* Step 2-B: 패스키 설정 */}
       {step === 'setup-passkey' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <button className="text-xs text-primary hover:underline" onClick={handleBack} type="button">
               ← 다른 방식 선택
             </button>
           </div>
 
-          <div className="text-center space-y-4">
+          <div className="text-center flex flex-col gap-4">
             <Fingerprint className="mx-auto h-16 w-16 text-primary" />
             <div>
               <h3 className="font-medium">패스키 등록</h3>
@@ -399,7 +399,7 @@ export function OnboardingFlow() {
 
       {/* Step 3: 복구 코드 확인 */}
       {step === 'recovery-codes' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-4">
               <Check className="h-6 w-6 text-emerald-600" />

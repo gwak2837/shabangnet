@@ -1,5 +1,6 @@
 'use server'
 
+import 'server-only'
 import { eq } from 'drizzle-orm'
 import ms from 'ms'
 import { z } from 'zod'

@@ -32,4 +32,3 @@ export const defaultInvoiceTemplate: Omit<InvoiceTemplate, 'id' | 'manufacturerI
   dataStartRow: 2,
   useColumnIndex: true,
 }
-

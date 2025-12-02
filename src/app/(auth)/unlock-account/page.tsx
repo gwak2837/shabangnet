@@ -9,7 +9,7 @@ export default async function UnlockAccountPage({ searchParams }: PageProps<'/un
 
   if (!token) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      <div className="flex flex-col items-center justify-center flex flex-col gap-4 text-center">
         <div className="rounded-full bg-red-100 p-3">
           <XCircle className="h-8 w-8 text-red-600" />
         </div>
@@ -28,7 +28,7 @@ export default async function UnlockAccountPage({ searchParams }: PageProps<'/un
   const result = await unlockAccountAction(token)
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 text-center">
+    <div className="flex flex-col items-center justify-center flex flex-col gap-4 text-center">
       {result.error ? (
         <>
           <div className="rounded-full bg-red-100 p-3">

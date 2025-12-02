@@ -36,7 +36,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
           </a>
         </>
       ) : (
-        <div className="mt-4 space-y-1">
+        <div className="mt-4 flex flex-col gap-1">
           <p className="text-sm text-emerald-600">{result.success}</p>
           <p className="text-sm text-muted-foreground">계정이 인증되었습니다.</p>
           <a

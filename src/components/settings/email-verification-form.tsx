@@ -79,7 +79,7 @@ export function EmailVerificationForm() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         {message && (
           <div
             className={`flex items-center gap-2 rounded-md p-3 text-sm ${
@@ -92,7 +92,7 @@ export function EmailVerificationForm() {
         )}
 
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-medium">{status?.email}</p>
             {isVerified ? (
               <p className="flex items-center gap-1.5 text-sm text-emerald-600">

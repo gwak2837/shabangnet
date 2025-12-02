@@ -18,12 +18,12 @@ export default function PendingApprovalPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md space-y-8 text-center">
+      <div className="w-full max-w-md flex flex-col gap-8 text-center">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
           <Clock className="h-10 w-10 text-amber-600" />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">승인 대기 중</h1>
           <p className="text-muted-foreground">
             회원가입이 완료됐어요.
@@ -34,7 +34,7 @@ export default function PendingApprovalPage() {
 
         <div className="rounded-lg border border-slate-200 bg-white p-4 text-left text-sm">
           <p className="font-medium text-slate-700">승인 후 이용 가능한 기능</p>
-          <ul className="mt-2 space-y-1 text-muted-foreground">
+          <ul className="mt-2 flex flex-col gap-1 text-muted-foreground">
             <li>• 대시보드 접근</li>
             <li>• 주문 관리</li>
             <li>• 발주서 변환</li>

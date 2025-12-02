@@ -203,8 +203,8 @@ export function ManufacturerModal({
         </DialogHeader>
 
         <form className="flex flex-col" onSubmit={handleSubmit}>
-          <div className="max-h-[55vh] overflow-y-auto space-y-4 pr-2">
-            <div className="space-y-2">
+          <div className="max-h-[55vh] overflow-y-auto flex flex-col gap-4 pr-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">
                 제조사명 <span className="text-rose-500">*</span>
               </Label>
@@ -218,7 +218,7 @@ export function ManufacturerModal({
               {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="contactName">담당자명</Label>
               <Input
                 id="contactName"
@@ -228,7 +228,7 @@ export function ManufacturerModal({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">
                 이메일 <span className="text-rose-500">*</span>
               </Label>
@@ -243,7 +243,7 @@ export function ManufacturerModal({
               {errors.email && <p className="text-xs text-rose-500">{errors.email}</p>}
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="ccEmail">참조 이메일 (CC)</Label>
               <Input
                 className={errors.ccEmail ? 'border-rose-500' : ''}
@@ -256,7 +256,7 @@ export function ManufacturerModal({
               {errors.ccEmail && <p className="text-xs text-rose-500">{errors.ccEmail}</p>}
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="phone">전화번호</Label>
               <Input
                 id="phone"
@@ -286,13 +286,13 @@ export function ManufacturerModal({
               </button>
 
               {showOrderTemplateSettings && (
-                <div className="p-4 space-y-4 bg-background/50">
+                <div className="p-4 flex flex-col gap-4 bg-background/50">
                   <p className="text-xs text-slate-500">
                     제조사의 발주서 양식 파일을 업로드하면 컬럼 구조를 자동으로 분석합니다.
                   </p>
 
                   {/* Template Upload */}
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-2">
                     <Label className="text-xs">양식 파일 업로드</Label>
                     <div className="flex items-center gap-2">
                       <label className="flex-1">
@@ -310,7 +310,7 @@ export function ManufacturerModal({
 
                   {/* Row Settings */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">헤더 행 번호</Label>
                       <Input
                         className="h-8 text-sm"
@@ -323,7 +323,7 @@ export function ManufacturerModal({
                         value={orderTemplate.headerRow}
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">데이터 시작 행</Label>
                       <Input
                         className="h-8 text-sm"
@@ -339,10 +339,10 @@ export function ManufacturerModal({
                   </div>
 
                   {/* Column Mappings */}
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-2">
                     <Label className="text-xs">컬럼 매핑</Label>
                     <p className="text-xs text-slate-400">사방넷 데이터를 제조사 양식의 어느 열에 넣을지 설정합니다.</p>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                       {mainSabangnetColumns.map((col) => (
                         <div className="flex items-center gap-2" key={col.key}>
                           <span className="text-xs text-slate-600 w-24 truncate">{col.label}</span>
@@ -410,7 +410,7 @@ export function ManufacturerModal({
               </button>
 
               {showInvoiceSettings && (
-                <div className="p-4 space-y-4 bg-background/50">
+                <div className="p-4 flex flex-col gap-4 bg-background/50">
                   <p className="text-xs text-slate-500">
                     거래처에서 받은 송장 파일의 컬럼 위치를 설정합니다. 기본값으로 대부분의 양식에 대응됩니다.
                   </p>
@@ -431,7 +431,7 @@ export function ManufacturerModal({
 
                   {/* Column Mappings */}
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">주문번호 컬럼</Label>
                       <Input
                         className="h-8 text-sm"
@@ -440,7 +440,7 @@ export function ManufacturerModal({
                         value={invoiceTemplate.orderNumberColumn}
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">택배사 컬럼</Label>
                       <Input
                         className="h-8 text-sm"
@@ -449,7 +449,7 @@ export function ManufacturerModal({
                         value={invoiceTemplate.courierColumn}
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">송장번호 컬럼</Label>
                       <Input
                         className="h-8 text-sm"
@@ -464,7 +464,7 @@ export function ManufacturerModal({
 
                   {/* Row Settings */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">헤더 행 번호</Label>
                       <Input
                         className="h-8 text-sm"
@@ -477,7 +477,7 @@ export function ManufacturerModal({
                         value={invoiceTemplate.headerRow}
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">데이터 시작 행</Label>
                       <Input
                         className="h-8 text-sm"

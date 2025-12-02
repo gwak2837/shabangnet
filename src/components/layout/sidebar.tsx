@@ -121,8 +121,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-            <div className="space-y-1">
+          <nav className="flex-1 flex flex-col gap-1 overflow-y-auto p-4">
+            <div className="flex flex-col gap-1">
               {mainNavItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
@@ -144,7 +144,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               })}
             </div>
             <Separator className="my-4" />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-slate-400">관리</p>
               {managementNavItems.map((item) => {
                 const isActive = pathname === item.href

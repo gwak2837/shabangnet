@@ -1,5 +1,6 @@
 'use server'
 
+import 'server-only'
 import { hashPassword } from 'better-auth/crypto'
 import { and, eq, gt } from 'drizzle-orm'
 import { z } from 'zod'
@@ -7,7 +8,8 @@ import { z } from 'zod'
 import { isCommonPassword } from '@/common/constants/common-passwords'
 import { db } from '@/db/client'
 import { account, user, verification } from '@/db/schema/auth'
-import { PASSWORD_ERROR_MESSAGES, passwordSchema } from '@/utils/password'
+import { PASSWORD_ERROR_MESSAGES } from '@/utils/password'
+import { passwordSchema } from '@/utils/password.server'
 
 const ResetPasswordSchema = z
   .object({
@@ -42,12 +44,7 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
     const [validToken] = await tx
       .select()
       .from(verification)
-      .where(
-        and(
-          eq(verification.value, token),
-          gt(verification.expiresAt, new Date()),
-        ),
-      )
+      .where(and(eq(verification.value, token), gt(verification.expiresAt, new Date())))
 
     if (!validToken || !validToken.identifier.startsWith('password_reset:')) {
       return { error: errorMessage }
@@ -88,12 +85,7 @@ export async function validateResetToken(token: string): Promise<{ valid: boolea
   const [validToken] = await db
     .select()
     .from(verification)
-    .where(
-      and(
-        eq(verification.value, token),
-        gt(verification.expiresAt, new Date()),
-      ),
-    )
+    .where(and(eq(verification.value, token), gt(verification.expiresAt, new Date())))
 
   if (!validToken || !validToken.identifier.startsWith('password_reset:')) {
     return { valid: false, error: '유효하지 않거나 만료된 토큰이에요' }

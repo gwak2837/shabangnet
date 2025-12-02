@@ -73,8 +73,8 @@ export function PasswordStrengthIndicator({
   }
 
   return (
-    <div className="mt-4 space-y-4">
-      <div className="space-y-2">
+    <div className="mt-4 flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between">
           <span className="text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">
             비밀번호 강도
@@ -101,7 +101,7 @@ export function PasswordStrengthIndicator({
         </div>
       </div>
       {showChecklist && validation && (
-        <ul className="space-y-2.5 pt-1">
+        <ul className="flex flex-col gap-2.5 pt-1">
           <RequirementItem isValid={!validation.errors.minLength} label={PASSWORD_ERROR_MESSAGES.minLength} />
           <RequirementItem isValid={!validation.errors.hasLetter} label={PASSWORD_ERROR_MESSAGES.hasLetter} />
           <RequirementItem isValid={!validation.errors.hasNumber} label={PASSWORD_ERROR_MESSAGES.hasNumber} />

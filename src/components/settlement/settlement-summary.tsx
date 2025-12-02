@@ -25,7 +25,7 @@ export function SettlementSummary({
   period,
 }: SettlementSummaryProps) {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Title */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-900">{manufacturerName} 정산 요약</h2>

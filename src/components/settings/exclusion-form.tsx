@@ -93,10 +93,10 @@ export function ExclusionForm({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-          <div className="space-y-0.5">
+          <div className="flex flex-col gap-0.5">
             <Label className="text-base" htmlFor="exclusion-enabled">
               발송 제외 필터 활성화
             </Label>
@@ -106,7 +106,7 @@ export function ExclusionForm({
         </div>
 
         {/* Patterns List */}
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <Label>제외 패턴 목록</Label>
             <Badge className="bg-slate-100 text-slate-600" variant="secondary">
@@ -114,7 +114,7 @@ export function ExclusionForm({
             </Badge>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {formData.patterns.map((pattern) => (
               <div
                 className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
@@ -153,10 +153,10 @@ export function ExclusionForm({
         </div>
 
         {/* Add New Pattern */}
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
           <Label>새 패턴 추가</Label>
           <div className="flex gap-2">
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 flex flex-col gap-2">
               <Input
                 className="bg-card font-mono text-sm"
                 onChange={(e) => setNewPattern(e.target.value)}

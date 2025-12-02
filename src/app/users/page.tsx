@@ -29,7 +29,7 @@ export default function UsersPage() {
 
   return (
     <AppShell description="사용자 가입 승인 및 관리" title="사용자 관리">
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         {/* Filters */}
         <div className="flex items-center gap-2">
           {statusFilters.map((filter) => (

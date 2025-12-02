@@ -28,7 +28,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   // 성공 시 로그인 페이지로 안내
   if (state && 'success' in state) {
     return (
-      <div className="mt-8 space-y-6 text-center">
+      <div className="mt-8 flex flex-col gap-6 text-center">
         <div className="rounded-md bg-emerald-50 p-4 text-emerald-700">
           <p>{state.success}</p>
         </div>
@@ -43,8 +43,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   }
 
   return (
-    <div className="mt-8 space-y-6">
-      <form action={dispatch} className="space-y-6">
+    <div className="mt-8 flex flex-col gap-6">
+      <form action={dispatch} className="flex flex-col gap-6">
         <input name="token" type="hidden" value={token} />
         <div>
           <Label htmlFor="password">새 비밀번호</Label>

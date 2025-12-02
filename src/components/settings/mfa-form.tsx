@@ -162,9 +162,9 @@ export function MfaForm({ settings }: MfaFormProps) {
         password: disableTotpCode,
         fetchOptions: {
           onSuccess: () => {
-      setShowDisableTotpDialog(false)
-      setDisableTotpCode('')
-      setSuccess('TOTP가 비활성화되었습니다.')
+            setShowDisableTotpDialog(false)
+            setDisableTotpCode('')
+            setSuccess('TOTP가 비활성화되었습니다.')
             window.location.reload()
           },
           onError: (ctx) => {
@@ -193,9 +193,9 @@ export function MfaForm({ settings }: MfaFormProps) {
         name: passkeyName || undefined,
         fetchOptions: {
           onSuccess: () => {
-      setShowPasskeySetup(false)
-      setPasskeyName('')
-      setSuccess('패스키가 등록되었습니다.')
+            setShowPasskeySetup(false)
+            setPasskeyName('')
+            setSuccess('패스키가 등록되었습니다.')
             window.location.reload()
           },
           onError: (ctx) => {
@@ -227,8 +227,8 @@ export function MfaForm({ settings }: MfaFormProps) {
         id,
         fetchOptions: {
           onSuccess: () => {
-      setDeletePasskeyId(null)
-      setSuccess('패스키가 삭제되었습니다.')
+            setDeletePasskeyId(null)
+            setSuccess('패스키가 삭제되었습니다.')
             window.location.reload()
           },
           onError: (ctx) => {
@@ -346,7 +346,7 @@ export function MfaForm({ settings }: MfaFormProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         {error && (
           <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -363,7 +363,7 @@ export function MfaForm({ settings }: MfaFormProps) {
         {/* Password Setup Section (for passwordless users) */}
         {settings?.hasPassword === false && (
           <>
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <KeyRound className="h-5 w-5 text-slate-500" />
@@ -383,8 +383,8 @@ export function MfaForm({ settings }: MfaFormProps) {
               </div>
               <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
                 <p>
-                  <strong>비밀번호가 없으면</strong> TOTP 인증 앱이나 복구 코드 기능을 사용할 수 없어요. 비밀번호를 설정하면
-                  다양한 보안 기능을 사용할 수 있습니다.
+                  <strong>비밀번호가 없으면</strong> TOTP 인증 앱이나 복구 코드 기능을 사용할 수 없어요. 비밀번호를
+                  설정하면 다양한 보안 기능을 사용할 수 있습니다.
                 </p>
               </div>
             </div>
@@ -393,7 +393,7 @@ export function MfaForm({ settings }: MfaFormProps) {
         )}
 
         {/* TOTP Section */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Smartphone className="h-5 w-5 text-slate-500" />
@@ -432,7 +432,7 @@ export function MfaForm({ settings }: MfaFormProps) {
         <Separator />
 
         {/* Passkey Section */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Key className="h-5 w-5 text-slate-500" />
@@ -447,7 +447,7 @@ export function MfaForm({ settings }: MfaFormProps) {
           </div>
 
           {settings?.passkeys && settings.passkeys.length > 0 && (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {settings.passkeys.map((pk) => (
                 <div className="flex items-center justify-between rounded-md border p-3" key={pk.id}>
                   <div>
@@ -468,7 +468,7 @@ export function MfaForm({ settings }: MfaFormProps) {
         <Separator />
 
         {/* Recovery Codes Section */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Shield className="h-5 w-5 text-slate-500" />
@@ -484,9 +484,7 @@ export function MfaForm({ settings }: MfaFormProps) {
             </div>
             <Button
               disabled={
-                isLoading ||
-                settings?.hasPassword === false ||
-                (!settings?.totpEnabled && !settings?.passkeys?.length)
+                isLoading || settings?.hasPassword === false || (!settings?.totpEnabled && !settings?.passkeys?.length)
               }
               onClick={() => setShowRecoveryCodes(true)}
               size="sm"
@@ -515,8 +513,8 @@ export function MfaForm({ settings }: MfaFormProps) {
             <DialogTitle>비밀번호 확인</DialogTitle>
             <DialogDescription>보안을 위해 비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="totpSetupPassword">비밀번호</Label>
               <Input
                 autoComplete="current-password"
@@ -549,7 +547,7 @@ export function MfaForm({ settings }: MfaFormProps) {
             <DialogDescription>Google Authenticator 또는 다른 인증 앱으로 QR 코드를 스캔해주세요.</DialogDescription>
           </DialogHeader>
           {!recoveryCodes ? (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {totpUri && (
                 <div className="flex justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -563,14 +561,14 @@ export function MfaForm({ settings }: MfaFormProps) {
                 </div>
               )}
               {totpUri && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label>수동 입력용 키</Label>
                   <code className="block rounded bg-muted p-2 text-center text-sm font-mono">
                     {extractSecret(totpUri)}
                   </code>
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="totpVerifyCode">인증 코드</Label>
                 <Input
                   autoComplete="one-time-code"
@@ -591,7 +589,7 @@ export function MfaForm({ settings }: MfaFormProps) {
               </DialogFooter>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
                 <p className="font-medium">복구 코드를 안전한 곳에 저장해주세요!</p>
                 <p className="mt-1 text-xs">인증 수단을 사용할 수 없을 때 이 코드로 로그인할 수 있습니다.</p>
@@ -630,8 +628,8 @@ export function MfaForm({ settings }: MfaFormProps) {
               이 기기에 패스키를 등록합니다. 생체 인증 또는 PIN을 사용해 인증합니다.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="passkeyName">패스키 이름 (선택)</Label>
               <Input
                 id="passkeyName"
@@ -667,7 +665,7 @@ export function MfaForm({ settings }: MfaFormProps) {
             <DialogDescription>새로운 복구 코드를 생성하면 기존 코드는 모두 무효화됩니다.</DialogDescription>
           </DialogHeader>
           {newRecoveryCodes ? (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
                 <p className="font-medium">복구 코드를 안전한 곳에 저장해주세요!</p>
               </div>
@@ -691,9 +689,9 @@ export function MfaForm({ settings }: MfaFormProps) {
               </DialogFooter>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">남은 복구 코드: {settings?.recoveryCodesRemaining ?? 0}개</p>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="recoveryPassword">비밀번호</Label>
                 <Input
                   autoComplete="current-password"
@@ -731,8 +729,8 @@ export function MfaForm({ settings }: MfaFormProps) {
             <DialogTitle>TOTP 비활성화</DialogTitle>
             <DialogDescription>보안을 위해 비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="disableTotpCode">비밀번호</Label>
               <Input
                 autoComplete="current-password"
@@ -795,8 +793,8 @@ export function MfaForm({ settings }: MfaFormProps) {
               비밀번호를 설정하면 패스키나 소셜 로그인 외에 비밀번호로도 로그인할 수 있어요.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="newPassword">새 비밀번호</Label>
               <Input
                 autoComplete="new-password"
@@ -815,7 +813,7 @@ export function MfaForm({ settings }: MfaFormProps) {
                 />
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword">비밀번호 확인</Label>
               <Input
                 autoComplete="new-password"

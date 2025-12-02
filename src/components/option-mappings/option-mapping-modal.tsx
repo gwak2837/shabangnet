@@ -102,8 +102,8 @@ export function OptionMappingModal({
           </div>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="productCode">
               상품코드 <span className="text-rose-500">*</span>
             </Label>
@@ -117,7 +117,7 @@ export function OptionMappingModal({
             {errors.productCode && <p className="text-xs text-rose-500">{errors.productCode}</p>}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="optionName">
               옵션명 <span className="text-rose-500">*</span>
             </Label>
@@ -132,7 +132,7 @@ export function OptionMappingModal({
             <p className="text-xs text-slate-500">사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력하세요</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="manufacturerId">
               제조사 <span className="text-rose-500">*</span>
             </Label>
@@ -156,7 +156,7 @@ export function OptionMappingModal({
 
           <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
             <p className="font-medium mb-1">💡 매핑 우선순위</p>
-            <ol className="list-decimal list-inside space-y-0.5 text-xs">
+            <ol className="list-decimal list-inside flex flex-col gap-0.5 text-xs">
               <li>옵션 매핑 (상품코드 + 옵션 조합)</li>
               <li>상품 매핑 (상품코드 기준)</li>
               <li>미매핑 처리</li>

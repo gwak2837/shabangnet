@@ -71,7 +71,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell description="시스템 설정을 관리합니다" title="설정">
-      <div className="max-w-3xl space-y-6">
+      <div className="max-w-3xl flex flex-col gap-6">
         <EmailVerificationForm />
         <MfaForm settings={mfaSettings} />
         <SMTPForm />

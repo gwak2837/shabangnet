@@ -136,10 +136,10 @@ export function SMTPForm() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         {/* Server Settings */}
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="host">SMTP 서버 주소</Label>
             <div className="relative">
               <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -153,7 +153,7 @@ export function SMTPForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="port">포트</Label>
             <Input className="bg-slate-50 text-slate-500" disabled id="port" readOnly value="587 (STARTTLS)" />
             <p className="text-xs text-slate-500">보안을 위해 587 포트로 고정됩니다</p>
@@ -162,7 +162,7 @@ export function SMTPForm() {
 
         {/* Auth Settings */}
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="username">사용자명 (이메일)</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -178,7 +178,7 @@ export function SMTPForm() {
             <p className="text-xs text-slate-500">발신자 이메일로도 사용됩니다</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">비밀번호 (앱 비밀번호)</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -198,7 +198,7 @@ export function SMTPForm() {
         </div>
 
         {/* From Name */}
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="fromName">발신자 이름</Label>
           <Input
             id="fromName"
@@ -212,7 +212,7 @@ export function SMTPForm() {
         {/* Security Notice */}
         <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-medium text-emerald-800">보안 연결 활성화됨</p>
             <p className="text-xs text-emerald-700">
               모든 이메일은 TLS 암호화 연결(STARTTLS)을 통해 안전하게 발송됩니다.

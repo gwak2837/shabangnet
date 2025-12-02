@@ -1,6 +1,10 @@
 'use server'
 
+import { eq } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
+
+import { db } from '@/db/client'
+import { shoppingMallTemplates } from '@/db/schema/settings'
 
 // Types
 export interface AnalyzeResult {
@@ -93,33 +97,57 @@ export async function analyzeShoppingMallFile(file: File, headerRow?: number): P
   }
 }
 
-// CRUD operations - TODO: implement with actual database
-export async function createShoppingMallTemplate(_data: CreateTemplateData): Promise<ShoppingMallTemplate> {
-  // TODO: Implement with database
-  throw new Error('Not implemented')
+// CRUD operations
+export async function createShoppingMallTemplate(data: CreateTemplateData): Promise<ShoppingMallTemplate> {
+  const [created] = await db
+    .insert(shoppingMallTemplates)
+    .values({
+      id: `smt_${Date.now()}`,
+      mallName: data.mallName,
+      displayName: data.displayName,
+      columnMappings: JSON.stringify(data.columnMappings),
+      headerRow: data.headerRow,
+      dataStartRow: data.dataStartRow,
+      enabled: true,
+    })
+    .returning()
+
+  return mapToShoppingMallTemplate(created)
 }
 
-export async function deleteShoppingMallTemplate(_id: string): Promise<void> {
-  // TODO: Implement with database
-  throw new Error('Not implemented')
+export async function deleteShoppingMallTemplate(id: string): Promise<void> {
+  await db.delete(shoppingMallTemplates).where(eq(shoppingMallTemplates.id, id))
 }
 
-export async function getShoppingMallTemplate(_id: string): Promise<ShoppingMallTemplate> {
-  // TODO: Implement with database
-  throw new Error('Not implemented')
+export async function getShoppingMallTemplate(id: string): Promise<ShoppingMallTemplate | null> {
+  const [result] = await db.select().from(shoppingMallTemplates).where(eq(shoppingMallTemplates.id, id))
+
+  if (!result) return null
+  return mapToShoppingMallTemplate(result)
 }
 
 export async function getShoppingMallTemplates(): Promise<ShoppingMallTemplate[]> {
-  // TODO: Implement with database
-  return []
+  const result = await db.select().from(shoppingMallTemplates).orderBy(shoppingMallTemplates.displayName)
+  return result.map(mapToShoppingMallTemplate)
 }
 
-export async function updateShoppingMallTemplate(
-  _id: string,
-  _data: UpdateTemplateData,
-): Promise<ShoppingMallTemplate> {
-  // TODO: Implement with database
-  throw new Error('Not implemented')
+export async function updateShoppingMallTemplate(id: string, data: UpdateTemplateData): Promise<ShoppingMallTemplate> {
+  const [updated] = await db
+    .update(shoppingMallTemplates)
+    .set({
+      mallName: data.mallName,
+      displayName: data.displayName,
+      columnMappings: data.columnMappings ? JSON.stringify(data.columnMappings) : undefined,
+      headerRow: data.headerRow,
+      dataStartRow: data.dataStartRow,
+      enabled: data.enabled,
+      updatedAt: new Date(),
+    })
+    .where(eq(shoppingMallTemplates.id, id))
+    .returning()
+
+  if (!updated) throw new Error('Template not found')
+  return mapToShoppingMallTemplate(updated)
 }
 
 // Helper functions
@@ -161,4 +189,26 @@ function getCellValue(cell: ExcelJS.Cell): string {
   }
 
   return String(value)
+}
+
+// Helper function to map DB record to ShoppingMallTemplate
+function mapToShoppingMallTemplate(record: typeof shoppingMallTemplates.$inferSelect): ShoppingMallTemplate {
+  let columnMappings: Record<string, string> = {}
+  try {
+    columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
+  } catch {
+    columnMappings = {}
+  }
+
+  return {
+    id: record.id,
+    mallName: record.mallName,
+    displayName: record.displayName,
+    columnMappings,
+    headerRow: record.headerRow || 1,
+    dataStartRow: record.dataStartRow || 2,
+    enabled: record.enabled ?? true,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  }
 }

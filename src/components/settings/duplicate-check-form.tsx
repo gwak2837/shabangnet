@@ -60,10 +60,10 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-          <div className="space-y-0.5">
+          <div className="flex flex-col gap-0.5">
             <Label className="text-base" htmlFor="duplicate-check-enabled">
               중복 발주 체크 활성화
             </Label>
@@ -79,7 +79,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
         </div>
 
         {/* Period Selection */}
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <Label htmlFor="duplicate-check-period">중복 체크 기간</Label>
           <Select
             disabled={!formData.enabled}

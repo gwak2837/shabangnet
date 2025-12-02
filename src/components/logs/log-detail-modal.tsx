@@ -45,7 +45,7 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
           </div>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {/* Status */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">상태</span>

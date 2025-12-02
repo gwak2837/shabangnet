@@ -126,7 +126,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           {/* Courier List Table */}
           <div className="rounded-lg border border-slate-200 overflow-hidden">
             <Table>
@@ -226,9 +226,9 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
           </DialogHeader>
 
           {editingCourier && (
-            <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="courierName">택배사명 (사방넷 기준)</Label>
                   <Input
                     id="courierName"
@@ -237,7 +237,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                     value={editingCourier.name}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="courierCode">사방넷 코드</Label>
                   <Input
                     className="font-mono"
@@ -249,7 +249,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>별칭 (거래처에서 사용하는 표기)</Label>
                 <div className="flex gap-2">
                   <Input

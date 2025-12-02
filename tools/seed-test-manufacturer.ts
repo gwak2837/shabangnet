@@ -64,11 +64,7 @@ async function seed() {
 
     for (const manufacturer of testManufacturers) {
       // 이미 존재하는지 확인
-      const existing = await db
-        .select()
-        .from(manufacturers)
-        .where(eq(manufacturers.id, manufacturer.id))
-        .limit(1)
+      const existing = await db.select().from(manufacturers).where(eq(manufacturers.id, manufacturer.id)).limit(1)
 
       if (existing.length > 0) {
         console.log(`⏭️  건너뜀: ${manufacturer.name} (이미 존재)`)
@@ -89,4 +85,3 @@ async function seed() {
 }
 
 seed()
-

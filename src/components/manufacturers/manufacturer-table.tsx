@@ -103,7 +103,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                   </TableCell>
                   <TableCell className="font-medium text-slate-900">{manufacturer.contactName}</TableCell>
                   <TableCell>
-                    <div className="space-y-1">
+                    <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Mail className="h-3.5 w-3.5 text-slate-400" />
                         {manufacturer.email}

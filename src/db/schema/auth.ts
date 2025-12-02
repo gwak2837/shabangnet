@@ -127,8 +127,8 @@ export const role = pgTable('role', {
 
 export const userToRole = pgTable('user_to_role', {
   id: text('id').primaryKey(),
-    userId: text('user_id')
-      .notNull()
+  userId: text('user_id')
+    .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   roleId: text('role_id')
     .notNull()

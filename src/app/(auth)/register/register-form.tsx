@@ -3,7 +3,7 @@
 import { Eye, EyeOff, Fingerprint, KeyRound, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { GoogleOAuthButton } from '@/app/(auth)/google-oauth-button'
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
@@ -16,47 +16,65 @@ import { PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
 type AuthMethod = 'passkey' | 'password'
 
+interface UserInfo {
+  email: string
+  name: string
+}
+
 export function RegisterForm() {
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
   const [isPending, setIsPending] = useState(false)
   const [authMethod, setAuthMethod] = useState<AuthMethod | null>(null)
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordTouched, setPasswordTouched] = useState(false)
-  const [confirmTouched, setConfirmTouched] = useState(false)
   const [error, setError] = useState('')
 
   const validation = validatePassword(password, COMMON_PASSWORDS)
-  const passwordsMatch = password === confirmPassword
-  const showMismatchError = confirmTouched && confirmPassword && !passwordsMatch
 
   function handleMethodSelect(method: AuthMethod) {
-    if (!name.trim()) {
+    const formData = new FormData(formRef.current!)
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
+
+    if (!name?.trim()) {
       setError('이름을 입력해주세요')
       return
     }
-    if (!email.trim()) {
+    if (!email?.trim()) {
       setError('이메일을 입력해주세요')
       return
     }
+
+    setUserInfo({ name, email })
     setAuthMethod(method)
     setError('')
   }
 
-  async function handlePasswordRegister(e: React.FormEvent) {
+  async function handlePasswordRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!userInfo) return
+
+    const formData = new FormData(e.currentTarget)
+    const formPassword = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (formPassword !== confirmPassword) {
+      setError(PASSWORD_ERROR_MESSAGES.mismatch)
+      return
+    }
+
     setError('')
     setIsPending(true)
 
     try {
       const result = await signUp.email({
-        email,
-        password,
-        name,
+        email: userInfo.email,
+        password: formPassword,
+        name: userInfo.name,
       })
 
       if (result.error) {
@@ -73,6 +91,8 @@ export function RegisterForm() {
   }
 
   async function handlePasskeyRegister() {
+    if (!userInfo) return
+
     setError('')
     setIsPending(true)
 
@@ -81,9 +101,9 @@ export function RegisterForm() {
       const tempPassword = crypto.randomUUID() + crypto.randomUUID()
 
       const signUpResult = await signUp.email({
-        email,
+        email: userInfo.email,
         password: tempPassword,
-        name,
+        name: userInfo.name,
       })
 
       if (signUpResult.error) {
@@ -96,7 +116,7 @@ export function RegisterForm() {
 
       // 2. 패스키 등록
       const passkeyResult = await passkeyMethods.addPasskey({
-        name: email,
+        name: userInfo.email,
       })
 
       if (passkeyResult.error) {
@@ -130,19 +150,17 @@ export function RegisterForm() {
   function handleBack() {
     setAuthMethod(null)
     setPassword('')
-    setConfirmPassword('')
     setShowPassword(false)
     setShowConfirmPassword(false)
     setPasswordTouched(false)
-    setConfirmTouched(false)
     setError('')
   }
 
   // Step 1: 기본 정보 + 방법 선택
   if (!authMethod) {
     return (
-      <div className="mt-8 space-y-6">
-        <div className="space-y-4">
+      <div className="flex flex-col gap-6">
+        <form className="flex flex-col gap-4" ref={formRef}>
           <div>
             <Label htmlFor="name">이름</Label>
             <Input
@@ -150,10 +168,9 @@ export function RegisterForm() {
               className="mt-2"
               disabled={isPending}
               id="name"
-              onChange={(e) => setName(e.target.value)}
+              name="name"
               placeholder="홍길동"
               type="text"
-              value={name}
             />
           </div>
           <div>
@@ -163,17 +180,16 @@ export function RegisterForm() {
               className="mt-2"
               disabled={isPending}
               id="email"
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
               placeholder="example@email.com"
               type="email"
-              value={email}
             />
           </div>
-        </div>
+        </form>
 
         {error && <div className="text-sm text-destructive">{error}</div>}
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <Button className="w-full" disabled={isPending} onClick={() => handleMethodSelect('passkey')}>
             <Fingerprint className="mr-2 h-4 w-4" />
             패스키로 가입 (권장)
@@ -216,15 +232,15 @@ export function RegisterForm() {
   // Step 2a: 비밀번호 가입
   if (authMethod === 'password') {
     return (
-      <div className="mt-8 space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="text-center">
-          <p className="text-sm text-primary">{email}</p>
+          <p className="text-sm text-primary">{userInfo?.email}</p>
           <button className="text-xs text-muted-foreground hover:underline" onClick={handleBack} type="button">
             다른 방식으로 가입
           </button>
         </div>
 
-        <form className="space-y-4" onSubmit={handlePasswordRegister}>
+        <form className="flex flex-col gap-4" onSubmit={handlePasswordRegister}>
           <div>
             <Label htmlFor="password">비밀번호</Label>
             <div className="relative mt-2">
@@ -234,6 +250,7 @@ export function RegisterForm() {
                 className="pr-10"
                 disabled={isPending}
                 id="password"
+                name="password"
                 onBlur={() => setPasswordTouched(true)}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -262,11 +279,9 @@ export function RegisterForm() {
                 className="pr-10"
                 disabled={isPending}
                 id="confirmPassword"
-                onBlur={() => setConfirmTouched(true)}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                name="confirmPassword"
                 required
                 type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
               />
               <button
                 aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -277,15 +292,11 @@ export function RegisterForm() {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {showMismatchError && <p className="mt-1 text-sm text-destructive">{PASSWORD_ERROR_MESSAGES.mismatch}</p>}
-            {confirmTouched && passwordsMatch && confirmPassword && (
-              <p className="mt-1 text-sm text-emerald-500">비밀번호가 일치해요</p>
-            )}
           </div>
 
           {error && <div className="text-sm text-destructive">{error}</div>}
 
-          <Button className="w-full" disabled={isPending || !validation.isValid || !passwordsMatch} type="submit">
+          <Button className="w-full" disabled={isPending || !validation.isValid} type="submit">
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -303,15 +314,15 @@ export function RegisterForm() {
   // Step 2b: 패스키 가입
   if (authMethod === 'passkey') {
     return (
-      <div className="mt-8 space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="text-center">
-          <p className="text-sm text-primary">{email}</p>
+          <p className="text-sm text-primary">{userInfo?.email}</p>
           <button className="text-xs text-muted-foreground hover:underline" onClick={handleBack} type="button">
             다른 방식으로 가입
           </button>
         </div>
 
-        <div className="text-center space-y-4">
+        <div className="text-center flex flex-col gap-4">
           <Fingerprint className="mx-auto h-16 w-16 text-muted-foreground" />
           <div>
             <h3 className="font-medium">패스키로 안전하게 가입</h3>

@@ -5,7 +5,6 @@ import {
   findSabangnetKeyByLabel,
   indexToColumnLetter,
   SABANGNET_COLUMNS,
-  type ShoppingMallConfig,
 } from '../common/constants'
 
 // ============================================
@@ -84,6 +83,16 @@ export interface ParseResult {
   headers: string[]
   orders: ParsedOrder[]
   totalRows: number
+}
+
+// 쇼핑몰 템플릿 설정 타입
+export interface ShoppingMallConfig {
+  columnMappings: Record<string, string>
+  dataStartRow: number
+  displayName: string
+  headerRow: number
+  id: string
+  mallName: string
 }
 
 // 템플릿 분석 결과

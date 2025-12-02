@@ -123,10 +123,10 @@ export function MfaChallenge() {
     setError('')
     setTotpCode('')
     setRecoveryCode('')
-    }
+  }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6 flex flex-col gap-6">
       {/* 복구 코드 경고 배너 */}
       {recoveryLogin && (
         <div className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800">
@@ -140,7 +140,7 @@ export function MfaChallenge() {
 
       {/* TOTP 인증 */}
       {selectedMethod === 'totp' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <Smartphone className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">인증 앱 코드 입력</h3>
@@ -149,7 +149,7 @@ export function MfaChallenge() {
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleTotpSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleTotpSubmit}>
             <div>
               <Label htmlFor="totpCode">인증 코드</Label>
               <Input
@@ -166,16 +166,16 @@ export function MfaChallenge() {
               />
             </div>
 
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={trustDevice}
-                  id="trustDevice"
-                  onCheckedChange={(checked) => setTrustDevice(checked === true)}
-                />
-                <Label className="cursor-pointer font-normal text-sm" htmlFor="trustDevice">
-                  이 브라우저 신뢰
-                </Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={trustDevice}
+                id="trustDevice"
+                onCheckedChange={(checked) => setTrustDevice(checked === true)}
+              />
+              <Label className="cursor-pointer font-normal text-sm" htmlFor="trustDevice">
+                이 브라우저 신뢰
+              </Label>
+            </div>
 
             {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
@@ -191,16 +191,16 @@ export function MfaChallenge() {
             </Button>
           </form>
 
-            <Button className="w-full" onClick={() => handleMethodChange('passkey')} variant="ghost">
-              <Fingerprint className="mr-2 h-4 w-4" />
-              패스키로 인증
-            </Button>
+          <Button className="w-full" onClick={() => handleMethodChange('passkey')} variant="ghost">
+            <Fingerprint className="mr-2 h-4 w-4" />
+            패스키로 인증
+          </Button>
         </div>
       )}
 
       {/* 패스키 인증 */}
       {selectedMethod === 'passkey' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <Fingerprint className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">패스키 인증</h3>
@@ -223,23 +223,23 @@ export function MfaChallenge() {
             )}
           </Button>
 
-            <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="ghost">
-              <Smartphone className="mr-2 h-4 w-4" />
-              인증 앱으로 인증
-            </Button>
+          <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="ghost">
+            <Smartphone className="mr-2 h-4 w-4" />
+            인증 앱으로 인증
+          </Button>
         </div>
       )}
 
       {/* 복구 코드 인증 */}
       {selectedMethod === 'recovery' && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <div className="text-center">
             <KeyRound className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">복구 코드 입력</h3>
             <p className="mt-2 text-sm text-muted-foreground">가입 시 발급받은 복구 코드 중 하나를 입력해주세요.</p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleRecoverySubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleRecoverySubmit}>
             <div>
               <Label htmlFor="recoveryCode">복구 코드</Label>
               <Input
@@ -276,16 +276,16 @@ export function MfaChallenge() {
       {/* 복구 코드 링크 */}
       {selectedMethod !== 'recovery' && (
         <>
-      <Separator />
-      <div className="text-center">
-        <button
-          className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+          <Separator />
+          <div className="text-center">
+            <button
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
               onClick={() => handleMethodChange('recovery')}
-          type="button"
-        >
-          인증 수단을 사용할 수 없나요?
-        </button>
-      </div>
+              type="button"
+            >
+              인증 수단을 사용할 수 없나요?
+            </button>
+          </div>
         </>
       )}
     </div>

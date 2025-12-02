@@ -16,10 +16,7 @@ import { signIn } from '@/lib/auth-client'
 export function LoginForm() {
   const router = useRouter()
   const routerRef = useRef(router)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [isPending, setIsPending] = useState(false)
 
@@ -70,6 +67,11 @@ export function LoginForm() {
     e.preventDefault()
     setError('')
 
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const rememberMe = formData.get('remember') === 'on'
+
     if (!email.trim()) {
       setError('이메일을 입력해주세요')
       return
@@ -107,7 +109,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="flex flex-col gap-6">
       {/* 패스키 로그인 */}
       <Button className="w-full" disabled={isPending} onClick={handlePasskeyLogin} type="button">
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
@@ -125,7 +127,7 @@ export function LoginForm() {
       </div>
 
       {/* 이메일/비밀번호 로그인 */}
-      <form className="space-y-4" onSubmit={handlePasswordLogin}>
+      <form className="flex flex-col gap-4" onSubmit={handlePasswordLogin}>
         <div>
           <Label htmlFor="email">이메일</Label>
           <Input
@@ -134,10 +136,8 @@ export function LoginForm() {
             disabled={isPending}
             id="email"
             name="email"
-            onChange={(e) => setEmail(e.target.value)}
             placeholder="example@email.com"
             type="email"
-            value={email}
           />
         </div>
 
@@ -158,9 +158,7 @@ export function LoginForm() {
               disabled={isPending}
               id="password"
               name="password"
-              onChange={(e) => setPassword(e.target.value)}
               type={showPassword ? 'text' : 'password'}
-              value={password}
             />
             <button
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -174,13 +172,8 @@ export function LoginForm() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Checkbox
-            checked={rememberMe}
-            disabled={isPending}
-            id="rememberMe"
-            onCheckedChange={(checked) => setRememberMe(checked === true)}
-          />
-          <Label className="cursor-pointer font-normal text-sm" htmlFor="rememberMe">
+          <Checkbox disabled={isPending} id="remember" name="remember" />
+          <Label className="cursor-pointer font-normal text-sm" htmlFor="remember">
             로그인 유지
           </Label>
         </div>
@@ -208,10 +201,7 @@ export function LoginForm() {
           <span className="bg-card px-2 text-muted-foreground">또는</span>
         </div>
       </div>
-
-      {/* Google 로그인 */}
       <GoogleOAuthButton disabled={isPending} />
-
       <p className="text-center text-sm text-muted-foreground">
         계정이 없으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/register">

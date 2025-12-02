@@ -90,7 +90,7 @@ export default function InvoiceConvertPage() {
           results={convertResults}
         />
       ) : (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* Progress Steps */}
           <Card className="border-slate-200 bg-card shadow-sm">
             <CardContent className="p-4">

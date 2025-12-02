@@ -68,7 +68,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     // 옵션-제조사 매핑 조회
     const allOptionMappings = await db.select().from(optionMappings)
-    const optionMap = new Map(allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]))
+    const optionMap = new Map(
+      allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
+    )
 
     // DB 트랜잭션으로 저장
     await db.transaction(async (tx) => {

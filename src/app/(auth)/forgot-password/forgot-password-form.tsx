@@ -12,8 +12,8 @@ export function ForgotPasswordForm() {
   const [state, dispatch, isPending] = useActionState(requestPasswordReset, undefined)
 
   return (
-    <div className="mt-8 space-y-6">
-      <form action={dispatch} className="space-y-6">
+    <div className="mt-8 flex flex-col gap-6">
+      <form action={dispatch} className="flex flex-col gap-6">
         <div>
           <Label htmlFor="email">이메일</Label>
           <Input autoComplete="email" className="mt-2" id="email" name="email" required type="email" />

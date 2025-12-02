@@ -47,7 +47,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-slate-200 bg-card shadow-sm">

@@ -64,7 +64,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         {/* Recent Uploads & Chart - 2 columns */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="flex flex-col gap-6 lg:col-span-2">
           <RecentUploads isLoading={isLoadingUploads} uploads={uploads ?? []} />
           <ManufacturerChart data={chartData ?? []} isLoading={isLoadingChart} />
         </div>

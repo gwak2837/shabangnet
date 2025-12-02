@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
-import { SHOPPING_MALL_CONFIGS } from '@/common/constants'
 import { db } from '@/db/client'
 import { manufacturers, optionMappings, products } from '@/db/schema/manufacturers'
 import { orders, uploads } from '@/db/schema/orders'
@@ -37,13 +36,17 @@ interface UploadResult {
 
 // 쇼핑몰 목록 조회
 export async function GET(): Promise<NextResponse> {
-  const malls = SHOPPING_MALL_CONFIGS.map((m) => ({
-    id: m.id,
-    name: m.mallName,
-    displayName: m.displayName,
-  }))
+  const templates = await db
+    .select({
+      id: shoppingMallTemplates.id,
+      name: shoppingMallTemplates.mallName,
+      displayName: shoppingMallTemplates.displayName,
+    })
+    .from(shoppingMallTemplates)
+    .where(eq(shoppingMallTemplates.enabled, true))
+    .orderBy(shoppingMallTemplates.displayName)
 
-  return NextResponse.json({ malls })
+  return NextResponse.json({ malls: templates })
 }
 
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
@@ -60,27 +63,25 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       return NextResponse.json({ error: '쇼핑몰을 선택해주세요' }, { status: 400 })
     }
 
-    // DB에서 쇼핑몰 템플릿 조회 시도, 없으면 기본 설정 사용
-    let mallConfig = SHOPPING_MALL_CONFIGS.find((m) => m.id === mallId)
+    // DB에서 쇼핑몰 템플릿 조회
     const dbTemplate = await db.query.shoppingMallTemplates.findFirst({
       where: eq(shoppingMallTemplates.id, mallId),
     })
 
-    if (dbTemplate) {
-      mallConfig = {
-        id: dbTemplate.id,
-        mallName: dbTemplate.mallName,
-        displayName: dbTemplate.displayName,
-        headerRow: dbTemplate.headerRow ?? 1,
-        dataStartRow: dbTemplate.dataStartRow ?? 2,
-        columnMappings: typeof dbTemplate.columnMappings === 'string' 
-          ? JSON.parse(dbTemplate.columnMappings) 
-          : (dbTemplate.columnMappings as Record<string, string> | null) ?? {},
-      }
+    if (!dbTemplate) {
+      return NextResponse.json({ error: '알 수 없는 쇼핑몰입니다' }, { status: 400 })
     }
 
-    if (!mallConfig) {
-      return NextResponse.json({ error: '알 수 없는 쇼핑몰입니다' }, { status: 400 })
+    const mallConfig = {
+      id: dbTemplate.id,
+      mallName: dbTemplate.mallName,
+      displayName: dbTemplate.displayName,
+      headerRow: dbTemplate.headerRow ?? 1,
+      dataStartRow: dbTemplate.dataStartRow ?? 2,
+      columnMappings:
+        typeof dbTemplate.columnMappings === 'string'
+          ? (JSON.parse(dbTemplate.columnMappings) as Record<string, string>)
+          : ((dbTemplate.columnMappings as Record<string, string> | null) ?? {}),
     }
 
     // 파일 유효성 검사
@@ -111,7 +112,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     // 옵션-제조사 매핑 조회
     const allOptionMappings = await db.select().from(optionMappings)
-    const optionMap = new Map(allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]))
+    const optionMap = new Map(
+      allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
+    )
 
     // DB 트랜잭션으로 저장
     await db.transaction(async (tx) => {

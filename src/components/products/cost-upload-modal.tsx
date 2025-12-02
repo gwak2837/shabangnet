@@ -135,7 +135,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
           <DialogDescription>엑셀 파일(.xlsx)을 업로드하여 상품 원가를 일괄 등록합니다.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-auto space-y-4">
+        <div className="flex-1 overflow-auto flex flex-col gap-4">
           {/* Template Download */}
           <Button className="gap-2" onClick={handleDownloadTemplate} size="sm" variant="outline">
             <Download className="h-4 w-4" />
@@ -192,7 +192,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
           {/* Preview */}
           {uploadedData.length > 0 && !isProcessing && (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-4 text-sm">
                 <span className="flex items-center gap-1 text-emerald-600">
                   <CheckCircle2 className="h-4 w-4" />

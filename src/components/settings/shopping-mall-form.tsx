@@ -274,7 +274,7 @@ export function ShoppingMallForm({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           {/* Template List Table */}
           <div className="rounded-lg border border-slate-200 overflow-hidden">
             <Table>
@@ -389,10 +389,10 @@ export function ShoppingMallForm({
           </DialogHeader>
 
           {editingTemplate && (
-            <div className="space-y-6 py-4">
+            <div className="flex flex-col gap-6 py-4">
               {/* 기본 정보 */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="mallName">쇼핑몰 ID (영문)</Label>
                   <Input
                     id="mallName"
@@ -401,7 +401,7 @@ export function ShoppingMallForm({
                     value={editingTemplate.mallName}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="displayName">쇼핑몰명 (표시용)</Label>
                   <Input
                     id="displayName"
@@ -413,7 +413,7 @@ export function ShoppingMallForm({
               </div>
 
               {/* 샘플 파일 업로드 */}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>샘플 파일 업로드</Label>
                 <div
                   className={cn(
@@ -458,7 +458,7 @@ export function ShoppingMallForm({
               {/* 헤더 행 설정 */}
               {analyzeResult && (
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-2">
                     <Label htmlFor="headerRow">헤더 행 번호</Label>
                     <Input
                       id="headerRow"
@@ -469,7 +469,7 @@ export function ShoppingMallForm({
                     />
                     <p className="text-xs text-slate-500">자동 감지: {analyzeResult.detectedHeaderRow}행</p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-2">
                     <Label htmlFor="dataStartRow">데이터 시작 행</Label>
                     <Input
                       id="dataStartRow"
@@ -486,7 +486,7 @@ export function ShoppingMallForm({
 
               {/* 컬럼 매핑 */}
               {analyzeResult && analyzeResult.headers.length > 0 && (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <Label>컬럼 매핑</Label>
                     {getMissingRequiredFields().length > 0 && (

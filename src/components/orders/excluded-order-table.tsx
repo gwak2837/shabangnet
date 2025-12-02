@@ -92,7 +92,7 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <div className="space-y-1">
+                              <div className="flex flex-col gap-1">
                                 {exclusionLabels.slice(2).map((label, idx) => (
                                   <p className="text-xs" key={idx}>
                                     {label}

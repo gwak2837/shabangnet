@@ -1,5 +1,3 @@
-import { z } from 'zod'
-
 // 허용되는 특수문자 목록
 export const SPECIAL_CHARACTERS = '!@#$%^&*()_+-=[]{}|;:,.<>?'
 
@@ -102,23 +100,3 @@ export const PASSWORD_ERROR_MESSAGES = {
   isCommon: '너무 흔한 비밀번호예요. 다른 비밀번호를 선택해주세요',
   mismatch: '비밀번호가 일치하지 않아요',
 } as const
-
-/**
- * Zod 비밀번호 스키마 (기본 검증)
- */
-export const passwordSchema = z
-  .string()
-  .min(PASSWORD_RULES.minLength, PASSWORD_ERROR_MESSAGES.minLength)
-  .max(PASSWORD_RULES.maxLength, PASSWORD_ERROR_MESSAGES.maxLength)
-  .regex(LETTER_REGEX, PASSWORD_ERROR_MESSAGES.hasLetter)
-  .regex(NUMBER_REGEX, PASSWORD_ERROR_MESSAGES.hasNumber)
-  .regex(SPECIAL_REGEX, PASSWORD_ERROR_MESSAGES.hasSpecial)
-
-/**
- * 흔한 비밀번호 체크를 포함한 커스텀 검증 함수
- */
-export function createPasswordSchemaWithCommonCheck(commonPasswords: Set<string>) {
-  return passwordSchema.refine((password) => !commonPasswords.has(password.toLowerCase()), {
-    message: PASSWORD_ERROR_MESSAGES.isCommon,
-  })
-}

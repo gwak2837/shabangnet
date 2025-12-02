@@ -57,7 +57,7 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
+                    <div className="flex flex-col gap-1">
                       <p className="font-medium text-slate-900">{upload.totalOrders.toLocaleString()}건</p>
                       {upload.errorOrders > 0 && <p className="text-xs text-rose-600">오류 {upload.errorOrders}건</p>}
                     </div>

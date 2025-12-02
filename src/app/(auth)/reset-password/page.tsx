@@ -10,7 +10,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
 
   if (!token) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      <div className="flex flex-col items-center justify-center flex flex-col gap-4 text-center">
         <div className="rounded-full bg-red-100 p-3">
           <XCircle className="h-8 w-8 text-red-600" />
         </div>
@@ -30,7 +30,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
 
   if (!valid) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      <div className="flex flex-col items-center justify-center flex flex-col gap-4 text-center">
         <div className="rounded-full bg-red-100 p-3">
           <XCircle className="h-8 w-8 text-red-600" />
         </div>

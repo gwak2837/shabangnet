@@ -33,7 +33,7 @@ export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+        <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2">
           {completedLogs.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
               <Mail className="h-12 w-12 mx-auto mb-3 text-slate-300" />
