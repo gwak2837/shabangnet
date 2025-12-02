@@ -6,14 +6,14 @@ dotenv.config({
   override: true,
 })
 
-console.log('👀 - DATABASE_URL_DIRECT:', process.env.DATABASE_URL_DIRECT)
+console.log('👀 - SUPABASE_POSTGRES_URL_NON_POOLING:', process.env.SUPABASE_POSTGRES_URL_NON_POOLING)
 
 export default defineConfig({
   schema: './src/db/schema',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL_DIRECT!,
+    url: process.env.SUPABASE_POSTGRES_URL_NON_POOLING!,
     ssl: process.env.SUPABASE_CERTIFICATE
       ? { ca: process.env.SUPABASE_CERTIFICATE, rejectUnauthorized: true }
       : 'prefer',
