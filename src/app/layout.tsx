@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
+import { Toaster } from 'sonner'
 
 import { getOrigin } from '@/common/config'
 import { SITE_CONFIG } from '@/common/constants'
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${notoSansKr.variable} font-sans antialiased`}>
         <QueryProvider>{children}</QueryProvider>
+        <Toaster position="top-center" richColors theme="system" />
       </body>
     </html>
   )
