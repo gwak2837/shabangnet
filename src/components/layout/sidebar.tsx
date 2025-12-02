@@ -11,6 +11,7 @@ import {
   Settings2,
   Truck,
   Upload,
+  Users,
   X,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -74,6 +75,12 @@ const managementNavItems = [
     description: '제조사별 발주 내역 및 정산서 다운로드',
     href: '/settlement',
     icon: Calculator,
+  },
+  {
+    title: '사용자 관리',
+    description: '사용자 가입 승인 및 관리 (관리자 전용)',
+    href: '/users',
+    icon: Users,
   },
 ]
 

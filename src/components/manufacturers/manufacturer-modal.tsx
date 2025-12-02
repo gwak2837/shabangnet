@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { defaultInvoiceTemplate, type InvoiceTemplate, invoiceTemplates, type Manufacturer } from '@/lib/mock-data'
+import { defaultInvoiceTemplate, type InvoiceTemplate, type Manufacturer } from '@/services/manufacturers'
 
 import { analyzeOrderTemplate } from './actions'
 
@@ -532,10 +532,8 @@ function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
   }
 }
 
-function getInvoiceTemplateFromManufacturer(manufacturer: Manufacturer | null): Partial<InvoiceTemplate> {
-  if (!manufacturer) {
-    return { ...defaultInvoiceTemplate }
-  }
-  const existingTemplate = invoiceTemplates.find((t) => t.manufacturerId === manufacturer.id)
-  return existingTemplate || { ...defaultInvoiceTemplate }
+function getInvoiceTemplateFromManufacturer(_manufacturer: Manufacturer | null): Partial<InvoiceTemplate> {
+  // Invoice template loading is now handled async via API
+  // Default template is used initially, actual template should be fetched separately
+  return { ...defaultInvoiceTemplate }
 }

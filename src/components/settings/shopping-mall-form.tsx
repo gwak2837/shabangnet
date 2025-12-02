@@ -3,7 +3,7 @@
 import { CheckCircle2, FileSpreadsheet, Loader2, Pencil, Plus, Store, Trash2, Upload } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import type { AnalyzeResult, ShoppingMallTemplate } from '@/lib/api/shopping-mall-templates'
+import type { AnalyzeResult, ShoppingMallTemplate } from '@/services/shopping-mall-templates'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
 import { Badge } from '@/components/ui/badge'

@@ -2,11 +2,12 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw } from 'lucide-react'
 
+import type { InvoiceConvertResult } from '@/services/logs'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { type InvoiceConvertResult } from '@/lib/mock-data'
 
 interface ConvertResultProps {
   fileName: string

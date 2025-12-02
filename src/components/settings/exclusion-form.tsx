@@ -3,7 +3,7 @@
 import { CheckCircle2, Filter, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
+import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

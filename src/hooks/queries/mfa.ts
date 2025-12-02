@@ -1,7 +1,11 @@
 'use server'
 
-import { auth } from '@/auth'
-import { getPasskeyCredentials, getRemainingRecoveryCodesCount, getUserMfaSettings } from '@/lib/mfa'
+import { eq } from 'drizzle-orm'
+import { headers } from 'next/headers'
+
+import { db } from '@/db/client'
+import { passkey, twoFactor, user } from '@/db/schema/auth'
+import { auth } from '@/lib/auth'
 
 // ============================================================================
 // Types
@@ -30,7 +34,9 @@ interface MfaSettingsResult extends ActionResult {
  */
 export async function getMfaSettings(): Promise<MfaSettingsResult> {
   try {
-    const session = await auth()
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    })
 
     if (!session?.user?.id) {
       return { success: false, error: '로그인이 필요합니다.' }
@@ -38,20 +44,48 @@ export async function getMfaSettings(): Promise<MfaSettingsResult> {
 
     const userId = session.user.id
 
-    const mfaSettings = await getUserMfaSettings(userId)
-    const passkeys = await getPasskeyCredentials(userId)
-    const recoveryCodesRemaining = await getRemainingRecoveryCodesCount(userId)
+    // User의 twoFactorEnabled 확인
+    const [userData] = await db
+      .select({
+        twoFactorEnabled: user.twoFactorEnabled,
+      })
+      .from(user)
+      .where(eq(user.id, userId))
+
+    // 패스키 목록 조회
+    const passkeys = await db
+      .select({
+        id: passkey.id,
+        name: passkey.name,
+        createdAt: passkey.createdAt,
+      })
+      .from(passkey)
+      .where(eq(passkey.userId, userId))
+
+    // Two-factor 테이블에서 백업 코드 확인
+    const [twoFactorData] = await db.select().from(twoFactor).where(eq(twoFactor.userId, userId))
+
+    // 백업 코드 개수 계산 (JSON 문자열에서)
+    let recoveryCodesRemaining = 0
+    if (twoFactorData?.backupCodes) {
+      try {
+        const codes = JSON.parse(twoFactorData.backupCodes)
+        recoveryCodesRemaining = Array.isArray(codes) ? codes.filter((c: { used?: boolean }) => !c.used).length : 0
+      } catch {
+        recoveryCodesRemaining = 0
+      }
+    }
 
     return {
       success: true,
       settings: {
-        totpEnabled: mfaSettings.totpEnabled,
-        passkeyEnabled: mfaSettings.passkeyEnabled,
+        totpEnabled: userData?.twoFactorEnabled ?? false,
+        passkeyEnabled: passkeys.length > 0,
         passkeys: passkeys.map((p) => ({
           id: p.id,
           name: p.name,
           createdAt: p.createdAt.toISOString(),
-          lastUsedAt: p.lastUsedAt?.toISOString() ?? null,
+          lastUsedAt: null,
         })),
         recoveryCodesRemaining,
       },

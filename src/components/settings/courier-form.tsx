@@ -3,7 +3,7 @@
 import { CheckCircle2, Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { useState } from 'react'
 
-import type { CourierMapping } from '@/lib/mock-data'
+import type { CourierMapping } from '@/services/settings'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

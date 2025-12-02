@@ -2,11 +2,33 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { CreateTemplateData, UpdateTemplateData } from '@/lib/api/shopping-mall-templates'
-import type { CourierMapping, DuplicateCheckSettings, ExclusionPattern, ExclusionSettings } from '@/lib/mock-data'
-
-import { api } from '@/lib/api'
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/common/constants/query-keys'
+import {
+  addCourierMapping,
+  addExclusionPattern,
+  type CourierMapping,
+  type DuplicateCheckSettings,
+  type ExclusionPattern,
+  type ExclusionSettings,
+  getCourierMappings,
+  getDuplicateCheckSettings,
+  getExclusionSettings,
+  removeCourierMapping,
+  removeExclusionPattern,
+  updateCourierMapping,
+  updateDuplicateCheckSettings,
+  updateExclusionSettings,
+} from '@/services/settings'
+import {
+  analyzeShoppingMallFile,
+  createShoppingMallTemplate,
+  type CreateTemplateData,
+  deleteShoppingMallTemplate,
+  getShoppingMallTemplate,
+  getShoppingMallTemplates,
+  updateShoppingMallTemplate,
+  type UpdateTemplateData,
+} from '@/services/shopping-mall-templates'
 
 import { getMfaSettings } from './queries/mfa'
 
@@ -14,7 +36,7 @@ export function useAddCourierMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Omit<CourierMapping, 'id'>) => api.settings.addCourierMapping(data),
+    mutationFn: (data: Omit<CourierMapping, 'id'>) => addCourierMapping(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.courier })
     },
@@ -25,7 +47,7 @@ export function useAddExclusionPattern() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (pattern: Omit<ExclusionPattern, 'id'>) => api.settings.addExclusionPattern(pattern),
+    mutationFn: (pattern: Omit<ExclusionPattern, 'id'>) => addExclusionPattern(pattern),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.exclusion })
     },
@@ -35,8 +57,7 @@ export function useAddExclusionPattern() {
 // 샘플 파일 분석
 export function useAnalyzeShoppingMallFile() {
   return useMutation({
-    mutationFn: ({ file, headerRow }: { file: File; headerRow?: number }) =>
-      api.shoppingMallTemplates.analyzeShoppingMallFile(file, headerRow),
+    mutationFn: ({ file, headerRow }: { file: File; headerRow?: number }) => analyzeShoppingMallFile(file, headerRow),
   })
 }
 
@@ -44,7 +65,7 @@ export function useAnalyzeShoppingMallFile() {
 export function useCourierMappings() {
   return useQuery({
     queryKey: queryKeys.settings.courier,
-    queryFn: api.settings.getCourierMappings,
+    queryFn: getCourierMappings,
   })
 }
 
@@ -53,7 +74,7 @@ export function useCreateShoppingMallTemplate() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateTemplateData) => api.shoppingMallTemplates.createShoppingMallTemplate(data),
+    mutationFn: (data: CreateTemplateData) => createShoppingMallTemplate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
     },
@@ -65,7 +86,7 @@ export function useDeleteShoppingMallTemplate() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.shoppingMallTemplates.deleteShoppingMallTemplate(id),
+    mutationFn: (id: string) => deleteShoppingMallTemplate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
     },
@@ -76,7 +97,7 @@ export function useDeleteShoppingMallTemplate() {
 export function useDuplicateCheckSettings() {
   return useQuery({
     queryKey: queryKeys.settings.duplicateCheck,
-    queryFn: api.settings.getDuplicateCheckSettings,
+    queryFn: getDuplicateCheckSettings,
   })
 }
 
@@ -84,7 +105,7 @@ export function useDuplicateCheckSettings() {
 export function useExclusionSettings() {
   return useQuery({
     queryKey: queryKeys.settings.exclusion,
-    queryFn: api.settings.getExclusionSettings,
+    queryFn: getExclusionSettings,
   })
 }
 
@@ -104,7 +125,7 @@ export function useRemoveCourierMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.settings.removeCourierMapping(id),
+    mutationFn: (id: string) => removeCourierMapping(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.courier })
     },
@@ -115,7 +136,7 @@ export function useRemoveExclusionPattern() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.settings.removeExclusionPattern(id),
+    mutationFn: (id: string) => removeExclusionPattern(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.exclusion })
     },
@@ -126,7 +147,7 @@ export function useRemoveExclusionPattern() {
 export function useShoppingMallTemplate(id: string) {
   return useQuery({
     queryKey: queryKeys.shoppingMallTemplates.detail(id),
-    queryFn: () => api.shoppingMallTemplates.getShoppingMallTemplate(id),
+    queryFn: () => getShoppingMallTemplate(id),
     enabled: !!id,
   })
 }
@@ -135,20 +156,15 @@ export function useShoppingMallTemplate(id: string) {
 export function useShoppingMallTemplates() {
   return useQuery({
     queryKey: queryKeys.shoppingMallTemplates.all,
-    queryFn: api.shoppingMallTemplates.getShoppingMallTemplates,
+    queryFn: getShoppingMallTemplates,
   })
 }
-
-// ============================================
-// Shopping Mall Templates
-// ============================================
 
 export function useUpdateCourierMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CourierMapping> }) =>
-      api.settings.updateCourierMapping(id, data),
+    mutationFn: ({ id, data }: { data: Partial<CourierMapping>; id: string }) => updateCourierMapping(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.courier })
     },
@@ -159,7 +175,7 @@ export function useUpdateDuplicateCheckSettings() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Partial<DuplicateCheckSettings>) => api.settings.updateDuplicateCheckSettings(data),
+    mutationFn: (data: Partial<DuplicateCheckSettings>) => updateDuplicateCheckSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.duplicateCheck })
     },
@@ -170,7 +186,7 @@ export function useUpdateExclusionSettings() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Partial<ExclusionSettings>) => api.settings.updateExclusionSettings(data),
+    mutationFn: (data: Partial<ExclusionSettings>) => updateExclusionSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.exclusion })
     },
@@ -182,8 +198,7 @@ export function useUpdateShoppingMallTemplate() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateTemplateData }) =>
-      api.shoppingMallTemplates.updateShoppingMallTemplate(id, data),
+    mutationFn: ({ id, data }: { data: UpdateTemplateData; id: string }) => updateShoppingMallTemplate(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
     },

@@ -1,24 +1,18 @@
 'use server'
 
-import { and, eq, isNull } from 'drizzle-orm'
+// Account lock 기능은 better-auth에서는 기본적으로 제공되지 않습니다.
+// 필요한 경우 별도 구현이 필요합니다.
 
-import { db } from '@/db/client'
-import { accountLocks } from '@/db/schema/auth'
+interface UnlockResult {
+  error?: string
+  success?: string
+}
 
-export async function unlockAccountAction(token: string) {
+export async function unlockAccountAction(token: string): Promise<UnlockResult> {
   if (!token) {
     return { error: '잠금 해제 토큰이 필요해요' }
   }
 
-  const [updated] = await db
-    .update(accountLocks)
-    .set({ unlockedAt: new Date() })
-    .where(and(eq(accountLocks.unlockToken, token), isNull(accountLocks.unlockedAt)))
-    .returning({ id: accountLocks.id })
-
-  if (!updated) {
-    return { error: '유효하지 않거나 이미 사용된 토큰이에요' }
-  }
-
-  return { success: '계정 잠금이 해제됐어요' }
+  // TODO: Account lock 기능 구현 필요
+  return { error: '계정 잠금 해제 기능이 아직 구현되지 않았어요' }
 }

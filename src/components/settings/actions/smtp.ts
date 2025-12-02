@@ -12,11 +12,9 @@ import { decrypt, encrypt, maskPassword } from '@/utils/crypto'
 // ============================================================================
 
 export interface SMTPSettingsData {
-  fromEmail: string
   fromName: string
   host: string
   password: string
-  port: number
   username: string
 }
 
@@ -39,11 +37,9 @@ interface SettingToSave {
 
 // SMTP 설정 키 상수
 const SMTP_KEYS = {
-  fromEmail: 'smtp.fromEmail',
   fromName: 'smtp.fromName',
   host: 'smtp.host',
   pass: 'smtp.pass',
-  port: 'smtp.port',
   user: 'smtp.user',
 } as const
 
@@ -65,11 +61,9 @@ export async function getSmtpSettingsAction(): Promise<{
       .select()
       .from(settings)
       .where(eq(settings.key, SMTP_KEYS.host))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.port)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.user)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.pass)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromName)))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromEmail)))
 
     // 설정이 없으면 null 반환
     if (rows.length === 0) {
@@ -80,11 +74,9 @@ export async function getSmtpSettingsAction(): Promise<{
     const settingsMap = new Map(rows.map((r) => [r.key, r.value]))
 
     const host = settingsMap.get(SMTP_KEYS.host) || ''
-    const port = parseInt(settingsMap.get(SMTP_KEYS.port) || '587', 10)
     const username = settingsMap.get(SMTP_KEYS.user) || ''
     const encryptedPassword = settingsMap.get(SMTP_KEYS.pass) || ''
     const fromName = settingsMap.get(SMTP_KEYS.fromName) || ''
-    const fromEmail = settingsMap.get(SMTP_KEYS.fromEmail) || ''
 
     // 비밀번호 마스킹 처리
     let maskedPassword = ''
@@ -105,12 +97,10 @@ export async function getSmtpSettingsAction(): Promise<{
       success: true,
       settings: {
         host,
-        port,
         username,
         maskedPassword,
         hasPassword,
         fromName,
-        fromEmail,
       },
     }
   } catch (error) {
@@ -131,11 +121,9 @@ export async function saveSmtpSettingsAction(data: SMTPSettingsData): Promise<Ac
     // 각 설정을 upsert
     const settingsToSave = [
       { key: SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
-      { key: SMTP_KEYS.port, value: String(data.port), description: 'SMTP 서버 포트' },
       { key: SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
       { key: SMTP_KEYS.pass, value: encryptedPassword, description: 'SMTP 비밀번호 (암호화됨)' },
       { key: SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
-      { key: SMTP_KEYS.fromEmail, value: data.fromEmail, description: '발신자 이메일' },
     ]
 
     for (const setting of settingsToSave) {
@@ -202,10 +190,8 @@ export async function updateSmtpSettingsAction(
     // 비밀번호가 제공되지 않으면 기존 값 유지
     const settingsToSave: SettingToSave[] = [
       { key: SMTP_KEYS.host, value: data.host, description: 'SMTP 서버 호스트' },
-      { key: SMTP_KEYS.port, value: String(data.port), description: 'SMTP 서버 포트' },
       { key: SMTP_KEYS.user, value: data.username, description: 'SMTP 사용자명' },
       { key: SMTP_KEYS.fromName, value: data.fromName, description: '발신자 이름' },
-      { key: SMTP_KEYS.fromEmail, value: data.fromEmail, description: '발신자 이메일' },
     ]
 
     // 비밀번호가 제공된 경우에만 업데이트

@@ -13,22 +13,18 @@ import type { SMTPSettingsDisplay } from './actions/smtp'
 import { getSmtpSettingsAction, testSMTPConnectionAction, updateSmtpSettingsAction } from './actions/smtp'
 
 interface SMTPFormData {
-  fromEmail: string
   fromName: string
   host: string
   password: string
-  port: number
   username: string
 }
 
 export function SMTPForm() {
   const [formData, setFormData] = useState<SMTPFormData>({
     host: '',
-    port: 587,
     username: '',
     password: '',
     fromName: '',
-    fromEmail: '',
   })
   const [hasExistingPassword, setHasExistingPassword] = useState(false)
   const [maskedPassword, setMaskedPassword] = useState('')
@@ -53,11 +49,9 @@ export function SMTPForm() {
         const settings: SMTPSettingsDisplay = result.settings
         setFormData({
           host: settings.host,
-          port: settings.port,
           username: settings.username,
-          password: '', // 비밀번호는 마스킹된 값만 표시
+          password: '',
           fromName: settings.fromName,
-          fromEmail: settings.fromEmail,
         })
         setHasExistingPassword(settings.hasPassword)
         setMaskedPassword(settings.maskedPassword)
@@ -76,16 +70,13 @@ export function SMTPForm() {
     try {
       const result = await updateSmtpSettingsAction({
         host: formData.host,
-        port: formData.port,
         username: formData.username,
-        password: formData.password || undefined, // 빈 문자열이면 undefined로 전달
+        password: formData.password || undefined,
         fromName: formData.fromName,
-        fromEmail: formData.fromEmail,
       })
 
       if (result.success) {
         setSaved(true)
-        // 저장 후 설정 다시 로드 (마스킹된 비밀번호 업데이트)
         await loadSettings()
         setFormData((prev) => ({ ...prev, password: '' }))
         setTimeout(() => setSaved(false), 3000)
@@ -164,19 +155,8 @@ export function SMTPForm() {
 
           <div className="space-y-2">
             <Label htmlFor="port">포트</Label>
-            <Input
-              id="port"
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  port: parseInt(e.target.value) || 587,
-                })
-              }
-              placeholder="587"
-              type="number"
-              value={formData.port}
-            />
-            <p className="text-xs text-slate-500">587 (STARTTLS) 또는 465 (SSL) 권장</p>
+            <Input className="bg-slate-50 text-slate-500" disabled id="port" readOnly value="587 (STARTTLS)" />
+            <p className="text-xs text-slate-500">보안을 위해 587 포트로 고정됩니다</p>
           </div>
         </div>
 
@@ -195,6 +175,7 @@ export function SMTPForm() {
                 value={formData.username}
               />
             </div>
+            <p className="text-xs text-slate-500">발신자 이메일로도 사용됩니다</p>
           </div>
 
           <div className="space-y-2">
@@ -216,28 +197,16 @@ export function SMTPForm() {
           </div>
         </div>
 
-        {/* From Settings */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="fromName">발신자 이름</Label>
-            <Input
-              id="fromName"
-              onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
-              placeholder="(주)다온에프앤씨"
-              value={formData.fromName}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fromEmail">발신자 이메일</Label>
-            <Input
-              id="fromEmail"
-              onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
-              placeholder="daonfnc@gmail.com"
-              type="email"
-              value={formData.fromEmail}
-            />
-          </div>
+        {/* From Name */}
+        <div className="space-y-2">
+          <Label htmlFor="fromName">발신자 이름</Label>
+          <Input
+            id="fromName"
+            onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
+            placeholder="(주)다온에프앤씨"
+            value={formData.fromName}
+          />
+          <p className="text-xs text-slate-500">수신자에게 표시되는 발신자 이름입니다</p>
         </div>
 
         {/* Security Notice */}
@@ -246,9 +215,7 @@ export function SMTPForm() {
           <div className="space-y-1">
             <p className="text-sm font-medium text-emerald-800">보안 연결 활성화됨</p>
             <p className="text-xs text-emerald-700">
-              모든 이메일은 TLS/SSL 암호화 연결을 통해 안전하게 발송됩니다.
-              <br />
-              포트 587은 STARTTLS, 포트 465는 Implicit TLS를 자동으로 사용합니다.
+              모든 이메일은 TLS 암호화 연결(STARTTLS)을 통해 안전하게 발송됩니다.
             </p>
           </div>
         </div>

@@ -2,11 +2,13 @@
 
 import { CheckCircle2, Eye, FileSpreadsheet, Mail, XCircle } from 'lucide-react'
 
+import type { SendLog } from '@/services/logs'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatCurrency, formatDateTime, type SendLog } from '@/lib/mock-data'
+import { formatCurrency, formatDateTime } from '@/utils/format'
 
 interface LogTableProps {
   logs: SendLog[]

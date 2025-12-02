@@ -2,10 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import type { SettlementData, SettlementFilters } from '@/lib/api/settlement'
-
-import { api } from '@/lib/api'
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/common/constants/query-keys'
+import { getSettlementData, type SettlementData, type SettlementFilters } from '@/services/settlement'
 
 export function useSettlement(filters: SettlementFilters | null) {
   return useQuery<SettlementData>({
@@ -31,7 +29,7 @@ export function useSettlement(filters: SettlementFilters | null) {
           },
         })
       }
-      return api.settlement.getSettlementData(filters)
+      return getSettlementData(filters)
     },
     enabled: !!filters?.manufacturerId,
   })

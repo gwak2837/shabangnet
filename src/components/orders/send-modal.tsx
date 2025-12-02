@@ -14,7 +14,7 @@ import {
   Send,
   User,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,17 +28,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { checkDuplicate, type DuplicateCheckResult, type OrderBatch } from '@/services/orders'
+import { getDuplicateCheckSettings } from '@/services/settings'
 import {
-  checkDuplicateSend,
-  type DuplicateCheckResult,
-  duplicateCheckSettings,
   formatCurrency,
   formatDateTime,
   formatProductNameWithOption,
   formatRecipientName,
   getDaysDifference,
-  type OrderBatch,
-} from '@/lib/mock-data'
+} from '@/utils/format'
 
 import { sendOrder } from './actions'
 
@@ -54,14 +52,37 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
   const [sendError, setSendError] = useState<string | null>(null)
   const [duplicateReason, setDuplicateReason] = useState('')
   const [showOrderDetails, setShowOrderDetails] = useState(false)
+  const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResult | null>(null)
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
+  const [periodDays, setPeriodDays] = useState(10)
 
-  // 중복 체크 결과를 useMemo로 계산 (렌더링 시점에 파생)
-  const duplicateCheck = useMemo<DuplicateCheckResult | null>(() => {
-    if (!open || !batch || !duplicateCheckSettings.enabled) {
-      return null
+  // 중복 체크 결과를 useEffect로 비동기 로드
+  useEffect(() => {
+    if (!open || !batch) {
+      setDuplicateCheck(null)
+      return
     }
-    const recipientAddresses = batch.orders.map((order) => order.address)
-    return checkDuplicateSend(batch.manufacturerId, recipientAddresses, duplicateCheckSettings.periodDays)
+
+    async function checkForDuplicates() {
+      setIsCheckingDuplicate(true)
+      try {
+        const settings = await getDuplicateCheckSettings()
+        if (!settings.enabled) {
+          setDuplicateCheck(null)
+          return
+        }
+        setPeriodDays(settings.periodDays)
+        const recipientAddresses = batch!.orders.map((order) => order.address)
+        const result = await checkDuplicate(batch!.manufacturerId, recipientAddresses, settings.periodDays)
+        setDuplicateCheck(result)
+      } catch {
+        setDuplicateCheck(null)
+      } finally {
+        setIsCheckingDuplicate(false)
+      }
+    }
+
+    checkForDuplicates()
   }, [open, batch])
 
   if (!batch) {
@@ -247,9 +268,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div className="flex-1">
                   <p className="font-semibold text-amber-800">중복 발송 주의</p>
-                  <p className="mt-1 text-sm text-amber-700">
-                    동일 주소로 {duplicateCheckSettings.periodDays}일 이내 발송 이력이 있습니다.
-                  </p>
+                  <p className="mt-1 text-sm text-amber-700">동일 주소로 {periodDays}일 이내 발송 이력이 있습니다.</p>
                 </div>
               </div>
 

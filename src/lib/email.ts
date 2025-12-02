@@ -31,23 +31,20 @@ interface SMTPConfig {
     user: string
     pass: string
   }
-  fromEmail: string
   fromName: string
   host: string
-  port: number
-  requireTLS: boolean
-  secure: boolean
 }
 
 // SMTP 설정 키 상수
 const SMTP_KEYS = {
-  fromEmail: 'smtp.fromEmail',
   fromName: 'smtp.fromName',
   host: 'smtp.host',
   pass: 'smtp.pass',
-  port: 'smtp.port',
   user: 'smtp.user',
 } as const
+
+// SMTP 포트 587 (STARTTLS) 강제 사용
+const SMTP_PORT = 587
 
 /**
  * 이메일 발송 함수
@@ -132,48 +129,56 @@ export async function testSMTPConnection(): Promise<{ success: boolean; error?: 
 
 // Nodemailer transporter 생성
 async function createTransporter() {
-  // DB 설정 우선, 없으면 환경 변수 사용
-  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+  const config = await loadSMTPConfig()
 
   return nodemailer.createTransport({
     host: config.host,
-    port: config.port,
-    secure: config.secure,
-    requireTLS: config.requireTLS,
+    port: SMTP_PORT,
+    secure: false, // STARTTLS 사용
+    requireTLS: true, // TLS 필수
     auth: config.auth,
-    // TLS 옵션: 자체 서명 인증서 거부 (프로덕션 권장)
-    tls: {
-      rejectUnauthorized: true,
-    },
+    tls: { rejectUnauthorized: true },
   })
 }
 
 // 발신자 정보 가져오기
 async function getFromAddress(): Promise<string> {
-  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+  const config = await loadSMTPConfig()
+  const email = config.auth.user
 
-  return config.fromName ? `"${config.fromName}" <${config.fromEmail}>` : config.fromEmail
+  return config.fromName ? `"${config.fromName}" <${email}>` : email
 }
 
 /**
  * 환경변수에서 SMTP 설정을 가져옵니다. (fallback)
+ * 필수 환경변수가 없으면 null 반환
  */
-function getSMTPConfigFromEnv(): SMTPConfig {
-  const port = env.SMTP_PORT
+function getSMTPConfigFromEnv(): SMTPConfig | null {
+  const host = env.SMTP_HOST
+  const user = env.SMTP_USER
+  const pass = env.SMTP_PASS
+
+  // 필수 설정이 없으면 null 반환
+  if (!host || !user || !pass) {
+    return null
+  }
 
   return {
-    host: env.SMTP_HOST,
-    port,
-    // 포트 465는 Implicit TLS, 그 외는 STARTTLS
-    secure: port === 465,
-    requireTLS: port !== 465,
-    auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS,
-    },
+    host,
+    auth: { user, pass },
     fromName: env.SMTP_FROM_NAME || '',
-    fromEmail: env.SMTP_FROM_EMAIL || env.SMTP_USER,
   }
+}
+
+// SMTP 설정 로드 (DB 우선, 환경변수 fallback)
+async function loadSMTPConfig(): Promise<SMTPConfig> {
+  const config = (await loadSMTPConfigFromDB()) || getSMTPConfigFromEnv()
+
+  if (!config) {
+    throw new Error('SMTP 설정이 없습니다. 설정 페이지에서 SMTP를 설정해주세요.')
+  }
+
+  return config
 }
 
 /**
@@ -186,11 +191,9 @@ async function loadSMTPConfigFromDB(): Promise<SMTPConfig | null> {
       .select()
       .from(settings)
       .where(eq(settings.key, SMTP_KEYS.host))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.port)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.user)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.pass)))
       .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromName)))
-      .union(db.select().from(settings).where(eq(settings.key, SMTP_KEYS.fromEmail)))
 
     if (rows.length === 0) {
       return null
@@ -199,7 +202,6 @@ async function loadSMTPConfigFromDB(): Promise<SMTPConfig | null> {
     const settingsMap = new Map(rows.map((r) => [r.key, r.value]))
 
     const host = settingsMap.get(SMTP_KEYS.host)
-    const portStr = settingsMap.get(SMTP_KEYS.port)
     const user = settingsMap.get(SMTP_KEYS.user)
     const encryptedPass = settingsMap.get(SMTP_KEYS.pass)
 
@@ -208,21 +210,13 @@ async function loadSMTPConfigFromDB(): Promise<SMTPConfig | null> {
       return null
     }
 
-    const port = parseInt(portStr || '587', 10)
     const pass = decrypt(encryptedPass)
     const fromName = settingsMap.get(SMTP_KEYS.fromName) || ''
-    const fromEmail = settingsMap.get(SMTP_KEYS.fromEmail) || user
 
     return {
       host,
-      port,
-      // 포트 465는 Implicit TLS (secure: true)
-      // 포트 587은 STARTTLS (secure: false, requireTLS: true)
-      secure: port === 465,
-      requireTLS: port !== 465, // 465가 아닌 경우 STARTTLS 강제
       auth: { user, pass },
       fromName,
-      fromEmail,
     }
   } catch {
     return null

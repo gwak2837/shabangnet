@@ -2,6 +2,8 @@
 
 import { Edit2, Settings2, Trash2 } from 'lucide-react'
 
+import type { OptionManufacturerMapping } from '@/services/option-mappings'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate, type OptionManufacturerMapping } from '@/lib/mock-data'
+import { formatDate } from '@/utils/format'
 
 interface OptionMappingTableProps {
   mappings: OptionManufacturerMapping[]

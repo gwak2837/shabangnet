@@ -3,7 +3,7 @@
 import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 
-import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/lib/mock-data'
+import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/services/settings'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

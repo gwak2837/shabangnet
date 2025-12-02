@@ -2,16 +2,14 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { Manufacturer } from '@/lib/mock-data'
-
-import { api } from '@/lib/api'
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/common/constants/query-keys'
+import { create, getAll, getById, type Manufacturer, remove, update } from '@/services/manufacturers'
 
 export function useCreateManufacturer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>) => api.manufacturers.create(data),
+    mutationFn: (data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>) => create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
     },
@@ -22,7 +20,7 @@ export function useDeleteManufacturer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.manufacturers.remove(id),
+    mutationFn: (id: string) => remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
     },
@@ -32,7 +30,7 @@ export function useDeleteManufacturer() {
 export function useManufacturer(id: string) {
   return useQuery({
     queryKey: queryKeys.manufacturers.detail(id),
-    queryFn: () => api.manufacturers.getById(id),
+    queryFn: () => getById(id),
     enabled: !!id,
   })
 }
@@ -40,7 +38,7 @@ export function useManufacturer(id: string) {
 export function useManufacturers() {
   return useQuery({
     queryKey: queryKeys.manufacturers.all,
-    queryFn: api.manufacturers.getAll,
+    queryFn: getAll,
   })
 }
 
@@ -48,7 +46,7 @@ export function useUpdateManufacturer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Manufacturer> }) => api.manufacturers.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Manufacturer> }) => update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.detail(variables.id) })

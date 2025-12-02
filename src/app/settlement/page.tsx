@@ -3,7 +3,7 @@
 import { Download, FileSpreadsheet } from 'lucide-react'
 import { useState } from 'react'
 
-import type { SettlementFilters as SettlementFiltersType } from '@/lib/api/settlement'
+import type { SettlementFilters as SettlementFiltersType } from '@/services/settlement'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { SettlementFilters } from '@/components/settlement/settlement-filters'
@@ -12,8 +12,8 @@ import { SettlementTable } from '@/components/settlement/settlement-table'
 import { Button } from '@/components/ui/button'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useSettlement } from '@/hooks/use-settlement'
-import { api } from '@/lib/api'
 import { downloadExcel } from '@/lib/excel-client'
+import { getSettlementExcelData } from '@/services/settlement'
 
 export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()
@@ -62,7 +62,7 @@ export default function SettlementPage() {
   const handleDownload = async () => {
     if (filteredOrders.length === 0 || !searchParams) return
 
-    const { data, summary: downloadSummary } = await api.settlement.getSettlementExcelData(searchParams)
+    const { data, summary: downloadSummary } = await getSettlementExcelData(searchParams)
 
     // Add summary row
     data.push({

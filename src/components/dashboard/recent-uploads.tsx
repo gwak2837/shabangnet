@@ -2,10 +2,12 @@
 
 import { FileSpreadsheet, Loader2 } from 'lucide-react'
 
+import type { Upload } from '@/services/dashboard'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel, type Upload } from '@/lib/mock-data'
+import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel } from '@/utils/format'
 
 interface RecentUploadsProps {
   isLoading?: boolean

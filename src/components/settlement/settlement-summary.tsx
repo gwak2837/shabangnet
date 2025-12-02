@@ -3,7 +3,7 @@
 import { Ban, DollarSign, Hash, Package, Truck } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { formatCurrency } from '@/lib/mock-data'
+import { formatCurrency } from '@/utils/format'
 
 interface SettlementSummaryProps {
   excludedOrderCount?: number
