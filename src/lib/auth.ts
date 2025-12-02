@@ -8,7 +8,7 @@ import { db } from '@/db/client'
 import * as schema from '@/db/schema/auth'
 import { sec } from '@/utils/sec'
 
-const baseURL = env.BETTER_AUTH_URL || 'http://localhost:3000'
+const baseURL = env.NEXT_PUBLIC_APP_URL
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {

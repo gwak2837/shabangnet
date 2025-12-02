@@ -84,9 +84,9 @@ const SHOPPING_MALL_SEED_DATA = [
 ]
 
 async function seed() {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
   if (!databaseUrl) {
-    console.error('❌ DATABASE_URL environment variable is not set')
+    console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
   }
 

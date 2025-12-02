@@ -4,16 +4,13 @@ import { z } from 'zod'
 export const env = createEnv({
   server: {
     // Database
-    DATABASE_URL: z.url(),
     SUPABASE_CERTIFICATE: z.string().optional(),
+    SUPABASE_POSTGRES_URL_NON_POOLING: z.url(),
 
     // Authentication
-    AUTH_SECRET: z.string().min(1),
-    BETTER_AUTH_URL: z.url().optional(),
-
-    // OAuth - Google
     AUTH_GOOGLE_ID: z.string().optional(),
     AUTH_GOOGLE_SECRET: z.string().optional(),
+    AUTH_SECRET: z.string().min(1),
 
     // Email (SMTP)
     SMTP_HOST: z.string().optional(),
@@ -22,16 +19,15 @@ export const env = createEnv({
     SMTP_FROM_NAME: z.string().optional(),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.url().optional(),
+    NEXT_PUBLIC_APP_URL: z.url().default('http://localhost:3000'),
   },
   runtimeEnv: {
     // Database
-    DATABASE_URL: process.env.DATABASE_URL,
+    SUPABASE_POSTGRES_URL_NON_POOLING: process.env.SUPABASE_POSTGRES_URL_NON_POOLING,
     SUPABASE_CERTIFICATE: process.env.SUPABASE_CERTIFICATE,
 
     // Authentication
     AUTH_SECRET: process.env.AUTH_SECRET,
-    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
 
     // OAuth - Google
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,

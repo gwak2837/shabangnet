@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:push": "drizzle-kit push",
+    "db:push:prod": "DB_ENV=production pnpm drizzle-kit push"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.4.4",

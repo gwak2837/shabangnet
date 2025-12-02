@@ -20,7 +20,7 @@ const schema = {
 
 // postgres.js 클라이언트 생성
 // max: 1 은 서버리스 환경에서 권장 (Next.js API Routes)
-const client = postgres(env.DATABASE_URL, {
+const client = postgres(env.SUPABASE_POSTGRES_URL_NON_POOLING, {
   prepare: false,
   max: 1,
   idle_timeout: 20,
