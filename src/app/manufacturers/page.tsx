@@ -3,7 +3,7 @@
 import { Building2, Loader2, TrendingUp, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers'
+import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { ManufacturerModal } from '@/components/manufacturers/manufacturer-modal'

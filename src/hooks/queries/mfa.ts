@@ -1,10 +1,10 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 import { db } from '@/db/client'
-import { passkey, twoFactor, user } from '@/db/schema/auth'
+import { account, passkey, twoFactor, user } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
 
 // ============================================================================
@@ -18,6 +18,7 @@ interface ActionResult {
 
 interface MfaSettingsResult extends ActionResult {
   settings?: {
+    hasPassword: boolean
     passkeys: { createdAt: string; id: string; lastUsedAt: string | null; name: string | null }[]
     passkeyEnabled: boolean
     recoveryCodesRemaining: number
@@ -52,6 +53,14 @@ export async function getMfaSettings(): Promise<MfaSettingsResult> {
       .from(user)
       .where(eq(user.id, userId))
 
+    // credential 계정에서 비밀번호 유무 확인
+    const [credentialAccount] = await db
+      .select({ password: account.password })
+      .from(account)
+      .where(and(eq(account.userId, userId), eq(account.providerId, 'credential')))
+
+    const hasPassword = !!credentialAccount?.password
+
     // 패스키 목록 조회
     const passkeys = await db
       .select({
@@ -79,6 +88,7 @@ export async function getMfaSettings(): Promise<MfaSettingsResult> {
     return {
       success: true,
       settings: {
+        hasPassword,
         totpEnabled: userData?.twoFactorEnabled ?? false,
         passkeyEnabled: passkeys.length > 0,
         passkeys: passkeys.map((p) => ({

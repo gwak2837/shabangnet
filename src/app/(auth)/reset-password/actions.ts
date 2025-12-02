@@ -1,6 +1,6 @@
 'use server'
 
-import bcrypt from 'bcryptjs'
+import { hashPassword } from 'better-auth/crypto'
 import { and, eq, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -35,7 +35,7 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
   }
 
   const { token, password } = validatedFields.data
-  const hashedPassword = await bcrypt.hash(password, 10)
+  const hashedPassword = await hashPassword(password)
 
   const result = await db.transaction(async (tx) => {
     // verification 테이블에서 토큰 찾기

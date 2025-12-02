@@ -1,8 +1,9 @@
 'use client'
 
-import { AlertTriangle, CheckCircle2, Key, Loader2, Shield, Smartphone, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Key, KeyRound, Loader2, Shield, Smartphone, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -17,12 +18,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { passkeyMethods, twoFactor } from '@/lib/auth-client'
+import { validatePassword } from '@/utils/password'
+
+import { setPasswordAction } from './actions/mfa'
 
 interface MfaFormProps {
   settings?: MfaSettings
 }
 
 interface MfaSettings {
+  hasPassword?: boolean
   passkeys: { createdAt: string; id: string; lastUsedAt: string | null; name: string | null }[]
   recoveryCodesRemaining: number
   totpEnabled: boolean
@@ -35,6 +40,8 @@ export function MfaForm({ settings }: MfaFormProps) {
 
   // TOTP Setup State
   const [showTotpSetup, setShowTotpSetup] = useState(false)
+  const [showTotpPasswordDialog, setShowTotpPasswordDialog] = useState(false)
+  const [totpSetupPassword, setTotpSetupPassword] = useState('')
   const [totpUri, setTotpUri] = useState<string | null>(null)
   const [totpCode, setTotpCode] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
@@ -46,11 +53,18 @@ export function MfaForm({ settings }: MfaFormProps) {
   // Recovery Codes State
   const [showRecoveryCodes, setShowRecoveryCodes] = useState(false)
   const [newRecoveryCodes, setNewRecoveryCodes] = useState<string[] | null>(null)
+  const [recoveryPassword, setRecoveryPassword] = useState('')
 
   // Delete Confirmation
   const [deletePasskeyId, setDeletePasskeyId] = useState<string | null>(null)
   const [showDisableTotpDialog, setShowDisableTotpDialog] = useState(false)
   const [disableTotpCode, setDisableTotpCode] = useState('')
+
+  // Password Setup State (for passwordless users)
+  const [showSetPasswordDialog, setShowSetPasswordDialog] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordTouched, setPasswordTouched] = useState(false)
 
   useEffect(() => {
     if (success) {
@@ -72,12 +86,17 @@ export function MfaForm({ settings }: MfaFormProps) {
 
   // TOTP Setup
   async function handleStartTotpSetup() {
+    if (!totpSetupPassword) {
+      setError('비밀번호를 입력해주세요.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
       const result = await twoFactor.enable({
-        password: '', // better-auth handles this
+        password: totpSetupPassword,
         fetchOptions: {
           onSuccess: (ctx) => {
             const data = ctx.data as { totpURI?: string; backupCodes?: string[] }
@@ -86,6 +105,8 @@ export function MfaForm({ settings }: MfaFormProps) {
               if (data.backupCodes) {
                 setRecoveryCodes(data.backupCodes)
               }
+              setShowTotpPasswordDialog(false)
+              setTotpSetupPassword('')
               setShowTotpSetup(true)
             }
           },
@@ -228,18 +249,24 @@ export function MfaForm({ settings }: MfaFormProps) {
 
   // Recovery Codes
   async function handleRegenerateRecoveryCodes() {
+    if (!recoveryPassword) {
+      setError('비밀번호를 입력해주세요.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
       const result = await twoFactor.generateBackupCodes({
-        password: '',
+        password: recoveryPassword,
         fetchOptions: {
           onSuccess: (ctx) => {
             const data = ctx.data as { backupCodes?: string[] }
             if (data.backupCodes) {
               setNewRecoveryCodes(data.backupCodes)
-      setSuccess('복구 코드가 재생성되었습니다.')
+              setRecoveryPassword('')
+              setSuccess('복구 코드가 재생성되었습니다.')
             }
           },
           onError: (ctx) => {
@@ -253,6 +280,45 @@ export function MfaForm({ settings }: MfaFormProps) {
       }
     } catch {
       setError('복구 코드 생성에 실패했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Password Setup (for passwordless users)
+  async function handleSetPassword() {
+    if (!newPassword || !confirmPassword) {
+      setError('비밀번호를 입력해주세요.')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('password', newPassword)
+      formData.append('confirmPassword', confirmPassword)
+
+      const result = await setPasswordAction(formData)
+
+      if (result.success) {
+        setShowSetPasswordDialog(false)
+        setNewPassword('')
+        setConfirmPassword('')
+        setPasswordTouched(false)
+        setSuccess('비밀번호가 설정되었습니다.')
+        window.location.reload()
+      } else {
+        setError(result.error || '비밀번호 설정에 실패했습니다.')
+      }
+    } catch {
+      setError('비밀번호 설정에 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -294,6 +360,38 @@ export function MfaForm({ settings }: MfaFormProps) {
           </div>
         )}
 
+        {/* Password Setup Section (for passwordless users) */}
+        {settings?.hasPassword === false && (
+          <>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <KeyRound className="h-5 w-5 text-slate-500" />
+                  <div>
+                    <h3 className="font-medium">비밀번호</h3>
+                    <p className="text-sm text-muted-foreground">
+                      패스키나 소셜 로그인 외에 비밀번호로도 로그인할 수 있어요
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-amber-600 font-medium">미설정</span>
+                  <Button disabled={isLoading} onClick={() => setShowSetPasswordDialog(true)} size="sm">
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '설정'}
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+                <p>
+                  <strong>비밀번호가 없으면</strong> TOTP 인증 앱이나 복구 코드 기능을 사용할 수 없어요. 비밀번호를 설정하면
+                  다양한 보안 기능을 사용할 수 있습니다.
+                </p>
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
+
         {/* TOTP Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -318,7 +416,12 @@ export function MfaForm({ settings }: MfaFormProps) {
                   </Button>
                 </>
               ) : (
-                <Button disabled={isLoading} onClick={handleStartTotpSetup} size="sm">
+                <Button
+                  disabled={isLoading || settings?.hasPassword === false}
+                  onClick={() => setShowTotpPasswordDialog(true)}
+                  size="sm"
+                  title={settings?.hasPassword === false ? '비밀번호를 먼저 설정해주세요' : undefined}
+                >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '설정'}
                 </Button>
               )}
@@ -380,9 +483,14 @@ export function MfaForm({ settings }: MfaFormProps) {
               </div>
             </div>
             <Button
-              disabled={isLoading || (!settings?.totpEnabled && !settings?.passkeys?.length)}
+              disabled={
+                isLoading ||
+                settings?.hasPassword === false ||
+                (!settings?.totpEnabled && !settings?.passkeys?.length)
+              }
               onClick={() => setShowRecoveryCodes(true)}
               size="sm"
+              title={settings?.hasPassword === false ? '비밀번호를 먼저 설정해주세요' : undefined}
               variant="outline"
             >
               보기/재생성
@@ -390,6 +498,48 @@ export function MfaForm({ settings }: MfaFormProps) {
           </div>
         </div>
       </CardContent>
+
+      {/* TOTP Password Verification Dialog */}
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowTotpPasswordDialog(false)
+            setTotpSetupPassword('')
+            setError(null)
+          }
+        }}
+        open={showTotpPasswordDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>비밀번호 확인</DialogTitle>
+            <DialogDescription>보안을 위해 비밀번호를 입력해주세요.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="totpSetupPassword">비밀번호</Label>
+              <Input
+                autoComplete="current-password"
+                id="totpSetupPassword"
+                onChange={(e) => setTotpSetupPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && totpSetupPassword) {
+                    handleStartTotpSetup()
+                  }
+                }}
+                type="password"
+                value={totpSetupPassword}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <DialogFooter>
+              <Button disabled={isLoading || !totpSetupPassword} onClick={handleStartTotpSetup}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* TOTP Setup Dialog */}
       <Dialog onOpenChange={(open) => !open && setShowTotpSetup(false)} open={showTotpSetup}>
@@ -501,7 +651,16 @@ export function MfaForm({ settings }: MfaFormProps) {
       </Dialog>
 
       {/* Recovery Codes Dialog */}
-      <Dialog onOpenChange={(open) => !open && setShowRecoveryCodes(false)} open={showRecoveryCodes}>
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowRecoveryCodes(false)
+            setRecoveryPassword('')
+            setError(null)
+          }
+        }}
+        open={showRecoveryCodes}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>복구 코드</DialogTitle>
@@ -534,9 +693,29 @@ export function MfaForm({ settings }: MfaFormProps) {
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">남은 복구 코드: {settings?.recoveryCodesRemaining ?? 0}개</p>
+              <div className="space-y-2">
+                <Label htmlFor="recoveryPassword">비밀번호</Label>
+                <Input
+                  autoComplete="current-password"
+                  id="recoveryPassword"
+                  onChange={(e) => setRecoveryPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && recoveryPassword) {
+                      handleRegenerateRecoveryCodes()
+                    }
+                  }}
+                  placeholder="비밀번호를 입력하세요"
+                  type="password"
+                  value={recoveryPassword}
+                />
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <DialogFooter>
-                <Button disabled={isLoading} onClick={handleRegenerateRecoveryCodes} variant="destructive">
+                <Button
+                  disabled={isLoading || !recoveryPassword}
+                  onClick={handleRegenerateRecoveryCodes}
+                  variant="destructive"
+                >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '새로 생성'}
                 </Button>
               </DialogFooter>
@@ -593,6 +772,78 @@ export function MfaForm({ settings }: MfaFormProps) {
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '삭제'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set Password Dialog (for passwordless users) */}
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowSetPasswordDialog(false)
+            setNewPassword('')
+            setConfirmPassword('')
+            setPasswordTouched(false)
+            setError(null)
+          }
+        }}
+        open={showSetPasswordDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>비밀번호 설정</DialogTitle>
+            <DialogDescription>
+              비밀번호를 설정하면 패스키나 소셜 로그인 외에 비밀번호로도 로그인할 수 있어요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">새 비밀번호</Label>
+              <Input
+                autoComplete="new-password"
+                id="newPassword"
+                onBlur={() => setPasswordTouched(true)}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="8자 이상, 대/소문자, 숫자 포함"
+                type="password"
+                value={newPassword}
+              />
+              {passwordTouched && newPassword && (
+                <PasswordStrengthIndicator
+                  password={newPassword}
+                  showChecklist
+                  validation={validatePassword(newPassword)}
+                />
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+              <Input
+                autoComplete="new-password"
+                id="confirmPassword"
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newPassword && confirmPassword) {
+                    handleSetPassword()
+                  }
+                }}
+                placeholder="비밀번호를 다시 입력하세요"
+                type="password"
+                value={confirmPassword}
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-sm text-destructive">비밀번호가 일치하지 않아요</p>
+              )}
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <DialogFooter>
+              <Button
+                disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                onClick={handleSetPassword}
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '비밀번호 설정'}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

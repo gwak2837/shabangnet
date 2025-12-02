@@ -12,7 +12,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks/use-logs'
-import { defaultInvoiceTemplate } from '@/services/manufacturers'
+import { defaultInvoiceTemplate } from '@/services/manufacturers.types'
 
 type Step = 'result' | 'select' | 'upload'
 

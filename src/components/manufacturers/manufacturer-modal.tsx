@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { defaultInvoiceTemplate, type InvoiceTemplate, type Manufacturer } from '@/services/manufacturers'
+import { defaultInvoiceTemplate, type InvoiceTemplate, type Manufacturer } from '@/services/manufacturers.types'
 
 import { analyzeOrderTemplate } from './actions'
 

@@ -105,9 +105,12 @@ export function RegisterForm() {
         return
       }
 
-      // 패스키 등록 성공 시 온보딩 완료 처리
+      // 패스키 등록 성공 시 임시 비밀번호 삭제 및 온보딩 완료 처리
       try {
-        await fetch('/api/auth/complete-onboarding', { method: 'POST' })
+        await Promise.all([
+          fetch('/api/auth/clear-temp-password', { method: 'POST' }),
+          fetch('/api/auth/complete-onboarding', { method: 'POST' }),
+        ])
       } catch {
         // 실패해도 계속 진행
       }

@@ -2,7 +2,7 @@
 
 import { Plus, Search, X } from 'lucide-react'
 
-import type { Manufacturer } from '@/services/manufacturers'
+import type { Manufacturer } from '@/services/manufacturers.types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

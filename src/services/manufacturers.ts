@@ -5,7 +5,10 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { invoiceTemplates, manufacturers } from '@/db/schema/manufacturers'
 
-export interface InvoiceTemplate {
+// Types moved to avoid 'use server' export restrictions
+// These are re-exported for convenience but defined inline
+
+interface InvoiceTemplate {
   courierColumn: string
   dataStartRow: number
   headerRow: number
@@ -17,8 +20,7 @@ export interface InvoiceTemplate {
   useColumnIndex: boolean
 }
 
-// Manufacturer types
-export interface Manufacturer {
+interface Manufacturer {
   ccEmail?: string
   contactName: string
   email: string
@@ -29,14 +31,14 @@ export interface Manufacturer {
   phone: string
 }
 
-export const defaultInvoiceTemplate: Omit<InvoiceTemplate, 'id' | 'manufacturerId' | 'manufacturerName'> = {
+const DEFAULT_INVOICE_TEMPLATE = {
   orderNumberColumn: 'A',
   courierColumn: 'B',
   trackingNumberColumn: 'C',
   headerRow: 1,
   dataStartRow: 2,
   useColumnIndex: true,
-}
+} as const
 
 export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>): Promise<Manufacturer> {
   const [newManufacturer] = await db
@@ -86,7 +88,7 @@ export async function getInvoiceTemplateOrDefault(manufacturerId: string): Promi
     id: 'default',
     manufacturerId,
     manufacturerName: manufacturer?.name || '알 수 없음',
-    ...defaultInvoiceTemplate,
+    ...DEFAULT_INVOICE_TEMPLATE,
   }
 }
 

@@ -132,7 +132,12 @@ export function OnboardingFlow() {
         name: userEmail,
         fetchOptions: {
           onSuccess: async () => {
-            // 패스키 등록 후 온보딩 완료
+            // 패스키 등록 후 임시 비밀번호 삭제 및 온보딩 완료
+            try {
+              await fetch('/api/auth/clear-temp-password', { method: 'POST' })
+            } catch {
+              // 실패해도 계속 진행
+            }
             completeOnboarding()
           },
           onError: (ctx) => {
