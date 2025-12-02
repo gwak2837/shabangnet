@@ -73,6 +73,32 @@ function process(data: unknown): string {
 }
 ```
 
+### Time Calculations
+
+- **Use `ms()` or `sec()` functions for time calculations.** Never use magic numbers for time values.
+- `ms()` returns milliseconds, `sec()` returns seconds. Both accept human-readable strings like `'1h'`, `'30m'`, `'7d'`.
+
+```typescript
+// ❌ Bad - magic numbers for time
+const TOKEN_EXPIRY = 3600000 // What is this? 1 hour in ms
+const SESSION_TIMEOUT = 1800 // 30 minutes in seconds?
+const LOCK_DURATION = 900000 // Hard to understand
+
+// ✅ Good - use ms() for milliseconds
+import ms from 'ms'
+
+const TOKEN_EXPIRY = ms('1h')
+const COOKIE_MAX_AGE = ms('7d')
+const RATE_LIMIT_WINDOW = ms('15m')
+
+// ✅ Good - use sec() for seconds
+import { sec } from '@/utils/sec'
+
+const SESSION_TIMEOUT = sec('30m')
+const LOCK_DURATION = sec('15m')
+const MFA_CODE_EXPIRY = sec('5m')
+```
+
 ### File Structure
 
 - **Do not create barrel files (index.ts that re-exports).** Import directly from the source file.
@@ -265,3 +291,13 @@ export async function POST(request: Request) {
 | Search with query parameters      | GET API Route |
 | Data that needs HTTP caching      | GET API Route |
 | Real-time data fetching           | GET API Route |
+
+---
+
+## Security
+
+### Rate Limiting
+
+- **IP-based rate limiting is managed at the infrastructure level** (e.g., CDN, load balancer, reverse proxy).
+- Do NOT implement IP-based rate limiting in application code.
+- For user-specific rate limiting (e.g., login attempts), use email/account-based tracking instead of IP.
