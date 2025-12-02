@@ -1,12 +1,12 @@
 'use server'
 
 import bcrypt from 'bcryptjs'
-import { and, eq, gt, isNull } from 'drizzle-orm'
+import { and, eq, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { isCommonPassword } from '@/common/constants/common-passwords'
 import { db } from '@/db/client'
-import { passwordResetTokens, users } from '@/db/schema/auth'
+import { account, user, verification } from '@/db/schema/auth'
 import { PASSWORD_ERROR_MESSAGES, passwordSchema } from '@/utils/password'
 
 const ResetPasswordSchema = z
@@ -38,34 +38,38 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   const result = await db.transaction(async (tx) => {
-    const [updatedToken] = await tx
-      .update(passwordResetTokens)
-      .set({ usedAt: new Date() })
+    // verification 테이블에서 토큰 찾기
+    const [validToken] = await tx
+      .select()
+      .from(verification)
       .where(
         and(
-          eq(passwordResetTokens.token, token),
-          gt(passwordResetTokens.expires, new Date()),
-          isNull(passwordResetTokens.usedAt),
+          eq(verification.value, token),
+          gt(verification.expiresAt, new Date()),
         ),
       )
-      .returning({ email: passwordResetTokens.email })
 
-    if (!updatedToken) {
+    if (!validToken || !validToken.identifier.startsWith('password_reset:')) {
       return { error: errorMessage }
     }
 
-    const [updatedUser] = await tx
-      .update(users)
-      .set({
-        password: hashedPassword,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.email, updatedToken.email))
-      .returning({ id: users.id })
+    const email = validToken.identifier.replace('password_reset:', '')
 
-    if (!updatedUser) {
+    // 토큰 삭제
+    await tx.delete(verification).where(eq(verification.id, validToken.id))
+
+    // 사용자의 credential account 찾기 및 비밀번호 업데이트
+    const [userData] = await tx.select({ id: user.id }).from(user).where(eq(user.email, email))
+
+    if (!userData) {
       return { error: errorMessage }
     }
+
+    // account 테이블에서 credential 계정 업데이트
+    await tx
+      .update(account)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(and(eq(account.userId, userData.id), eq(account.providerId, 'credential')))
 
     return { success: true }
   })
@@ -83,16 +87,15 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
 export async function validateResetToken(token: string): Promise<{ valid: boolean; error?: string }> {
   const [validToken] = await db
     .select()
-    .from(passwordResetTokens)
+    .from(verification)
     .where(
       and(
-        eq(passwordResetTokens.token, token),
-        gt(passwordResetTokens.expires, new Date()),
-        isNull(passwordResetTokens.usedAt),
+        eq(verification.value, token),
+        gt(verification.expiresAt, new Date()),
       ),
     )
 
-  if (!validToken) {
+  if (!validToken || !validToken.identifier.startsWith('password_reset:')) {
     return { valid: false, error: '유효하지 않거나 만료된 토큰이에요' }
   }
 

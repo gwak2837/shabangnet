@@ -2,15 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import {
-  create,
-  getAll,
-  getById,
-  type Manufacturer,
-  remove,
-  update,
-} from '@/services/db/manufacturers'
+import { queryKeys } from '@/common/constants/query-keys'
+import { create, getAll, getById, type Manufacturer, remove, update } from '@/services/manufacturers'
 
 export function useCreateManufacturer() {
   const queryClient = useQueryClient()

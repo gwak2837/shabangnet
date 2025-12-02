@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
 
-import { accounts, roles, sessions, users, usersToRoles } from './auth'
+import { account, passkey, role, session, twoFactor, user, userToRole } from './auth'
 import { invoiceTemplates, manufacturers, optionMappings, orderTemplates, products } from './manufacturers'
 import { emailLogOrders, emailLogs, orders, uploads } from './orders'
 import { shoppingMallTemplates } from './settings'
@@ -9,38 +9,54 @@ import { shoppingMallTemplates } from './settings'
 // Auth Relations
 // ============================================
 
-export const usersRelations = relations(users, ({ many }) => ({
-  accounts: many(accounts),
-  sessions: many(sessions),
-  roles: many(usersToRoles),
+export const userRelations = relations(user, ({ many }) => ({
+  accounts: many(account),
+  sessions: many(session),
+  roles: many(userToRole),
+  twoFactors: many(twoFactor),
+  passkeys: many(passkey),
 }))
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
   }),
 }))
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
   }),
 }))
 
-export const rolesRelations = relations(roles, ({ many }) => ({
-  users: many(usersToRoles),
+export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
+  user: one(user, {
+    fields: [twoFactor.userId],
+    references: [user.id],
+  }),
 }))
 
-export const usersToRolesRelations = relations(usersToRoles, ({ one }) => ({
-  user: one(users, {
-    fields: [usersToRoles.userId],
-    references: [users.id],
+export const passkeyRelations = relations(passkey, ({ one }) => ({
+  user: one(user, {
+    fields: [passkey.userId],
+    references: [user.id],
   }),
-  role: one(roles, {
-    fields: [usersToRoles.roleId],
-    references: [roles.id],
+}))
+
+export const roleRelations = relations(role, ({ many }) => ({
+  users: many(userToRole),
+}))
+
+export const userToRoleRelations = relations(userToRole, ({ one }) => ({
+  user: one(user, {
+    fields: [userToRole.userId],
+    references: [user.id],
+  }),
+  role: one(role, {
+    fields: [userToRole.roleId],
+    references: [role.id],
   }),
 }))
 

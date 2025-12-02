@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import { create, getAll, type OptionManufacturerMapping, remove, update } from '@/services/db/option-mappings'
+import { queryKeys } from '@/common/constants/query-keys'
+import { create, getAll, type OptionManufacturerMapping, remove, update } from '@/services/option-mappings'
 
 export function useCreateOptionMapping() {
   const queryClient = useQueryClient()

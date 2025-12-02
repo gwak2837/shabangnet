@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertTriangle, CheckCircle2, Key, Loader2, Shield, Smartphone, Trash2 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -17,16 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-
-import {
-  deletePasskeyAction,
-  disableTotpAction,
-  generateRecoveryCodesAction,
-  getPasskeyRegistrationOptions,
-  setupTotp,
-  verifyPasskeyRegistration,
-  verifyTotpSetup,
-} from './actions/mfa'
+import { passkeyMethods, twoFactor } from '@/lib/auth-client'
 
 interface MfaFormProps {
   settings?: MfaSettings
@@ -39,15 +29,13 @@ interface MfaSettings {
 }
 
 export function MfaForm({ settings }: MfaFormProps) {
-  const { update } = useSession()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   // TOTP Setup State
   const [showTotpSetup, setShowTotpSetup] = useState(false)
-  const [totpQrCode, setTotpQrCode] = useState<string | null>(null)
-  const [totpSecret, setTotpSecret] = useState<string | null>(null)
+  const [totpUri, setTotpUri] = useState<string | null>(null)
   const [totpCode, setTotpCode] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
 
@@ -71,22 +59,45 @@ export function MfaForm({ settings }: MfaFormProps) {
     }
   }, [success])
 
+  // QR 코드 이미지 생성 (totpUri에서)
+  function generateQRCodeUrl(uri: string): string {
+    return `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(uri)}&choe=UTF-8`
+  }
+
+  // totpUri에서 secret 추출
+  function extractSecret(uri: string): string {
+    const match = uri.match(/secret=([A-Z2-7]+)/i)
+    return match ? match[1] : ''
+  }
+
   // TOTP Setup
-  const handleStartTotpSetup = async () => {
+  async function handleStartTotpSetup() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const result = await setupTotp()
+      const result = await twoFactor.enable({
+        password: '', // better-auth handles this
+        fetchOptions: {
+          onSuccess: (ctx) => {
+            const data = ctx.data as { totpURI?: string; backupCodes?: string[] }
+            if (data.totpURI) {
+              setTotpUri(data.totpURI)
+              if (data.backupCodes) {
+                setRecoveryCodes(data.backupCodes)
+              }
+              setShowTotpSetup(true)
+            }
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || 'TOTP 설정에 실패했어요')
+          },
+        },
+      })
 
-      if (!result.success) {
-        setError(result.error ?? null)
-        return
+      if (result.error) {
+        setError(result.error.message || 'TOTP 설정을 시작할 수 없습니다.')
       }
-
-      setTotpQrCode(result.qrCode ?? null)
-      setTotpSecret(result.secret ?? null)
-      setShowTotpSetup(true)
     } catch {
       setError('TOTP 설정을 시작할 수 없습니다.')
     } finally {
@@ -94,21 +105,26 @@ export function MfaForm({ settings }: MfaFormProps) {
     }
   }
 
-  const handleVerifyTotp = async () => {
+  async function handleVerifyTotp() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const result = await verifyTotpSetup(totpCode)
+      const result = await twoFactor.verifyTotp({
+        code: totpCode,
+        fetchOptions: {
+          onSuccess: () => {
+            setSuccess('TOTP가 활성화되었습니다.')
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || 'TOTP 인증에 실패했어요')
+          },
+        },
+      })
 
-      if (!result.success) {
-        setError(result.error ?? null)
-        return
+      if (result.error) {
+        setError(result.error.message || 'TOTP 인증에 실패했습니다.')
       }
-
-      setRecoveryCodes(result.recoveryCodes ?? null)
-      setSuccess('TOTP가 활성화되었습니다.')
-      await update()
     } catch {
       setError('TOTP 인증에 실패했습니다.')
     } finally {
@@ -116,22 +132,29 @@ export function MfaForm({ settings }: MfaFormProps) {
     }
   }
 
-  const handleDisableTotp = async () => {
+  async function handleDisableTotp() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const result = await disableTotpAction(disableTotpCode)
-
-      if (!result.success) {
-        setError(result.error ?? null)
-        return
-      }
-
+      const result = await twoFactor.disable({
+        password: disableTotpCode,
+        fetchOptions: {
+          onSuccess: () => {
       setShowDisableTotpDialog(false)
       setDisableTotpCode('')
       setSuccess('TOTP가 비활성화되었습니다.')
-      await update()
+            window.location.reload()
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || 'TOTP 비활성화에 실패했어요')
+          },
+        },
+      })
+
+      if (result.error) {
+        setError(result.error.message || 'TOTP 비활성화에 실패했습니다.')
+      }
     } catch {
       setError('TOTP 비활성화에 실패했습니다.')
     } finally {
@@ -140,40 +163,29 @@ export function MfaForm({ settings }: MfaFormProps) {
   }
 
   // Passkey Setup
-  const handleStartPasskeySetup = async () => {
+  async function handleStartPasskeySetup() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const optionsResult = await getPasskeyRegistrationOptions()
-
-      if (!optionsResult.success || !optionsResult.options || !optionsResult.challengeId) {
-        setError(optionsResult.error ?? null)
-        return
-      }
-
-      const { startRegistration } = await import('@simplewebauthn/browser')
-      const registration = await startRegistration({ optionsJSON: optionsResult.options })
-
-      const verifyResult = await verifyPasskeyRegistration(
-        optionsResult.challengeId,
-        registration,
-        passkeyName || undefined,
-      )
-
-      if (!verifyResult.success) {
-        setError(verifyResult.error ?? null)
-        return
-      }
-
-      if (verifyResult.recoveryCodes) {
-        setRecoveryCodes(verifyResult.recoveryCodes)
-      }
-
+      const result = await passkeyMethods.addPasskey({
+        name: passkeyName || undefined,
+        fetchOptions: {
+          onSuccess: () => {
       setShowPasskeySetup(false)
       setPasskeyName('')
       setSuccess('패스키가 등록되었습니다.')
-      await update()
+            window.location.reload()
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || '패스키 등록에 실패했어요')
+          },
+        },
+      })
+
+      if (result.error) {
+        setError(result.error.message || '패스키 등록에 실패했습니다.')
+      }
     } catch (err) {
       if (err instanceof Error && err.name === 'NotAllowedError') {
         setError('패스키 등록이 취소되었습니다.')
@@ -185,21 +197,28 @@ export function MfaForm({ settings }: MfaFormProps) {
     }
   }
 
-  const handleDeletePasskey = async (id: string) => {
+  async function handleDeletePasskey(id: string) {
     setIsLoading(true)
     setError(null)
 
     try {
-      const result = await deletePasskeyAction(id)
-
-      if (!result.success) {
-        setError(result.error ?? null)
-        return
-      }
-
+      const result = await passkeyMethods.deletePasskey({
+        id,
+        fetchOptions: {
+          onSuccess: () => {
       setDeletePasskeyId(null)
       setSuccess('패스키가 삭제되었습니다.')
-      await update()
+            window.location.reload()
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || '패스키 삭제에 실패했어요')
+          },
+        },
+      })
+
+      if (result.error) {
+        setError(result.error.message || '패스키 삭제에 실패했습니다.')
+      }
     } catch {
       setError('패스키 삭제에 실패했습니다.')
     } finally {
@@ -208,20 +227,30 @@ export function MfaForm({ settings }: MfaFormProps) {
   }
 
   // Recovery Codes
-  const handleRegenerateRecoveryCodes = async () => {
+  async function handleRegenerateRecoveryCodes() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const result = await generateRecoveryCodesAction()
-
-      if (!result.success) {
-        setError(result.error ?? null)
-        return
-      }
-
-      setNewRecoveryCodes(result.codes ?? null)
+      const result = await twoFactor.generateBackupCodes({
+        password: '',
+        fetchOptions: {
+          onSuccess: (ctx) => {
+            const data = ctx.data as { backupCodes?: string[] }
+            if (data.backupCodes) {
+              setNewRecoveryCodes(data.backupCodes)
       setSuccess('복구 코드가 재생성되었습니다.')
+            }
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || '복구 코드 생성에 실패했어요')
+          },
+        },
+      })
+
+      if (result.error) {
+        setError(result.error.message || '복구 코드 생성에 실패했습니다.')
+      }
     } catch {
       setError('복구 코드 생성에 실패했습니다.')
     } finally {
@@ -229,7 +258,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     }
   }
 
-  const formatDate = (dateString: string | null) => {
+  function formatDate(dateString: string | null) {
     if (!dateString) return '사용 안 함'
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -316,15 +345,15 @@ export function MfaForm({ settings }: MfaFormProps) {
 
           {settings?.passkeys && settings.passkeys.length > 0 && (
             <div className="space-y-2">
-              {settings.passkeys.map((passkey) => (
-                <div className="flex items-center justify-between rounded-md border p-3" key={passkey.id}>
+              {settings.passkeys.map((pk) => (
+                <div className="flex items-center justify-between rounded-md border p-3" key={pk.id}>
                   <div>
-                    <p className="font-medium">{passkey.name || '이름 없음'}</p>
+                    <p className="font-medium">{pk.name || '이름 없음'}</p>
                     <p className="text-xs text-muted-foreground">
-                      등록: {formatDate(passkey.createdAt)} · 마지막 사용: {formatDate(passkey.lastUsedAt)}
+                      등록: {formatDate(pk.createdAt)} · 마지막 사용: {formatDate(pk.lastUsedAt)}
                     </p>
                   </div>
-                  <Button disabled={isLoading} onClick={() => setDeletePasskeyId(passkey.id)} size="sm" variant="ghost">
+                  <Button disabled={isLoading} onClick={() => setDeletePasskeyId(pk.id)} size="sm" variant="ghost">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -371,16 +400,24 @@ export function MfaForm({ settings }: MfaFormProps) {
           </DialogHeader>
           {!recoveryCodes ? (
             <div className="space-y-4">
-              {totpQrCode && (
+              {totpUri && (
                 <div className="flex justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img alt="TOTP QR Code" className="rounded-lg" height={200} src={totpQrCode} width={200} />
+                  <img
+                    alt="TOTP QR Code"
+                    className="rounded-lg"
+                    height={200}
+                    src={generateQRCodeUrl(totpUri)}
+                    width={200}
+                  />
                 </div>
               )}
-              {totpSecret && (
+              {totpUri && (
                 <div className="space-y-2">
                   <Label>수동 입력용 키</Label>
-                  <code className="block rounded bg-muted p-2 text-center text-sm font-mono">{totpSecret}</code>
+                  <code className="block rounded bg-muted p-2 text-center text-sm font-mono">
+                    {extractSecret(totpUri)}
+                  </code>
                 </div>
               )}
               <div className="space-y-2">
@@ -422,8 +459,7 @@ export function MfaForm({ settings }: MfaFormProps) {
                     setShowTotpSetup(false)
                     setRecoveryCodes(null)
                     setTotpCode('')
-                    setTotpQrCode(null)
-                    setTotpSecret(null)
+                    setTotpUri(null)
                     window.location.reload()
                   }}
                 >
@@ -514,29 +550,22 @@ export function MfaForm({ settings }: MfaFormProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>TOTP 비활성화</DialogTitle>
-            <DialogDescription>보안을 위해 현재 인증 코드를 입력해주세요.</DialogDescription>
+            <DialogDescription>보안을 위해 비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="disableTotpCode">인증 코드</Label>
+              <Label htmlFor="disableTotpCode">비밀번호</Label>
               <Input
-                autoComplete="one-time-code"
-                className="text-center text-lg tracking-widest"
+                autoComplete="current-password"
                 id="disableTotpCode"
-                inputMode="numeric"
-                maxLength={6}
-                onChange={(e) => setDisableTotpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
+                onChange={(e) => setDisableTotpCode(e.target.value)}
+                type="password"
                 value={disableTotpCode}
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
-              <Button
-                disabled={isLoading || disableTotpCode.length !== 6}
-                onClick={handleDisableTotp}
-                variant="destructive"
-              >
+              <Button disabled={isLoading || !disableTotpCode} onClick={handleDisableTotp} variant="destructive">
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '비활성화'}
               </Button>
             </DialogFooter>

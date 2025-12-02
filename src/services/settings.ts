@@ -106,7 +106,7 @@ export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>)
 export async function getCourierCode(courierName: string): Promise<string | null> {
   const mappings = await getCourierMappings()
   const normalized = courierName.trim()
-  
+
   for (const courier of mappings) {
     if (!courier.enabled) continue
     if (courier.name === normalized) return courier.code
@@ -138,9 +138,7 @@ export async function getExclusionLabel(fulfillmentType?: string): Promise<strin
   if (!fulfillmentType) return null
 
   const exclusionSettings = await getExclusionSettings()
-  const matchedPattern = exclusionSettings.patterns.find(
-    (p) => p.enabled && fulfillmentType.includes(p.pattern)
-  )
+  const matchedPattern = exclusionSettings.patterns.find((p) => p.enabled && fulfillmentType.includes(p.pattern))
 
   if (!matchedPattern) return null
 
@@ -210,7 +208,7 @@ export async function updateExclusionSettings(data: Partial<ExclusionSettings>):
   if (data.enabled !== undefined) {
     await setSetting('exclusion_enabled', data.enabled)
   }
-  
+
   return getExclusionSettings()
 }
 
@@ -248,6 +246,6 @@ async function setSetting<T>(key: string, value: T, description?: string): Promi
       },
     })
     .returning()
-  
+
   return JSON.parse(record.value!) as T
 }

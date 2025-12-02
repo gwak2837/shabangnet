@@ -96,4 +96,3 @@ export function getExclusionLabelSync(fulfillmentType?: string): string | null {
   }
   return null
 }
-

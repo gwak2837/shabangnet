@@ -3,7 +3,7 @@
 import { CheckCircle2, Download, Eye, Mail, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
-import type { OrderBatch } from '@/services/db/orders'
+import type { OrderBatch } from '@/services/orders'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

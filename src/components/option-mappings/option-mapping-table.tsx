@@ -2,7 +2,7 @@
 
 import { Edit2, Settings2, Trash2 } from 'lucide-react'
 
-import type { OptionManufacturerMapping } from '@/services/db/option-mappings'
+import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
 import {
   AlertDialog,

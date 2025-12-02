@@ -3,7 +3,7 @@
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { InvoiceConvertResult, SendLog } from '@/services/db/logs'
+import type { InvoiceConvertResult, SendLog } from '@/services/logs'
 
 import { ConvertResult } from '@/components/invoice-convert/convert-result'
 import { InvoiceDropzone } from '@/components/invoice-convert/invoice-dropzone'
@@ -12,7 +12,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useSendLogs } from '@/hooks/use-logs'
-import { defaultInvoiceTemplate } from '@/services/db/manufacturers'
+import { defaultInvoiceTemplate } from '@/services/manufacturers'
 
 type Step = 'result' | 'select' | 'upload'
 

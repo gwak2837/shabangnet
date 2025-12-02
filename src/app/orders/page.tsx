@@ -3,7 +3,7 @@
 import { AlertCircle, Ban, CheckCircle2, Clock, FileSpreadsheet, Loader2, Mail, RefreshCw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { OrderBatch } from '@/services/db/orders'
+import type { OrderBatch } from '@/services/orders'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { ExcludedOrderTable } from '@/components/orders/excluded-order-table'

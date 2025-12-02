@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Eye, FileSpreadsheet, Mail, XCircle } from 'lucide-react'
 
-import type { SendLog } from '@/services/db/logs'
+import type { SendLog } from '@/services/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

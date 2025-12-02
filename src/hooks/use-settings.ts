@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/common/constants/query-keys'
 import {
   addCourierMapping,
   addExclusionPattern,
@@ -18,7 +18,7 @@ import {
   updateCourierMapping,
   updateDuplicateCheckSettings,
   updateExclusionSettings,
-} from '@/services/db/settings'
+} from '@/services/settings'
 import {
   analyzeShoppingMallFile,
   createShoppingMallTemplate,
@@ -28,7 +28,7 @@ import {
   getShoppingMallTemplates,
   updateShoppingMallTemplate,
   type UpdateTemplateData,
-} from '@/services/db/shopping-mall-templates'
+} from '@/services/shopping-mall-templates'
 
 import { getMfaSettings } from './queries/mfa'
 
@@ -57,8 +57,7 @@ export function useAddExclusionPattern() {
 // 샘플 파일 분석
 export function useAnalyzeShoppingMallFile() {
   return useMutation({
-    mutationFn: ({ file, headerRow }: { file: File; headerRow?: number }) =>
-      analyzeShoppingMallFile(file, headerRow),
+    mutationFn: ({ file, headerRow }: { file: File; headerRow?: number }) => analyzeShoppingMallFile(file, headerRow),
   })
 }
 
@@ -165,8 +164,7 @@ export function useUpdateCourierMapping() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { data: Partial<CourierMapping>; id: string }) =>
-      updateCourierMapping(id, data),
+    mutationFn: ({ id, data }: { data: Partial<CourierMapping>; id: string }) => updateCourierMapping(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.courier })
     },
@@ -200,8 +198,7 @@ export function useUpdateShoppingMallTemplate() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { data: UpdateTemplateData; id: string }) =>
-      updateShoppingMallTemplate(id, data),
+    mutationFn: ({ id, data }: { data: UpdateTemplateData; id: string }) => updateShoppingMallTemplate(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.shoppingMallTemplates.all })
     },

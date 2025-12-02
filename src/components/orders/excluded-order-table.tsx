@@ -2,7 +2,7 @@
 
 import { Ban } from 'lucide-react'
 
-import type { OrderBatch } from '@/services/db/orders'
+import type { OrderBatch } from '@/services/orders'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'

@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import { getChartData, getRecentUploads, getStats } from '@/services/db/dashboard'
+import { queryKeys } from '@/common/constants/query-keys'
+import { getChartData, getRecentUploads, getStats } from '@/services/dashboard'
 
 export function useDashboardStats() {
   return useQuery({

@@ -28,8 +28,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { checkDuplicate, type DuplicateCheckResult, type OrderBatch } from '@/services/db/orders'
-import { getDuplicateCheckSettings } from '@/services/db/settings'
+import { checkDuplicate, type DuplicateCheckResult, type OrderBatch } from '@/services/orders'
+import { getDuplicateCheckSettings } from '@/services/settings'
 import {
   formatCurrency,
   formatDateTime,
@@ -268,9 +268,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div className="flex-1">
                   <p className="font-semibold text-amber-800">중복 발송 주의</p>
-                  <p className="mt-1 text-sm text-amber-700">
-                    동일 주소로 {periodDays}일 이내 발송 이력이 있습니다.
-                  </p>
+                  <p className="mt-1 text-sm text-amber-700">동일 주소로 {periodDays}일 이내 발송 이력이 있습니다.</p>
                 </div>
               </div>
 

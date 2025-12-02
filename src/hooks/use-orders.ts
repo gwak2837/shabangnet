@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/common/constants/query-keys'
 import {
   checkDuplicate,
   type DuplicateCheckPeriod,
@@ -10,7 +10,7 @@ import {
   getExcludedBatches,
   sendOrders,
   type SendOrdersParams,
-} from '@/services/db/orders'
+} from '@/services/orders'
 
 export function useCheckDuplicate() {
   return useMutation({

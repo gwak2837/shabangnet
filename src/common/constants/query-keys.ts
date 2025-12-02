@@ -43,4 +43,8 @@ export const queryKeys = {
     all: ['shopping-mall-templates'] as const,
     detail: (id: string) => ['shopping-mall-templates', id] as const,
   },
+  users: {
+    all: ['users'] as const,
+    list: (params: { status?: string; page?: number; limit?: number }) => ['users', 'list', params] as const,
+  },
 } as const

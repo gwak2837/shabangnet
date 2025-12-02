@@ -78,11 +78,7 @@ export async function checkDuplicate(
 
   const recentLogs = await db.query.emailLogs.findMany({
     where: (logs, { and, eq, gte }) =>
-      and(
-        eq(logs.manufacturerId, manufacturerId),
-        eq(logs.status, 'success'),
-        gte(logs.sentAt, periodStart)
-      ),
+      and(eq(logs.manufacturerId, manufacturerId), eq(logs.status, 'success'), gte(logs.sentAt, periodStart)),
   })
 
   const matchedAddresses: string[] = []
@@ -90,7 +86,7 @@ export async function checkDuplicate(
 
   for (const log of recentLogs) {
     if (!log.recipientAddresses) continue
-    
+
     const logAddresses = log.recipientAddresses as string[]
     const matches = recipientAddresses.filter((addr) =>
       logAddresses.some((logAddr) => normalizeAddress(logAddr) === normalizeAddress(addr)),
@@ -127,7 +123,13 @@ export async function getBatches(): Promise<OrderBatch[]> {
   })
 
   const batchesMap = new Map<string, OrderBatch>()
-  const allManufacturers = await db.select().from(manufacturers)
+  const allManufacturers = await db
+    .select({
+      id: manufacturers.id,
+      name: manufacturers.name,
+      email: manufacturers.email,
+    })
+    .from(manufacturers)
 
   for (const m of allManufacturers) {
     batchesMap.set(m.id, {
@@ -143,7 +145,7 @@ export async function getBatches(): Promise<OrderBatch[]> {
 
   for (const order of allOrders) {
     if (!order.manufacturerId) continue
-    
+
     const isExcluded = await shouldExcludeFromEmail(order.shoppingMall ?? order.courier ?? undefined)
     if (isExcluded) continue
 
@@ -172,10 +174,10 @@ export async function getBatches(): Promise<OrderBatch[]> {
   for (const batch of batchesMap.values()) {
     batch.totalOrders = batch.orders.length
     batch.totalAmount = batch.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
-    
-    if (batch.orders.some(o => o.status === 'error')) {
+
+    if (batch.orders.some((o) => o.status === 'error')) {
       batch.status = 'error'
-    } else if (batch.orders.length > 0 && batch.orders.every(o => o.status === 'completed')) {
+    } else if (batch.orders.length > 0 && batch.orders.every((o) => o.status === 'completed')) {
       batch.status = 'sent'
     } else {
       batch.status = 'pending'
@@ -194,7 +196,13 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
   })
 
   const batchesMap = new Map<string, OrderBatch>()
-  const allManufacturers = await db.select().from(manufacturers)
+  const allManufacturers = await db
+    .select({
+      id: manufacturers.id,
+      name: manufacturers.name,
+      email: manufacturers.email,
+    })
+    .from(manufacturers)
 
   for (const m of allManufacturers) {
     batchesMap.set(m.id, {
@@ -210,7 +218,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
 
   for (const order of allOrders) {
     if (!order.manufacturerId) continue
-    
+
     const isExcluded = await shouldExcludeFromEmail(order.shoppingMall ?? order.courier ?? undefined)
     if (!isExcluded) continue
 
@@ -241,24 +249,24 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
     batch.totalAmount = batch.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
   }
 
-  return Array.from(batchesMap.values()).filter(b => b.totalOrders > 0)
+  return Array.from(batchesMap.values()).filter((b) => b.totalOrders > 0)
 }
 
 export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersResult> {
   const manufacturer = await db.query.manufacturers.findFirst({
-    where: eq(manufacturers.id, params.manufacturerId)
+    where: eq(manufacturers.id, params.manufacturerId),
   })
-  
+
   if (!manufacturer) {
     return { success: false, sentCount: 0, errorMessage: 'Manufacturer not found' }
   }
 
   const ordersToSend = await db.query.orders.findMany({
-    where: inArray(orders.id, params.orderIds)
+    where: inArray(orders.id, params.orderIds),
   })
 
   const totalAmount = ordersToSend.reduce((sum, o) => sum + Number(o.paymentAmount || 0) * (o.quantity || 1), 0)
-  const recipientAddresses = ordersToSend.map(o => o.address || '').filter(Boolean)
+  const recipientAddresses = ordersToSend.map((o) => o.address || '').filter(Boolean)
 
   return await db.transaction(async (tx) => {
     await tx.insert(emailLogs).values({
@@ -272,13 +280,11 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
       status: 'success',
       recipientAddresses: recipientAddresses,
       sentAt: new Date(),
-      sentBy: 'system'
+      sentBy: 'system',
     })
 
-    await tx.update(orders)
-      .set({ status: 'completed' })
-      .where(inArray(orders.id, params.orderIds))
-    
+    await tx.update(orders).set({ status: 'completed' }).where(inArray(orders.id, params.orderIds))
+
     return { success: true, sentCount: ordersToSend.length }
   })
 }
@@ -291,9 +297,9 @@ function normalizeAddress(address: string): string {
 // Helper function to check if fulfillment type should be excluded
 async function shouldExcludeFromEmail(fulfillmentType?: string): Promise<boolean> {
   if (!fulfillmentType) return false
-  
+
   const exclusionSettings = await getExclusionSettings()
   if (!exclusionSettings.enabled) return false
-  
+
   return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
 }

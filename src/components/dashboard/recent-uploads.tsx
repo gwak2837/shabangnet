@@ -2,7 +2,7 @@
 
 import { FileSpreadsheet, Loader2 } from 'lucide-react'
 
-import type { Upload } from '@/services/db/dashboard'
+import type { Upload } from '@/services/dashboard'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

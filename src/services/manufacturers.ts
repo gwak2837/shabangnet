@@ -67,10 +67,7 @@ export async function getById(id: string): Promise<Manufacturer | undefined> {
 }
 
 export async function getInvoiceTemplate(manufacturerId: string): Promise<InvoiceTemplate | null> {
-  const [template] = await db
-    .select()
-    .from(invoiceTemplates)
-    .where(eq(invoiceTemplates.manufacturerId, manufacturerId))
+  const [template] = await db.select().from(invoiceTemplates).where(eq(invoiceTemplates.manufacturerId, manufacturerId))
 
   if (!template) return null
 
@@ -155,10 +152,7 @@ export async function updateInvoiceTemplate(
 }
 
 // Helper to convert DB invoice template to App InvoiceTemplate
-function mapToInvoiceTemplate(
-  t: typeof invoiceTemplates.$inferSelect,
-  manufacturerName: string,
-): InvoiceTemplate {
+function mapToInvoiceTemplate(t: typeof invoiceTemplates.$inferSelect, manufacturerName: string): InvoiceTemplate {
   return {
     id: t.id,
     manufacturerId: t.manufacturerId,

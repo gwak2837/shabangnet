@@ -3,7 +3,7 @@
 import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { Manufacturer } from '@/services/db/manufacturers'
+import type { Manufacturer } from '@/services/manufacturers'
 
 import {
   AlertDialog,

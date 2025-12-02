@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Mail, Package } from 'lucide-react'
 
-import type { SendLog } from '@/services/db/logs'
+import type { SendLog } from '@/services/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

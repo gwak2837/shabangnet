@@ -2,7 +2,7 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw } from 'lucide-react'
 
-import type { InvoiceConvertResult } from '@/services/db/logs'
+import type { InvoiceConvertResult } from '@/services/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

@@ -3,7 +3,7 @@
 import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { Product } from '@/services/db/products'
+import type { Product } from '@/services/products'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { BulkUploadModal } from '@/components/products/bulk-upload-modal'

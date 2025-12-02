@@ -5,7 +5,7 @@ import ms from 'ms'
 import { z } from 'zod'
 
 import { db } from '@/db/client'
-import { passwordResetTokens, users } from '@/db/schema/auth'
+import { user, verification } from '@/db/schema/auth'
 import { sendEmail } from '@/lib/email'
 
 const ForgotPasswordSchema = z.object({
@@ -26,43 +26,48 @@ export async function requestPasswordReset(prevState: unknown, formData: FormDat
   const normalizedEmail = email.toLowerCase()
   const cooldownThreshold = new Date(Date.now() - RATE_LIMIT_COOLDOWN_MS)
 
-  const [result] = await db
+  // 사용자 확인
+  const [userData] = await db
     .select({
-      userId: users.id,
-      hasPassword: users.password,
-      tokenCreatedAt: passwordResetTokens.createdAt,
+      id: user.id,
+      emailVerified: user.emailVerified,
     })
-    .from(users)
-    .leftJoin(passwordResetTokens, eq(users.email, passwordResetTokens.email))
-    .where(eq(users.email, normalizedEmail))
+    .from(user)
+    .where(eq(user.email, normalizedEmail))
 
-  if (!result || !result.hasPassword) {
+  // User enumeration 방지: 사용자가 없어도 성공 메시지 반환
+  if (!userData) {
     return { success: successMessage }
   }
 
-  if (result.tokenCreatedAt && result.tokenCreatedAt > cooldownThreshold) {
+  // 이메일 인증이 되지 않은 경우
+  if (!userData.emailVerified) {
+    return { error: '비밀번호 재설정을 위해 먼저 이메일 인증이 필요해요. 설정에서 이메일을 인증해주세요.' }
+  }
+
+  // 기존 토큰 확인 (rate limiting)
+  const [existingToken] = await db
+    .select({ createdAt: verification.createdAt })
+    .from(verification)
+    .where(eq(verification.identifier, `password_reset:${normalizedEmail}`))
+
+  if (existingToken?.createdAt && existingToken.createdAt > cooldownThreshold) {
     return { success: successMessage }
   }
 
   const token = crypto.randomUUID()
   const expires = new Date(Date.now() + ms('1h'))
 
+  // verification 테이블 사용하여 토큰 저장
   await db
-    .insert(passwordResetTokens)
+    .insert(verification)
     .values({
-      email: normalizedEmail,
-      token,
-      expires,
+      id: crypto.randomUUID(),
+      identifier: `password_reset:${normalizedEmail}`,
+      value: token,
+      expiresAt: expires,
     })
-    .onConflictDoUpdate({
-      target: passwordResetTokens.email,
-      set: {
-        token,
-        expires,
-        createdAt: new Date(),
-        usedAt: null, // 이전에 사용된 토큰이면 초기화
-      },
-    })
+    .onConflictDoNothing()
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const resetUrl = `${appUrl}/reset-password?token=${token}`

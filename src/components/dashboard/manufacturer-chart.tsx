@@ -3,7 +3,7 @@
 import { Loader2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { ChartDataItem } from '@/services/db/dashboard'
+import type { ChartDataItem } from '@/services/dashboard'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/utils/format'

@@ -2,7 +2,7 @@
 
 import { Calendar, X } from 'lucide-react'
 
-import type { Manufacturer } from '@/services/db/manufacturers'
+import type { Manufacturer } from '@/services/manufacturers'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

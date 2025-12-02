@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import { create, getAll, getById, type Product, remove, update } from '@/services/db/products'
+import { queryKeys } from '@/common/constants/query-keys'
+import { create, getAll, getById, type Product, remove, update } from '@/services/products'
 
 export function useCreateProduct() {
   const queryClient = useQueryClient()

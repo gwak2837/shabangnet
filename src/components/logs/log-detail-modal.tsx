@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, Clock, FileSpreadsheet, Mail, User, XCircle } from 'lucide-react'
 
-import type { SendLog } from '@/services/db/logs'
+import type { SendLog } from '@/services/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'

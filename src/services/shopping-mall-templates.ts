@@ -42,7 +42,7 @@ export interface UpdateTemplateData {
 // Analyze shopping mall file
 export async function analyzeShoppingMallFile(file: File, headerRow?: number): Promise<AnalyzeResult> {
   const fileBuffer = await file.arrayBuffer()
-  
+
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(fileBuffer)
 
@@ -114,7 +114,10 @@ export async function getShoppingMallTemplates(): Promise<ShoppingMallTemplate[]
   return []
 }
 
-export async function updateShoppingMallTemplate(_id: string, _data: UpdateTemplateData): Promise<ShoppingMallTemplate> {
+export async function updateShoppingMallTemplate(
+  _id: string,
+  _data: UpdateTemplateData,
+): Promise<ShoppingMallTemplate> {
   // TODO: Implement with database
   throw new Error('Not implemented')
 }
@@ -159,4 +162,3 @@ function getCellValue(cell: ExcelJS.Cell): string {
 
   return String(value)
 }
-

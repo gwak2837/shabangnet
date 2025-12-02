@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import { getAll, getById, getFiltered, type LogFilters } from '@/services/db/logs'
+import { queryKeys } from '@/common/constants/query-keys'
+import { getAll, getById, getFiltered, type LogFilters } from '@/services/logs'
 
 export function useSendLog(id: string) {
   return useQuery({

@@ -3,8 +3,8 @@
 import { Loader2, Settings2 } from 'lucide-react'
 import { useState } from 'react'
 
-import type { Manufacturer } from '@/services/db/manufacturers'
-import type { OptionManufacturerMapping } from '@/services/db/option-mappings'
+import type { Manufacturer } from '@/services/manufacturers'
+import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
 import { Button } from '@/components/ui/button'
 import {

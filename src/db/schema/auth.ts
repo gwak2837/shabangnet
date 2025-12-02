@@ -1,232 +1,148 @@
-import type { AdapterAccount } from 'next-auth/adapters'
+import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
-import { boolean, integer, pgTable, primaryKey, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { authTypeEnum, userStatusEnum } from './enums'
 
 // ============================================
-// 사용자 (Users)
+// 사용자 (Users) - better-auth core + custom fields
 // ============================================
 
-export const users = pgTable('user', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text('name'),
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  emailVerified: timestamp('emailVerified', { mode: 'date' }),
+  emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
-  password: text('password'), // For Credentials provider
-  invalidateSessionsBefore: timestamp('invalidate_sessions_before', { withTimezone: true }),
-  totpEnabled: boolean('totp_enabled').default(false).notNull(),
-  passkeyEnabled: boolean('passkey_enabled').default(false).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  // Two-factor 플러그인 필드
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  // Custom fields
+  status: userStatusEnum('status').notNull().default('pending'),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
+  authType: authTypeEnum('auth_type').notNull().default('password'),
 }).enableRLS()
 
 // ============================================
-// 계정 (Accounts) - OAuth 연동
+// 세션 (Sessions) - better-auth core
 // ============================================
 
-export const accounts = pgTable(
-  'account',
-  {
-    userId: text('userId')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    type: text('type').$type<AdapterAccount['type']>().notNull(),
-    provider: text('provider').notNull(),
-    providerAccountId: text('providerAccountId').notNull(),
-    refresh_token: text('refresh_token'),
-    access_token: text('access_token'),
-    expires_at: integer('expires_at'),
-    token_type: text('token_type'),
-    scope: text('scope'),
-    id_token: text('id_token'),
-    session_state: text('session_state'),
-  },
-  (account) => [primaryKey({ columns: [account.provider, account.providerAccountId] })],
-).enableRLS()
-
-// ============================================
-// 세션 (Sessions)
-// ============================================
-
-export const sessions = pgTable('session', {
-  sessionToken: text('sessionToken').primaryKey(),
-  userId: text('userId')
+export const session = pgTable('session', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
-}).enableRLS()
-
-// ============================================
-// 이메일 인증 토큰 (Verification Tokens)
-// ============================================
-
-export const verificationTokens = pgTable(
-  'verificationToken',
-  {
-    identifier: text('identifier').notNull(),
-    token: text('token').notNull(),
-    expires: timestamp('expires', { mode: 'date' }).notNull(),
-  },
-  (verificationToken) => [primaryKey({ columns: [verificationToken.identifier, verificationToken.token] })],
-).enableRLS()
-
-// ============================================
-// 로그인 시도 기록 (Login Attempts)
-// ============================================
-
-export const loginAttempts = pgTable('login_attempts', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  email: varchar('email', { length: 255 }).notNull(),
-  ipAddress: varchar('ip_address', { length: 45 }), // IPv6 지원
-  success: boolean('success').notNull(),
-  attemptedAt: timestamp('attempted_at', { withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
-
-// ============================================
-// 계정 잠금 (Account Locks)
-// ============================================
-
-export const accountLocks = pgTable('account_locks', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  unlockToken: text('unlock_token').notNull(),
-  lockedAt: timestamp('locked_at', { withTimezone: true }).defaultNow().notNull(),
-  unlockedAt: timestamp('unlocked_at', { withTimezone: true }),
-}).enableRLS()
-
-// ============================================
-// 비밀번호 재설정 토큰 (Password Reset Tokens)
-// ============================================
-
-export const passwordResetTokens = pgTable('password_reset_token', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  email: varchar('email', { length: 255 }).notNull().unique(),
+    .references(() => user.id, { onDelete: 'cascade' }),
   token: text('token').notNull().unique(),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
-  usedAt: timestamp('used_at', { mode: 'date' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
 }).enableRLS()
 
 // ============================================
-// 역할 (Roles)
+// 계정 (Accounts) - better-auth core (OAuth)
 // ============================================
 
-export const roles = pgTable('role', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: varchar('name', { length: 50 }).notNull().unique(), // e.g. 'admin', 'customer'
+export const account = pgTable('account', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at'),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+  scope: text('scope'),
+  idToken: text('id_token'),
+  password: text('password'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}).enableRLS()
+
+// ============================================
+// 인증 토큰 (Verification) - better-auth core
+// ============================================
+
+export const verification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}).enableRLS()
+
+// ============================================
+// 2단계 인증 (Two Factor) - better-auth two-factor plugin
+// ============================================
+
+export const twoFactor = pgTable('two_factor', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(),
+  backupCodes: text('backup_codes').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}).enableRLS()
+
+// ============================================
+// 패스키 (Passkey) - better-auth passkey plugin
+// ============================================
+
+export const passkey = pgTable('passkey', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  name: text('name'),
+  publicKey: text('public_key').notNull(),
+  credentialID: text('credential_id').notNull().unique(),
+  counter: integer('counter').notNull().default(0),
+  deviceType: text('device_type'),
+  backedUp: boolean('backed_up').default(false),
+  transports: text('transports'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  aaguid: text('aaguid'),
+}).enableRLS()
+
+// ============================================
+// 역할 (Roles) - Custom
+// ============================================
+
+export const role = pgTable('role', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
   description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }).enableRLS()
 
 // ============================================
-// 사용자-역할 매핑 (Users to Roles)
+// 사용자-역할 매핑 (Users to Roles) - Custom
 // ============================================
 
-export const usersToRoles = pgTable(
-  'users_to_roles',
-  {
+export const userToRole = pgTable('user_to_role', {
+  id: text('id').primaryKey(),
     userId: text('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    roleId: text('role_id')
-      .notNull()
-      .references(() => roles.id, { onDelete: 'cascade' }),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.roleId] })],
-).enableRLS()
-
-// ============================================
-// TOTP 자격 증명 (TOTP Credentials)
-// ============================================
-
-export const totpCredentials = pgTable('totp_credentials', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id')
+    .references(() => user.id, { onDelete: 'cascade' }),
+  roleId: text('role_id')
     .notNull()
-    .unique()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  secret: text('secret').notNull(), // AES-256-GCM 암호화 저장
-  verified: boolean('verified').default(false).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    .references(() => role.id, { onDelete: 'cascade' }),
 }).enableRLS()
 
 // ============================================
-// 패스키 자격 증명 (Passkey Credentials - WebAuthn)
+// Type exports
 // ============================================
 
-export const passkeyCredentials = pgTable('passkey_credentials', {
-  id: text('id').primaryKey(), // credential ID (base64url)
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  publicKey: text('public_key').notNull(), // 공개키 (base64)
-  counter: integer('counter').notNull().default(0),
-  deviceType: text('device_type'), // 'singleDevice' | 'multiDevice'
-  backedUp: boolean('backed_up').default(false),
-  transports: text('transports'), // JSON array of transports
-  name: varchar('name', { length: 100 }), // 사용자가 지정한 이름 (예: "MacBook Pro")
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
-}).enableRLS()
-
-// ============================================
-// 복구 코드 (Recovery Codes)
-// ============================================
-
-export const recoveryCodes = pgTable('recovery_codes', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  code: text('code').notNull(), // bcrypt 해시 저장
-  usedAt: timestamp('used_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
-
-// ============================================
-// 신뢰할 수 있는 기기 (Trusted Devices) - 일반 사용자용
-// ============================================
-
-export const trustedDevices = pgTable('trusted_devices', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  deviceFingerprint: text('device_fingerprint').notNull(), // 기기 식별자
-  userAgent: text('user_agent'),
-  ipAddress: varchar('ip_address', { length: 45 }), // IPv6 지원
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
-
-// ============================================
-// WebAuthn 챌린지 (임시 저장용)
-// ============================================
-
-export const webauthnChallenges = pgTable('webauthn_challenges', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  challenge: text('challenge').notNull(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(), // 'registration' | 'authentication'
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
+export type Account = typeof account.$inferSelect
+export type NewUser = typeof user.$inferInsert
+export type Passkey = typeof passkey.$inferSelect
+export type Role = typeof role.$inferSelect
+export type Session = typeof session.$inferSelect
+export type TwoFactor = typeof twoFactor.$inferSelect
+export type User = typeof user.$inferSelect

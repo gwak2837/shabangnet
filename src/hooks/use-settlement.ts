@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { queryKeys } from '@/lib/query-keys'
-import { getSettlementData, type SettlementData, type SettlementFilters } from '@/services/db/settlement'
+import { queryKeys } from '@/common/constants/query-keys'
+import { getSettlementData, type SettlementData, type SettlementFilters } from '@/services/settlement'
 
 export function useSettlement(filters: SettlementFilters | null) {
   return useQuery<SettlementData>({

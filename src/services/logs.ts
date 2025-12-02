@@ -60,14 +60,14 @@ export async function getById(id: string): Promise<SendLog | undefined> {
   const result = await db.query.emailLogs.findFirst({
     where: eq(emailLogs.id, id),
     with: {
-      orders: true
-    }
+      orders: true,
+    },
   })
 
   if (!result) return undefined
 
   const mapped = mapToSendLog(result)
-  mapped.orders = result.orders.map(o => ({
+  mapped.orders = result.orders.map((o) => ({
     address: o.address || '',
     cost: Number(o.cost || 0),
     customerName: o.customerName || '',
@@ -75,9 +75,9 @@ export async function getById(id: string): Promise<SendLog | undefined> {
     orderNumber: o.orderNumber,
     price: Number(o.price || 0),
     productName: o.productName,
-    quantity: o.quantity || 0
+    quantity: o.quantity || 0,
   }))
-  
+
   return mapped
 }
 
@@ -87,22 +87,24 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
   if (filters.manufacturerId && filters.manufacturerId !== 'all') {
     conditions.push(eq(emailLogs.manufacturerId, filters.manufacturerId))
   }
-  
+
   if (filters.status && filters.status !== 'all') {
     conditions.push(eq(emailLogs.status, filters.status))
   }
-  
+
   if (filters.startDate) {
     conditions.push(gte(emailLogs.sentAt, new Date(filters.startDate)))
   }
-  
+
   if (filters.endDate) {
     const endDate = new Date(filters.endDate)
     endDate.setHours(23, 59, 59, 999)
     conditions.push(lte(emailLogs.sentAt, endDate))
   }
 
-  const result = await db.select().from(emailLogs)
+  const result = await db
+    .select()
+    .from(emailLogs)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(emailLogs.sentAt))
 
