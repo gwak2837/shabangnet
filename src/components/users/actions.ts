@@ -91,6 +91,12 @@ async function checkAdminRole(): Promise<boolean> {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  // TODO: 역할 기반 권한 체크 구현 필요
-  return !!session?.user
+
+  if (!session?.user) {
+    return false
+  }
+
+  const [currentUser] = await db.select({ isAdmin: user.isAdmin }).from(user).where(eq(user.id, session.user.id))
+
+  return currentUser?.isAdmin ?? false
 }

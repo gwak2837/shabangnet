@@ -1,4 +1,4 @@
-import { account, passkey, role, session, twoFactor, user, userToRole, verification } from './auth'
+import { account, passkey, session, twoFactor, user, verification } from './auth'
 import { invoiceTemplates, manufacturers, optionMappings, orderTemplates, products } from './manufacturers'
 import { emailLogOrders, emailLogs, orders, uploads } from './orders'
 import { courierMappings, exclusionPatterns, settings, shoppingMallTemplates } from './settings'
@@ -22,26 +22,22 @@ export type NewOrder = typeof orders.$inferInsert
 export type NewOrderTemplate = typeof orderTemplates.$inferInsert
 export type NewPasskey = typeof passkey.$inferInsert
 export type NewProduct = typeof products.$inferInsert
-export type NewRole = typeof role.$inferInsert
 export type NewSession = typeof session.$inferInsert
 export type NewSetting = typeof settings.$inferInsert
 export type NewShoppingMallTemplate = typeof shoppingMallTemplates.$inferInsert
 export type NewTwoFactor = typeof twoFactor.$inferInsert
 export type NewUpload = typeof uploads.$inferInsert
 export type NewUser = typeof user.$inferInsert
-export type NewUserToRole = typeof userToRole.$inferInsert
 export type NewVerification = typeof verification.$inferInsert
 export type OptionMapping = typeof optionMappings.$inferSelect
 export type Order = typeof orders.$inferSelect
 export type OrderTemplate = typeof orderTemplates.$inferSelect
 export type Passkey = typeof passkey.$inferSelect
 export type Product = typeof products.$inferSelect
-export type Role = typeof role.$inferSelect
 export type Session = typeof session.$inferSelect
 export type Setting = typeof settings.$inferSelect
 export type ShoppingMallTemplate = typeof shoppingMallTemplates.$inferSelect
 export type TwoFactor = typeof twoFactor.$inferSelect
 export type Upload = typeof uploads.$inferSelect
 export type User = typeof user.$inferSelect
-export type UserToRole = typeof userToRole.$inferSelect
 export type Verification = typeof verification.$inferSelect

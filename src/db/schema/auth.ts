@@ -20,6 +20,7 @@ export const user = pgTable('user', {
   status: userStatusEnum('status').notNull().default('pending'),
   onboardingComplete: boolean('onboarding_complete').notNull().default(false),
   authType: authTypeEnum('auth_type').notNull().default('password'),
+  isAdmin: boolean('is_admin').notNull().default(false),
 }).enableRLS()
 
 // ============================================
@@ -110,39 +111,12 @@ export const passkey = pgTable('passkey', {
 }).enableRLS()
 
 // ============================================
-// 역할 (Roles) - Custom
-// ============================================
-
-export const role = pgTable('role', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  description: text('description'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}).enableRLS()
-
-// ============================================
-// 사용자-역할 매핑 (Users to Roles) - Custom
-// ============================================
-
-export const userToRole = pgTable('user_to_role', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  roleId: text('role_id')
-    .notNull()
-    .references(() => role.id, { onDelete: 'cascade' }),
-}).enableRLS()
-
-// ============================================
 // Type exports
 // ============================================
 
 export type Account = typeof account.$inferSelect
 export type NewUser = typeof user.$inferInsert
 export type Passkey = typeof passkey.$inferSelect
-export type Role = typeof role.$inferSelect
 export type Session = typeof session.$inferSelect
 export type TwoFactor = typeof twoFactor.$inferSelect
 export type User = typeof user.$inferSelect

@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, ArrowRight, Building2, CheckCircle2, Download, Package } from 'lucide-react'
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, Copy, Download, Package } from 'lucide-react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ interface UploadError {
 }
 
 interface UploadResultData {
+  duplicateOrders?: number
   errorOrders: number
   errors: UploadError[]
   fileName: string
@@ -49,7 +50,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
   return (
     <div className="flex flex-col gap-5">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -70,6 +71,18 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             <div>
               <p className="text-sm text-slate-500">제조사 수</p>
               <p className="text-xl font-semibold text-slate-900">{data.manufacturerBreakdown.length}곳</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+              <Copy className="h-5 w-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">중복 건너뜀</p>
+              <p className="text-xl font-semibold text-slate-900">{data.duplicateOrders ?? 0}건</p>
             </div>
           </CardContent>
         </Card>
@@ -97,6 +110,23 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
                 <p className="font-medium text-emerald-900">파일 처리 완료</p>
                 <p className="text-sm text-emerald-700">
                   총 {data.processedOrders}건의 주문이 성공적으로 처리되었습니다.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Duplicate Notice */}
+      {(data.duplicateOrders ?? 0) > 0 && (
+        <Card className="border-slate-200 bg-slate-50/50 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Copy className="h-5 w-5 text-slate-600" />
+              <div>
+                <p className="font-medium text-slate-900">중복 주문 건너뜀</p>
+                <p className="text-sm text-slate-700">
+                  이미 등록된 주문번호 {data.duplicateOrders}건은 중복으로 건너뛰었습니다.
                 </p>
               </div>
             </div>

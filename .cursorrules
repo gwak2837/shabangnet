@@ -292,6 +292,90 @@ export async function POST(request: Request) {
 | Data that needs HTTP caching      | GET API Route |
 | Real-time data fetching           | GET API Route |
 
+### Calling Server Actions from Client
+
+- **Do NOT use React Query's `useMutation`** for mutations. Use Server Actions with React hooks instead.
+- **For form submissions**: Use `useActionState` hook.
+- **For button clicks (non-form mutations)**: Use `useTransition` hook.
+
+```tsx
+// ❌ Bad - Using useMutation for mutations
+import { useMutation } from '@tanstack/react-query'
+import { createOrder } from '@/actions/orders'
+
+function OrderForm() {
+  const mutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      // ...
+    },
+  })
+
+  return <form onSubmit={() => mutation.mutate(data)}>...</form>
+}
+```
+
+```tsx
+// ✅ Good - Using useActionState for form submissions
+'use client'
+
+import { useActionState } from 'react'
+import { createOrder } from '@/actions/orders'
+
+function OrderForm() {
+  const [state, formAction, isPending] = useActionState(createOrder, null)
+
+  return (
+    <form action={formAction}>
+      <input name="productId" />
+      <input name="quantity" type="number" />
+      <button type="submit" disabled={isPending}>
+        {isPending ? '처리 중...' : '주문하기'}
+      </button>
+      {state?.error && <p className="text-red-500">{state.error}</p>}
+    </form>
+  )
+}
+```
+
+```tsx
+// ✅ Good - Using useTransition for button clicks (non-form mutations)
+'use client'
+
+import { useTransition } from 'react'
+import { deleteOrder } from '@/actions/orders'
+
+function DeleteOrderButton({ orderId }: { orderId: string }) {
+  const [isPending, startTransition] = useTransition()
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const result = await deleteOrder(orderId)
+      if (result.success) {
+        // Handle success (e.g., show toast, refresh data)
+      }
+    })
+  }
+
+  return (
+    <button onClick={handleDelete} disabled={isPending}>
+      {isPending ? '삭제 중...' : '삭제'}
+    </button>
+  )
+}
+```
+
+### When to Use Which Hook
+
+| Use Case                     | Hook             |
+| ---------------------------- | ---------------- |
+| Form with multiple inputs    | `useActionState` |
+| Login/Register forms         | `useActionState` |
+| Search forms                 | `useActionState` |
+| Single button action         | `useTransition`  |
+| Delete/Toggle actions        | `useTransition`  |
+| Actions triggered by events  | `useTransition`  |
+
 ---
 
 ## Security

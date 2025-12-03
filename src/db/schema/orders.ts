@@ -28,8 +28,7 @@ export const uploads = pgTable('uploads', {
 export const orders = pgTable('orders', {
   id: text('id').primaryKey(),
   uploadId: text('upload_id').references(() => uploads.id),
-  // 사방넷 표준 컬럼
-  orderNumber: varchar('order_number', { length: 100 }).notNull(),
+  orderNumber: varchar('order_number', { length: 100 }).notNull().unique(),
   productName: varchar('product_name', { length: 500 }),
   quantity: integer('quantity').default(1),
   orderName: varchar('order_name', { length: 255 }), // 주문인

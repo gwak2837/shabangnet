@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
 
-import { account, passkey, role, session, twoFactor, user, userToRole } from './auth'
+import { account, passkey, session, twoFactor, user } from './auth'
 import { invoiceTemplates, manufacturers, optionMappings, orderTemplates, products } from './manufacturers'
 import { emailLogOrders, emailLogs, orders, uploads } from './orders'
 import { shoppingMallTemplates } from './settings'
@@ -12,7 +12,6 @@ import { shoppingMallTemplates } from './settings'
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   sessions: many(session),
-  roles: many(userToRole),
   twoFactors: many(twoFactor),
   passkeys: many(passkey),
 }))
@@ -42,21 +41,6 @@ export const passkeyRelations = relations(passkey, ({ one }) => ({
   user: one(user, {
     fields: [passkey.userId],
     references: [user.id],
-  }),
-}))
-
-export const roleRelations = relations(role, ({ many }) => ({
-  users: many(userToRole),
-}))
-
-export const userToRoleRelations = relations(userToRole, ({ one }) => ({
-  user: one(user, {
-    fields: [userToRole.userId],
-    references: [user.id],
-  }),
-  role: one(role, {
-    fields: [userToRole.roleId],
-    references: [role.id],
   }),
 }))
 

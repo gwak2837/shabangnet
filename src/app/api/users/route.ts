@@ -1,6 +1,9 @@
+import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { db } from '@/db/client'
+import { user } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
 import { getUserList, type UserStatus } from '@/services/users'
 import { createCacheControl } from '@/utils/cache-control'
@@ -14,8 +17,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // TODO: 역할 기반 권한 체크 구현 필요
-  // 현재는 모든 로그인 사용자가 접근 가능
+  const [currentUser] = await db.select({ isAdmin: user.isAdmin }).from(user).where(eq(user.id, session.user.id))
+
+  if (!currentUser?.isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') as 'all' | UserStatus | null

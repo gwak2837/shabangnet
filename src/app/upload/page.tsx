@@ -12,6 +12,7 @@ import { UploadResult } from '@/components/upload/upload-result'
 import { useShoppingMallTemplates } from '@/hooks/use-settings'
 
 interface UploadResultData {
+  duplicateOrders?: number
   errorOrders: number
   errors: { row: number; message: string; productCode?: string; productName?: string }[]
   fileName: string
