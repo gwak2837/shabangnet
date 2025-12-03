@@ -1,6 +1,6 @@
 'use server'
 
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email/send'
 import { generateOrderFileName, generateOrderSheet, type OrderData } from '@/lib/excel'
 
 // ============================================================================

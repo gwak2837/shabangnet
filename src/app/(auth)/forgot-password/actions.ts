@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { db } from '@/db/client'
 import { user, verification } from '@/db/schema/auth'
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email/send'
 
 const ForgotPasswordSchema = z.object({
   email: z.email('올바른 이메일 형식이 아니에요'),

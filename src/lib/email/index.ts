@@ -1,4 +1,5 @@
-// Re-exports for backward compatibility and convenience
+// Re-exports for convenience
+export { SMTP_DEFAULT_PORT, SMTP_PURPOSE_LABELS } from './config'
 export type {
   SMTPAccount,
   SMTPAccountDisplay,
@@ -6,10 +7,9 @@ export type {
   SMTPAccountPurpose,
   SMTPConnectionConfig,
 } from './config'
-export { LEGACY_SMTP_KEYS, SMTP_DEFAULT_PORT, SMTP_PURPOSE_LABELS } from './config'
 
-export type { CreateEmailLogInput, EmailLogEntry, EmailLogFilter, EmailLogStatus } from './logging'
 export { cleanupOldEmailLogs, createEmailLog, getEmailLogs, updateEmailLog } from './logging'
+export type { CreateEmailLogInput, EmailLogEntry, EmailLogFilter, EmailLogStatus } from './logging'
 
 export type { SendEmailOptions, SendEmailResult } from './send'
 

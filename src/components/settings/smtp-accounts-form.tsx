@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Bell, CheckCircle2, Loader2, Lock, Mail, Package, Server, ShieldCheck } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import type { SMTPAccountPurpose } from '@/lib/email/config'
 
@@ -76,11 +76,7 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     saveError: null,
   })
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  async function loadSettings() {
+  const loadSettings = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }))
     try {
       const result = await getSmtpAccountByPurposeAction(purpose)
@@ -107,7 +103,11 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     } finally {
       setState((prev) => ({ ...prev, isLoading: false }))
     }
-  }
+  }, [purpose])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   async function handleSave() {
     setState((prev) => ({ ...prev, isSaving: true, saveError: null }))

@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm'
 import nodemailer from 'nodemailer'
 import 'server-only'
 
-import { env } from '@/common/env'
 import { db } from '@/db/client'
 import { settings, smtpAccount } from '@/db/schema/settings'
 import { decrypt } from '@/utils/crypto'
@@ -65,34 +64,7 @@ export async function loadSMTPConfig(purpose: SMTPAccountPurpose = 'system'): Pr
     return legacyConfig
   }
 
-  // 3. 환경변수에서 조회 (최종 fallback)
-  const envConfig = getSMTPConfigFromEnv()
-  if (envConfig) {
-    return envConfig
-  }
-
   throw new Error('SMTP 설정이 없습니다. 설정 페이지에서 SMTP를 설정해주세요.')
-}
-
-/**
- * 환경변수에서 SMTP 설정을 가져옵니다. (fallback)
- */
-function getSMTPConfigFromEnv(): SMTPConnectionConfig | null {
-  const host = env.SMTP_HOST
-  const user = env.SMTP_USER
-  const pass = env.SMTP_PASS
-
-  if (!host || !user || !pass) {
-    return null
-  }
-
-  return {
-    host,
-    port: SMTP_DEFAULT_PORT,
-    auth: { user, pass },
-    fromName: env.SMTP_FROM_NAME || '',
-    fromEmail: user,
-  }
 }
 
 /**

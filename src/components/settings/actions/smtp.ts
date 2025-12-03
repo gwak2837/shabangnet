@@ -4,7 +4,8 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { settings } from '@/db/schema/settings'
-import { LEGACY_SMTP_KEYS, testSMTPConnection } from '@/lib/email'
+import { LEGACY_SMTP_KEYS } from '@/lib/email/config'
+import { testSMTPConnection } from '@/lib/email/send'
 import { decrypt, encrypt, maskPassword } from '@/utils/crypto'
 
 // ============================================================================

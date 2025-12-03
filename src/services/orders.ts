@@ -5,7 +5,7 @@ import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email/send'
 import {
   formatDateForFileName,
   generateOrderFileName,

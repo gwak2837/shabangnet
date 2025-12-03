@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 import { db } from '@/db/client'
 import { user, verification } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email/send'
 
 interface EmailVerificationStatus {
   email: string
