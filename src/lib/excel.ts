@@ -2,12 +2,8 @@ import ExcelJS from 'exceljs'
 
 import type { InvoiceTemplate } from '../services/manufacturers.types'
 
-import {
-  columnLetterToIndex,
-  findSabangnetKeyByLabel,
-  indexToColumnLetter,
-  SABANGNET_COLUMNS,
-} from '../common/constants'
+import { SABANGNET_COLUMNS } from '../common/constants'
+import { findStandardKeyByLabel } from '../services/column-synonyms'
 
 // ============================================
 // 타입 정의
@@ -174,15 +170,16 @@ export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<Tem
     }
   })
 
-  // 자동 매핑 제안
+  // 자동 매핑 제안 (DB에서 동의어 조회)
   const suggestedMappings: Record<string, string> = {}
-  headers.forEach((header, index) => {
-    if (!header) return
-    const sabangnetKey = findSabangnetKeyByLabel(header)
+  for (let index = 0; index < headers.length; index++) {
+    const header = headers[index]
+    if (!header) continue
+    const sabangnetKey = await findStandardKeyByLabel(header)
     if (sabangnetKey) {
       suggestedMappings[sabangnetKey] = indexToColumnLetter(index)
     }
-  })
+  }
 
   // 샘플 데이터 추출 (최대 3행)
   const sampleData: Record<string, string>[] = []
@@ -211,6 +208,17 @@ export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<Tem
     suggestedMappings,
     sampleData,
   }
+}
+
+/**
+ * 엑셀 컬럼 문자를 인덱스로 변환 (A -> 0, Z -> 25, AA -> 26)
+ */
+export function columnLetterToIndex(letter: string): number {
+  let index = 0
+  for (let i = 0; i < letter.length; i++) {
+    index = index * 26 + (letter.charCodeAt(i) - 64)
+  }
+  return index - 1
 }
 
 /**
@@ -277,16 +285,16 @@ export function generateInvoiceFileName(manufacturerName: string, date: Date = n
   return `사방넷_송장업로드_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
 }
 
+// ============================================
+// 파싱 함수들
+// ============================================
+
 /**
  * 발주서 파일명 생성
  */
 export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
   return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
 }
-
-// ============================================
-// 파싱 함수들
-// ============================================
 
 /**
  * 제조사별 발주서 엑셀 파일 생성
@@ -456,6 +464,10 @@ export async function generateSabangnetInvoiceFile(results: InvoiceConvertResult
   return Buffer.from(buffer)
 }
 
+// ============================================
+// 템플릿 기반 발주서 생성
+// ============================================
+
 /**
  * 제조사별 템플릿을 사용하여 발주서 생성
  */
@@ -513,10 +525,6 @@ export async function generateTemplateBasedOrderSheet(
   return Buffer.from(buffer)
 }
 
-// ============================================
-// 템플릿 기반 발주서 생성
-// ============================================
-
 /**
  * 제조사별로 주문 그룹화
  */
@@ -532,6 +540,23 @@ export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, Pa
 
   return grouped
 }
+
+/**
+ * 엑셀 컬럼 인덱스를 문자로 변환 (0 -> A, 25 -> Z, 26 -> AA)
+ */
+export function indexToColumnLetter(index: number): string {
+  let letter = ''
+  let i = index
+  while (i >= 0) {
+    letter = String.fromCharCode((i % 26) + 65) + letter
+    i = Math.floor(i / 26) - 1
+  }
+  return letter
+}
+
+// ============================================
+// 헬퍼 함수들
+// ============================================
 
 /**
  * 제조사 송장 파일 파싱
@@ -696,10 +721,6 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   return { orders, errors, headers, totalRows: rowIndex }
 }
 
-// ============================================
-// 헬퍼 함수들
-// ============================================
-
 /**
  * 쇼핑몰 파일 파싱
  */
@@ -783,6 +804,10 @@ function formatProductNameWithOption(productName: string, optionName?: string): 
   return `${productName} ${optionName}`
 }
 
+// ============================================
+// 송장 변환 관련 함수들
+// ============================================
+
 /**
  * 셀 값을 문자열로 변환
  */
@@ -839,10 +864,6 @@ function getOrderValue(order: ParsedOrder, key: string): number | string {
 
   return String(value)
 }
-
-// ============================================
-// 송장 변환 관련 함수들
-// ============================================
 
 /**
  * 빈 옵션 판별

@@ -185,7 +185,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <div className="mt-2 flex gap-1">
               <Link
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  pathname.startsWith('/settings')
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                )}
                 href="/settings"
                 onClick={onClose}
               >

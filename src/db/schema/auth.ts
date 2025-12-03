@@ -1,4 +1,3 @@
-// ✅ AI 코드 검토 완료
 import { boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import 'server-only'
 

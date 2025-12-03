@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
 import { Toaster } from 'sonner'
 
-import { getOrigin } from '@/common/config'
 import { SITE_CONFIG } from '@/common/constants'
 import { QueryProvider } from '@/providers/query-provider'
+import { getOrigin } from '@/utils/config'
 
 import './globals.css'
 

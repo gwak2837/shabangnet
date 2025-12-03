@@ -3,10 +3,19 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { getAllSynonyms } from '@/services/column-synonyms'
 import { getCourierMappings, getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 import { getShoppingMallTemplate, getShoppingMallTemplates } from '@/services/shopping-mall-templates'
 
 import { getMfaSettings } from './queries/mfa'
+
+// Column Synonyms
+export function useColumnSynonyms() {
+  return useQuery({
+    queryKey: queryKeys.settings.synonyms,
+    queryFn: getAllSynonyms,
+  })
+}
 
 // Courier Mappings
 export function useCourierMappings() {

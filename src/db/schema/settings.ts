@@ -1,5 +1,27 @@
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
+
+// ============================================
+// 컬럼 동의어 (Column Synonym)
+// 사방넷 표준 컬럼명에 대한 동의어 매핑
+// ============================================
+
+export const columnSynonym = pgTable(
+  'column_synonym',
+  {
+    id: text('id').primaryKey(),
+    standardKey: varchar('standard_key', { length: 50 }).notNull(), // 사방넷 표준 키 (productName, quantity 등)
+    synonym: varchar('synonym', { length: 100 }).notNull(), // 동의어 (상품명, 품명 등)
+    enabled: boolean('enabled').default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_column_synonym_standard_key').on(table.standardKey),
+    index('idx_column_synonym_synonym').on(table.synonym),
+    unique('unique_standard_key_synonym').on(table.standardKey, table.synonym),
+  ],
+).enableRLS()
 
 export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),

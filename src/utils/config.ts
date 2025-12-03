@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './constants'
+import { SITE_CONFIG } from '../common/constants'
 
 /**
  * 현재 환경에 맞는 앱 origin URL을 반환합니다.

@@ -11,6 +11,8 @@
  * DATABASE_URL="your_db_url" npx tsx tools/seed-order-templates.ts
  */
 
+import './env-loader'
+
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import ExcelJS from 'exceljs'
@@ -18,11 +20,14 @@ import fs from 'fs'
 import path from 'path'
 import postgres from 'postgres'
 
-import { COLUMN_SYNONYMS } from '../src/common/constants'
 import { manufacturer, orderTemplate } from '../src/db/schema/manufacturers'
+import { columnSynonym } from '../src/db/schema/settings'
 
-// 헤더 분석하여 매핑 제안
-function analyzeHeaders(headers: string[]): Record<string, string> {
+// 동의어 맵 타입
+type SynonymMap = Map<string, string> // synonym -> standardKey
+
+// 헤더 분석하여 매핑 제안 (DB에서 로드한 동의어 사용)
+function analyzeHeaders(headers: string[], synonymMap: SynonymMap): Record<string, string> {
   const mappings: Record<string, string> = {}
 
   headers.forEach((header, index) => {
@@ -31,9 +36,16 @@ function analyzeHeaders(headers: string[]): Record<string, string> {
     const normalizedHeader = header.toLowerCase().trim()
     const columnLetter = indexToColumnLetter(index)
 
-    // 동의어 사전에서 매칭 찾기
-    for (const [key, synonyms] of Object.entries(COLUMN_SYNONYMS)) {
-      if (synonyms.some((s) => s.toLowerCase() === normalizedHeader || normalizedHeader.includes(s.toLowerCase()))) {
+    // 동의어 맵에서 직접 매칭
+    const standardKey = synonymMap.get(normalizedHeader)
+    if (standardKey) {
+      mappings[standardKey] = columnLetter
+      return
+    }
+
+    // 부분 매칭 시도
+    for (const [synonym, key] of synonymMap.entries()) {
+      if (normalizedHeader.includes(synonym) || synonym.includes(normalizedHeader)) {
         mappings[key] = columnLetter
         break
       }
@@ -44,7 +56,10 @@ function analyzeHeaders(headers: string[]): Record<string, string> {
 }
 
 // 템플릿 파일 분석
-async function analyzeTemplateFile(filePath: string): Promise<{
+async function analyzeTemplateFile(
+  filePath: string,
+  synonymMap: SynonymMap,
+): Promise<{
   columnMappings: Record<string, string>
   dataStartRow: number
   headerRow: number
@@ -80,7 +95,7 @@ async function analyzeTemplateFile(filePath: string): Promise<{
     }
   })
 
-  const columnMappings = analyzeHeaders(headers)
+  const columnMappings = analyzeHeaders(headers, synonymMap)
 
   return {
     headers,
@@ -183,6 +198,15 @@ async function seed() {
   const db = drizzle(client)
 
   try {
+    // DB에서 동의어 로드
+    console.log('📚 Loading synonyms from database...')
+    const synonyms = await db.select().from(columnSynonym).where(eq(columnSynonym.enabled, true))
+    const synonymMap: SynonymMap = new Map()
+    for (const syn of synonyms) {
+      synonymMap.set(syn.synonym.toLowerCase(), syn.standardKey)
+    }
+    console.log(`   Loaded ${synonyms.length} synonyms`)
+
     // 템플릿 파일 목록
     const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.xlsx') && !f.startsWith('~'))
 
@@ -238,7 +262,7 @@ async function seed() {
         }
 
         // 파일 분석
-        const analysis = await analyzeTemplateFile(filePath)
+        const analysis = await analyzeTemplateFile(filePath, synonymMap)
 
         // 템플릿 저장
         await db.insert(orderTemplate).values({
