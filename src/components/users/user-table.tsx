@@ -144,7 +144,7 @@ export function UserTable({ users, isLoading }: UserTableProps) {
             {users.map((user) => {
               const config = statusConfig[user.status]
               return (
-                <tr className="bg-white hover:bg-slate-50" key={user.id}>
+                <tr className="bg-card hover:bg-slate-50" key={user.id}>
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium text-slate-900">{user.name || '이름 없음'}</p>

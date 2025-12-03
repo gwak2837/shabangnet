@@ -180,7 +180,7 @@ export function EmailTemplateForm() {
             <div className="flex flex-wrap gap-2">
               {Object.entries(template?.variables || {}).map(([key, description]) => (
                 <span
-                  className="inline-flex items-center gap-1 text-xs bg-white border border-slate-200 rounded px-2 py-1"
+                  className="inline-flex items-center gap-1 text-xs bg-card border border-slate-200 rounded px-2 py-1"
                   key={key}
                 >
                   <code className="text-amber-600">{`{{${key}}}`}</code>
@@ -259,7 +259,7 @@ export function EmailTemplateForm() {
           </CardHeader>
           <CardContent>
             <div
-              className="border border-slate-200 rounded-lg p-4 bg-white"
+              className="border border-slate-200 rounded-lg p-4 bg-card"
               dangerouslySetInnerHTML={{ __html: previewHtml }}
             />
           </CardContent>

@@ -32,7 +32,7 @@ export default function PendingApprovalPage() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4 text-left text-sm">
+        <div className="rounded-lg border border-slate-200 bg-card p-4 text-left text-sm">
           <p className="font-medium text-slate-700">승인 후 이용 가능한 기능</p>
           <ul className="mt-2 flex flex-col gap-1 text-muted-foreground">
             <li>• 대시보드 접근</li>

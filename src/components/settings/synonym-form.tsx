@@ -150,7 +150,9 @@ export function SynonymForm({
             </div>
             <div>
               <CardTitle className="text-lg">컬럼 동의어 사전</CardTitle>
-              <CardDescription>쇼핑몰 파일의 컬럼명을 사방넷 표준 컬럼에 자동 매핑하기 위한 동의어를 관리합니다</CardDescription>
+              <CardDescription>
+                쇼핑몰 파일의 컬럼명을 사방넷 표준 컬럼에 자동 매핑하기 위한 동의어를 관리합니다
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -211,7 +213,7 @@ export function SynonymForm({
                               <div
                                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors ${
                                   syn.enabled
-                                    ? 'border-slate-200 bg-white text-slate-700'
+                                    ? 'border-slate-200 bg-card text-slate-700'
                                     : 'border-slate-100 bg-slate-100 text-slate-400'
                                 }`}
                                 key={syn.id}
@@ -378,4 +380,3 @@ export function SynonymForm({
     </>
   )
 }
-

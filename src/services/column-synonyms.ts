@@ -274,4 +274,3 @@ async function getCachedSynonyms(): Promise<{ map: ColumnSynonymsMap; reverseMap
 
   return { map, reverseMap }
 }
-
