@@ -1,4 +1,5 @@
 import { decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import 'server-only'
 
 import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
 import { manufacturers } from './manufacturers'

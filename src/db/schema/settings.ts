@@ -1,4 +1,5 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import 'server-only'
 
 // ============================================
 // 설정 (Settings)

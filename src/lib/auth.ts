@@ -56,6 +56,11 @@ export const auth = betterAuth({
         defaultValue: 'password',
         input: false,
       },
+      isAdmin: {
+        type: 'boolean',
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   session: {

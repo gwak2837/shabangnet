@@ -1,4 +1,5 @@
 import { relations } from 'drizzle-orm'
+import 'server-only'
 
 import { account, passkey, session, twoFactor, user } from './auth'
 import { invoiceTemplates, manufacturers, optionMappings, orderTemplates, products } from './manufacturers'
@@ -10,22 +11,22 @@ import { shoppingMallTemplates } from './settings'
 // ============================================
 
 export const userRelations = relations(user, ({ many }) => ({
-  accounts: many(account),
   sessions: many(session),
+  accounts: many(account),
   twoFactors: many(twoFactor),
   passkeys: many(passkey),
-}))
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
+    references: [user.id],
+  }),
+}))
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
     references: [user.id],
   }),
 }))

@@ -1,5 +1,5 @@
-import 'server-only'
 import { desc, eq, sql } from 'drizzle-orm'
+import 'server-only'
 
 import { db } from '@/db/client'
 import { emailLogs, smtpAccounts } from '@/db/schema/settings'

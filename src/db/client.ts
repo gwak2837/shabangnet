@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
+import 'server-only'
 
 import { env } from '@/common/env'
 
@@ -9,13 +10,12 @@ import * as ordersSchema from './schema/orders'
 import * as relationsSchema from './schema/relations'
 import * as settingsSchema from './schema/settings'
 
-// 모든 스키마를 하나의 객체로 병합
 const schema = {
   ...authSchema,
-  ...settingsSchema,
   ...manufacturersSchema,
   ...ordersSchema,
   ...relationsSchema,
+  ...settingsSchema,
 }
 
 // postgres.js 클라이언트 생성
@@ -31,6 +31,5 @@ const client = postgres(env.SUPABASE_POSTGRES_URL_NON_POOLING, {
 // Drizzle ORM 인스턴스 생성
 export const db = drizzle(client, { schema })
 
-// 타입 export
 export type Database = typeof db
 export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]

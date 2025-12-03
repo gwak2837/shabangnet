@@ -1,4 +1,5 @@
 import { boolean, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import 'server-only'
 
 // ============================================
 // 제조사 (Manufacturers)
