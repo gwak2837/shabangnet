@@ -499,7 +499,7 @@ export function ManufacturerModal({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-4 flex-shrink-0">
+          <DialogFooter className="gap-2 sm:gap-0 pt-4 shrink-0">
             <Button disabled={isSaving} onClick={() => onOpenChange(false)} type="button" variant="outline">
               취소
             </Button>

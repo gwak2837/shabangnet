@@ -9,8 +9,8 @@ dotenv.config({
 console.log('👀 - SUPABASE_POSTGRES_URL_NON_POOLING:', process.env.SUPABASE_POSTGRES_URL_NON_POOLING)
 
 export default defineConfig({
-  schema: './src/db/schema',
   out: './drizzle',
+  schema: './src/db/schema',
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.SUPABASE_POSTGRES_URL_NON_POOLING!,
