@@ -2,9 +2,9 @@ import { relations } from 'drizzle-orm'
 import 'server-only'
 
 import { account, passkey, session, twoFactor, user } from './auth'
-import { invoiceTemplates, manufacturers, optionMappings, orderTemplates, products } from './manufacturers'
-import { emailLogOrders, emailLogs, orders, uploads } from './orders'
-import { shoppingMallTemplates } from './settings'
+import { invoiceTemplate, manufacturer, optionMapping, orderTemplate, product } from './manufacturers'
+import { order, orderEmailLog, orderEmailLogItem, upload } from './orders'
+import { shoppingMallTemplate } from './settings'
 
 // ============================================
 // Auth Relations
@@ -46,43 +46,43 @@ export const passkeyRelations = relations(passkey, ({ one }) => ({
 }))
 
 // ============================================
-// Manufacturers Relations
+// Manufacturer Relations
 // ============================================
 
-export const manufacturersRelations = relations(manufacturers, ({ many, one }) => ({
-  products: many(products),
-  optionMappings: many(optionMappings),
-  emailLogs: many(emailLogs),
-  invoiceTemplate: many(invoiceTemplates),
-  orderTemplate: one(orderTemplates),
-  orders: many(orders),
+export const manufacturerRelations = relations(manufacturer, ({ many, one }) => ({
+  products: many(product),
+  optionMappings: many(optionMapping),
+  orderEmailLogs: many(orderEmailLog),
+  invoiceTemplates: many(invoiceTemplate),
+  orderTemplate: one(orderTemplate),
+  orders: many(order),
 }))
 
-export const productsRelations = relations(products, ({ one }) => ({
-  manufacturer: one(manufacturers, {
-    fields: [products.manufacturerId],
-    references: [manufacturers.id],
+export const productRelations = relations(product, ({ one }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [product.manufacturerId],
+    references: [manufacturer.id],
   }),
 }))
 
-export const optionMappingsRelations = relations(optionMappings, ({ one }) => ({
-  manufacturer: one(manufacturers, {
-    fields: [optionMappings.manufacturerId],
-    references: [manufacturers.id],
+export const optionMappingRelations = relations(optionMapping, ({ one }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [optionMapping.manufacturerId],
+    references: [manufacturer.id],
   }),
 }))
 
-export const invoiceTemplatesRelations = relations(invoiceTemplates, ({ one }) => ({
-  manufacturer: one(manufacturers, {
-    fields: [invoiceTemplates.manufacturerId],
-    references: [manufacturers.id],
+export const invoiceTemplateRelations = relations(invoiceTemplate, ({ one }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [invoiceTemplate.manufacturerId],
+    references: [manufacturer.id],
   }),
 }))
 
-export const orderTemplatesRelations = relations(orderTemplates, ({ one }) => ({
-  manufacturer: one(manufacturers, {
-    fields: [orderTemplates.manufacturerId],
-    references: [manufacturers.id],
+export const orderTemplateRelations = relations(orderTemplate, ({ one }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [orderTemplate.manufacturerId],
+    references: [manufacturer.id],
   }),
 }))
 
@@ -90,44 +90,44 @@ export const orderTemplatesRelations = relations(orderTemplates, ({ one }) => ({
 // Settings Relations
 // ============================================
 
-export const shoppingMallTemplatesRelations = relations(shoppingMallTemplates, ({ many }) => ({
-  uploads: many(uploads),
+export const shoppingMallTemplateRelations = relations(shoppingMallTemplate, ({ many }) => ({
+  uploads: many(upload),
 }))
 
 // ============================================
-// Orders Relations
+// Order Relations
 // ============================================
 
-export const uploadsRelations = relations(uploads, ({ one, many }) => ({
-  shoppingMallTemplate: one(shoppingMallTemplates, {
-    fields: [uploads.shoppingMallId],
-    references: [shoppingMallTemplates.id],
+export const uploadRelations = relations(upload, ({ one, many }) => ({
+  shoppingMallTemplate: one(shoppingMallTemplate, {
+    fields: [upload.shoppingMallId],
+    references: [shoppingMallTemplate.id],
   }),
-  orders: many(orders),
+  orders: many(order),
 }))
 
-export const ordersRelations = relations(orders, ({ one }) => ({
-  upload: one(uploads, {
-    fields: [orders.uploadId],
-    references: [uploads.id],
+export const orderRelations = relations(order, ({ one }) => ({
+  upload: one(upload, {
+    fields: [order.uploadId],
+    references: [upload.id],
   }),
-  manufacturer: one(manufacturers, {
-    fields: [orders.manufacturerId],
-    references: [manufacturers.id],
+  manufacturer: one(manufacturer, {
+    fields: [order.manufacturerId],
+    references: [manufacturer.id],
   }),
 }))
 
-export const emailLogsRelations = relations(emailLogs, ({ one, many }) => ({
-  manufacturer: one(manufacturers, {
-    fields: [emailLogs.manufacturerId],
-    references: [manufacturers.id],
+export const orderEmailLogRelations = relations(orderEmailLog, ({ one, many }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [orderEmailLog.manufacturerId],
+    references: [manufacturer.id],
   }),
-  orders: many(emailLogOrders),
+  items: many(orderEmailLogItem),
 }))
 
-export const emailLogOrdersRelations = relations(emailLogOrders, ({ one }) => ({
-  emailLog: one(emailLogs, {
-    fields: [emailLogOrders.emailLogId],
-    references: [emailLogs.id],
+export const orderEmailLogItemRelations = relations(orderEmailLogItem, ({ one }) => ({
+  orderEmailLog: one(orderEmailLog, {
+    fields: [orderEmailLogItem.emailLogId],
+    references: [orderEmailLog.id],
   }),
 }))

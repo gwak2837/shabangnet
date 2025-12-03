@@ -4,7 +4,7 @@ import 'server-only'
 
 import { env } from '@/common/env'
 import { db } from '@/db/client'
-import { settings, smtpAccounts } from '@/db/schema/settings'
+import { settings, smtpAccount } from '@/db/schema/settings'
 import { decrypt } from '@/utils/crypto'
 
 import type { SMTPAccountPurpose, SMTPConnectionConfig } from './config'
@@ -48,7 +48,7 @@ export function formatFromAddress(config: SMTPConnectionConfig): string {
 
 /**
  * SMTP 설정을 로드합니다.
- * 우선순위: DB (smtp_accounts) > DB (legacy settings) > 환경변수
+ * 우선순위: DB (smtp_account) > DB (legacy settings) > 환경변수
  * @param purpose SMTP 계정 용도
  * @returns SMTP 연결 설정
  */
@@ -97,7 +97,7 @@ function getSMTPConfigFromEnv(): SMTPConnectionConfig | null {
 
 /**
  * DB에서 레거시 SMTP 설정을 로드합니다.
- * @deprecated Multi-SMTP 구현 후 smtp_accounts 테이블 사용
+ * @deprecated Multi-SMTP 구현 후 smtp_account 테이블 사용
  */
 async function loadLegacySMTPConfigFromDB(): Promise<SMTPConnectionConfig | null> {
   try {
@@ -139,12 +139,12 @@ async function loadLegacySMTPConfigFromDB(): Promise<SMTPConnectionConfig | null
 }
 
 /**
- * smtp_accounts 테이블에서 SMTP 설정을 로드합니다.
+ * smtp_account 테이블에서 SMTP 설정을 로드합니다.
  * @param purpose SMTP 계정 용도
  */
 async function loadSMTPConfigFromAccounts(purpose: SMTPAccountPurpose): Promise<SMTPConnectionConfig | null> {
   try {
-    const [account] = await db.select().from(smtpAccounts).where(eq(smtpAccounts.purpose, purpose)).limit(1)
+    const [account] = await db.select().from(smtpAccount).where(eq(smtpAccount.purpose, purpose)).limit(1)
 
     if (!account || !account.enabled) {
       return null

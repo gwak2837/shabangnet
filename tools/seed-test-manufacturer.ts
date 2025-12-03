@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { manufacturers } from '../src/db/schema/manufacturers'
+import { manufacturer } from '../src/db/schema/manufacturers'
 
 // .env 파일 로드
 dotenv.config({ path: '.env.local' })
@@ -62,17 +62,17 @@ async function seed() {
       },
     ]
 
-    for (const manufacturer of testManufacturers) {
+    for (const mfr of testManufacturers) {
       // 이미 존재하는지 확인
-      const existing = await db.select().from(manufacturers).where(eq(manufacturers.id, manufacturer.id)).limit(1)
+      const existing = await db.select().from(manufacturer).where(eq(manufacturer.id, mfr.id)).limit(1)
 
       if (existing.length > 0) {
-        console.log(`⏭️  건너뜀: ${manufacturer.name} (이미 존재)`)
+        console.log(`⏭️  건너뜀: ${mfr.name} (이미 존재)`)
         continue
       }
 
-      await db.insert(manufacturers).values(manufacturer)
-      console.log(`✅ 제조사 등록: ${manufacturer.name}`)
+      await db.insert(manufacturer).values(mfr)
+      console.log(`✅ 제조사 등록: ${mfr.name}`)
     }
 
     console.log('\n🎉 테스트 제조사 시드 완료!')

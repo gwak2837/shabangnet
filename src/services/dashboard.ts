@@ -3,8 +3,8 @@
 import { desc, eq, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers } from '@/db/schema/manufacturers'
-import { orders, uploads } from '@/db/schema/orders'
+import { manufacturer } from '@/db/schema/manufacturers'
+import { order, upload } from '@/db/schema/orders'
 
 // Dashboard types
 export interface ChartDataItem {
@@ -38,14 +38,14 @@ export interface Upload {
 export async function getChartData(): Promise<ChartDataItem[]> {
   const result = await db
     .select({
-      name: manufacturers.name,
-      orders: sql<number>`count(${orders.id})`.mapWith(Number),
-      amount: sql<number>`sum(${orders.paymentAmount} * ${orders.quantity})`.mapWith(Number),
+      name: manufacturer.name,
+      orders: sql<number>`count(${order.id})`.mapWith(Number),
+      amount: sql<number>`sum(${order.paymentAmount} * ${order.quantity})`.mapWith(Number),
     })
-    .from(orders)
-    .leftJoin(manufacturers, eq(orders.manufacturerId, manufacturers.id))
-    .where(eq(orders.status, 'pending'))
-    .groupBy(manufacturers.name)
+    .from(order)
+    .leftJoin(manufacturer, eq(order.manufacturerId, manufacturer.id))
+    .where(eq(order.status, 'pending'))
+    .groupBy(manufacturer.name)
 
   return result.map((r) => ({
     name: r.name || 'Unknown',
@@ -55,7 +55,7 @@ export async function getChartData(): Promise<ChartDataItem[]> {
 }
 
 export async function getRecentUploads(): Promise<Upload[]> {
-  const result = await db.select().from(uploads).orderBy(desc(uploads.uploadedAt)).limit(5)
+  const result = await db.select().from(upload).orderBy(desc(upload.uploadedAt)).limit(5)
 
   return result.map((u) => ({
     id: u.id,
@@ -72,12 +72,12 @@ export async function getRecentUploads(): Promise<Upload[]> {
 export async function getStats(): Promise<DashboardStats> {
   const [stats] = await db
     .select({
-      todayOrders: sql<number>`count(case when date(${orders.createdAt}) = current_date then 1 end)`.mapWith(Number),
-      pendingOrders: sql<number>`count(case when ${orders.status} = 'pending' then 1 end)`.mapWith(Number),
-      completedOrders: sql<number>`count(case when ${orders.status} = 'completed' then 1 end)`.mapWith(Number),
-      errorOrders: sql<number>`count(case when ${orders.status} = 'error' then 1 end)`.mapWith(Number),
+      todayOrders: sql<number>`count(case when date(${order.createdAt}) = current_date then 1 end)`.mapWith(Number),
+      pendingOrders: sql<number>`count(case when ${order.status} = 'pending' then 1 end)`.mapWith(Number),
+      completedOrders: sql<number>`count(case when ${order.status} = 'completed' then 1 end)`.mapWith(Number),
+      errorOrders: sql<number>`count(case when ${order.status} = 'error' then 1 end)`.mapWith(Number),
     })
-    .from(orders)
+    .from(order)
 
   return {
     todayOrders: stats.todayOrders,

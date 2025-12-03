@@ -5,8 +5,8 @@ import { eq, inArray } from 'drizzle-orm'
 import type { InvoiceTemplate } from '@/services/manufacturers.types'
 
 import { db } from '@/db/client'
-import { orders } from '@/db/schema/orders'
-import { courierMappings } from '@/db/schema/settings'
+import { order } from '@/db/schema/orders'
+import { courierMapping } from '@/db/schema/settings'
 import {
   generateInvoiceFileName,
   generateSabangnetInvoiceFile,
@@ -64,15 +64,15 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
     }
 
     // 2. 택배사 매핑 조회
-    const courierMappingList = await db.select().from(courierMappings)
+    const courierMappingList = await db.select().from(courierMapping)
     const courierLookup = buildCourierLookup(courierMappingList)
 
     // 3. 해당 제조사의 주문 데이터 조회 (주문번호로 매칭)
     const orderNumbers = parseResult.invoices.map((inv) => inv.orderNumber)
     const existingOrders = await db
-      .select({ id: orders.id, orderNumber: orders.orderNumber })
-      .from(orders)
-      .where(inArray(orders.orderNumber, orderNumbers))
+      .select({ id: order.id, orderNumber: order.orderNumber })
+      .from(order)
+      .where(inArray(order.orderNumber, orderNumbers))
 
     const orderMap = new Map(existingOrders.map((o) => [o.orderNumber, o.id]))
 
@@ -102,12 +102,12 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
       await db.transaction(async (tx) => {
         for (const update of ordersToUpdate) {
           await tx
-            .update(orders)
+            .update(order)
             .set({
               courier: update.courier,
               trackingNumber: update.trackingNumber,
             })
-            .where(eq(orders.id, update.id))
+            .where(eq(order.id, update.id))
         }
       })
     }

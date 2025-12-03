@@ -19,7 +19,7 @@ import path from 'path'
 import postgres from 'postgres'
 
 import { COLUMN_SYNONYMS } from '../src/common/constants'
-import { manufacturers, orderTemplates } from '../src/db/schema/manufacturers'
+import { manufacturer, orderTemplate } from '../src/db/schema/manufacturers'
 
 // 헤더 분석하여 매핑 제안
 function analyzeHeaders(headers: string[]): Record<string, string> {
@@ -112,7 +112,7 @@ function extractManufacturerName(fileName: string): string {
 
 // 제조사 이름으로 ID 찾기
 async function findManufacturerId(db: ReturnType<typeof drizzle>, name: string): Promise<string | null> {
-  const result = await db.select().from(manufacturers).where(eq(manufacturers.name, name)).limit(1)
+  const result = await db.select().from(manufacturer).where(eq(manufacturer.name, name)).limit(1)
 
   return result.length > 0 ? result[0].id : null
 }
@@ -218,8 +218,8 @@ async function seed() {
         // 이미 존재하는지 확인
         const existing = await db
           .select()
-          .from(orderTemplates)
-          .where(eq(orderTemplates.manufacturerId, manufacturerId))
+          .from(orderTemplate)
+          .where(eq(orderTemplate.manufacturerId, manufacturerId))
           .limit(1)
 
         if (existing.length > 0) {
@@ -241,7 +241,7 @@ async function seed() {
         const analysis = await analyzeTemplateFile(filePath)
 
         // 템플릿 저장
-        await db.insert(orderTemplates).values({
+        await db.insert(orderTemplate).values({
           id: `ot_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           manufacturerId,
           templateFileName: fileName,

@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { courierMappings, exclusionPatterns, settings } from '@/db/schema/settings'
+import { courierMapping, exclusionPattern, settings } from '@/db/schema/settings'
 
 // Settings types
 export interface CourierMapping {
@@ -43,7 +43,7 @@ const defaultDuplicateCheckSettings: DuplicateCheckSettings = {
 // Courier Mappings
 export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promise<CourierMapping> {
   const [newMapping] = await db
-    .insert(courierMappings)
+    .insert(courierMapping)
     .values({
       id: `courier${Date.now()}`,
       name: data.name,
@@ -65,7 +65,7 @@ export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promi
 // Exclusion Settings
 export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>): Promise<ExclusionPattern> {
   const [newPattern] = await db
-    .insert(exclusionPatterns)
+    .insert(exclusionPattern)
     .values({
       id: `exc${Date.now()}`,
       pattern: pattern.pattern,
@@ -98,7 +98,7 @@ export async function getCourierCode(courierName: string): Promise<string | null
 }
 
 export async function getCourierMappings(): Promise<CourierMapping[]> {
-  const result = await db.select().from(courierMappings).orderBy(courierMappings.name)
+  const result = await db.select().from(courierMapping).orderBy(courierMapping.name)
   return result.map((m) => ({
     id: m.id,
     name: m.name,
@@ -127,7 +127,7 @@ export async function getExclusionLabel(fulfillmentType?: string): Promise<strin
 
 export async function getExclusionSettings(): Promise<ExclusionSettings> {
   const enabled = await getSetting<boolean>('exclusion_enabled', true)
-  const patterns = await db.select().from(exclusionPatterns).orderBy(exclusionPatterns.createdAt)
+  const patterns = await db.select().from(exclusionPattern).orderBy(exclusionPattern.createdAt)
 
   return {
     enabled,
@@ -141,23 +141,23 @@ export async function getExclusionSettings(): Promise<ExclusionSettings> {
 }
 
 export async function removeCourierMapping(id: string): Promise<void> {
-  await db.delete(courierMappings).where(eq(courierMappings.id, id))
+  await db.delete(courierMapping).where(eq(courierMapping.id, id))
 }
 
 export async function removeExclusionPattern(id: string): Promise<void> {
-  await db.delete(exclusionPatterns).where(eq(exclusionPatterns.id, id))
+  await db.delete(exclusionPattern).where(eq(exclusionPattern.id, id))
 }
 
 export async function updateCourierMapping(id: string, data: Partial<CourierMapping>): Promise<CourierMapping> {
   const [updated] = await db
-    .update(courierMappings)
+    .update(courierMapping)
     .set({
       name: data.name,
       code: data.code,
       aliases: data.aliases,
       enabled: data.enabled,
     })
-    .where(eq(courierMappings.id, id))
+    .where(eq(courierMapping.id, id))
     .returning()
 
   if (!updated) throw new Error('Courier mapping not found')
@@ -184,14 +184,14 @@ export async function updateExclusionPattern(
   data: Partial<Omit<ExclusionPattern, 'id'>>,
 ): Promise<ExclusionPattern> {
   const [updated] = await db
-    .update(exclusionPatterns)
+    .update(exclusionPattern)
     .set({
       pattern: data.pattern,
       description: data.description,
       enabled: data.enabled,
       updatedAt: new Date(),
     })
-    .where(eq(exclusionPatterns.id, id))
+    .where(eq(exclusionPattern.id, id))
     .returning()
 
   if (!updated) throw new Error('Exclusion pattern not found')

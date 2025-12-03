@@ -3,8 +3,8 @@
 import { and, eq, gte, lte } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers } from '@/db/schema/manufacturers'
-import { orders } from '@/db/schema/orders'
+import { manufacturer } from '@/db/schema/manufacturers'
+import { order } from '@/db/schema/orders'
 
 export interface SettlementData {
   orders: SettlementOrder[]
@@ -51,49 +51,49 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
   const { startDate, endDate } = getDateRange(filters)
 
   // Get manufacturer info
-  const manufacturer = await db.query.manufacturers.findFirst({
-    where: eq(manufacturers.id, filters.manufacturerId),
+  const mfr = await db.query.manufacturer.findFirst({
+    where: eq(manufacturer.id, filters.manufacturerId),
   })
 
-  if (!manufacturer) {
+  if (!mfr) {
     return createEmptySettlement(filters)
   }
 
   // Query completed orders for the manufacturer within the date range
   const result = await db
     .select()
-    .from(orders)
+    .from(order)
     .where(
       and(
-        eq(orders.manufacturerId, filters.manufacturerId),
-        eq(orders.status, 'completed'),
-        gte(orders.createdAt, startDate),
-        lte(orders.createdAt, endDate),
+        eq(order.manufacturerId, filters.manufacturerId),
+        eq(order.status, 'completed'),
+        gte(order.createdAt, startDate),
+        lte(order.createdAt, endDate),
       ),
     )
-    .orderBy(orders.createdAt)
+    .orderBy(order.createdAt)
 
   // Map to SettlementOrder
-  const settlementOrders: SettlementOrder[] = result.map((order) => {
-    const cost = Number(order.cost || 0)
-    const shippingCost = Number(order.shippingCost || 0)
-    const quantity = order.quantity || 1
+  const settlementOrders: SettlementOrder[] = result.map((o) => {
+    const cost = Number(o.cost || 0)
+    const shippingCost = Number(o.shippingCost || 0)
+    const quantity = o.quantity || 1
     const totalCost = cost * quantity + shippingCost
 
     return {
-      id: order.id,
-      orderNumber: order.orderNumber,
-      productName: order.productName || '',
-      optionName: order.optionName || '',
+      id: o.id,
+      orderNumber: o.orderNumber,
+      productName: o.productName || '',
+      optionName: o.optionName || '',
       quantity,
       cost,
       shippingCost,
       totalCost,
-      customerName: order.recipientName || '',
-      address: order.address || '',
-      sentAt: order.createdAt.toISOString(),
-      excludedFromEmail: !!order.excludedReason,
-      excludedReason: order.excludedReason || undefined,
+      customerName: o.recipientName || '',
+      address: o.address || '',
+      sentAt: o.createdAt.toISOString(),
+      excludedFromEmail: !!o.excludedReason,
+      excludedReason: o.excludedReason || undefined,
     }
   })
 
@@ -114,7 +114,7 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
       totalCost,
       totalShippingCost,
       excludedOrderCount,
-      manufacturerName: manufacturer.name,
+      manufacturerName: mfr.name,
       period,
     },
   }
@@ -126,19 +126,19 @@ export async function getSettlementExcelData(filters: SettlementFilters): Promis
 }> {
   const settlement = await getSettlementData(filters)
 
-  const data = settlement.orders.map((order) => ({
-    주문번호: order.orderNumber,
-    발주일: new Date(order.sentAt).toLocaleDateString('ko-KR'),
-    상품명: order.productName,
-    옵션: order.optionName || '',
-    수량: order.quantity,
-    원가: order.cost,
-    총원가: order.totalCost,
-    택배비: order.shippingCost,
-    고객명: order.customerName,
-    배송지: order.address,
-    이메일제외: order.excludedFromEmail ? 'Y' : '',
-    제외사유: order.excludedReason || '',
+  const data = settlement.orders.map((o) => ({
+    주문번호: o.orderNumber,
+    발주일: new Date(o.sentAt).toLocaleDateString('ko-KR'),
+    상품명: o.productName,
+    옵션: o.optionName || '',
+    수량: o.quantity,
+    원가: o.cost,
+    총원가: o.totalCost,
+    택배비: o.shippingCost,
+    고객명: o.customerName,
+    배송지: o.address,
+    이메일제외: o.excludedFromEmail ? 'Y' : '',
+    제외사유: o.excludedReason || '',
   }))
 
   return {

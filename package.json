@@ -9,8 +9,8 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "prepare": "husky",
-    "db:push": "drizzle-kit push",
-    "db:push:prod": "DB_ENV=production pnpm drizzle-kit push",
+    "db:push": "NODE_OPTIONS='--conditions=react-server' drizzle-kit push",
+    "db:push:prod": "NODE_OPTIONS='--conditions=react-server' DB_ENV=production pnpm drizzle-kit push",
     "seed:shopping-mall": "pnpm dlx tools/seed-shopping-mall-templates.ts"
   },
   "dependencies": {

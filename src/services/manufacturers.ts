@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { invoiceTemplates, manufacturers, orderTemplates } from '@/db/schema/manufacturers'
+import { invoiceTemplate, manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 
 // Types moved to avoid 'use server' export restrictions
 // These are re-exported for convenience but defined inline
@@ -73,7 +73,7 @@ const DEFAULT_ORDER_TEMPLATE = {
 
 export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>): Promise<Manufacturer> {
   const [newManufacturer] = await db
-    .insert(manufacturers)
+    .insert(manufacturer)
     .values({
       id: `m${Date.now()}`,
       name: data.name,
@@ -89,75 +89,75 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
 }
 
 export async function deleteOrderTemplate(manufacturerId: string): Promise<void> {
-  await db.delete(orderTemplates).where(eq(orderTemplates.manufacturerId, manufacturerId))
+  await db.delete(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
 }
 
 export async function getAll(): Promise<Manufacturer[]> {
-  const result = await db.select().from(manufacturers).orderBy(manufacturers.name)
+  const result = await db.select().from(manufacturer).orderBy(manufacturer.name)
   return result.map(mapToManufacturer)
 }
 
 export async function getById(id: string): Promise<Manufacturer | undefined> {
-  const [result] = await db.select().from(manufacturers).where(eq(manufacturers.id, id))
+  const [result] = await db.select().from(manufacturer).where(eq(manufacturer.id, id))
   if (!result) return undefined
   return mapToManufacturer(result)
 }
 
 export async function getInvoiceTemplate(manufacturerId: string): Promise<InvoiceTemplate | null> {
-  const [template] = await db.select().from(invoiceTemplates).where(eq(invoiceTemplates.manufacturerId, manufacturerId))
+  const [template] = await db.select().from(invoiceTemplate).where(eq(invoiceTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
 
-  const manufacturer = await getById(manufacturerId)
-  if (!manufacturer) throw new Error('Manufacturer not found')
+  const mfr = await getById(manufacturerId)
+  if (!mfr) throw new Error('Manufacturer not found')
 
-  return mapToInvoiceTemplate(template, manufacturer.name)
+  return mapToInvoiceTemplate(template, mfr.name)
 }
 
 export async function getInvoiceTemplateOrDefault(manufacturerId: string): Promise<InvoiceTemplate> {
   const customTemplate = await getInvoiceTemplate(manufacturerId)
   if (customTemplate) return customTemplate
 
-  const manufacturer = await getById(manufacturerId)
+  const mfr = await getById(manufacturerId)
   return {
     id: 'default',
     manufacturerId,
-    manufacturerName: manufacturer?.name || '알 수 없음',
+    manufacturerName: mfr?.name || '알 수 없음',
     ...DEFAULT_INVOICE_TEMPLATE,
   }
 }
 
 export async function getOrderTemplate(manufacturerId: string): Promise<OrderTemplate | null> {
-  const [template] = await db.select().from(orderTemplates).where(eq(orderTemplates.manufacturerId, manufacturerId))
+  const [template] = await db.select().from(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
 
-  const manufacturer = await getById(manufacturerId)
-  if (!manufacturer) throw new Error('Manufacturer not found')
+  const mfr = await getById(manufacturerId)
+  if (!mfr) throw new Error('Manufacturer not found')
 
-  return mapToOrderTemplate(template, manufacturer.name)
+  return mapToOrderTemplate(template, mfr.name)
 }
 
 export async function getOrderTemplateOrDefault(manufacturerId: string): Promise<OrderTemplate> {
   const customTemplate = await getOrderTemplate(manufacturerId)
   if (customTemplate) return customTemplate
 
-  const manufacturer = await getById(manufacturerId)
+  const mfr = await getById(manufacturerId)
   return {
     id: 'default',
     manufacturerId,
-    manufacturerName: manufacturer?.name || '알 수 없음',
+    manufacturerName: mfr?.name || '알 수 없음',
     ...DEFAULT_ORDER_TEMPLATE,
   }
 }
 
 export async function remove(id: string): Promise<void> {
-  await db.delete(manufacturers).where(eq(manufacturers.id, id))
+  await db.delete(manufacturer).where(eq(manufacturer.id, id))
 }
 
 export async function update(id: string, data: Partial<Manufacturer>): Promise<Manufacturer> {
   const [updated] = await db
-    .update(manufacturers)
+    .update(manufacturer)
     .set({
       name: data.name,
       contactName: data.contactName,
@@ -166,7 +166,7 @@ export async function update(id: string, data: Partial<Manufacturer>): Promise<M
       phone: data.phone,
       updatedAt: new Date(),
     })
-    .where(eq(manufacturers.id, id))
+    .where(eq(manufacturer.id, id))
     .returning()
 
   if (!updated) throw new Error('Manufacturer not found')
@@ -181,7 +181,7 @@ export async function updateInvoiceTemplate(
 
   if (existing) {
     const [updated] = await db
-      .update(invoiceTemplates)
+      .update(invoiceTemplate)
       .set({
         orderNumberColumn: template.orderNumberColumn,
         courierColumn: template.courierColumn,
@@ -191,12 +191,12 @@ export async function updateInvoiceTemplate(
         useColumnIndex: template.useColumnIndex,
         updatedAt: new Date(),
       })
-      .where(eq(invoiceTemplates.manufacturerId, manufacturerId))
+      .where(eq(invoiceTemplate.manufacturerId, manufacturerId))
       .returning()
     return mapToInvoiceTemplate(updated, template.manufacturerName)
   } else {
     const [created] = await db
-      .insert(invoiceTemplates)
+      .insert(invoiceTemplate)
       .values({
         id: `it${Date.now()}`,
         manufacturerId,
@@ -217,13 +217,13 @@ export async function updateOrderTemplate(
   template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>,
 ): Promise<OrderTemplate> {
   const existing = await getOrderTemplate(manufacturerId)
-  const manufacturer = await getById(manufacturerId)
+  const mfr = await getById(manufacturerId)
 
-  if (!manufacturer) throw new Error('Manufacturer not found')
+  if (!mfr) throw new Error('Manufacturer not found')
 
   if (existing) {
     const [updated] = await db
-      .update(orderTemplates)
+      .update(orderTemplate)
       .set({
         templateFileName: template.templateFileName || null,
         headerRow: template.headerRow,
@@ -232,12 +232,12 @@ export async function updateOrderTemplate(
         fixedValues: template.fixedValues ? JSON.stringify(template.fixedValues) : null,
         updatedAt: new Date(),
       })
-      .where(eq(orderTemplates.manufacturerId, manufacturerId))
+      .where(eq(orderTemplate.manufacturerId, manufacturerId))
       .returning()
-    return mapToOrderTemplate(updated, manufacturer.name)
+    return mapToOrderTemplate(updated, mfr.name)
   } else {
     const [created] = await db
-      .insert(orderTemplates)
+      .insert(orderTemplate)
       .values({
         id: `ot${Date.now()}`,
         manufacturerId,
@@ -248,12 +248,12 @@ export async function updateOrderTemplate(
         fixedValues: template.fixedValues ? JSON.stringify(template.fixedValues) : null,
       })
       .returning()
-    return mapToOrderTemplate(created, manufacturer.name)
+    return mapToOrderTemplate(created, mfr.name)
   }
 }
 
 // Helper to convert DB invoice template to App InvoiceTemplate
-function mapToInvoiceTemplate(t: typeof invoiceTemplates.$inferSelect, manufacturerName: string): InvoiceTemplate {
+function mapToInvoiceTemplate(t: typeof invoiceTemplate.$inferSelect, manufacturerName: string): InvoiceTemplate {
   return {
     id: t.id,
     manufacturerId: t.manufacturerId,
@@ -269,8 +269,8 @@ function mapToInvoiceTemplate(t: typeof invoiceTemplates.$inferSelect, manufactu
 
 // Helper to convert DB manufacturer to App Manufacturer
 function mapToManufacturer(
-  m: typeof manufacturers.$inferSelect & {
-    invoiceTemplate?: typeof invoiceTemplates.$inferSelect
+  m: typeof manufacturer.$inferSelect & {
+    invoiceTemplate?: typeof invoiceTemplate.$inferSelect
   },
 ): Manufacturer {
   return {
@@ -286,7 +286,7 @@ function mapToManufacturer(
 }
 
 // Helper to convert DB order template to App OrderTemplate
-function mapToOrderTemplate(t: typeof orderTemplates.$inferSelect, manufacturerName: string): OrderTemplate {
+function mapToOrderTemplate(t: typeof orderTemplate.$inferSelect, manufacturerName: string): OrderTemplate {
   let columnMappings: Record<string, string> = {}
   let fixedValues: Record<string, string> | undefined
 

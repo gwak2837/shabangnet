@@ -2,10 +2,10 @@ import { boolean, decimal, integer, pgTable, text, timestamp, varchar } from 'dr
 import 'server-only'
 
 // ============================================
-// 제조사 (Manufacturers)
+// 제조사 (Manufacturer)
 // ============================================
 
-export const manufacturers = pgTable('manufacturers', {
+export const manufacturer = pgTable('manufacturer', {
   id: text('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   contactName: varchar('contact_name', { length: 255 }),
@@ -26,15 +26,15 @@ export const manufacturers = pgTable('manufacturers', {
 }).enableRLS()
 
 // ============================================
-// 상품 (Products) - 상품-제조사 매핑
+// 상품 (Product) - 상품-제조사 매핑
 // ============================================
 
-export const products = pgTable('products', {
+export const product = pgTable('product', {
   id: text('id').primaryKey(),
   productCode: varchar('product_code', { length: 100 }).notNull().unique(),
   productName: varchar('product_name', { length: 500 }).notNull(),
   optionName: varchar('option_name', { length: 255 }),
-  manufacturerId: text('manufacturer_id').references(() => manufacturers.id),
+  manufacturerId: text('manufacturer_id').references(() => manufacturer.id),
   price: decimal('price', { precision: 12, scale: 2 }).default('0'),
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 원가
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -42,29 +42,29 @@ export const products = pgTable('products', {
 }).enableRLS()
 
 // ============================================
-// 옵션-제조사 매핑 (Option Manufacturer Mappings)
+// 옵션-제조사 매핑 (Option Mapping)
 // 같은 상품코드라도 옵션에 따라 다른 제조사에서 공급되는 경우
 // ============================================
 
-export const optionMappings = pgTable('option_mappings', {
+export const optionMapping = pgTable('option_mapping', {
   id: text('id').primaryKey(),
   productCode: varchar('product_code', { length: 100 }).notNull(),
   optionName: varchar('option_name', { length: 255 }).notNull(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturers.id)
+    .references(() => manufacturer.id)
     .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================
-// 제조사별 발주서 템플릿 (Order Templates)
+// 제조사별 발주서 템플릿 (Order Template)
 // ============================================
 
-export const orderTemplates = pgTable('order_templates', {
+export const orderTemplate = pgTable('order_template', {
   id: text('id').primaryKey(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturers.id)
+    .references(() => manufacturer.id)
     .notNull()
     .unique(),
   templateFileName: varchar('template_file_name', { length: 255 }),
@@ -77,13 +77,13 @@ export const orderTemplates = pgTable('order_templates', {
 }).enableRLS()
 
 // ============================================
-// 송장 변환 템플릿 (Invoice Templates)
+// 송장 변환 템플릿 (Invoice Template)
 // ============================================
 
-export const invoiceTemplates = pgTable('invoice_templates', {
+export const invoiceTemplate = pgTable('invoice_template', {
   id: text('id').primaryKey(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturers.id)
+    .references(() => manufacturer.id)
     .notNull()
     .unique(),
   orderNumberColumn: varchar('order_number_column', { length: 50 }).notNull(),

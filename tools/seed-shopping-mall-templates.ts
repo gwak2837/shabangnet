@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { shoppingMallTemplates } from '../src/db/schema/settings'
+import { shoppingMallTemplate } from '../src/db/schema/settings'
 
 // 기존 SHOPPING_MALL_CONFIGS에서 가져온 시드 데이터
 const SHOPPING_MALL_SEED_DATA = [
@@ -107,8 +107,8 @@ async function seed() {
       // 이미 존재하는지 확인
       const existing = await db
         .select()
-        .from(shoppingMallTemplates)
-        .where(eq(shoppingMallTemplates.mallName, template.mallName))
+        .from(shoppingMallTemplate)
+        .where(eq(shoppingMallTemplate.mallName, template.mallName))
         .limit(1)
 
       if (existing.length > 0) {
@@ -117,7 +117,7 @@ async function seed() {
       }
 
       // 새로 추가
-      await db.insert(shoppingMallTemplates).values({
+      await db.insert(shoppingMallTemplate).values({
         id: template.id,
         mallName: template.mallName,
         displayName: template.displayName,

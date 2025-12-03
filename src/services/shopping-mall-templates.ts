@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
 
 import { db } from '@/db/client'
-import { shoppingMallTemplates } from '@/db/schema/settings'
+import { shoppingMallTemplate } from '@/db/schema/settings'
 
 // Types
 export interface AnalyzeResult {
@@ -100,7 +100,7 @@ export async function analyzeShoppingMallFile(file: File, headerRow?: number): P
 // CRUD operations
 export async function createShoppingMallTemplate(data: CreateTemplateData): Promise<ShoppingMallTemplate> {
   const [created] = await db
-    .insert(shoppingMallTemplates)
+    .insert(shoppingMallTemplate)
     .values({
       id: `smt_${Date.now()}`,
       mallName: data.mallName,
@@ -116,24 +116,24 @@ export async function createShoppingMallTemplate(data: CreateTemplateData): Prom
 }
 
 export async function deleteShoppingMallTemplate(id: string): Promise<void> {
-  await db.delete(shoppingMallTemplates).where(eq(shoppingMallTemplates.id, id))
+  await db.delete(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
 }
 
 export async function getShoppingMallTemplate(id: string): Promise<ShoppingMallTemplate | null> {
-  const [result] = await db.select().from(shoppingMallTemplates).where(eq(shoppingMallTemplates.id, id))
+  const [result] = await db.select().from(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
 
   if (!result) return null
   return mapToShoppingMallTemplate(result)
 }
 
 export async function getShoppingMallTemplates(): Promise<ShoppingMallTemplate[]> {
-  const result = await db.select().from(shoppingMallTemplates).orderBy(shoppingMallTemplates.displayName)
+  const result = await db.select().from(shoppingMallTemplate).orderBy(shoppingMallTemplate.displayName)
   return result.map(mapToShoppingMallTemplate)
 }
 
 export async function updateShoppingMallTemplate(id: string, data: UpdateTemplateData): Promise<ShoppingMallTemplate> {
   const [updated] = await db
-    .update(shoppingMallTemplates)
+    .update(shoppingMallTemplate)
     .set({
       mallName: data.mallName,
       displayName: data.displayName,
@@ -143,7 +143,7 @@ export async function updateShoppingMallTemplate(id: string, data: UpdateTemplat
       enabled: data.enabled,
       updatedAt: new Date(),
     })
-    .where(eq(shoppingMallTemplates.id, id))
+    .where(eq(shoppingMallTemplate.id, id))
     .returning()
 
   if (!updated) throw new Error('Template not found')
@@ -192,7 +192,7 @@ function getCellValue(cell: ExcelJS.Cell): string {
 }
 
 // Helper function to map DB record to ShoppingMallTemplate
-function mapToShoppingMallTemplate(record: typeof shoppingMallTemplates.$inferSelect): ShoppingMallTemplate {
+function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect): ShoppingMallTemplate {
   let columnMappings: Record<string, string> = {}
   try {
     columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}

@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers, products } from '@/db/schema/manufacturers'
+import { manufacturer, product } from '@/db/schema/manufacturers'
 
 // Product types
 export interface Product {
@@ -21,7 +21,7 @@ export interface Product {
 
 export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt'>): Promise<Product> {
   const [newProduct] = await db
-    .insert(products)
+    .insert(product)
     .values({
       id: `p${Date.now()}`,
       productCode: data.productCode,
@@ -33,29 +33,29 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
     })
     .returning()
 
-  const manufacturer = data.manufacturerId
-    ? await db.query.manufacturers.findFirst({
-        where: eq(manufacturers.id, data.manufacturerId),
+  const mfr = data.manufacturerId
+    ? await db.query.manufacturer.findFirst({
+        where: eq(manufacturer.id, data.manufacturerId),
       })
     : null
 
-  return mapToProduct({ ...newProduct, manufacturer })
+  return mapToProduct({ ...newProduct, manufacturer: mfr })
 }
 
 export async function getAll(): Promise<Product[]> {
-  const result = await db.query.products.findMany({
+  const result = await db.query.product.findMany({
     with: {
       manufacturer: true,
     },
-    orderBy: (products, { desc }) => [desc(products.createdAt)],
+    orderBy: (product, { desc }) => [desc(product.createdAt)],
   })
 
   return result.map(mapToProduct)
 }
 
 export async function getById(id: string): Promise<Product | undefined> {
-  const result = await db.query.products.findFirst({
-    where: eq(products.id, id),
+  const result = await db.query.product.findFirst({
+    where: eq(product.id, id),
     with: {
       manufacturer: true,
     },
@@ -66,12 +66,12 @@ export async function getById(id: string): Promise<Product | undefined> {
 }
 
 export async function remove(id: string): Promise<void> {
-  await db.delete(products).where(eq(products.id, id))
+  await db.delete(product).where(eq(product.id, id))
 }
 
 export async function update(id: string, data: Partial<Product>): Promise<Product> {
   const [updated] = await db
-    .update(products)
+    .update(product)
     .set({
       productCode: data.productCode,
       productName: data.productName,
@@ -81,23 +81,23 @@ export async function update(id: string, data: Partial<Product>): Promise<Produc
       cost: data.cost?.toString(),
       updatedAt: new Date(),
     })
-    .where(eq(products.id, id))
+    .where(eq(product.id, id))
     .returning()
 
   if (!updated) throw new Error('Product not found')
 
-  const manufacturer = updated.manufacturerId
-    ? await db.query.manufacturers.findFirst({
-        where: eq(manufacturers.id, updated.manufacturerId),
+  const mfr = updated.manufacturerId
+    ? await db.query.manufacturer.findFirst({
+        where: eq(manufacturer.id, updated.manufacturerId),
       })
     : null
 
-  return mapToProduct({ ...updated, manufacturer })
+  return mapToProduct({ ...updated, manufacturer: mfr })
 }
 
 function mapToProduct(
-  p: typeof products.$inferSelect & {
-    manufacturer?: typeof manufacturers.$inferSelect | null
+  p: typeof product.$inferSelect & {
+    manufacturer?: typeof manufacturer.$inferSelect | null
   },
 ): Product {
   return {

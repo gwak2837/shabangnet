@@ -1,10 +1,6 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
-// ============================================
-// 설정 (Settings)
-// ============================================
-
 export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),
   value: text('value'),
@@ -12,11 +8,7 @@ export const settings = pgTable('settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 택배사 코드 매핑 (Courier Mappings)
-// ============================================
-
-export const courierMappings = pgTable('courier_mappings', {
+export const courierMapping = pgTable('courier_mapping', {
   id: text('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   code: varchar('code', { length: 10 }).notNull(),
@@ -25,11 +17,7 @@ export const courierMappings = pgTable('courier_mappings', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 발송 제외 패턴 (Exclusion Patterns)
-// ============================================
-
-export const exclusionPatterns = pgTable('exclusion_patterns', {
+export const exclusionPattern = pgTable('exclusion_pattern', {
   id: text('id').primaryKey(),
   pattern: varchar('pattern', { length: 255 }).notNull(),
   description: text('description'),
@@ -38,11 +26,7 @@ export const exclusionPatterns = pgTable('exclusion_patterns', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 쇼핑몰별 파일 템플릿 (Shopping Mall Templates)
-// ============================================
-
-export const shoppingMallTemplates = pgTable('shopping_mall_templates', {
+export const shoppingMallTemplate = pgTable('shopping_mall_template', {
   id: text('id').primaryKey(),
   mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
   displayName: varchar('display_name', { length: 100 }).notNull(),
@@ -54,11 +38,7 @@ export const shoppingMallTemplates = pgTable('shopping_mall_templates', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// SMTP 계정 (SMTP Accounts)
-// ============================================
-
-export const smtpAccounts = pgTable('smtp_accounts', {
+export const smtpAccount = pgTable('smtp_account', {
   id: text('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(), // "시스템 알림", "발주서 발송"
   purpose: varchar('purpose', { length: 50 }).notNull().unique(), // "system" | "order"
@@ -73,11 +53,7 @@ export const smtpAccounts = pgTable('smtp_accounts', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 이메일 템플릿 (Email Templates)
-// ============================================
-
-export const emailTemplates = pgTable('email_templates', {
+export const emailTemplate = pgTable('email_template', {
   id: text('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(), // "발주서 기본"
   slug: varchar('slug', { length: 50 }).notNull().unique(), // "order-default"
@@ -89,16 +65,12 @@ export const emailTemplates = pgTable('email_templates', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 이메일 발송 로그 (Email Logs)
-// ============================================
-
-export const emailLogs = pgTable(
-  'email_logs',
+export const systemEmailLog = pgTable(
+  'system_email_log',
   {
     id: text('id').primaryKey(),
-    smtpAccountId: text('smtp_account_id').references(() => smtpAccounts.id),
-    templateId: text('template_id').references(() => emailTemplates.id),
+    smtpAccountId: text('smtp_account_id').references(() => smtpAccount.id),
+    templateId: text('template_id').references(() => emailTemplate.id),
     recipient: varchar('recipient', { length: 255 }).notNull(),
     cc: text('cc').array(),
     subject: varchar('subject', { length: 500 }).notNull(),
@@ -110,8 +82,8 @@ export const emailLogs = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    index('idx_email_logs_recipient').on(table.recipient),
-    index('idx_email_logs_status').on(table.status),
-    index('idx_email_logs_sent_at').on(table.sentAt),
+    index('idx_system_email_log_recipient').on(table.recipient),
+    index('idx_system_email_log_status').on(table.status),
+    index('idx_system_email_log_sent_at').on(table.sentAt),
   ],
 ).enableRLS()

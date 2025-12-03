@@ -2,7 +2,7 @@ import { desc, eq, sql } from 'drizzle-orm'
 import 'server-only'
 
 import { db } from '@/db/client'
-import { emailLogs, smtpAccounts } from '@/db/schema/settings'
+import { smtpAccount, systemEmailLog } from '@/db/schema/settings'
 
 import type { SMTPAccountPurpose } from './config'
 
@@ -62,13 +62,13 @@ export async function cleanupOldEmailLogs(olderThanDays: number = 90): Promise<n
   // 먼저 삭제 대상 개수를 조회
   const [countResult] = await db
     .select({ count: sql<number>`count(*)` })
-    .from(emailLogs)
-    .where(sql`${emailLogs.createdAt} < ${cutoffDate}`)
+    .from(systemEmailLog)
+    .where(sql`${systemEmailLog.createdAt} < ${cutoffDate}`)
 
   const count = Number(countResult?.count || 0)
 
   if (count > 0) {
-    await db.delete(emailLogs).where(sql`${emailLogs.createdAt} < ${cutoffDate}`)
+    await db.delete(systemEmailLog).where(sql`${systemEmailLog.createdAt} < ${cutoffDate}`)
   }
 
   return count
@@ -79,7 +79,7 @@ export async function cleanupOldEmailLogs(olderThanDays: number = 90): Promise<n
  */
 export async function createEmailLog(input: CreateEmailLogInput): Promise<EmailLogEntry> {
   const [log] = await db
-    .insert(emailLogs)
+    .insert(systemEmailLog)
     .values({
       id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       smtpAccountId: input.smtpAccountId || null,
@@ -124,23 +124,23 @@ export async function getEmailLogs(filter: EmailLogFilter = {}): Promise<{
 
   const conditions = []
   if (filter.status) {
-    conditions.push(eq(emailLogs.status, filter.status))
+    conditions.push(eq(systemEmailLog.status, filter.status))
   }
   if (filter.recipient) {
-    conditions.push(eq(emailLogs.recipient, filter.recipient))
+    conditions.push(eq(systemEmailLog.recipient, filter.recipient))
   }
 
   const [logs, countResult] = await Promise.all([
     db
       .select()
-      .from(emailLogs)
+      .from(systemEmailLog)
       .where(conditions.length > 0 ? sql`${conditions.map((c) => c).join(' AND ')}` : undefined)
-      .orderBy(desc(emailLogs.createdAt))
+      .orderBy(desc(systemEmailLog.createdAt))
       .limit(limit)
       .offset(offset),
     db
       .select({ count: sql<number>`count(*)` })
-      .from(emailLogs)
+      .from(systemEmailLog)
       .where(conditions.length > 0 ? sql`${conditions.map((c) => c).join(' AND ')}` : undefined),
   ])
 
@@ -168,9 +168,9 @@ export async function getEmailLogs(filter: EmailLogFilter = {}): Promise<{
  */
 export async function getSmtpAccountIdByPurpose(purpose: SMTPAccountPurpose): Promise<string | null> {
   const [account] = await db
-    .select({ id: smtpAccounts.id })
-    .from(smtpAccounts)
-    .where(eq(smtpAccounts.purpose, purpose))
+    .select({ id: smtpAccount.id })
+    .from(smtpAccount)
+    .where(eq(smtpAccount.purpose, purpose))
     .limit(1)
 
   return account?.id || null
@@ -184,12 +184,12 @@ export async function updateEmailLog(
   updates: Partial<Pick<CreateEmailLogInput, 'errorMessage' | 'messageId' | 'sentAt' | 'status'>>,
 ): Promise<void> {
   await db
-    .update(emailLogs)
+    .update(systemEmailLog)
     .set({
       status: updates.status,
       errorMessage: updates.errorMessage,
       messageId: updates.messageId,
       sentAt: updates.sentAt || (updates.status === 'sent' ? new Date() : undefined),
     })
-    .where(eq(emailLogs.id, id))
+    .where(eq(systemEmailLog.id, id))
 }

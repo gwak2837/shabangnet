@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
 import { db } from '@/db/client'
-import { manufacturers, optionMappings, products } from '@/db/schema/manufacturers'
-import { orders, uploads } from '@/db/schema/orders'
+import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
+import { order, upload } from '@/db/schema/orders'
 import { groupOrdersByManufacturer, type ParsedOrder, parseSabangnetFile } from '@/lib/excel'
 
 interface ManufacturerBreakdown {
@@ -60,75 +60,75 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const uploadId = generateId()
 
     // 제조사 목록 조회
-    const allManufacturers = await db.select().from(manufacturers)
+    const allManufacturers = await db.select().from(manufacturer)
     const manufacturerMap = new Map(allManufacturers.map((m) => [m.name.toLowerCase(), m]))
 
     // 상품-제조사 매핑 조회
-    const allProducts = await db.select().from(products)
+    const allProducts = await db.select().from(product)
     const productMap = new Map(allProducts.map((p) => [p.productCode.toLowerCase(), p]))
 
     // 옵션-제조사 매핑 조회
-    const allOptionMappings = await db.select().from(optionMappings)
+    const allOptionMappings = await db.select().from(optionMapping)
     const optionMap = new Map(
       allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
     )
 
     // 주문 데이터 준비 (제조사 매칭 포함)
-    const orderValues = parseResult.orders.map((order) => {
+    const orderValues = parseResult.orders.map((o) => {
       // 제조사 매칭 로직 (우선순위: 옵션 매핑 > 상품 매핑 > 파일 내 제조사명)
       let matchedManufacturerId: string | null = null
 
       // 1) 옵션 매핑 확인
-      if (order.productCode && order.optionName) {
-        const optionKey = `${order.productCode.toLowerCase()}_${order.optionName.toLowerCase()}`
-        const optionMapping = optionMap.get(optionKey)
-        if (optionMapping) {
-          matchedManufacturerId = optionMapping.manufacturerId
+      if (o.productCode && o.optionName) {
+        const optionKey = `${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`
+        const om = optionMap.get(optionKey)
+        if (om) {
+          matchedManufacturerId = om.manufacturerId
         }
       }
 
       // 2) 상품 매핑 확인 (옵션 매핑이 없는 경우)
-      if (!matchedManufacturerId && order.productCode) {
-        const product = productMap.get(order.productCode.toLowerCase())
-        if (product?.manufacturerId) {
-          matchedManufacturerId = product.manufacturerId
+      if (!matchedManufacturerId && o.productCode) {
+        const p = productMap.get(o.productCode.toLowerCase())
+        if (p?.manufacturerId) {
+          matchedManufacturerId = p.manufacturerId
         }
       }
 
       // 3) 파일 내 제조사명으로 매칭
-      if (!matchedManufacturerId && order.manufacturer) {
-        const manufacturer = manufacturerMap.get(order.manufacturer.toLowerCase())
-        if (manufacturer) {
-          matchedManufacturerId = manufacturer.id
+      if (!matchedManufacturerId && o.manufacturer) {
+        const mfr = manufacturerMap.get(o.manufacturer.toLowerCase())
+        if (mfr) {
+          matchedManufacturerId = mfr.id
         }
       }
 
       return {
         id: generateOrderId(),
         uploadId,
-        orderNumber: order.orderNumber,
-        productName: order.productName || null,
-        quantity: order.quantity || 1,
-        orderName: order.orderName || null,
-        recipientName: order.recipientName || null,
-        orderPhone: order.orderPhone || null,
-        orderMobile: order.orderMobile || null,
-        recipientPhone: order.recipientPhone || null,
-        recipientMobile: order.recipientMobile || null,
-        postalCode: order.postalCode || null,
-        address: order.address || null,
-        memo: order.memo || null,
-        shoppingMall: order.shoppingMall || null,
-        manufacturerName: order.manufacturer || null,
+        orderNumber: o.orderNumber,
+        productName: o.productName || null,
+        quantity: o.quantity || 1,
+        orderName: o.orderName || null,
+        recipientName: o.recipientName || null,
+        orderPhone: o.orderPhone || null,
+        orderMobile: o.orderMobile || null,
+        recipientPhone: o.recipientPhone || null,
+        recipientMobile: o.recipientMobile || null,
+        postalCode: o.postalCode || null,
+        address: o.address || null,
+        memo: o.memo || null,
+        shoppingMall: o.shoppingMall || null,
+        manufacturerName: o.manufacturer || null,
         manufacturerId: matchedManufacturerId,
-        courier: order.courier || null,
-        trackingNumber: order.trackingNumber || null,
-        optionName: order.optionName || null,
-        paymentAmount: order.paymentAmount?.toString() || '0',
-        productAbbr: order.productAbbr || null,
-        productCode: order.productCode || null,
-        cost: order.cost?.toString() || '0',
-        shippingCost: order.shippingCost?.toString() || '0',
+        courier: o.courier || null,
+        trackingNumber: o.trackingNumber || null,
+        optionName: o.optionName || null,
+        paymentAmount: o.paymentAmount?.toString() || '0',
+        productAbbr: o.productAbbr || null,
+        productCode: o.productCode || null,
+        cost: o.cost?.toString() || '0',
+        shippingCost: o.shippingCost?.toString() || '0',
         status: 'pending' as const,
       }
     })
@@ -137,7 +137,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     let insertedCount = 0
     await db.transaction(async (tx) => {
       // 1. 업로드 레코드 생성
-      await tx.insert(uploads).values({
+      await tx.insert(upload).values({
         id: uploadId,
         fileName: file.name,
         fileSize: file.size,
@@ -151,10 +151,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       // 2. 주문 레코드 일괄 생성 (중복 주문번호는 건너뜀)
       if (orderValues.length > 0) {
         const insertResult = await tx
-          .insert(orders)
+          .insert(order)
           .values(orderValues)
-          .onConflictDoNothing({ target: orders.orderNumber })
-          .returning({ id: orders.id })
+          .onConflictDoNothing({ target: order.orderNumber })
+          .returning({ id: order.id })
 
         insertedCount = insertResult.length
       }
@@ -168,10 +168,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     // 제조사별 통계
     const manufacturerBreakdown: ManufacturerBreakdown[] = []
-    groupedOrders.forEach((ordersGroup, manufacturer) => {
+    groupedOrders.forEach((ordersGroup, mfr) => {
       const totalAmount = ordersGroup.reduce((sum, o) => sum + o.paymentAmount * o.quantity, 0)
       manufacturerBreakdown.push({
-        name: manufacturer,
+        name: mfr,
         orders: ordersGroup.length,
         amount: totalAmount,
       })

@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import type { SMTPAccountPurpose } from '@/lib/email/config'
 
 import { db } from '@/db/client'
-import { smtpAccounts } from '@/db/schema/settings'
+import { smtpAccount } from '@/db/schema/settings'
 import { SMTP_DEFAULT_PORT } from '@/lib/email/config'
 import { testSMTPConnection } from '@/lib/email/send'
 import { decrypt, encrypt, maskPassword } from '@/utils/crypto'
@@ -56,7 +56,7 @@ interface ActionResult {
  */
 export async function deleteSmtpAccountAction(id: string): Promise<ActionResult> {
   try {
-    await db.delete(smtpAccounts).where(eq(smtpAccounts.id, id))
+    await db.delete(smtpAccount).where(eq(smtpAccount.id, id))
 
     return {
       success: true,
@@ -77,7 +77,7 @@ export async function getSmtpAccountByPurposeAction(purpose: SMTPAccountPurpose)
   error?: string
 }> {
   try {
-    const [account] = await db.select().from(smtpAccounts).where(eq(smtpAccounts.purpose, purpose)).limit(1)
+    const [account] = await db.select().from(smtpAccount).where(eq(smtpAccount.purpose, purpose)).limit(1)
 
     if (!account) {
       return { success: true, account: null }
@@ -130,7 +130,7 @@ export async function getSmtpAccountsAction(): Promise<{
   error?: string
 }> {
   try {
-    const accounts = await db.select().from(smtpAccounts).orderBy(smtpAccounts.createdAt)
+    const accounts = await db.select().from(smtpAccount).orderBy(smtpAccount.createdAt)
 
     const displayAccounts: SMTPAccountDisplay[] = accounts.map((account) => {
       let maskedPassword = ''
@@ -201,9 +201,9 @@ export async function testSmtpAccountConnectionAction(purpose: SMTPAccountPurpos
 export async function toggleSmtpAccountAction(id: string): Promise<ActionResult> {
   try {
     const [account] = await db
-      .select({ enabled: smtpAccounts.enabled })
-      .from(smtpAccounts)
-      .where(eq(smtpAccounts.id, id))
+      .select({ enabled: smtpAccount.enabled })
+      .from(smtpAccount)
+      .where(eq(smtpAccount.id, id))
       .limit(1)
 
     if (!account) {
@@ -211,12 +211,12 @@ export async function toggleSmtpAccountAction(id: string): Promise<ActionResult>
     }
 
     await db
-      .update(smtpAccounts)
+      .update(smtpAccount)
       .set({
         enabled: !account.enabled,
         updatedAt: new Date(),
       })
-      .where(eq(smtpAccounts.id, id))
+      .where(eq(smtpAccount.id, id))
 
     return {
       success: true,
@@ -237,7 +237,7 @@ export async function upsertSmtpAccountAction(data: SMTPAccountFormData): Promis
     const encryptedPassword = data.password ? encrypt(data.password) : ''
 
     // 기존 계정 확인
-    const [existing] = await db.select().from(smtpAccounts).where(eq(smtpAccounts.purpose, data.purpose)).limit(1)
+    const [existing] = await db.select().from(smtpAccount).where(eq(smtpAccount.purpose, data.purpose)).limit(1)
 
     if (existing) {
       // 업데이트 - 비밀번호가 없으면 기존 값 유지
@@ -255,7 +255,7 @@ export async function upsertSmtpAccountAction(data: SMTPAccountFormData): Promis
         updateData.password = encryptedPassword
       }
 
-      await db.update(smtpAccounts).set(updateData).where(eq(smtpAccounts.id, existing.id))
+      await db.update(smtpAccount).set(updateData).where(eq(smtpAccount.id, existing.id))
 
       return {
         success: true,
@@ -270,7 +270,7 @@ export async function upsertSmtpAccountAction(data: SMTPAccountFormData): Promis
         }
       }
 
-      await db.insert(smtpAccounts).values({
+      await db.insert(smtpAccount).values({
         id: `smtp_${data.purpose}_${Date.now()}`,
         name: data.name,
         purpose: data.purpose,

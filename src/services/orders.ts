@@ -3,8 +3,8 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers, orderTemplates } from '@/db/schema/manufacturers'
-import { emailLogOrders, emailLogs, orders } from '@/db/schema/orders'
+import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
+import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 import { sendEmail } from '@/lib/email'
 import {
   formatDateForFileName,
@@ -86,7 +86,7 @@ export async function checkDuplicate(
   const now = new Date()
   const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000)
 
-  const recentLogs = await db.query.emailLogs.findMany({
+  const recentLogs = await db.query.orderEmailLog.findMany({
     where: (logs, { and, eq, gte }) =>
       and(eq(logs.manufacturerId, manufacturerId), eq(logs.status, 'success'), gte(logs.sentAt, periodStart)),
   })
@@ -132,16 +132,16 @@ export async function generateOrderExcel(params: {
   manufacturerId: string
   orderIds: string[]
 }): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
-  const manufacturer = await db.query.manufacturers.findFirst({
-    where: eq(manufacturers.id, params.manufacturerId),
+  const mfr = await db.query.manufacturer.findFirst({
+    where: eq(manufacturer.id, params.manufacturerId),
   })
 
-  if (!manufacturer) {
+  if (!mfr) {
     return { error: '제조사를 찾을 수 없습니다' }
   }
 
-  const ordersToExport = await db.query.orders.findMany({
-    where: inArray(orders.id, params.orderIds),
+  const ordersToExport = await db.query.order.findMany({
+    where: inArray(order.id, params.orderIds),
   })
 
   if (ordersToExport.length === 0) {
@@ -151,8 +151,8 @@ export async function generateOrderExcel(params: {
   const date = new Date()
 
   // 제조사별 발주서 템플릿 조회
-  const template = await db.query.orderTemplates.findFirst({
-    where: eq(orderTemplates.manufacturerId, params.manufacturerId),
+  const template = await db.query.orderTemplate.findFirst({
+    where: eq(orderTemplate.manufacturerId, params.manufacturerId),
   })
 
   let excelBuffer: Buffer
@@ -180,7 +180,7 @@ export async function generateOrderExcel(params: {
       address: o.address || '',
       memo: o.memo || '',
       shoppingMall: o.shoppingMall || '',
-      manufacturer: manufacturer.name,
+      manufacturer: mfr.name,
       courier: o.courier || '',
       trackingNumber: o.trackingNumber || '',
       optionName: o.optionName || '',
@@ -192,7 +192,7 @@ export async function generateOrderExcel(params: {
       rowIndex: idx + 1,
     }))
 
-    excelBuffer = await generateTemplateBasedOrderSheet(parsedOrders, null, templateConfig, manufacturer.name, date)
+    excelBuffer = await generateTemplateBasedOrderSheet(parsedOrders, null, templateConfig, mfr.name, date)
   } else {
     // 기본 양식으로 생성
     const orderData: OrderData[] = ordersToExport.map((o) => ({
@@ -210,33 +210,33 @@ export async function generateOrderExcel(params: {
     }))
 
     excelBuffer = await generateOrderSheet({
-      manufacturerName: manufacturer.name,
+      manufacturerName: mfr.name,
       orders: orderData,
       date,
     })
   }
 
-  const fileName = generateOrderFileName(manufacturer.name, date)
+  const fileName = generateOrderFileName(mfr.name, date)
 
   return { buffer: excelBuffer, fileName }
 }
 
 export async function getBatches(): Promise<OrderBatch[]> {
-  const allOrders = await db.query.orders.findMany({
+  const allOrders = await db.query.order.findMany({
     with: {
       manufacturer: true,
     },
-    where: (orders, { isNotNull }) => isNotNull(orders.manufacturerId),
+    where: (order, { isNotNull }) => isNotNull(order.manufacturerId),
   })
 
   const batchesMap = new Map<string, OrderBatch>()
   const allManufacturers = await db
     .select({
-      id: manufacturers.id,
-      name: manufacturers.name,
-      email: manufacturers.email,
+      id: manufacturer.id,
+      name: manufacturer.name,
+      email: manufacturer.email,
     })
-    .from(manufacturers)
+    .from(manufacturer)
 
   for (const m of allManufacturers) {
     batchesMap.set(m.id, {
@@ -250,30 +250,30 @@ export async function getBatches(): Promise<OrderBatch[]> {
     })
   }
 
-  for (const order of allOrders) {
-    if (!order.manufacturerId) continue
+  for (const o of allOrders) {
+    if (!o.manufacturerId) continue
 
-    const isExcluded = await shouldExcludeFromEmail(order.shoppingMall ?? order.courier ?? undefined)
+    const isExcluded = await shouldExcludeFromEmail(o.shoppingMall ?? o.courier ?? undefined)
     if (isExcluded) continue
 
-    const batch = batchesMap.get(order.manufacturerId)
+    const batch = batchesMap.get(o.manufacturerId)
     if (batch) {
       batch.orders.push({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        customerName: order.recipientName || '',
-        phone: order.recipientMobile || order.recipientPhone || '',
-        address: order.address || '',
-        productCode: order.productCode || '',
-        productName: order.productName || '',
-        optionName: order.optionName || '',
-        quantity: order.quantity || 0,
-        price: Number(order.paymentAmount || 0),
-        manufacturerId: order.manufacturerId,
-        manufacturerName: order.manufacturerName || '',
-        status: order.status as Order['status'],
-        createdAt: order.createdAt.toISOString(),
-        fulfillmentType: order.shoppingMall || '',
+        id: o.id,
+        orderNumber: o.orderNumber,
+        customerName: o.recipientName || '',
+        phone: o.recipientMobile || o.recipientPhone || '',
+        address: o.address || '',
+        productCode: o.productCode || '',
+        productName: o.productName || '',
+        optionName: o.optionName || '',
+        quantity: o.quantity || 0,
+        price: Number(o.paymentAmount || 0),
+        manufacturerId: o.manufacturerId,
+        manufacturerName: o.manufacturerName || '',
+        status: o.status as Order['status'],
+        createdAt: o.createdAt.toISOString(),
+        fulfillmentType: o.shoppingMall || '',
       })
     }
   }
@@ -295,21 +295,21 @@ export async function getBatches(): Promise<OrderBatch[]> {
 }
 
 export async function getExcludedBatches(): Promise<OrderBatch[]> {
-  const allOrders = await db.query.orders.findMany({
+  const allOrders = await db.query.order.findMany({
     with: {
       manufacturer: true,
     },
-    where: (orders, { isNotNull }) => isNotNull(orders.manufacturerId),
+    where: (order, { isNotNull }) => isNotNull(order.manufacturerId),
   })
 
   const batchesMap = new Map<string, OrderBatch>()
   const allManufacturers = await db
     .select({
-      id: manufacturers.id,
-      name: manufacturers.name,
-      email: manufacturers.email,
+      id: manufacturer.id,
+      name: manufacturer.name,
+      email: manufacturer.email,
     })
-    .from(manufacturers)
+    .from(manufacturer)
 
   for (const m of allManufacturers) {
     batchesMap.set(m.id, {
@@ -323,30 +323,30 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
     })
   }
 
-  for (const order of allOrders) {
-    if (!order.manufacturerId) continue
+  for (const o of allOrders) {
+    if (!o.manufacturerId) continue
 
-    const isExcluded = await shouldExcludeFromEmail(order.shoppingMall ?? order.courier ?? undefined)
+    const isExcluded = await shouldExcludeFromEmail(o.shoppingMall ?? o.courier ?? undefined)
     if (!isExcluded) continue
 
-    const batch = batchesMap.get(order.manufacturerId)
+    const batch = batchesMap.get(o.manufacturerId)
     if (batch) {
       batch.orders.push({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        customerName: order.recipientName || '',
-        phone: order.recipientMobile || order.recipientPhone || '',
-        address: order.address || '',
-        productCode: order.productCode || '',
-        productName: order.productName || '',
-        optionName: order.optionName || '',
-        quantity: order.quantity || 0,
-        price: Number(order.paymentAmount || 0),
-        manufacturerId: order.manufacturerId,
-        manufacturerName: order.manufacturerName || '',
-        status: order.status as Order['status'],
-        createdAt: order.createdAt.toISOString(),
-        fulfillmentType: order.shoppingMall || '',
+        id: o.id,
+        orderNumber: o.orderNumber,
+        customerName: o.recipientName || '',
+        phone: o.recipientMobile || o.recipientPhone || '',
+        address: o.address || '',
+        productCode: o.productCode || '',
+        productName: o.productName || '',
+        optionName: o.optionName || '',
+        quantity: o.quantity || 0,
+        price: Number(o.paymentAmount || 0),
+        manufacturerId: o.manufacturerId,
+        manufacturerName: o.manufacturerName || '',
+        status: o.status as Order['status'],
+        createdAt: o.createdAt.toISOString(),
+        fulfillmentType: o.shoppingMall || '',
       })
     }
   }
@@ -360,16 +360,16 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
 }
 
 export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersResult> {
-  const manufacturer = await db.query.manufacturers.findFirst({
-    where: eq(manufacturers.id, params.manufacturerId),
+  const mfr = await db.query.manufacturer.findFirst({
+    where: eq(manufacturer.id, params.manufacturerId),
   })
 
-  if (!manufacturer) {
+  if (!mfr) {
     return { success: false, sentCount: 0, errorMessage: '제조사를 찾을 수 없습니다' }
   }
 
-  const ordersToSend = await db.query.orders.findMany({
-    where: inArray(orders.id, params.orderIds),
+  const ordersToSend = await db.query.order.findMany({
+    where: inArray(order.id, params.orderIds),
   })
 
   if (ordersToSend.length === 0) {
@@ -382,8 +382,8 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
   const date = new Date()
 
   // 1. 제조사별 발주서 템플릿 조회
-  const template = await db.query.orderTemplates.findFirst({
-    where: eq(orderTemplates.manufacturerId, params.manufacturerId),
+  const template = await db.query.orderTemplate.findFirst({
+    where: eq(orderTemplate.manufacturerId, params.manufacturerId),
   })
 
   // 2. 발주서 엑셀 파일 생성
@@ -412,7 +412,7 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
       address: o.address || '',
       memo: o.memo || '',
       shoppingMall: o.shoppingMall || '',
-      manufacturer: manufacturer.name,
+      manufacturer: mfr.name,
       courier: o.courier || '',
       trackingNumber: o.trackingNumber || '',
       optionName: o.optionName || '',
@@ -428,7 +428,7 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
       parsedOrders,
       null, // 템플릿 파일 없이 동적 생성
       templateConfig,
-      manufacturer.name,
+      mfr.name,
       date,
     )
   } else {
@@ -448,21 +448,21 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
     }))
 
     excelBuffer = await generateOrderSheet({
-      manufacturerName: manufacturer.name,
+      manufacturerName: mfr.name,
       orders: orderData,
       date,
     })
   }
 
   // 3. 이메일 제목/본문 생성
-  const emailSubject = (manufacturer.emailSubjectTemplate || '[다온에프앤씨 발주서]_{제조사명}_{날짜}')
-    .replace('{제조사명}', manufacturer.name)
+  const emailSubject = (mfr.emailSubjectTemplate || '[다온에프앤씨 발주서]_{제조사명}_{날짜}')
+    .replace('{제조사명}', mfr.name)
     .replace('{날짜}', formatDateForFileName(date))
 
   const emailBody = generateEmailBody(
-    manufacturer.emailBodyTemplate || '안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다. 감사합니다.',
+    mfr.emailBodyTemplate || '안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다. 감사합니다.',
     {
-      manufacturerName: manufacturer.name,
+      manufacturerName: mfr.name,
       orderCount: ordersToSend.length,
       totalQuantity,
       totalAmount,
@@ -471,17 +471,17 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
   )
 
   // 4. CC 이메일 처리 (콤마로 구분된 복수 이메일 지원)
-  const ccEmails = manufacturer.ccEmail
-    ? manufacturer.ccEmail
+  const ccEmails = mfr.ccEmail
+    ? mfr.ccEmail
         .split(',')
         .map((e) => e.trim())
         .filter(Boolean)
     : undefined
 
-  // 5. 이메일 발송
-  const fileName = generateOrderFileName(manufacturer.name, date)
+  // 5. 이메일 발송 (skipLogging: true로 systemEmailLog에 중복 기록 방지)
+  const fileName = generateOrderFileName(mfr.name, date)
   const emailResult = await sendEmail({
-    to: manufacturer.email,
+    to: mfr.email,
     cc: ccEmails,
     subject: emailSubject,
     html: emailBody,
@@ -492,6 +492,7 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
     ],
+    skipLogging: true, // orderEmailLog에만 기록
   })
 
   // 6. DB 트랜잭션으로 로그 저장 및 주문 상태 업데이트
@@ -499,11 +500,11 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
 
   return await db.transaction(async (tx) => {
     // 이메일 로그 저장
-    await tx.insert(emailLogs).values({
+    await tx.insert(orderEmailLog).values({
       id: logId,
-      manufacturerId: manufacturer.id,
-      manufacturerName: manufacturer.name,
-      email: manufacturer.email,
+      manufacturerId: mfr.id,
+      manufacturerName: mfr.name,
+      email: mfr.email,
       subject: emailSubject,
       fileName,
       orderCount: ordersToSend.length,
@@ -517,27 +518,27 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
     })
 
     // 이메일 로그 상세 (주문 정보) 저장
-    for (const order of ordersToSend) {
-      await tx.insert(emailLogOrders).values({
+    for (const o of ordersToSend) {
+      await tx.insert(orderEmailLogItem).values({
         id: `elo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         emailLogId: logId,
-        orderNumber: order.orderNumber,
-        productName: order.productName || '',
-        optionName: order.optionName || null,
-        quantity: order.quantity || 1,
-        price: order.paymentAmount?.toString() || '0',
-        cost: order.cost?.toString() || '0',
-        shippingCost: order.shippingCost?.toString() || '0',
-        customerName: order.recipientName || null,
-        address: order.address || null,
+        orderNumber: o.orderNumber,
+        productName: o.productName || '',
+        optionName: o.optionName || null,
+        quantity: o.quantity || 1,
+        price: o.paymentAmount?.toString() || '0',
+        cost: o.cost?.toString() || '0',
+        shippingCost: o.shippingCost?.toString() || '0',
+        customerName: o.recipientName || null,
+        address: o.address || null,
       })
     }
 
     // 주문 상태 업데이트
     if (emailResult.success) {
-      await tx.update(orders).set({ status: 'completed' }).where(inArray(orders.id, params.orderIds))
+      await tx.update(order).set({ status: 'completed' }).where(inArray(order.id, params.orderIds))
     } else {
-      await tx.update(orders).set({ status: 'error' }).where(inArray(orders.id, params.orderIds))
+      await tx.update(order).set({ status: 'error' }).where(inArray(order.id, params.orderIds))
     }
 
     if (emailResult.success) {

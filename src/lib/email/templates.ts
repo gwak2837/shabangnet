@@ -3,7 +3,7 @@ import Handlebars from 'handlebars'
 import 'server-only'
 
 import { db } from '@/db/client'
-import { emailTemplates } from '@/db/schema/settings'
+import { emailTemplate } from '@/db/schema/settings'
 
 // ============================================================================
 // Types
@@ -143,7 +143,7 @@ export type OrderTemplateVariables = {
  */
 export async function createEmailTemplate(input: EmailTemplateInput): Promise<EmailTemplate> {
   const [template] = await db
-    .insert(emailTemplates)
+    .insert(emailTemplate)
     .values({
       id: `template_${Date.now()}`,
       name: input.name,
@@ -174,7 +174,7 @@ export async function createEmailTemplate(input: EmailTemplateInput): Promise<Em
  * 이메일 템플릿을 삭제합니다.
  */
 export async function deleteEmailTemplate(id: string): Promise<void> {
-  await db.delete(emailTemplates).where(eq(emailTemplates.id, id))
+  await db.delete(emailTemplate).where(eq(emailTemplate.id, id))
 }
 
 /**
@@ -194,7 +194,7 @@ export async function ensureDefaultOrderTemplate(): Promise<EmailTemplate> {
  * 슬러그로 이메일 템플릿을 조회합니다.
  */
 export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplate | null> {
-  const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.slug, slug)).limit(1)
+  const [template] = await db.select().from(emailTemplate).where(eq(emailTemplate.slug, slug)).limit(1)
 
   if (!template) {
     return null
@@ -217,7 +217,7 @@ export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplat
  * 이메일 템플릿 목록을 조회합니다.
  */
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
-  const templates = await db.select().from(emailTemplates).orderBy(emailTemplates.createdAt)
+  const templates = await db.select().from(emailTemplate).orderBy(emailTemplate.createdAt)
 
   return templates.map((t) => ({
     id: t.id,
@@ -263,12 +263,12 @@ export function renderTemplate(
  */
 export async function updateEmailTemplate(id: string, updates: Partial<EmailTemplateInput>): Promise<EmailTemplate> {
   const [template] = await db
-    .update(emailTemplates)
+    .update(emailTemplate)
     .set({
       ...updates,
       updatedAt: new Date(),
     })
-    .where(eq(emailTemplates.id, id))
+    .where(eq(emailTemplate.id, id))
     .returning()
 
   if (!template) {

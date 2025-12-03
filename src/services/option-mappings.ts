@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturers, optionMappings } from '@/db/schema/manufacturers'
+import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
 
 // Option mapping types
 export interface OptionManufacturerMapping {
@@ -20,7 +20,7 @@ export async function create(
   data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>,
 ): Promise<OptionManufacturerMapping> {
   const [newMapping] = await db
-    .insert(optionMappings)
+    .insert(optionMapping)
     .values({
       id: `om${Date.now()}`,
       productCode: data.productCode,
@@ -29,27 +29,27 @@ export async function create(
     })
     .returning()
 
-  const manufacturer = await db.query.manufacturers.findFirst({
-    where: eq(manufacturers.id, data.manufacturerId),
+  const mfr = await db.query.manufacturer.findFirst({
+    where: eq(manufacturer.id, data.manufacturerId),
   })
 
-  return mapToOptionMapping({ ...newMapping, manufacturer })
+  return mapToOptionMapping({ ...newMapping, manufacturer: mfr })
 }
 
 export async function getAll(): Promise<OptionManufacturerMapping[]> {
-  const result = await db.query.optionMappings.findMany({
+  const result = await db.query.optionMapping.findMany({
     with: {
       manufacturer: true,
     },
-    orderBy: (mappings, { desc }) => [desc(mappings.createdAt)],
+    orderBy: (optionMapping, { desc }) => [desc(optionMapping.createdAt)],
   })
 
   return result.map(mapToOptionMapping)
 }
 
 export async function getById(id: string): Promise<OptionManufacturerMapping | undefined> {
-  const result = await db.query.optionMappings.findFirst({
-    where: eq(optionMappings.id, id),
+  const result = await db.query.optionMapping.findFirst({
+    where: eq(optionMapping.id, id),
     with: {
       manufacturer: true,
     },
@@ -60,7 +60,7 @@ export async function getById(id: string): Promise<OptionManufacturerMapping | u
 }
 
 export async function remove(id: string): Promise<void> {
-  await db.delete(optionMappings).where(eq(optionMappings.id, id))
+  await db.delete(optionMapping).where(eq(optionMapping.id, id))
 }
 
 export async function update(
@@ -68,30 +68,30 @@ export async function update(
   data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>>,
 ): Promise<OptionManufacturerMapping> {
   const [updated] = await db
-    .update(optionMappings)
+    .update(optionMapping)
     .set({
       productCode: data.productCode,
       optionName: data.optionName,
       manufacturerId: data.manufacturerId,
       updatedAt: new Date(),
     })
-    .where(eq(optionMappings.id, id))
+    .where(eq(optionMapping.id, id))
     .returning()
 
   if (!updated) throw new Error('Mapping not found')
 
-  const manufacturer = updated.manufacturerId
-    ? await db.query.manufacturers.findFirst({
-        where: eq(manufacturers.id, updated.manufacturerId),
+  const mfr = updated.manufacturerId
+    ? await db.query.manufacturer.findFirst({
+        where: eq(manufacturer.id, updated.manufacturerId),
       })
     : null
 
-  return mapToOptionMapping({ ...updated, manufacturer })
+  return mapToOptionMapping({ ...updated, manufacturer: mfr })
 }
 
 function mapToOptionMapping(
-  m: typeof optionMappings.$inferSelect & {
-    manufacturer?: typeof manufacturers.$inferSelect | null
+  m: typeof optionMapping.$inferSelect & {
+    manufacturer?: typeof manufacturer.$inferSelect | null
   },
 ): OptionManufacturerMapping {
   return {
