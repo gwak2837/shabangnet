@@ -1,12 +1,3 @@
-/**
- * 컬럼 동의어 시드 스크립트
- *
- * 사방넷 표준 컬럼에 대한 동의어 매핑을 DB에 등록합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-column-synonyms.ts
- */
-
 import './server-only'
 
 import { drizzle } from 'drizzle-orm/postgres-js'

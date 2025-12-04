@@ -1,12 +1,3 @@
-/**
- * 쇼핑몰 템플릿 시드 스크립트
- *
- * real-data의 실제 쇼핑몰 파일 구조를 기반으로 템플릿을 등록합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-shopping-mall-templates.ts
- */
-
 import './server-only'
 
 import { eq } from 'drizzle-orm'

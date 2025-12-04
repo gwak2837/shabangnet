@@ -1,16 +1,3 @@
-/**
- * 발주서 템플릿 시드 스크립트
- *
- * public/templates 폴더의 엑셀 파일들을 분석하여
- * 제조사별 발주서 템플릿을 DB에 등록합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-order-templates.ts
- *
- * 또는 환경 변수와 함께:
- * DATABASE_URL="your_db_url" pnpm tsx tools/seed-order-templates.ts
- */
-
 import './server-only'
 
 import { eq } from 'drizzle-orm'

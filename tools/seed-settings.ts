@@ -1,15 +1,3 @@
-/**
- * 기본 설정 시드 스크립트
- *
- * 발송 제외 패턴과 택배사 코드 매핑을 DB에 등록합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-settings.ts
- *
- * 또는 환경 변수와 함께:
- * DATABASE_URL="your_db_url" pnpm tsx tools/seed-settings.ts
- */
-
 import './server-only'
 
 import { drizzle } from 'drizzle-orm/postgres-js'

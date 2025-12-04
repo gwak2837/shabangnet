@@ -1,12 +1,3 @@
-/**
- * 실제 제조사 데이터 시드 스크립트
- *
- * real-data에서 추출한 실제 제조사 데이터를 DB에 등록합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-real-manufacturers.ts
- */
-
 import './server-only'
 
 import { eq } from 'drizzle-orm'

@@ -1,12 +1,3 @@
-/**
- * 전체 시드 실행 스크립트
- *
- * 모든 시드 스크립트를 올바른 순서로 실행합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-all.ts
- */
-
 import { execSync } from 'child_process'
 import path from 'path'
 

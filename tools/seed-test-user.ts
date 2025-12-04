@@ -1,12 +1,3 @@
-/**
- * E2E 테스트용 사용자 계정 시드 스크립트
- *
- * 테스트용 이메일/비밀번호 계정을 생성합니다.
- *
- * 실행 방법:
- * pnpm tsx tools/seed-test-user.ts
- */
-
 import './server-only'
 
 import { scrypt } from '@noble/hashes/scrypt.js'
@@ -25,7 +16,6 @@ const TEST_USER = {
 }
 
 // better-auth 호환 비밀번호 해싱
-// better-auth는 @noble/hashes/scrypt 사용, 형식은 "salt:hash"
 function hashPassword(password: string): string {
   // better-auth와 동일한 설정
   const config = { N: 16384, r: 16, p: 1, dkLen: 64 }
@@ -43,13 +33,13 @@ function hashPassword(password: string): string {
 
 async function seed() {
   const databaseUrl = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+
   if (!databaseUrl) {
     console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
   }
 
   console.log('🌱 E2E 테스트 계정 시드 시작...')
-  console.log(`   DB URL: ${databaseUrl}\n`)
 
   const client = postgres(databaseUrl, {
     prepare: false,
