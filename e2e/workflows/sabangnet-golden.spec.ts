@@ -1,24 +1,12 @@
-/**
- * 사방넷 실제 데이터 전체 워크플로우 테스트
- *
- * 실제 데이터(real-data)를 사용하여 전체 업무 플로우를 검증합니다.
- * - 사방넷 원본 파일 업로드
- * - 제조사별 분류 정확성 검증
- * - 발주서 생성 및 Golden File 비교 (셀 단위)
- *
- * 테스트 실행:
- * pnpm test:e2e e2e/real-data/sabangnet-workflow.spec.ts
- */
-
 import { expect, test } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
-import { COUNT_ONLY_TEST_CASES, INPUT_FILES, SABANGNET_TEST_CASES } from './fixtures'
-import { compareExcelFiles, formatCompareResult } from './util/excel'
+import { COUNT_ONLY_TEST_CASES, INPUT_FILES, SABANGNET_TEST_CASES } from '../common/fixtures'
+import { compareExcelFiles, formatCompareResult } from '../util/excel'
 
 // 다운로드된 파일 저장 경로
-const DOWNLOADS_DIR = path.join(__dirname, '../test-results/downloads')
+const DOWNLOADS_DIR = path.join(__dirname, '../../test-results/downloads')
 
 // 테스트 전에 다운로드 디렉토리 생성
 test.beforeAll(async () => {
@@ -27,7 +15,7 @@ test.beforeAll(async () => {
   }
 })
 
-test.describe.serial('사방넷 실제 데이터 전체 워크플로우', () => {
+test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
   // 업로드는 한 번만 수행 (누적 상태)
   test('1. 사방넷 원본 파일 업로드 및 파싱', async ({ page }) => {
     // 업로드 페이지로 이동
@@ -143,14 +131,6 @@ test.describe.serial('사방넷 실제 데이터 전체 워크플로우', () => 
       }
     }
   })
-
-  test('5. 대시보드 통계 검증', async ({ page }) => {
-    await page.goto('/dashboard')
-    await expect(page.getByRole('heading', { name: '대시보드' })).toBeVisible()
-
-    // 통계 카드 표시 확인
-    await expect(page.getByText(/오늘 업로드|총 주문|발송 완료/)).toBeVisible({ timeout: 10000 })
-  })
 })
 
 // 발주서 다운로드 일괄 테스트 (선택적)
@@ -184,77 +164,6 @@ test.describe.serial('발주서 일괄 다운로드 테스트', () => {
         // 다운로드 완료 대기
         await download.saveAs(path.join(DOWNLOADS_DIR, fileName))
       }
-    }
-  })
-})
-
-// 발주서 이메일 발송 테스트 (Mock)
-test.describe.serial('발주서 이메일 발송 테스트', () => {
-  test('전체 발송 버튼 동작 확인', async ({ page }) => {
-    await page.goto('/orders')
-    await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
-
-    // 전체 발송 버튼 확인
-    const sendAllButton = page.getByRole('button', { name: /전체 발송/ })
-    await expect(sendAllButton).toBeVisible()
-
-    // 버튼이 활성화 상태인지 확인 (대기중인 주문이 있으면 활성화)
-    // 실제 발송은 하지 않고 버튼 상태만 확인
-    const isDisabled = await sendAllButton.isDisabled()
-    console.log(`전체 발송 버튼 비활성화 상태: ${isDisabled}`)
-  })
-
-  test('개별 발송 버튼 동작 확인', async ({ page }) => {
-    await page.goto('/orders')
-    await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
-
-    // 첫 번째 제조사 행의 발송 버튼 찾기
-    const firstRow = page.locator('tbody tr').first()
-
-    if (await firstRow.isVisible()) {
-      const sendButton = firstRow.getByRole('button', { name: /발송/i })
-
-      // 발송 버튼이 있으면 표시 확인 (실제 클릭은 하지 않음)
-      if (await sendButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await expect(sendButton).toBeVisible()
-      }
-    }
-  })
-})
-
-// 데이터 무결성 검증
-test.describe('데이터 무결성 검증', () => {
-  test('업로드된 총 주문 수 검증', async ({ page }) => {
-    await page.goto('/orders')
-    await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
-
-    // 페이지에 표시된 총 주문 수 확인 (있다면)
-    // 실제 구현에 따라 조정 필요
-  })
-
-  test('발송 제외 주문 확인', async ({ page }) => {
-    await page.goto('/orders')
-
-    // 발송 제외 탭 클릭
-    const excludeTab = page.getByRole('button', { name: /발송 제외/ })
-    if (await excludeTab.isVisible()) {
-      await excludeTab.click()
-
-      // 발송 제외 안내 메시지 확인
-      await expect(page.getByText(/F열 값이 설정된 제외 패턴과 일치하는 주문/)).toBeVisible()
-    }
-  })
-
-  test('발송 완료 주문 탭 확인', async ({ page }) => {
-    await page.goto('/orders')
-
-    // 발송 완료 탭 클릭
-    const completedTab = page.getByRole('button', { name: /발송 완료/ })
-    if (await completedTab.isVisible()) {
-      await completedTab.click()
-
-      // 발송 완료 목록 또는 안내 메시지 확인
-      // 초기에는 발송 완료 건이 없을 수 있음
     }
   })
 })

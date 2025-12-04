@@ -7,15 +7,6 @@ dotenv.config({ path: path.join(__dirname, '.env.test.local'), quiet: true })
 
 const E2E_TEST_PORT = 3010
 
-/**
- * Playwright E2E 테스트 설정
- *
- * 실행 방법:
- * - 전체 테스트: pnpm test:e2e
- * - UI 모드: pnpm test:e2e:ui
- * - 특정 파일: pnpm test:e2e e2e/upload.spec.ts
- * - 디버그 모드: pnpm test:e2e:debug
- */
 export default defineConfig({
   // 전역 설정 (테스트 전 DB 초기화/시드)
   globalSetup: './e2e/global-setup.ts',
@@ -76,7 +67,7 @@ export default defineConfig({
     // 2. 로그인 테스트 (세션 없이 직접 로그인 테스트)
     {
       name: 'auth-tests',
-      testMatch: /auth\.spec\.ts/,
+      testMatch: /pages\/auth\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: undefined, // 세션 없음
@@ -85,7 +76,7 @@ export default defineConfig({
     // 3. 나머지 테스트 (저장된 세션 재사용)
     {
       name: 'authenticated',
-      testIgnore: /auth\.(setup|spec)\.ts/,
+      testIgnore: [/auth\.setup\.ts/, /pages\/auth\.spec\.ts/],
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -95,11 +86,21 @@ export default defineConfig({
   ],
 
   // 테스트 서버 실행 설정
-  webServer: {
-    command: `pnpm dotenv -e .env.test.local -- sh -c "next build && next start --port ${E2E_TEST_PORT}"`,
-    url: `http://localhost:${E2E_TEST_PORT}`,
-    reuseExistingServer: false, // 항상 새 서버 시작
-    timeout: ms('3 minutes'), // 빌드 시간 고려
-    env: { NODE_ENV: 'test' },
-  },
+  // E2E_DEV=true: 기존 dev 서버 재사용 (빠른 개발 반복)
+  // E2E_DEV 없음: production 빌드 후 시작 (전체 테스트/CI)
+  webServer: process.env.E2E_DEV
+    ? {
+        command: `pnpm dotenv -e .env.test.local -- next dev --port ${E2E_TEST_PORT}`,
+        url: `http://localhost:${E2E_TEST_PORT}`,
+        reuseExistingServer: true, // 이미 실행 중이면 재사용
+        timeout: ms('30 seconds'),
+        env: { NODE_ENV: 'test' },
+      }
+    : {
+        command: `pnpm dotenv -e .env.test.local -- sh -c "next build && next start --port ${E2E_TEST_PORT}"`,
+        url: `http://localhost:${E2E_TEST_PORT}`,
+        reuseExistingServer: false, // 항상 새 서버 시작
+        timeout: ms('3 minutes'), // 빌드 시간 고려
+        env: { NODE_ENV: 'test' },
+      },
 })

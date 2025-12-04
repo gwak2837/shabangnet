@@ -1,18 +1,9 @@
-/**
- * 송장 변환 테스트
- *
- * 거래처에서 받은 송장 파일을 사방넷 업로드 양식으로 변환하는 기능을 테스트합니다.
- *
- * 테스트 실행:
- * pnpm test:e2e e2e/real-data/invoice-convert.spec.ts
- */
-
 import { expect, test } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
 // 다운로드된 파일 저장 경로
-const DOWNLOADS_DIR = path.join(__dirname, '../test-results/downloads')
+const DOWNLOADS_DIR = path.join(__dirname, '../../test-results/downloads')
 
 // 테스트 전에 다운로드 디렉토리 생성
 test.beforeAll(async () => {

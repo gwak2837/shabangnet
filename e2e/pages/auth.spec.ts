@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { TEST_USER } from './fixtures'
+import { TEST_USER } from '../common/fixtures'
 
 test.describe('인증', () => {
   test('이메일/비밀번호로 로그인', async ({ page }) => {

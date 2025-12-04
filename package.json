@@ -22,9 +22,11 @@
     "analyze-data": "pnpm tsx tools/analyze-real-data.ts",
     "test:db:up": "docker compose up -d db-test",
     "test:db:down": "docker compose rm -sf db-test",
-    "test:e2e": "pnpm test:db:down && pnpm test:db:up && lsof -ti:3010 | xargs kill -9 2>/dev/null || true && pnpm playwright test && pnpm test:db:down",
-    "test:e2e:ui": "pnpm playwright test --ui",
-    "test:e2e:debug": "pnpm playwright test --debug"
+    "test:e2e": "E2E_DEV=true pnpm playwright test",
+    "test:e2e:prod": "pnpm playwright test",
+    "test:e2e:all": "pnpm test:db:down && pnpm test:db:up && lsof -ti:3010 | xargs kill -9 2>/dev/null || true && pnpm playwright test && pnpm test:db:down",
+    "test:e2e:ui": "E2E_DEV=true pnpm playwright test --ui",
+    "test:e2e:debug": "E2E_DEV=true pnpm playwright test --debug"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.4.4",

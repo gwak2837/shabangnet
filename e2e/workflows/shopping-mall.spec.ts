@@ -1,24 +1,12 @@
-/**
- * 쇼핑몰 주문 변환 테스트
- *
- * 쇼핑몰별 원본 파일을 업로드하고 사방넷 양식으로 변환되는지 검증합니다.
- * - SK스토아
- * - 삼성복지몰
- * - 삼성카드몰
- *
- * 테스트 실행:
- * pnpm test:e2e e2e/real-data/shopping-mall.spec.ts
- */
-
 import { expect, test } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
-import { SHOPPING_MALL_TEST_CASES } from './fixtures'
-import { getExcelRowCount } from './util/excel'
+import { SHOPPING_MALL_TEST_CASES } from '../common/fixtures'
+import { getExcelRowCount } from '../util/excel'
 
 // 다운로드된 파일 저장 경로
-const DOWNLOADS_DIR = path.join(__dirname, '../test-results/downloads')
+const DOWNLOADS_DIR = path.join(__dirname, '../../test-results/downloads')
 
 // 테스트 전에 다운로드 디렉토리 생성
 test.beforeAll(async () => {
@@ -27,7 +15,7 @@ test.beforeAll(async () => {
   }
 })
 
-test.describe.serial('쇼핑몰 주문 변환 테스트', () => {
+test.describe.serial('쇼핑몰 주문 변환 워크플로우', () => {
   // 각 쇼핑몰에 대해 테스트 생성
   for (const testCase of SHOPPING_MALL_TEST_CASES) {
     test.describe.serial(`${testCase.mallName} 변환`, () => {

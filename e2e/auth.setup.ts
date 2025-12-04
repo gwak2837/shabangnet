@@ -7,7 +7,7 @@
 
 import { expect, test as setup } from '@playwright/test'
 
-import { TEST_USER } from './fixtures'
+import { TEST_USER } from './common/fixtures'
 
 const authFile = 'e2e/.auth/user.json'
 

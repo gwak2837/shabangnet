@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { INPUT_FILES, SABANGNET_TEST_CASES } from './fixtures'
+import { INPUT_FILES, SABANGNET_TEST_CASES } from '../common/fixtures'
 
 test.describe('발주 생성/발송', () => {
   test('발주 페이지에서 제조사별 주문 목록 확인', async ({ page }) => {

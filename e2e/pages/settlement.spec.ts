@@ -1,20 +1,11 @@
-/**
- * 정산 관리 테스트
- *
- * 제조사별 발주 내역 조회 및 정산서 다운로드 기능을 테스트합니다.
- *
- * 테스트 실행:
- * pnpm test:e2e e2e/real-data/settlement.spec.ts
- */
-
 import { expect, test } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
-import { SABANGNET_TEST_CASES } from './fixtures'
+import { SABANGNET_TEST_CASES } from '../common/fixtures'
 
 // 다운로드된 파일 저장 경로
-const DOWNLOADS_DIR = path.join(__dirname, '../test-results/downloads')
+const DOWNLOADS_DIR = path.join(__dirname, '../../test-results/downloads')
 
 // 테스트 전에 다운로드 디렉토리 생성
 test.beforeAll(async () => {
@@ -119,7 +110,7 @@ test.describe('정산 데이터 조회 테스트', () => {
     await firstOption.click()
 
     // 월 선택 확인 (기본값일 수 있음)
-    const monthTab = page.getByRole('button', { name: '월 선택' })
+    const monthTab = page.getByRole('tab', { name: /월 선택/ })
     if (await monthTab.isVisible({ timeout: 2000 }).catch(() => false)) {
       await monthTab.click()
     }
@@ -152,7 +143,7 @@ test.describe('정산 데이터 조회 테스트', () => {
     await firstOption.click()
 
     // 기간 지정 선택
-    const rangeTab = page.getByRole('button', { name: '기간 지정' })
+    const rangeTab = page.getByRole('tab', { name: /기간 지정/ })
     if (await rangeTab.isVisible({ timeout: 2000 }).catch(() => false)) {
       await rangeTab.click()
 

@@ -1,7 +1,7 @@
 import path from 'path'
 
 // 테스트 데이터 경로
-export const TEST_DATA_DIR = path.join(__dirname, '../public/data/real-data')
+export const TEST_DATA_DIR = path.join(__dirname, '../../public/data/real-data')
 
 // 입력 파일 경로
 export const INPUT_FILES = {
