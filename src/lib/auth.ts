@@ -3,6 +3,7 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { twoFactor } from 'better-auth/plugins/two-factor'
 
+import { SITE_CONFIG } from '@/common/constants'
 import { env } from '@/common/env'
 import { db } from '@/db/client'
 import * as schema from '@/db/schema/auth'
@@ -90,7 +91,7 @@ export const auth = betterAuth({
       },
     }),
     passkey({
-      rpID: process.env.NODE_ENV === 'production' ? 'daonfnc.vercel.app' : 'localhost',
+      rpID: process.env.NODE_ENV === 'production' ? SITE_CONFIG.url : 'localhost',
       rpName: 'daonfnc',
       origin: baseURL,
     }),
