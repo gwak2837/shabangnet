@@ -20,7 +20,7 @@ import { Step4BackupCodes } from './step-4-backup-codes'
  */
 export function OnboardingFlow() {
   const router = useRouter()
-  const { data: session, isPending: isSessionPending } = useSession()
+  const { data: session, isPending: isSessionPending, refetch: refetchSession } = useSession()
   const [isPending, setIsPending] = useState(false)
   const [step, setStep] = useState(OnboardingStep.Step1_ChooseMethod)
   const [error, setError] = useState('')
@@ -61,6 +61,9 @@ export function OnboardingFlow() {
         setError(result.error.message || 'TOTP 설정에 실패했어요')
         return
       }
+
+      // TOTP 활성화 후 세션 새로고침 (twoFactorEnabled가 업데이트됨)
+      await refetchSession()
 
       const data = result.data
       if (data.totpURI) {
