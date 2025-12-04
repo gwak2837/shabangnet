@@ -34,7 +34,7 @@ export function GoogleOAuthButton({ disabled, label = 'Google로 로그인' }: G
       disabled={disabled || isPending}
       onClick={handleGoogleLogin}
       type="button"
-      variant="outline"
+      variant="glass-outline"
     >
       {isPending ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

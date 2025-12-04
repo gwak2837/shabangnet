@@ -219,3 +219,157 @@ body {
     backdrop-filter: none !important;
   }
 }
+
+/* ============================================
+   Liquid Glass Design System (Apple HIG)
+   ============================================ */
+
+/* Glass Card */
+.glass-card {
+  background: light-dark(rgba(255, 255, 255, 0.75), rgba(38, 38, 38, 0.72));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08));
+  box-shadow:
+    0 8px 32px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)),
+    0 1px 3px light-dark(rgba(0, 0, 0, 0.05), transparent),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.05));
+  border-radius: var(--radius-xl);
+}
+
+/* Glass Button */
+.glass-button {
+  background: light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.12));
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.15));
+  box-shadow:
+    0 1px 3px light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.08));
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.18));
+  box-shadow:
+    0 2px 6px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.4)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1));
+}
+
+/* Glass Button Primary */
+.glass-button-primary {
+  background: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2));
+  color: light-dark(white, black);
+  box-shadow:
+    0 2px 8px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.3)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15));
+  transition: all 0.2s ease;
+}
+
+.glass-button-primary:hover {
+  background: light-dark(rgba(0, 0, 0, 0.75), rgba(255, 255, 255, 0.85));
+  box-shadow:
+    0 4px 16px light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.2));
+}
+
+/* Glass Input */
+.glass-input {
+  background: light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.12));
+  box-shadow: inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.2));
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  background: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.12));
+  border-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.2));
+  box-shadow:
+    inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.2)),
+    0 0 0 3px light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+}
+
+.glass-input::placeholder {
+  color: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4));
+}
+
+/* Glass Checkbox */
+.glass-checkbox {
+  background: light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1)) !important;
+  border: 1.5px solid light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.25)) !important;
+}
+
+.glass-checkbox[data-state='checked'] {
+  background: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.9)) !important;
+  border-color: transparent !important;
+}
+
+/* Auth Divider */
+.auth-divider {
+  border-color: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.15));
+}
+
+/* Warm Mesh Gradient Background - Apple HIG inspired subtle tints */
+.auth-mesh-gradient {
+  background-color: light-dark(oklch(0.985 0.002 80), oklch(0.14 0.008 45));
+  background-image:
+    radial-gradient(at 0% 100%, light-dark(oklch(0.97 0.025 55), oklch(0.18 0.025 45)) 0%, transparent 55%),
+    radial-gradient(at 100% 0%, light-dark(oklch(0.96 0.03 350), oklch(0.17 0.03 350)) 0%, transparent 55%),
+    radial-gradient(at 50% 50%, light-dark(oklch(0.98 0.015 85), oklch(0.16 0.02 70)) 0%, transparent 65%),
+    radial-gradient(at 80% 80%, light-dark(oklch(0.975 0.02 40), oklch(0.175 0.025 35)) 0%, transparent 45%);
+}
+
+/* Fade-in Animation */
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-fade-in {
+  animation: auth-fade-in 0.4s ease-out forwards;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .auth-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reduced transparency fallback for glass effects */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-card {
+    background: var(--color-card) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .glass-button,
+  .glass-button-primary {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .glass-input {
+    background: var(--color-background) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .auth-mesh-gradient {
+    background-image: none !important;
+  }
+}

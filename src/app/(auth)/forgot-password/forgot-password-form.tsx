@@ -16,16 +16,24 @@ export function ForgotPasswordForm() {
       <form action={dispatch} className="flex flex-col gap-6">
         <div>
           <Label htmlFor="email">이메일</Label>
-          <Input autoComplete="email" className="mt-2" id="email" name="email" required type="email" />
+          <Input
+            autoComplete="email"
+            className="mt-2"
+            id="email"
+            name="email"
+            required
+            type="email"
+            variant="glass"
+          />
         </div>
         {state && 'error' in state && <div className="text-sm text-destructive">{state.error}</div>}
         {state && 'success' in state && <div className="text-sm text-emerald-500">{state.success}</div>}
-        <Button className="w-full" disabled={isPending} type="submit">
+        <Button className="w-full" disabled={isPending} type="submit" variant="glass">
           {isPending ? '전송 중...' : '재설정 링크 받기'}
         </Button>
       </form>
       <div className="text-center text-sm">
-        <Link className="font-medium text-primary hover:text-primary/90" href="/login">
+        <Link className="font-medium text-foreground hover:text-foreground/80" href="/login">
           로그인으로 돌아가기
         </Link>
       </div>

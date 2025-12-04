@@ -29,15 +29,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   if (state && 'success' in state) {
     return (
       <div className="mt-8 flex flex-col gap-6 text-center">
-        <div className="rounded-md bg-emerald-50 p-4 text-emerald-700">
+        <div className="glass-button rounded-lg p-4 text-emerald-700 dark:text-emerald-300">
           <p>{state.success}</p>
         </div>
-        <Link
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-          href="/login"
-        >
-          로그인하기
-        </Link>
+        <Button asChild variant="glass">
+          <Link href="/login">로그인하기</Link>
+        </Button>
       </div>
     )
   }
@@ -58,6 +55,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             required
             type="password"
             value={password}
+            variant="glass"
           />
           {password && (
             <PasswordStrengthIndicator password={password} showChecklist={passwordTouched} validation={validation} />
@@ -75,6 +73,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             required
             type="password"
             value={confirmPassword}
+            variant="glass"
           />
           {showMismatchError && <p className="mt-1 text-sm text-destructive">{PASSWORD_ERROR_MESSAGES.mismatch}</p>}
           {confirmTouched && passwordsMatch && confirmPassword && (
@@ -82,12 +81,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           )}
         </div>
         {state && 'error' in state && <div className="text-sm text-destructive">{state.error}</div>}
-        <Button className="w-full" disabled={isPending || !validation.isValid || !passwordsMatch} type="submit">
+        <Button className="w-full" disabled={isPending || !validation.isValid || !passwordsMatch} type="submit" variant="glass">
           {isPending ? '변경 중...' : '비밀번호 변경'}
         </Button>
       </form>
       <div className="text-center text-sm">
-        <Link className="font-medium text-primary hover:text-primary/90" href="/login">
+        <Link className="font-medium text-foreground hover:text-foreground/80" href="/login">
           로그인하기
         </Link>
       </div>

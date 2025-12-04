@@ -246,12 +246,12 @@ export function OnboardingFlow() {
       return (
         <div className="mt-6 flex flex-col gap-6">
           <div className="text-center flex flex-col gap-2">
-            <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100">
-              <Fingerprint className="h-6 w-6 text-emerald-600" />
+            <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20">
+              <Fingerprint className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-sm text-muted-foreground">이미 패스키가 등록되어 있어요!</p>
           </div>
-          <Button className="w-full" disabled={isPending} onClick={completeOnboarding}>
+          <Button className="w-full" disabled={isPending} onClick={completeOnboarding} variant="glass">
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -271,9 +271,14 @@ export function OnboardingFlow() {
         <div className="mt-6 flex flex-col gap-6">
           <p className="text-sm text-center text-muted-foreground">소셜 계정 보안 강화를 위해 패스키를 등록해주세요</p>
 
-          <Button className="w-full h-auto py-4" disabled={isPending} onClick={handleSelectPasskey} variant="outline">
+          <Button
+            className="w-full h-auto py-4"
+            disabled={isPending}
+            onClick={handleSelectPasskey}
+            variant="glass-outline"
+          >
             <div className="flex items-center gap-3 w-full">
-              <Fingerprint className="h-8 w-8 text-primary" />
+              <Fingerprint className="h-8 w-8 text-foreground" />
               <div className="text-left">
                 <div className="font-medium">패스키 등록</div>
                 <div className="text-xs text-muted-foreground">생체 인식으로 빠르고 안전하게</div>
@@ -283,7 +288,7 @@ export function OnboardingFlow() {
 
           {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-          <Button className="w-full" disabled={isPending} onClick={handleLogout} variant="ghost">
+          <Button className="w-full" disabled={isPending} onClick={handleLogout} variant="glass-outline">
             <LogOut className="mr-2 h-4 w-4" />
             로그아웃
           </Button>
@@ -293,10 +298,15 @@ export function OnboardingFlow() {
 
     // 비밀번호 사용자: TOTP 또는 패스키
     return (
-      <div className="flex flex-col gap-6">
-        <Button className="w-full h-auto py-4" disabled={isPending} onClick={handleSelectPasskey} variant="outline">
+      <div className="mt-6 flex flex-col gap-6">
+        <Button
+          className="w-full h-auto py-4"
+          disabled={isPending}
+          onClick={handleSelectPasskey}
+          variant="glass-outline"
+        >
           <div className="flex items-center gap-3 w-full">
-            <Fingerprint className="h-8 w-8 text-primary" />
+            <Fingerprint className="h-8 w-8 text-foreground" />
             <div className="text-left">
               <div className="font-medium">패스키 (권장)</div>
               <div className="text-xs text-muted-foreground">생체 인식으로 빠르고 안전하게</div>
@@ -304,9 +314,9 @@ export function OnboardingFlow() {
           </div>
         </Button>
 
-        <Button className="w-full h-auto py-4" disabled={isPending} onClick={handleSelectTOTP} variant="outline">
+        <Button className="w-full h-auto py-4" disabled={isPending} onClick={handleSelectTOTP} variant="glass-outline">
           <div className="flex items-center gap-3 w-full">
-            <Smartphone className="h-8 w-8 text-primary" />
+            <Smartphone className="h-8 w-8 text-foreground" />
             <div className="text-left">
               <div className="font-medium">인증 앱 (TOTP)</div>
               <div className="text-xs text-muted-foreground">Google Authenticator 등 사용</div>
@@ -316,7 +326,7 @@ export function OnboardingFlow() {
 
         {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-        <Button className="w-full" disabled={isPending} onClick={handleLogout} variant="ghost">
+        <Button className="w-full" disabled={isPending} onClick={handleLogout} variant="glass-outline">
           <LogOut className="mr-2 h-4 w-4" />
           로그아웃
         </Button>
@@ -329,7 +339,7 @@ export function OnboardingFlow() {
     return (
       <div className="mt-6 flex flex-col gap-6">
         <div className="text-center">
-          <button className="text-xs text-primary hover:underline" onClick={handleBack} type="button">
+          <button className="text-xs text-foreground/70 hover:text-foreground hover:underline" onClick={handleBack} type="button">
             ← 다른 방식 선택
           </button>
         </div>
@@ -348,6 +358,7 @@ export function OnboardingFlow() {
               onChange={(e) => setTotpPassword(e.target.value)}
               type={showPassword ? 'text' : 'password'}
               value={totpPassword}
+              variant="glass"
             />
             <button
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -362,7 +373,7 @@ export function OnboardingFlow() {
 
         {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-        <Button className="w-full" disabled={isPending || !totpPassword} onClick={handleEnableTOTP}>
+        <Button className="w-full" disabled={isPending || !totpPassword} onClick={handleEnableTOTP} variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -381,7 +392,7 @@ export function OnboardingFlow() {
     return (
       <div className="mt-6 flex flex-col gap-6">
         <div className="text-center">
-          <button className="text-xs text-primary hover:underline" onClick={handleBack} type="button">
+          <button className="text-xs text-foreground/70 hover:text-foreground hover:underline" onClick={handleBack} type="button">
             ← 다른 방식 선택
           </button>
         </div>
@@ -390,14 +401,14 @@ export function OnboardingFlow() {
           <p className="text-sm text-muted-foreground mb-4">인증 앱에서 QR 코드를 스캔하세요</p>
           {totpUri && (
             <div className="flex justify-center">
-              <div className="rounded-lg border bg-white p-2">
-                <QRCodeSVG size={200} value={totpUri} />
+              <div className="rounded-lg bg-white p-3 shadow-lg">
+                <QRCodeSVG size={180} value={totpUri} />
               </div>
             </div>
           )}
           {totpUri && (
-            <p className="text-xs text-muted-foreground mt-2">
-              또는 수동 입력: <code className="bg-muted px-1 rounded">{extractSecret(totpUri)}</code>
+            <p className="text-xs text-muted-foreground mt-3">
+              또는 수동 입력: <code className="glass-button px-2 py-0.5 rounded text-xs">{extractSecret(totpUri)}</code>
             </p>
           )}
         </div>
@@ -415,12 +426,13 @@ export function OnboardingFlow() {
             pattern="[0-9]*"
             placeholder="000000"
             value={totpCode}
+            variant="glass"
           />
         </div>
 
         {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-        <Button className="w-full" disabled={isPending || totpCode.length !== 6} onClick={handleVerifyTOTP}>
+        <Button className="w-full" disabled={isPending || totpCode.length !== 6} onClick={handleVerifyTOTP} variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -440,14 +452,14 @@ export function OnboardingFlow() {
       <div className="mt-6 flex flex-col gap-6">
         {!isSocialUser && (
           <div className="text-center">
-            <button className="text-xs text-primary hover:underline" onClick={handleBack} type="button">
+            <button className="text-xs text-foreground/70 hover:text-foreground hover:underline" onClick={handleBack} type="button">
               ← 다른 방식 선택
             </button>
           </div>
         )}
 
         <div className="text-center flex flex-col gap-4">
-          <Fingerprint className="mx-auto h-16 w-16 text-primary" />
+          <Fingerprint className="mx-auto h-16 w-16 text-foreground/80" />
           <div>
             <h3 className="font-medium">패스키 등록</h3>
             <p className="text-sm text-muted-foreground mt-1">
@@ -458,7 +470,7 @@ export function OnboardingFlow() {
 
         {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-        <Button className="w-full" disabled={isPending} onClick={handlePasskeySetup}>
+        <Button className="w-full" disabled={isPending} onClick={handlePasskeySetup} variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -480,8 +492,8 @@ export function OnboardingFlow() {
     return (
       <div className="mt-6 flex flex-col gap-6">
         <div className="text-center">
-          <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-4">
-            <Check className="h-6 w-6 text-emerald-600" />
+          <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-4">
+            <Check className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h3 className="font-medium">2차 인증 설정 완료!</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -491,10 +503,10 @@ export function OnboardingFlow() {
           </p>
         </div>
 
-        <div className="bg-muted rounded-lg p-4">
+        <div className="glass-button rounded-lg p-4">
           <div className="grid grid-cols-2 gap-2 font-mono text-sm">
             {backupCodes.map((code, index) => (
-              <div className="bg-background px-2 py-1 rounded text-center" key={index}>
+              <div className="glass-input px-2 py-1.5 rounded text-center" key={index}>
                 {code}
               </div>
             ))}
@@ -502,7 +514,7 @@ export function OnboardingFlow() {
         </div>
 
         <div className="flex gap-2">
-          <Button className="flex-1" onClick={handleCopyCodes} variant="outline">
+          <Button className="flex-1" onClick={handleCopyCodes} variant="glass-outline">
             {codesCopied ? (
               <>
                 <Check className="mr-2 h-4 w-4" />
@@ -515,7 +527,7 @@ export function OnboardingFlow() {
               </>
             )}
           </Button>
-          <Button className="flex-1" onClick={handleDownloadCodes} variant="outline">
+          <Button className="flex-1" onClick={handleDownloadCodes} variant="glass-outline">
             <Download className="mr-2 h-4 w-4" />
             다운로드
           </Button>
@@ -524,6 +536,7 @@ export function OnboardingFlow() {
         <div className="flex items-center gap-2">
           <Checkbox
             checked={codesConfirmed}
+            className="glass-checkbox"
             id="codesConfirmed"
             onCheckedChange={(checked) => setCodesConfirmed(checked === true)}
           />
@@ -534,7 +547,7 @@ export function OnboardingFlow() {
 
         {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-        <Button className="w-full" disabled={!codesConfirmed || isPending} onClick={completeOnboarding}>
+        <Button className="w-full" disabled={!codesConfirmed || isPending} onClick={completeOnboarding} variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -550,3 +563,4 @@ export function OnboardingFlow() {
 
   return null
 }
+

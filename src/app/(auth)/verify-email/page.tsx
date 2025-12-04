@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { Button } from '@/components/ui/button'
+
 import { verifyEmailToken } from './actions'
 
 export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ token: string }> }) {
@@ -9,8 +11,8 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
   if (!token) {
     return (
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">잘못된 요청</h1>
-        <p className="mt-3 text-muted-foreground">인증 토큰이 없습니다.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">링크를 확인해주세요</h1>
+        <p className="mt-3 text-muted-foreground">인증 링크가 올바르지 않아요</p>
       </div>
     )
   }
@@ -24,27 +26,21 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
 
   return (
     <div className="flex flex-col items-center justify-center text-center">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">이메일 인증</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">이메일 확인</h1>
       {result.error ? (
         <>
           <p className="mt-4 text-sm text-destructive">{result.error}</p>
-          <a
-            className="mt-8 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-80 active:opacity-70"
-            href="/register"
-          >
-            회원가입으로 돌아가기
-          </a>
+          <Button asChild className="mt-8" variant="glass">
+            <a href="/register">다시 가입하기</a>
+          </Button>
         </>
       ) : (
         <div className="mt-4 flex flex-col gap-1">
-          <p className="text-sm text-emerald-600">{result.success}</p>
-          <p className="text-sm text-muted-foreground">계정이 인증되었습니다.</p>
-          <a
-            className="mt-8 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-80 active:opacity-70"
-            href="/login"
-          >
-            로그인으로 이동
-          </a>
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">{result.success}</p>
+          <p className="text-sm text-muted-foreground">이메일이 확인됐어요</p>
+          <Button asChild className="mt-8" variant="glass">
+            <a href="/login">로그인하기</a>
+          </Button>
         </div>
       )}
     </div>

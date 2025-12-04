@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import { signIn, twoFactor } from '@/lib/auth-client'
 
 type MfaMethod = 'passkey' | 'recovery' | 'totp'
@@ -129,11 +128,11 @@ export function MfaChallenge() {
     <div className="mt-6 flex flex-col gap-6">
       {/* 복구 코드 경고 배너 */}
       {recoveryLogin && (
-        <div className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800">
+        <div className="glass-button flex items-center gap-3 rounded-lg p-4 text-amber-700 dark:text-amber-300">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <div className="text-sm">
             <p className="font-medium">복구 코드로 로그인했습니다</p>
-            <p className="mt-1 text-amber-700">보안 설정을 점검해주세요.</p>
+            <p className="mt-1 opacity-80">보안 설정을 점검해주세요.</p>
           </div>
         </div>
       )}
@@ -163,12 +162,14 @@ export function MfaChallenge() {
                 pattern="[0-9]*"
                 placeholder="000000"
                 value={totpCode}
+                variant="glass"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={trustDevice}
+                className="glass-checkbox"
                 id="trustDevice"
                 onCheckedChange={(checked) => setTrustDevice(checked === true)}
               />
@@ -179,7 +180,7 @@ export function MfaChallenge() {
 
             {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-            <Button className="w-full" disabled={isPending || totpCode.length !== 6} type="submit">
+            <Button className="w-full" disabled={isPending || totpCode.length !== 6} type="submit" variant="glass">
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -191,7 +192,7 @@ export function MfaChallenge() {
             </Button>
           </form>
 
-          <Button className="w-full" onClick={() => handleMethodChange('passkey')} variant="ghost">
+          <Button className="w-full" onClick={() => handleMethodChange('passkey')} variant="glass-outline">
             <Fingerprint className="mr-2 h-4 w-4" />
             패스키로 인증
           </Button>
@@ -209,7 +210,7 @@ export function MfaChallenge() {
 
           {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-          <Button className="w-full" disabled={isPending} onClick={handlePasskeyAuth}>
+          <Button className="w-full" disabled={isPending} onClick={handlePasskeyAuth} variant="glass">
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -223,7 +224,7 @@ export function MfaChallenge() {
             )}
           </Button>
 
-          <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="ghost">
+          <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="glass-outline">
             <Smartphone className="mr-2 h-4 w-4" />
             인증 앱으로 인증
           </Button>
@@ -250,12 +251,13 @@ export function MfaChallenge() {
                 onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                 placeholder="XXXX-XXXX"
                 value={recoveryCode}
+                variant="glass"
               />
             </div>
 
             {error && <div className="text-sm text-destructive text-center">{error}</div>}
 
-            <Button className="w-full" disabled={isPending || !recoveryCode.trim()} type="submit">
+            <Button className="w-full" disabled={isPending || !recoveryCode.trim()} type="submit" variant="glass">
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -267,7 +269,7 @@ export function MfaChallenge() {
             </Button>
           </form>
 
-          <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="ghost">
+          <Button className="w-full" onClick={() => handleMethodChange('totp')} variant="glass-outline">
             다른 방식으로 인증
           </Button>
         </div>
@@ -276,7 +278,11 @@ export function MfaChallenge() {
       {/* 복구 코드 링크 */}
       {selectedMethod !== 'recovery' && (
         <>
-          <Separator />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="auth-divider w-full border-t" />
+            </div>
+          </div>
           <div className="text-center">
             <button
               className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
@@ -291,3 +297,4 @@ export function MfaChallenge() {
     </div>
   )
 }
+

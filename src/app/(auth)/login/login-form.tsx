@@ -131,6 +131,7 @@ export function LoginForm() {
             name="email"
             placeholder="example@email.com"
             type="email"
+            variant="glass"
           />
         </div>
 
@@ -152,6 +153,7 @@ export function LoginForm() {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
+              variant="glass"
             />
             <button
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -165,7 +167,7 @@ export function LoginForm() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Checkbox disabled={isPending} id="remember" name="remember" />
+          <Checkbox className="glass-checkbox" disabled={isPending} id="remember" name="remember" />
           <Label className="cursor-pointer font-normal text-sm" htmlFor="remember">
             로그인 유지
           </Label>
@@ -173,7 +175,7 @@ export function LoginForm() {
 
         {error && <div className="text-sm text-destructive">{error}</div>}
 
-        <Button className="w-full" disabled={isPending} type="submit">
+        <Button className="w-full" disabled={isPending} type="submit" variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -188,17 +190,25 @@ export function LoginForm() {
       {/* 구분선 */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="auth-divider w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">또는</span>
+          <span className="bg-transparent px-3 text-muted-foreground">또는</span>
         </div>
       </div>
-      <Button className="w-full" disabled={isPending} onClick={handlePasskeyLogin} type="button">
+
+      <Button
+        className="w-full"
+        disabled={isPending}
+        onClick={handlePasskeyLogin}
+        type="button"
+        variant="glass-outline"
+      >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
         패스키로 로그인
       </Button>
       <GoogleOAuthButton disabled={isPending} />
+
       <p className="text-center text-sm text-muted-foreground">
         계정이 없으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/register">

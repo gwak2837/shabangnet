@@ -83,6 +83,7 @@ export function RegisterForm() {
             name="name"
             placeholder="홍길동"
             type="text"
+            variant="glass"
           />
         </div>
 
@@ -96,6 +97,7 @@ export function RegisterForm() {
             name="email"
             placeholder="example@email.com"
             type="email"
+            variant="glass"
           />
         </div>
 
@@ -113,6 +115,7 @@ export function RegisterForm() {
               required
               type={showPassword ? 'text' : 'password'}
               value={password}
+              variant="glass"
             />
             <button
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -139,6 +142,7 @@ export function RegisterForm() {
               name="confirmPassword"
               required
               type={showConfirmPassword ? 'text' : 'password'}
+              variant="glass"
             />
             <button
               aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
@@ -153,7 +157,7 @@ export function RegisterForm() {
 
         {error && <div className="text-sm text-destructive">{error}</div>}
 
-        <Button className="w-full" disabled={isPending || !validation.isValid} type="submit">
+        <Button className="w-full" disabled={isPending || !validation.isValid} type="submit" variant="glass">
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -165,12 +169,13 @@ export function RegisterForm() {
         </Button>
       </form>
 
+      {/* 구분선 */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="auth-divider w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">또는</span>
+          <span className="bg-transparent px-3 text-muted-foreground">또는</span>
         </div>
       </div>
 
