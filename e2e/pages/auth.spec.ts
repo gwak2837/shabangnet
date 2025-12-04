@@ -7,7 +7,7 @@ test.describe('인증', () => {
     await page.goto('/login')
 
     // 로그인 페이지 확인
-    await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '다시 만나서 반가워요' })).toBeVisible()
 
     // 이메일 입력 (id로 선택)
     await page.locator('#email').fill(TEST_USER.email)

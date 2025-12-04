@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signUp } from '@/lib/auth-client'
-import { PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
+import { getFirstPasswordError, PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
 export function RegisterForm() {
   const router = useRouter()
@@ -127,7 +127,10 @@ export function RegisterForm() {
             </button>
           </div>
           {password && (
-            <PasswordStrengthIndicator password={password} showChecklist={passwordTouched} validation={validation} />
+            <PasswordStrengthIndicator
+              errorMessage={passwordTouched ? getFirstPasswordError(validation) : undefined}
+              password={password}
+            />
           )}
         </div>
 

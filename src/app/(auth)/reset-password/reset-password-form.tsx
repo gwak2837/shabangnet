@@ -9,7 +9,7 @@ import { COMMON_PASSWORDS } from '@/common/constants/common-passwords'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
+import { getFirstPasswordError, PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
 interface ResetPasswordFormProps {
   token: string
@@ -58,7 +58,10 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             variant="glass"
           />
           {password && (
-            <PasswordStrengthIndicator password={password} showChecklist={passwordTouched} validation={validation} />
+            <PasswordStrengthIndicator
+              errorMessage={passwordTouched ? getFirstPasswordError(validation) : undefined}
+              password={password}
+            />
           )}
         </div>
         <div>
@@ -81,7 +84,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           )}
         </div>
         {state && 'error' in state && <div className="text-sm text-destructive">{state.error}</div>}
-        <Button className="w-full" disabled={isPending || !validation.isValid || !passwordsMatch} type="submit" variant="glass">
+        <Button
+          className="w-full"
+          disabled={isPending || !validation.isValid || !passwordsMatch}
+          type="submit"
+          variant="glass"
+        >
           {isPending ? '변경 중...' : '비밀번호 변경'}
         </Button>
       </form>

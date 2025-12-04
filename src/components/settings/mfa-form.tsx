@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { passkeyMethods, twoFactor } from '@/lib/auth-client'
-import { validatePassword } from '@/utils/password'
+import { getFirstPasswordError, validatePassword } from '@/utils/password'
 
 import { setPasswordAction } from './actions/mfa'
 
@@ -805,11 +805,10 @@ export function MfaForm({ settings }: MfaFormProps) {
                 type="password"
                 value={newPassword}
               />
-              {passwordTouched && newPassword && (
+              {newPassword && (
                 <PasswordStrengthIndicator
+                  errorMessage={passwordTouched ? getFirstPasswordError(validatePassword(newPassword)) : undefined}
                   password={newPassword}
-                  showChecklist
-                  validation={validatePassword(newPassword)}
                 />
               )}
             </div>

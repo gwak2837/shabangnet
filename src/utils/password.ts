@@ -100,3 +100,16 @@ export const PASSWORD_ERROR_MESSAGES = {
   isCommon: '너무 흔한 비밀번호예요. 다른 비밀번호를 선택해주세요',
   mismatch: '비밀번호가 일치하지 않아요',
 } as const
+
+/**
+ * 검증 결과에서 첫 번째 에러 메시지 추출 (우선순위 기반)
+ */
+export function getFirstPasswordError(validation: PasswordValidationResult): string | undefined {
+  const { errors } = validation
+  if (errors.minLength) return PASSWORD_ERROR_MESSAGES.minLength
+  if (errors.hasLetter) return PASSWORD_ERROR_MESSAGES.hasLetter
+  if (errors.hasNumber) return PASSWORD_ERROR_MESSAGES.hasNumber
+  if (errors.hasSpecial) return PASSWORD_ERROR_MESSAGES.hasSpecial
+  if (errors.isCommon) return PASSWORD_ERROR_MESSAGES.isCommon
+  return undefined
+}

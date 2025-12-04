@@ -1,27 +1,12 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import {
-  calculateStrength,
-  getStrengthLabel,
-  PASSWORD_ERROR_MESSAGES,
-  type PasswordStrength,
-  type PasswordValidationResult,
-} from '@/utils/password'
+import { calculateStrength, getStrengthLabel, type PasswordStrength } from '@/utils/password'
 
 interface PasswordStrengthIndicatorProps {
+  errorMessage?: string
   password: string
-  showChecklist?: boolean
-  validation?: PasswordValidationResult
 }
-
-interface RequirementItemProps {
-  isValid: boolean
-  isWarning?: boolean
-  label: string
-}
-
-type RequirementState = 'invalid' | 'valid' | 'warning'
 
 const strengthConfig: Record<PasswordStrength, { color: string; glow: string; width: string }> = {
   weak: {
@@ -47,23 +32,7 @@ const strengthTextColor: Record<PasswordStrength, string> = {
   strong: 'text-emerald-600 dark:text-emerald-400',
 }
 
-const textColors: Record<RequirementState, string> = {
-  invalid: 'text-muted-foreground/60',
-  valid: 'text-foreground/80',
-  warning: 'text-rose-500/90 dark:text-rose-400/90',
-}
-
-const dotStyles: Record<RequirementState, string> = {
-  invalid: 'scale-75 bg-muted-foreground/30',
-  valid: 'scale-100 bg-emerald-500 dark:bg-emerald-400',
-  warning: 'scale-100 bg-rose-400 dark:bg-rose-500',
-}
-
-export function PasswordStrengthIndicator({
-  password,
-  showChecklist = true,
-  validation,
-}: PasswordStrengthIndicatorProps) {
+export function PasswordStrengthIndicator({ password, errorMessage }: PasswordStrengthIndicatorProps) {
   const strength = calculateStrength(password)
   const strengthLabel = getStrengthLabel(strength)
   const config = strengthConfig[strength]
@@ -73,8 +42,8 @@ export function PasswordStrengthIndicator({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+    <div className="mt-3 flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
           <span className="text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">
             비밀번호 강도
@@ -100,47 +69,7 @@ export function PasswordStrengthIndicator({
           />
         </div>
       </div>
-      {showChecklist && validation && (
-        <ul className="flex flex-col gap-2.5 pt-1">
-          <RequirementItem isValid={!validation.errors.minLength} label={PASSWORD_ERROR_MESSAGES.minLength} />
-          <RequirementItem isValid={!validation.errors.hasLetter} label={PASSWORD_ERROR_MESSAGES.hasLetter} />
-          <RequirementItem isValid={!validation.errors.hasNumber} label={PASSWORD_ERROR_MESSAGES.hasNumber} />
-          <RequirementItem isValid={!validation.errors.hasSpecial} label={PASSWORD_ERROR_MESSAGES.hasSpecial} />
-          {validation.errors.isCommon && (
-            <RequirementItem isValid={false} isWarning label={PASSWORD_ERROR_MESSAGES.isCommon} />
-          )}
-        </ul>
-      )}
+      {errorMessage && <p className="text-[13px] text-rose-500 dark:text-rose-400">{errorMessage}</p>}
     </div>
-  )
-}
-
-function getRequirementState(isValid: boolean, isWarning?: boolean): RequirementState {
-  if (isValid) return 'valid'
-  if (isWarning) return 'warning'
-  return 'invalid'
-}
-
-function RequirementItem({ isValid, isWarning, label }: RequirementItemProps) {
-  const state = getRequirementState(isValid, isWarning)
-
-  return (
-    <li
-      className={cn(
-        'flex items-center gap-2.5 text-[13px] leading-none transition-all duration-300',
-        textColors[state],
-      )}
-    >
-      <span className="relative flex h-4 w-4 items-center justify-center">
-        <span className={cn('absolute h-1.5 w-1.5 rounded-full transition-all duration-300', dotStyles[state])} />
-        <span
-          className={cn(
-            'absolute h-3 w-3 rounded-full border transition-all duration-500',
-            isValid ? 'scale-100 border-emerald-500/30 dark:border-emerald-400/30' : 'scale-0 border-transparent',
-          )}
-        />
-      </span>
-      <span className={cn('transition-all duration-300', isValid && 'translate-x-0.5')}>{label}</span>
-    </li>
   )
 }
