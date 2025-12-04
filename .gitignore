@@ -206,4 +206,10 @@ dist
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs,node,macos
 
-public/templates
+# Test data and outputs
+public/data
+
+# Playwright
+e2e/test-results
+e2e/playwright-report
+playwright/.cache

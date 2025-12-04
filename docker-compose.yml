@@ -12,5 +12,16 @@ services:
       - daonfnc_data:/var/lib/postgresql/data
     restart: always
 
+  db-test:
+    image: postgres:18-alpine
+    container_name: daonfnc-test
+    ports:
+      - '12195:5432'
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: daonfnc_test
+    # volumes 없음 = 재시작 시 초기화
+
 volumes:
   daonfnc_data:

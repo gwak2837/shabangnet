@@ -4,7 +4,7 @@
  * 사방넷 표준 컬럼에 대한 동의어 매핑을 DB에 등록합니다.
  *
  * 실행 방법:
- * npx tsx tools/seed-column-synonyms.ts
+ * pnpm tsx tools/seed-column-synonyms.ts
  */
 
 import './env-loader'

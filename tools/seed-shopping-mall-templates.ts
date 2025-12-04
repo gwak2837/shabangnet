@@ -1,12 +1,13 @@
 /**
  * 쇼핑몰 템플릿 시드 스크립트
  *
- * 실행 방법:
- * npx tsx src/db/seed-shopping-mall-templates.ts
+ * real-data의 실제 쇼핑몰 파일 구조를 기반으로 템플릿을 등록합니다.
  *
- * 또는 환경 변수와 함께:
- * DATABASE_URL="your_db_url" npx tsx src/db/seed-shopping-mall-templates.ts
+ * 실행 방법:
+ * pnpm tsx tools/seed-shopping-mall-templates.ts
  */
+
+import './env-loader'
 
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -14,16 +15,18 @@ import postgres from 'postgres'
 
 import { shoppingMallTemplate } from '../src/db/schema/settings'
 
-// 기존 SHOPPING_MALL_CONFIGS에서 가져온 시드 데이터
+// 실제 파일 분석 결과 기반 쇼핑몰 템플릿 설정
+// 컬럼 매핑: { 쇼핑몰컬럼명: 사방넷키 }
 const SHOPPING_MALL_SEED_DATA = [
   {
     id: 'mall_sk_stoa',
     mallName: 'sk_stoa',
     displayName: 'SK스토아',
-    headerRow: 3,
+    headerRow: 3, // 1-2행은 제목, 3행이 실제 헤더
     dataStartRow: 4,
     columnMappings: {
       통합주문번호: 'orderNumber',
+      상품코드: 'productCode',
       상품명: 'productName',
       단품상세: 'optionName',
       수량: 'quantity',
@@ -46,6 +49,7 @@ const SHOPPING_MALL_SEED_DATA = [
     dataStartRow: 2,
     columnMappings: {
       주문번호: 'orderNumber',
+      상품코드: 'productCode',
       상품명: 'productName',
       단품명: 'optionName',
       수량: 'quantity',
@@ -54,9 +58,10 @@ const SHOPPING_MALL_SEED_DATA = [
       우편번호: 'postalCode',
       주소: 'address',
       휴대폰번호: 'recipientMobile',
+      전화번호: 'recipientPhone',
       고객배송요청사항: 'memo',
       결제금액: 'paymentAmount',
-      상품코드: 'productCode',
+      공급금액: 'cost',
     },
     enabled: true,
   },
@@ -68,6 +73,7 @@ const SHOPPING_MALL_SEED_DATA = [
     dataStartRow: 2,
     columnMappings: {
       주문번호: 'orderNumber',
+      상품코드: 'productCode',
       상품명: 'productName',
       단품명: 'optionName',
       수량: 'quantity',
@@ -76,8 +82,10 @@ const SHOPPING_MALL_SEED_DATA = [
       우편번호: 'postalCode',
       주소: 'address',
       휴대폰번호: 'recipientMobile',
+      전화번호: 'recipientPhone',
       고객배송요청사항: 'memo',
       결제금액: 'paymentAmount',
+      공급금액: 'cost',
     },
     enabled: true,
   },

@@ -4,10 +4,10 @@
  * 발송 제외 패턴과 택배사 코드 매핑을 DB에 등록합니다.
  *
  * 실행 방법:
- * npx tsx tools/seed-settings.ts
+ * pnpm tsx tools/seed-settings.ts
  *
  * 또는 환경 변수와 함께:
- * DATABASE_URL="your_db_url" npx tsx tools/seed-settings.ts
+ * DATABASE_URL="your_db_url" pnpm tsx tools/seed-settings.ts
  */
 
 import './env-loader'

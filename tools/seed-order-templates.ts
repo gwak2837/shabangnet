@@ -5,10 +5,10 @@
  * 제조사별 발주서 템플릿을 DB에 등록합니다.
  *
  * 실행 방법:
- * npx tsx tools/seed-order-templates.ts
+ * pnpm tsx tools/seed-order-templates.ts
  *
  * 또는 환경 변수와 함께:
- * DATABASE_URL="your_db_url" npx tsx tools/seed-order-templates.ts
+ * DATABASE_URL="your_db_url" pnpm tsx tools/seed-order-templates.ts
  */
 
 import './env-loader'
