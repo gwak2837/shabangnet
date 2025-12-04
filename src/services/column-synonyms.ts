@@ -2,6 +2,7 @@
 
 import { and, eq } from 'drizzle-orm'
 
+import { isUniqueViolation } from '@/common/constants/postgres-errors'
 import { db } from '@/db/client'
 import { columnSynonym } from '@/db/schema/settings'
 
@@ -47,25 +48,36 @@ const CACHE_TTL = 5 * 60 * 1000
 /**
  * 동의어 추가
  */
-export async function addSynonym(data: { standardKey: string; synonym: string }): Promise<ColumnSynonym> {
-  const [newSynonym] = await db
-    .insert(columnSynonym)
-    .values({
-      id: `syn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      standardKey: data.standardKey,
-      synonym: data.synonym,
-      enabled: true,
-    })
-    .returning()
+export async function addSynonym(data: {
+  standardKey: string
+  synonym: string
+}): Promise<ColumnSynonym | { error: string }> {
+  try {
+    const [newSynonym] = await db
+      .insert(columnSynonym)
+      .values({
+        id: `syn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        standardKey: data.standardKey,
+        synonym: data.synonym,
+        enabled: true,
+      })
+      .returning()
 
-  // 캐시 무효화
-  await invalidateSynonymCache()
+    // 캐시 무효화
+    await invalidateSynonymCache()
 
-  return {
-    id: newSynonym.id,
-    standardKey: newSynonym.standardKey,
-    synonym: newSynonym.synonym,
-    enabled: newSynonym.enabled ?? true,
+    return {
+      id: newSynonym.id,
+      standardKey: newSynonym.standardKey,
+      synonym: newSynonym.synonym,
+      enabled: newSynonym.enabled ?? true,
+    }
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return { error: `이미 존재하는 동의어입니다: "${data.synonym}"` }
+    }
+    console.error('동의어 추가 에러:', error)
+    return { error: '동의어 추가 중 오류가 발생했습니다' }
   }
 }
 

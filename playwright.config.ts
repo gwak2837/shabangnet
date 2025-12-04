@@ -18,11 +18,11 @@ export default defineConfig({
   outputDir: './e2e/test-results',
 
   // 전역 타임아웃 설정
-  timeout: ms('1 minute'),
+  timeout: ms('5 seconds'),
 
   // 기대값 타임아웃
   expect: {
-    timeout: ms('10 seconds'),
+    timeout: ms('5 seconds'),
   },
 
   // 병렬 실행 설정
@@ -92,14 +92,14 @@ export default defineConfig({
     ? {
         command: `pnpm dotenv -e .env.test.local -- next dev --port ${E2E_TEST_PORT}`,
         url: `http://localhost:${E2E_TEST_PORT}`,
-        reuseExistingServer: true, // 이미 실행 중이면 재사용
+        reuseExistingServer: true,
         timeout: ms('30 seconds'),
         env: { NODE_ENV: 'test' },
       }
     : {
         command: `pnpm dotenv -e .env.test.local -- sh -c "next build && next start --port ${E2E_TEST_PORT}"`,
         url: `http://localhost:${E2E_TEST_PORT}`,
-        reuseExistingServer: false, // 항상 새 서버 시작
+        reuseExistingServer: false,
         timeout: ms('3 minutes'), // 빌드 시간 고려
         env: { NODE_ENV: 'test' },
       },

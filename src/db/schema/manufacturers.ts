@@ -34,7 +34,7 @@ export const product = pgTable('product', {
   productCode: varchar('product_code', { length: 100 }).notNull().unique(),
   productName: varchar('product_name', { length: 500 }).notNull(),
   optionName: varchar('option_name', { length: 255 }),
-  manufacturerId: text('manufacturer_id').references(() => manufacturer.id),
+  manufacturerId: text('manufacturer_id').references(() => manufacturer.id, { onDelete: 'set null' }),
   price: decimal('price', { precision: 12, scale: 2 }).default('0'),
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 원가
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -51,7 +51,7 @@ export const optionMapping = pgTable('option_mapping', {
   productCode: varchar('product_code', { length: 100 }).notNull(),
   optionName: varchar('option_name', { length: 255 }).notNull(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturer.id)
+    .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -64,7 +64,7 @@ export const optionMapping = pgTable('option_mapping', {
 export const orderTemplate = pgTable('order_template', {
   id: text('id').primaryKey(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturer.id)
+    .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull()
     .unique(),
   templateFileName: varchar('template_file_name', { length: 255 }),
@@ -83,7 +83,7 @@ export const orderTemplate = pgTable('order_template', {
 export const invoiceTemplate = pgTable('invoice_template', {
   id: text('id').primaryKey(),
   manufacturerId: text('manufacturer_id')
-    .references(() => manufacturer.id)
+    .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull()
     .unique(),
   orderNumberColumn: varchar('order_number_column', { length: 50 }).notNull(),
