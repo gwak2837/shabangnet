@@ -65,20 +65,41 @@ export default defineConfig({
     timezoneId: 'Asia/Seoul',
   },
 
-  // 프로젝트 설정 (브라우저별)
+  // 프로젝트 설정
   projects: [
+    // 1. 세션 저장용 setup (먼저 실행)
     {
-      name: 'chromium',
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    // 2. 로그인 테스트 (세션 없이 직접 로그인 테스트)
+    {
+      name: 'auth-tests',
+      testMatch: /auth\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: undefined, // 세션 없음
+      },
+    },
+    // 3. 나머지 테스트 (저장된 세션 재사용)
+    {
+      name: 'authenticated',
+      testIgnore: /auth\.(setup|spec)\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/user.json',
+      },
     },
   ],
 
   // 테스트 서버 실행 설정
   webServer: {
-    command: `pnpm dotenv -e .env.test.local -- next dev --port ${E2E_TEST_PORT}`,
+    command: `pnpm dotenv -e .env.test.local -- sh -c "next build && next start --port ${E2E_TEST_PORT}"`,
     url: `http://localhost:${E2E_TEST_PORT}`,
     reuseExistingServer: false, // 항상 새 서버 시작
-    timeout: ms('2 minutes'),
+    timeout: ms('3 minutes'), // 빌드 시간 고려
     env: { NODE_ENV: 'test' },
   },
 })

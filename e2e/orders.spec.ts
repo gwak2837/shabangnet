@@ -1,7 +1,7 @@
 import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('발주 생성/발송', () => {
-  test('발주 페이지에서 제조사별 주문 목록 확인', async ({ authenticatedPage: page }) => {
+  test('발주 페이지에서 제조사별 주문 목록 확인', async ({ page }) => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
@@ -20,7 +20,7 @@ test.describe('발주 생성/발송', () => {
     await expect(page.getByText(TEST_MANUFACTURERS.hanul.name, { exact: true })).toBeVisible({ timeout: 10000 })
   })
 
-  test('제조사별 발주서 다운로드', async ({ authenticatedPage: page }) => {
+  test('제조사별 발주서 다운로드', async ({ page }) => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
@@ -47,7 +47,7 @@ test.describe('발주 생성/발송', () => {
     }
   })
 
-  test('전체 발송 버튼 상태 확인', async ({ authenticatedPage: page }) => {
+  test('전체 발송 버튼 상태 확인', async ({ page }) => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const uploadFileInput = page.locator('input[type="file"]')
@@ -65,7 +65,7 @@ test.describe('발주 생성/발송', () => {
     await expect(sendAllButton).toBeVisible()
   })
 
-  test('발송 제외 주문 탭 확인', async ({ authenticatedPage: page }) => {
+  test('발송 제외 주문 탭 확인', async ({ page }) => {
     await page.goto('/orders')
 
     // 발송 제외 탭 클릭

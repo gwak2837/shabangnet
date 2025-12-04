@@ -1,7 +1,7 @@
 import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('전체 워크플로우 테스트', () => {
-  test('사방넷 업로드 → 제조사 분류 → 발주서 생성 전체 플로우', async ({ authenticatedPage: page }) => {
+  test('사방넷 업로드 → 제조사 분류 → 발주서 생성 전체 플로우', async ({ page }) => {
     // 1단계: 주문 업로드
     await page.goto('/upload')
     await expect(page.getByRole('heading', { name: '주문 업로드' })).toBeVisible()
@@ -41,7 +41,7 @@ test.describe('전체 워크플로우 테스트', () => {
     }
   })
 
-  test('쇼핑몰 변환 → 발주 페이지 확인 플로우', async ({ authenticatedPage: page }) => {
+  test('쇼핑몰 변환 → 발주 페이지 확인 플로우', async ({ page }) => {
     // 1단계: SK 쇼핑몰 파일 업로드
     await page.goto('/upload')
 
@@ -72,7 +72,7 @@ test.describe('전체 워크플로우 테스트', () => {
 })
 
 test.describe('대시보드 확인', () => {
-  test('대시보드에서 업로드 및 발주 현황 확인', async ({ authenticatedPage: page }) => {
+  test('대시보드에서 업로드 및 발주 현황 확인', async ({ page }) => {
     // 먼저 데이터 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
@@ -89,7 +89,7 @@ test.describe('대시보드 확인', () => {
 })
 
 test.describe('제조사 관리', () => {
-  test('제조사 목록 페이지 확인', async ({ authenticatedPage: page }) => {
+  test('제조사 목록 페이지 확인', async ({ page }) => {
     await page.goto('/manufacturers')
     await expect(page.getByRole('heading', { name: '제조사 관리' })).toBeVisible()
 
@@ -100,7 +100,7 @@ test.describe('제조사 관리', () => {
     // 제조사 목록에 하늘명인, 로뎀푸드, 고창베리세상 등이 있어야 함
   })
 
-  test('제조사 추가 모달 열기', async ({ authenticatedPage: page }) => {
+  test('제조사 추가 모달 열기', async ({ page }) => {
     await page.goto('/manufacturers')
 
     // 제조사 추가 버튼 클릭

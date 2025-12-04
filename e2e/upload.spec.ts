@@ -1,7 +1,7 @@
 import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('주문 업로드', () => {
-  test('사방넷 원본 파일 업로드 및 파싱', async ({ authenticatedPage: page }) => {
+  test('사방넷 원본 파일 업로드 및 파싱', async ({ page }) => {
     // 1. 업로드 페이지로 이동
     await page.goto('/upload')
     await expect(page.getByRole('heading', { name: '주문 업로드' })).toBeVisible()
@@ -29,7 +29,7 @@ test.describe('주문 업로드', () => {
     await expect(page.getByText(TEST_MANUFACTURERS.hanul.name, { exact: true })).toBeVisible()
   })
 
-  test('SK 쇼핑몰 파일 업로드 및 사방넷 양식 변환', async ({ authenticatedPage: page }) => {
+  test('SK 쇼핑몰 파일 업로드 및 사방넷 양식 변환', async ({ page }) => {
     // 1. 업로드 페이지로 이동
     await page.goto('/upload')
 
@@ -51,7 +51,7 @@ test.describe('주문 업로드', () => {
     await expect(page.getByText('SK스토아')).toBeVisible()
   })
 
-  test('삼성복지몰 파일 업로드 및 변환', async ({ authenticatedPage: page }) => {
+  test('삼성복지몰 파일 업로드 및 변환', async ({ page }) => {
     await page.goto('/upload')
 
     // 쇼핑몰 주문 탭으로 전환
@@ -72,7 +72,7 @@ test.describe('주문 업로드', () => {
     await expect(page.getByText('삼성복지몰')).toBeVisible()
   })
 
-  test('삼성카드몰 파일 업로드 및 변환', async ({ authenticatedPage: page }) => {
+  test('삼성카드몰 파일 업로드 및 변환', async ({ page }) => {
     await page.goto('/upload')
 
     // 쇼핑몰 주문 탭으로 전환

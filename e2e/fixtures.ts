@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import path from 'path'
 
 // 테스트 데이터 경로
@@ -37,31 +37,6 @@ export const TEST_USER = {
   password: 'Test1234!',
 }
 
-// 로그인 헬퍼 함수
-async function login(page: import('@playwright/test').Page) {
-  await page.goto('/login')
-
-  // 이메일 입력 (id로 선택)
-  await page.locator('#email').fill(TEST_USER.email)
-
-  // 비밀번호 입력 (id로 선택 - 비밀번호 보기 버튼과 구분)
-  await page.locator('#password').fill(TEST_USER.password)
-
-  // 로그인 버튼 클릭
-  await page.getByRole('button', { name: '로그인', exact: true }).click()
-
-  // 대시보드로 리다이렉트 대기
-  await expect(page).toHaveURL(/\/(dashboard|upload|orders|manufacturers)/, { timeout: 15000 })
-}
-
-// 커스텀 테스트 픽스처 - 자동 로그인
-export const test = base.extend<{
-  authenticatedPage: import('@playwright/test').Page
-}>({
-  authenticatedPage: async ({ page }, runFixture) => {
-    await login(page)
-    await runFixture(page)
-  },
-})
-
-export { expect }
+// 기본 test와 expect를 그대로 export
+// storageState를 사용하므로 별도의 authenticatedPage 픽스처 불필요
+export { expect, test }
