@@ -7,7 +7,7 @@
  * pnpm tsx tools/seed-product-mappings.ts
  */
 
-import './env-loader'
+import './server-only'
 
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'

@@ -7,7 +7,7 @@
  * pnpm tsx tools/seed-test-user.ts
  */
 
-import './env-loader'
+import './server-only'
 
 import { scrypt } from '@noble/hashes/scrypt.js'
 import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'

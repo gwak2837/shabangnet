@@ -1,4 +1,6 @@
-import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { expect, test } from '@playwright/test'
+
+import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('발주 생성/발송', () => {
   test('발주 페이지에서 제조사별 주문 목록 확인', async ({ page }) => {

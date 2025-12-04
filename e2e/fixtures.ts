@@ -1,4 +1,3 @@
-import { expect, test } from '@playwright/test'
 import path from 'path'
 
 // 테스트 데이터 경로
@@ -36,7 +35,3 @@ export const TEST_USER = {
   email: 'test@e2e.local',
   password: 'Test1234!',
 }
-
-// 기본 test와 expect를 그대로 export
-// storageState를 사용하므로 별도의 authenticatedPage 픽스처 불필요
-export { expect, test }

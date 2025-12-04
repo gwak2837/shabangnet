@@ -1,4 +1,6 @@
-import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { expect, test } from '@playwright/test'
+
+import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('전체 워크플로우 테스트', () => {
   test('사방넷 업로드 → 제조사 분류 → 발주서 생성 전체 플로우', async ({ page }) => {

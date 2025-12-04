@@ -9,7 +9,7 @@ import { expect, test as setup } from '@playwright/test'
 
 import { TEST_USER } from './fixtures'
 
-const authFile = '.auth/user.json'
+const authFile = 'e2e/.auth/user.json'
 
 setup('authenticate', async ({ page }) => {
   // 로그인 페이지로 이동

@@ -11,7 +11,7 @@
  * DATABASE_URL="your_db_url" pnpm tsx tools/seed-order-templates.ts
  */
 
-import './env-loader'
+import './server-only'
 
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'

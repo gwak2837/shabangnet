@@ -58,20 +58,15 @@ async function globalSetup() {
   ]
 
   for (const script of seedScripts) {
-    console.log(`   실행: ${script}`)
+    console.log(`   ${script}`)
     try {
       const output = execSync(`pnpm tsx tools/${script}`, {
         cwd: path.join(__dirname, '..'),
         encoding: 'utf-8',
-        env: {
-          ...process.env,
-          // 테스트 DB URL 직접 전달
-          SUPABASE_POSTGRES_URL_NON_POOLING: process.env.SUPABASE_POSTGRES_URL_NON_POOLING,
-        },
+        env: process.env,
       })
-      // 시드 스크립트 출력 표시 (첫 2줄만)
-      const lines = output.trim().split('\n').slice(0, 2)
-      if (lines.length > 0) console.log(`      ${lines.join('\n      ')}`)
+      const lines = output.trim().split('\n').slice(0, 1)
+      if (lines.length > 0) console.log(`   ${lines.join('\n   ')}`)
     } catch {
       // 이미 존재하는 데이터는 에러로 처리하지 않음
     }

@@ -7,7 +7,7 @@
  * pnpm tsx tools/seed-column-synonyms.ts
  */
 
-import './env-loader'
+import './server-only'
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'

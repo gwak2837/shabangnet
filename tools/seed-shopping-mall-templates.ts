@@ -7,7 +7,7 @@
  * pnpm tsx tools/seed-shopping-mall-templates.ts
  */
 
-import './env-loader'
+import './server-only'
 
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'

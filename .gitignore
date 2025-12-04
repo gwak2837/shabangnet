@@ -212,5 +212,5 @@ public/data
 # Playwright
 e2e/test-results
 e2e/playwright-report
+e2e/.auth/
 playwright/.cache
-.auth/

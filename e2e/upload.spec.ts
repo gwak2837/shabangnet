@@ -1,4 +1,6 @@
-import { expect, test, TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { expect, test } from '@playwright/test'
+
+import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
 
 test.describe('주문 업로드', () => {
   test('사방넷 원본 파일 업로드 및 파싱', async ({ page }) => {
