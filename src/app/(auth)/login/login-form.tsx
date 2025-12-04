@@ -20,7 +20,14 @@ export function LoginForm() {
   const [error, setError] = useState('')
   const [isPending, setIsPending] = useState(false)
 
-  const handleSuccess = useCallback((user: Record<string, unknown>) => {
+  const handleSuccess = useCallback(
+    (user: Record<string, unknown>, twoFactorRedirect?: boolean) => {
+      // 2FA가 필요한 경우 MFA 페이지로 이동
+      if (twoFactorRedirect) {
+        routerRef.current.push('/mfa')
+        return
+      }
+
     if (!user.onboardingComplete) {
       routerRef.current.push('/onboarding')
       return
@@ -33,7 +40,9 @@ export function LoginForm() {
     }
 
     routerRef.current.push('/dashboard')
-  }, [])
+    },
+    [],
+  )
 
   async function handlePasskeyLogin() {
     setError('')
@@ -48,7 +57,8 @@ export function LoginForm() {
       }
 
       if (result.data?.user) {
-        handleSuccess(result.data.user)
+        // 패스키 로그인은 MFA를 대체하므로 twoFactorRedirect는 false
+        handleSuccess(result.data.user, false)
       } else {
         router.push('/dashboard')
       }
@@ -97,7 +107,9 @@ export function LoginForm() {
       }
 
       if (result.data?.user) {
-        handleSuccess(result.data.user)
+        // better-auth에서 2FA가 필요한 경우 twoFactorRedirect가 true
+        const twoFactorRedirect = (result.data as { twoFactorRedirect?: boolean }).twoFactorRedirect
+        handleSuccess(result.data.user, twoFactorRedirect)
       } else {
         router.push('/dashboard')
       }
