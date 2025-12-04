@@ -5,13 +5,13 @@ import { nextCookies } from 'better-auth/next-js'
 import { twoFactor } from 'better-auth/plugins/two-factor'
 import 'server-only'
 
-import { SITE_CONFIG } from '@/common/constants'
+import { getBaseURL } from '@/common/constants'
 import { env } from '@/common/env'
 import { db } from '@/db/client'
 import * as schema from '@/db/schema/auth'
 import { sec } from '@/utils/sec'
 
-const baseURL = env.NEXT_PUBLIC_APP_URL
+const baseURL = getBaseURL()
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -94,7 +94,7 @@ export const auth = betterAuth({
       },
     }),
     passkey({
-      rpID: process.env.NODE_ENV === 'production' ? SITE_CONFIG.url : 'localhost',
+      rpID: process.env.NODE_ENV === 'production' ? new URL(baseURL).hostname : 'localhost',
       rpName: 'daonfnc',
       origin: baseURL,
     }),

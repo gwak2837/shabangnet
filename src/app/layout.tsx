@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
 import { Toaster } from 'sonner'
 
-import { SITE_CONFIG } from '@/common/constants'
+import { getBaseURL, SITE_CONFIG } from '@/common/constants'
+import { env } from '@/common/env'
 import { QueryProvider } from '@/providers/query-provider'
-import { getOrigin } from '@/utils/config'
 
 import './globals.css'
 
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_CONFIG.shortName}`,
   },
   description: SITE_CONFIG.description,
-  metadataBase: new URL(getOrigin()),
+  metadataBase: new URL(getBaseURL()),
   robots: {
     index: false,
     follow: false,
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: SITE_CONFIG.name,
     description: SITE_CONFIG.description,
-    url: SITE_CONFIG.url,
+    url: env.NEXT_PUBLIC_APP_URL,
     siteName: SITE_CONFIG.shortName,
     locale: SITE_CONFIG.locale,
     type: 'website',

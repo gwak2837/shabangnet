@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { passkeyMethods, twoFactor } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 import { getFirstPasswordError, validatePassword } from '@/utils/password'
 
 import { setPasswordAction } from './actions/mfa'
@@ -110,7 +110,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await twoFactor.enable({
+      const result = await authClient.twoFactor.enable({
         password: totpSetupPassword,
         fetchOptions: {
           onSuccess: (ctx) => {
@@ -146,7 +146,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await twoFactor.verifyTotp({
+      const result = await authClient.twoFactor.verifyTotp({
         code: totpCode,
         fetchOptions: {
           onSuccess: () => {
@@ -173,7 +173,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await twoFactor.disable({
+      const result = await authClient.twoFactor.disable({
         password: disableTotpCode,
         fetchOptions: {
           onSuccess: () => {
@@ -204,7 +204,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await passkeyMethods.addPasskey({
+      const result = await authClient.passkey.addPasskey({
         name: passkeyName || undefined,
         fetchOptions: {
           onSuccess: () => {
@@ -238,7 +238,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await passkeyMethods.deletePasskey({
+      const result = await authClient.passkey.deletePasskey({
         id,
         fetchOptions: {
           onSuccess: () => {
@@ -273,7 +273,7 @@ export function MfaForm({ settings }: MfaFormProps) {
     setError(null)
 
     try {
-      const result = await twoFactor.generateBackupCodes({
+      const result = await authClient.twoFactor.generateBackupCodes({
         password: recoveryPassword,
         fetchOptions: {
           onSuccess: (ctx) => {

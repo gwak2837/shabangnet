@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { signIn } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 
 interface GoogleOAuthButtonProps {
   disabled?: boolean
@@ -18,7 +18,7 @@ export function GoogleOAuthButton({ disabled, label = 'Google로 로그인' }: G
     setIsPending(true)
 
     try {
-      await signIn.social({
+      await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/dashboard',
       })

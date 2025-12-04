@@ -1,10 +1,11 @@
 'use server'
 
-import 'server-only'
 import { eq } from 'drizzle-orm'
 import ms from 'ms'
+import 'server-only'
 import { z } from 'zod'
 
+import { getBaseURL } from '@/common/constants'
 import { db } from '@/db/client'
 import { user, verification } from '@/db/schema/auth'
 import { sendEmail } from '@/lib/email/send'
@@ -70,8 +71,7 @@ export async function requestPasswordReset(prevState: unknown, formData: FormDat
     })
     .onConflictDoNothing()
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const resetUrl = `${appUrl}/reset-password?token=${token}`
+  const resetUrl = `${getBaseURL()}/reset-password?token=${token}`
 
   await sendEmail({
     to: normalizedEmail,

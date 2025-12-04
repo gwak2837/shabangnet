@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signIn } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 
 export function LoginForm() {
   const router = useRouter()
@@ -46,7 +46,7 @@ export function LoginForm() {
     setIsPending(true)
 
     try {
-      const result = await signIn.passkey()
+      const result = await authClient.signIn.passkey()
 
       if (result.error) {
         setError(result.error.message || '패스키 인증에 실패했어요')
@@ -92,7 +92,7 @@ export function LoginForm() {
     setIsPending(true)
 
     try {
-      const result = await signIn.email({
+      const result = await authClient.signIn.email({
         email,
         password,
         rememberMe,

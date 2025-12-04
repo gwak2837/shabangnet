@@ -1,5 +1,20 @@
+export function getBaseURL(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000'
+  }
+
+  return 'https://daonfnc.vercel.app'
+}
+
 export const SITE_CONFIG = {
-  url: 'https://daonfnc.vercel.app',
   name: '다온 발주 자동화',
   shortName: '다온',
   description: '주문 취합 및 제조사별 발주 자동화 시스템',

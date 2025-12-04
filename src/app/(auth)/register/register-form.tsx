@@ -11,7 +11,7 @@ import { COMMON_PASSWORDS } from '@/common/constants/common-passwords'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signUp } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 import { getFirstPasswordError, PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
 export function RegisterForm() {
@@ -51,7 +51,7 @@ export function RegisterForm() {
     setIsPending(true)
 
     try {
-      const result = await signUp.email({
+      const result = await authClient.signUp.email({
         email,
         password: formPassword,
         name,

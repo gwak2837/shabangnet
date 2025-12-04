@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-import { passkeyMethods, signOut, twoFactor, useSession } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 
 import { OnboardingStep } from './common'
 import { Step1ChooseMethod } from './step-1-choose-method'
@@ -20,7 +20,7 @@ import { Step4BackupCodes } from './step-4-backup-codes'
  */
 export function OnboardingFlow() {
   const router = useRouter()
-  const { data: session, isPending: isSessionPending, refetch: refetchSession } = useSession()
+  const { data: session, isPending: isSessionPending, refetch: refetchSession } = authClient.useSession()
   const [isPending, setIsPending] = useState(false)
   const [step, setStep] = useState(OnboardingStep.Step1_ChooseMethod)
   const [error, setError] = useState('')
@@ -35,7 +35,7 @@ export function OnboardingFlow() {
   useEffect(() => {
     async function checkExistingPasskey() {
       try {
-        const result = await passkeyMethods.listUserPasskeys()
+        const result = await authClient.passkey.listUserPasskeys()
         if (result.data && result.data.length > 0) {
           setHasExistingPasskey(true)
         }
@@ -55,7 +55,7 @@ export function OnboardingFlow() {
     const password = formData.get('password') as string
 
     try {
-      const result = await twoFactor.enable({ password })
+      const result = await authClient.twoFactor.enable({ password })
 
       if (result.error) {
         setError(result.error.message || 'TOTP 설정에 실패했어요')
@@ -89,7 +89,7 @@ export function OnboardingFlow() {
     const code = formData.get('totpCode') as string
 
     try {
-      const result = await twoFactor.verifyTotp({ code })
+      const result = await authClient.twoFactor.verifyTotp({ code })
 
       if (result.error) {
         setError(result.error.message || '인증 코드가 올바르지 않아요')
@@ -113,7 +113,7 @@ export function OnboardingFlow() {
     setIsPending(true)
 
     try {
-      const result = await passkeyMethods.addPasskey({ name: userEmail })
+      const result = await authClient.passkey.addPasskey({ name: userEmail })
 
       if (result.error) {
         setError(result.error.message || '패스키 등록에 실패했어요')
@@ -158,7 +158,7 @@ export function OnboardingFlow() {
   }
 
   async function handleLogout() {
-    await signOut()
+    await authClient.signOut()
     window.location.href = '/login'
   }
 

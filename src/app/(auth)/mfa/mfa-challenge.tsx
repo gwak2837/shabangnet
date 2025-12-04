@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signIn, twoFactor } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 
 type MfaMethod = 'passkey' | 'recovery' | 'totp'
 
@@ -33,7 +33,7 @@ export function MfaChallenge() {
     setIsPending(true)
 
     try {
-      const result = await twoFactor.verifyTotp({
+      const result = await authClient.twoFactor.verifyTotp({
         code: totpCode,
         trustDevice,
         fetchOptions: {
@@ -62,7 +62,7 @@ export function MfaChallenge() {
     setIsPending(true)
 
     try {
-      const result = await signIn.passkey({
+      const result = await authClient.signIn.passkey({
         fetchOptions: {
           onSuccess: () => {
             router.push('/dashboard')
@@ -94,7 +94,7 @@ export function MfaChallenge() {
     setIsPending(true)
 
     try {
-      const result = await twoFactor.verifyBackupCode({
+      const result = await authClient.twoFactor.verifyBackupCode({
         code: recoveryCode,
         fetchOptions: {
           onSuccess: () => {

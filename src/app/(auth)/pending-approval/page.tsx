@@ -3,11 +3,11 @@
 import { Clock, LogOut } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { signOut } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client'
 
 export default function PendingApprovalPage() {
   async function handleLogout() {
-    await signOut({
+    await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
           window.location.href = '/login'

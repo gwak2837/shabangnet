@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm'
 import ms from 'ms'
 import { headers } from 'next/headers'
 
+import { getBaseURL } from '@/common/constants'
+import { env } from '@/common/env'
 import { db } from '@/db/client'
 import { user, verification } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
@@ -84,8 +86,7 @@ export async function sendVerificationEmail(): Promise<SendVerificationResult> {
     expiresAt: expires,
   })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const verifyUrl = `${appUrl}/verify-email?token=${token}`
+  const verifyUrl = `${getBaseURL()}/verify-email?token=${token}`
 
   try {
     await sendEmail({
