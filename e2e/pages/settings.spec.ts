@@ -194,6 +194,9 @@ test.describe('주문 설정 페이지', () => {
       if (await toggle.isEnabled()) {
         await toggle.click()
         await page.waitForTimeout(500)
+        // 원래 상태로 복원
+        await toggle.click()
+        await page.waitForTimeout(500)
       }
     })
 
@@ -296,6 +299,9 @@ test.describe('주문 설정 페이지', () => {
       if (await toggle.isVisible({ timeout: 2000 }).catch(() => false)) {
         await toggle.click()
         await page.waitForTimeout(500)
+        // 원래 상태로 복원
+        await toggle.click()
+        await page.waitForTimeout(500)
       }
     })
   })
@@ -355,6 +361,11 @@ test.describe('주문 설정 페이지', () => {
       if (await firstRow.isVisible({ timeout: 3000 }).catch(() => false)) {
         const toggle = firstRow.locator('button[role="switch"]')
         if (await toggle.isVisible()) {
+          // 토글 클릭
+          await toggle.click()
+          await page.waitForTimeout(500)
+
+          // 원래 상태로 복원 (다른 테스트에 영향 방지)
           await toggle.click()
           await page.waitForTimeout(500)
         }

@@ -1,6 +1,7 @@
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { nextCookies } from 'better-auth/next-js'
 import { twoFactor } from 'better-auth/plugins/two-factor'
 import 'server-only'
 
@@ -80,6 +81,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    nextCookies(),
     twoFactor({
       issuer: 'daonfnc',
       totpOptions: {
