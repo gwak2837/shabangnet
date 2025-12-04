@@ -20,13 +20,12 @@ export function LoginForm() {
   const [error, setError] = useState('')
   const [isPending, setIsPending] = useState(false)
 
-  const handleSuccess = useCallback(
-    (user: Record<string, unknown>, twoFactorRedirect?: boolean) => {
-      // 2FA가 필요한 경우 MFA 페이지로 이동
-      if (twoFactorRedirect) {
-        routerRef.current.push('/mfa')
-        return
-      }
+  const handleSuccess = useCallback((user: Record<string, unknown>, twoFactorRedirect?: boolean) => {
+    // 2FA가 필요한 경우 MFA 페이지로 이동
+    if (twoFactorRedirect) {
+      routerRef.current.push('/mfa')
+      return
+    }
 
     if (!user.onboardingComplete) {
       routerRef.current.push('/onboarding')
@@ -40,9 +39,7 @@ export function LoginForm() {
     }
 
     routerRef.current.push('/dashboard')
-    },
-    [],
-  )
+  }, [])
 
   async function handlePasskeyLogin() {
     setError('')
@@ -122,22 +119,6 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 패스키 로그인 */}
-      <Button className="w-full" disabled={isPending} onClick={handlePasskeyLogin} type="button">
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
-        패스키로 로그인
-      </Button>
-
-      {/* 구분선 */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">또는</span>
-        </div>
-      </div>
-
       {/* 이메일/비밀번호 로그인 */}
       <form className="flex flex-col gap-4" onSubmit={handlePasswordLogin}>
         <div>
@@ -213,6 +194,10 @@ export function LoginForm() {
           <span className="bg-card px-2 text-muted-foreground">또는</span>
         </div>
       </div>
+      <Button className="w-full" disabled={isPending} onClick={handlePasskeyLogin} type="button">
+        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
+        패스키로 로그인
+      </Button>
       <GoogleOAuthButton disabled={isPending} />
       <p className="text-center text-sm text-muted-foreground">
         계정이 없으신가요?{' '}
