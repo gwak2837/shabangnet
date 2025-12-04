@@ -125,14 +125,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   }
 }
 
-/**
- * 발주서 이메일을 발송합니다.
- * @param manufacturerEmail 제조사 이메일
- * @param subject 메일 제목
- * @param body 메일 본문 (HTML)
- * @param attachments 첨부파일
- * @param metadata 추가 메타데이터 (제조사 ID, 발주서 ID 등)
- */
 export async function sendOrderEmail(
   manufacturerEmail: string,
   subject: string,
@@ -150,11 +142,6 @@ export async function sendOrderEmail(
   })
 }
 
-/**
- * SMTP 연결을 테스트합니다.
- * @param purpose SMTP 계정 용도
- * @returns 연결 성공 여부
- */
 export async function testSMTPConnection(
   purpose: SMTPAccountPurpose = 'system',
 ): Promise<{ success: boolean; error?: string }> {

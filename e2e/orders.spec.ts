@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { INPUT_FILES, SABANGNET_TEST_CASES } from './fixtures'
 
 test.describe('발주 생성/발송', () => {
   test('발주 페이지에서 제조사별 주문 목록 확인', async ({ page }) => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.sabangnet)
+    await fileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 발주 페이지로 이동
@@ -19,14 +19,15 @@ test.describe('발주 생성/발송', () => {
 
     // 제조사별 주문이 표시되어야 함
     // 주요 제조사 확인 (exact: true로 정확한 텍스트만 매칭)
-    await expect(page.getByText(TEST_MANUFACTURERS.hanul.name, { exact: true })).toBeVisible({ timeout: 10000 })
+    const hanul = SABANGNET_TEST_CASES.find((m) => m.manufacturer === '하늘명인')!
+    await expect(page.getByText(hanul.manufacturer, { exact: true })).toBeVisible({ timeout: 10000 })
   })
 
   test('제조사별 발주서 다운로드', async ({ page }) => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.sabangnet)
+    await fileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     await page.goto('/orders')
@@ -53,7 +54,7 @@ test.describe('발주 생성/발송', () => {
     // 테스트 전 사방넷 파일 업로드
     await page.goto('/upload')
     const uploadFileInput = page.locator('input[type="file"]')
-    await uploadFileInput.setInputFiles(TEST_FILES.sabangnet)
+    await uploadFileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     await page.goto('/orders')

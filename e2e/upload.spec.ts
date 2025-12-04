@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { INPUT_FILES, SABANGNET_TEST_CASES } from './fixtures'
 
 test.describe('주문 업로드', () => {
+  const getManufacturer = (name: string) => SABANGNET_TEST_CASES.find((m) => m.manufacturer === name)!
+
   test('사방넷 원본 파일 업로드 및 파싱', async ({ page }) => {
     // 1. 업로드 페이지로 이동
     await page.goto('/upload')
@@ -14,7 +16,7 @@ test.describe('주문 업로드', () => {
 
     // 3. 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.sabangnet)
+    await fileInput.setInputFiles(INPUT_FILES.sabangnet)
 
     // 4. 처리 완료 대기
     await expect(page.getByText('파일을 분석하고 있습니다')).toBeVisible({ timeout: 5000 })
@@ -26,9 +28,9 @@ test.describe('주문 업로드', () => {
 
     // 6. 제조사별 분류 결과 확인
     // 고창베리세상, 로뎀푸드, 하늘명인 등 주요 제조사가 표시되어야 함 (exact: true로 정확한 텍스트만)
-    await expect(page.getByText(TEST_MANUFACTURERS.gochang.name, { exact: true })).toBeVisible()
-    await expect(page.getByText(TEST_MANUFACTURERS.rodem.name, { exact: true })).toBeVisible()
-    await expect(page.getByText(TEST_MANUFACTURERS.hanul.name, { exact: true })).toBeVisible()
+    await expect(page.getByText(getManufacturer('고창베리세상').manufacturer, { exact: true })).toBeVisible()
+    await expect(page.getByText(getManufacturer('로뎀푸드').manufacturer, { exact: true })).toBeVisible()
+    await expect(page.getByText(getManufacturer('하늘명인').manufacturer, { exact: true })).toBeVisible()
   })
 
   test('SK 쇼핑몰 파일 업로드 및 사방넷 양식 변환', async ({ page }) => {
@@ -44,7 +46,7 @@ test.describe('주문 업로드', () => {
 
     // 4. 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.skOriginal)
+    await fileInput.setInputFiles(INPUT_FILES.skOriginal)
 
     // 5. 처리 완료 대기
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
@@ -65,7 +67,7 @@ test.describe('주문 업로드', () => {
 
     // 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.samsungWelfare)
+    await fileInput.setInputFiles(INPUT_FILES.samsungWelfare)
 
     // 처리 완료 대기
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
@@ -86,7 +88,7 @@ test.describe('주문 업로드', () => {
 
     // 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.samsungCard)
+    await fileInput.setInputFiles(INPUT_FILES.samsungCard)
 
     // 처리 완료 대기
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })

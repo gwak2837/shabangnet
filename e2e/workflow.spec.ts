@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 
-import { TEST_FILES, TEST_MANUFACTURERS } from './fixtures'
+import { INPUT_FILES, SABANGNET_TEST_CASES } from './fixtures'
+
+// 주요 제조사 조회 헬퍼
 
 test.describe('전체 워크플로우 테스트', () => {
   test('사방넷 업로드 → 제조사 분류 → 발주서 생성 전체 플로우', async ({ page }) => {
@@ -10,7 +12,7 @@ test.describe('전체 워크플로우 테스트', () => {
 
     // 사방넷 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.sabangnet)
+    await fileInput.setInputFiles(INPUT_FILES.sabangnet)
 
     // 업로드 결과 대기
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
@@ -26,7 +28,9 @@ test.describe('전체 워크플로우 테스트', () => {
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
 
     // 3단계: 특정 제조사(하늘명인)의 발주서 다운로드 테스트
-    const hanulRow = page.locator('tr').filter({ hasText: TEST_MANUFACTURERS.hanul.name })
+    const hanul = SABANGNET_TEST_CASES.find((m) => m.manufacturer === '하늘명인')!
+    const hanulRow = page.locator('tr').filter({ hasText: hanul.manufacturer })
+
     if (await hanulRow.isVisible()) {
       // 해당 제조사 행에서 다운로드 버튼 클릭
       const downloadButton = hanulRow.getByRole('button', { name: /다운로드/i })
@@ -38,7 +42,7 @@ test.describe('전체 워크플로우 테스트', () => {
         // 파일명 검증
         const fileName = download.suggestedFilename()
         expect(fileName).toContain('발주서')
-        expect(fileName).toContain(TEST_MANUFACTURERS.hanul.name)
+        expect(fileName).toContain(hanul.manufacturer)
       }
     }
   })
@@ -56,7 +60,7 @@ test.describe('전체 워크플로우 테스트', () => {
 
     // 파일 업로드
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.skOriginal)
+    await fileInput.setInputFiles(INPUT_FILES.skOriginal)
 
     // 업로드 결과 대기
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
@@ -78,7 +82,7 @@ test.describe('대시보드 확인', () => {
     // 먼저 데이터 업로드
     await page.goto('/upload')
     const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(TEST_FILES.sabangnet)
+    await fileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 대시보드로 이동
