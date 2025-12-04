@@ -2,6 +2,7 @@ import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { twoFactor } from 'better-auth/plugins/two-factor'
+import 'server-only'
 
 import { SITE_CONFIG } from '@/common/constants'
 import { env } from '@/common/env'

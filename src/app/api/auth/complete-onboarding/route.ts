@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 import { db } from '@/db/client'
-import { user } from '@/db/schema/auth'
+import { passkey, user } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
 
 export async function POST() {
@@ -12,6 +12,14 @@ export async function POST() {
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const hasTOTP = session.user.twoFactorEnabled === true
+    const userPasskeys = await db.select().from(passkey).where(eq(passkey.userId, session.user.id))
+    const hasPasskey = userPasskeys.length > 0
+
+    if (!hasTOTP && !hasPasskey) {
+      return NextResponse.json({ error: '2FA 설정이 필요합니다' }, { status: 400 })
     }
 
     // 온보딩 완료 업데이트

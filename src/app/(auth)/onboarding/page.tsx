@@ -6,17 +6,14 @@ import { auth } from '@/lib/auth'
 import { OnboardingFlow } from './onboarding-flow'
 
 export default async function OnboardingPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const session = await auth.api.getSession({ headers: await headers() })
 
   if (!session?.user) {
     redirect('/login')
   }
 
-  const user = session.user as { onboardingComplete?: boolean; status?: string }
+  const { user } = session
 
-  // 이미 온보딩이 완료된 경우
   if (user.onboardingComplete) {
     if (user.status === 'pending') {
       redirect('/pending-approval')
@@ -34,4 +31,3 @@ export default async function OnboardingPage() {
     </>
   )
 }
-

@@ -1,7 +1,18 @@
 'use client'
 
-import { AlertTriangle, CheckCircle2, Key, KeyRound, Loader2, Shield, Smartphone, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Copy,
+  Key,
+  KeyRound,
+  Loader2,
+  Shield,
+  Smartphone,
+  Trash2,
+} from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
 import { Button } from '@/components/ui/button'
@@ -65,6 +76,10 @@ export function MfaForm({ settings }: MfaFormProps) {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordTouched, setPasswordTouched] = useState(false)
+
+  // Copy State
+  const [copiedSecret, setCopiedSecret] = useState(false)
+  const [copiedRecoveryCodes, setCopiedRecoveryCodes] = useState(false)
 
   useEffect(() => {
     if (success) {
@@ -333,6 +348,26 @@ export function MfaForm({ settings }: MfaFormProps) {
     })
   }
 
+  const handleCopySecret = useCallback(async (secret: string) => {
+    try {
+      await navigator.clipboard.writeText(secret)
+      setCopiedSecret(true)
+      setTimeout(() => setCopiedSecret(false), 2000)
+    } catch {
+      setError('클립보드에 복사할 수 없습니다.')
+    }
+  }, [])
+
+  const handleCopyRecoveryCodes = useCallback(async (codes: string[]) => {
+    try {
+      await navigator.clipboard.writeText(codes.join('\n'))
+      setCopiedRecoveryCodes(true)
+      setTimeout(() => setCopiedRecoveryCodes(false), 2000)
+    } catch {
+      setError('클립보드에 복사할 수 없습니다.')
+    }
+  }, [])
+
   return (
     <Card className="border-slate-200 bg-card shadow-sm py-6">
       <CardHeader>
@@ -563,9 +598,24 @@ export function MfaForm({ settings }: MfaFormProps) {
               {totpUri && (
                 <div className="flex flex-col gap-2">
                   <Label>수동 입력용 키</Label>
-                  <code className="block rounded bg-muted p-2 text-center text-sm font-mono">
-                    {extractSecret(totpUri)}
-                  </code>
+                  <div className="relative group">
+                    <code className="block rounded-lg bg-slate-100 dark:bg-slate-800 px-4 py-3 pr-12 text-center text-sm font-mono tracking-wider select-all border border-slate-200 dark:border-slate-700">
+                      {extractSecret(totpUri)}
+                    </code>
+                    <button
+                      aria-label="비밀키 복사"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      onClick={() => handleCopySecret(extractSecret(totpUri))}
+                      type="button"
+                    >
+                      {copiedSecret ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {copiedSecret && (
+                    <p className="text-xs text-green-600 text-center animate-in fade-in duration-200">
+                      클립보드에 복사되었습니다
+                    </p>
+                  )}
                 </div>
               )}
               <div className="flex flex-col gap-2">
@@ -601,6 +651,23 @@ export function MfaForm({ settings }: MfaFormProps) {
                   </code>
                 ))}
               </div>
+              <button
+                className="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300"
+                onClick={() => handleCopyRecoveryCodes(recoveryCodes)}
+                type="button"
+              >
+                {copiedRecoveryCodes ? (
+                  <>
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-green-600">복사 완료</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span>모든 코드 복사</span>
+                  </>
+                )}
+              </button>
               <DialogFooter>
                 <Button
                   onClick={() => {
@@ -608,6 +675,7 @@ export function MfaForm({ settings }: MfaFormProps) {
                     setRecoveryCodes(null)
                     setTotpCode('')
                     setTotpUri(null)
+                    setCopiedRecoveryCodes(false)
                     window.location.reload()
                   }}
                 >
@@ -676,11 +744,29 @@ export function MfaForm({ settings }: MfaFormProps) {
                   </code>
                 ))}
               </div>
+              <button
+                className="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300"
+                onClick={() => handleCopyRecoveryCodes(newRecoveryCodes)}
+                type="button"
+              >
+                {copiedRecoveryCodes ? (
+                  <>
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-green-600">복사 완료</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span>모든 코드 복사</span>
+                  </>
+                )}
+              </button>
               <DialogFooter>
                 <Button
                   onClick={() => {
                     setShowRecoveryCodes(false)
                     setNewRecoveryCodes(null)
+                    setCopiedRecoveryCodes(false)
                     window.location.reload()
                   }}
                 >
