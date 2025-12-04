@@ -16,15 +16,7 @@ export function ForgotPasswordForm() {
       <form action={dispatch} className="flex flex-col gap-6">
         <div>
           <Label htmlFor="email">이메일</Label>
-          <Input
-            autoComplete="email"
-            className="mt-2"
-            id="email"
-            name="email"
-            required
-            type="email"
-            variant="glass"
-          />
+          <Input autoComplete="email" className="mt-2" id="email" name="email" required type="email" variant="glass" />
         </div>
         {state && 'error' in state && <div className="text-sm text-destructive">{state.error}</div>}
         {state && 'success' in state && <div className="text-sm text-emerald-500">{state.success}</div>}

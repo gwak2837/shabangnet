@@ -66,10 +66,7 @@ export default function LogsPage() {
       order.address,
     ])
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n')
+    const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))].join('\n')
 
     // BOM 추가하여 한글 깨짐 방지
     const bom = '\uFEFF'

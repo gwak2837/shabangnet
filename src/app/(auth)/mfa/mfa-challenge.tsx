@@ -129,7 +129,7 @@ export function MfaChallenge() {
       {/* 복구 코드 경고 배너 */}
       {recoveryLogin && (
         <div className="glass-button flex items-center gap-3 rounded-lg p-4 text-amber-700 dark:text-amber-300">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+          <AlertTriangle className="h-5 w-5 shrink-0" />
           <div className="text-sm">
             <p className="font-medium">복구 코드로 로그인했습니다</p>
             <p className="mt-1 opacity-80">보안 설정을 점검해주세요.</p>
@@ -297,4 +297,3 @@ export function MfaChallenge() {
     </div>
   )
 }
-
