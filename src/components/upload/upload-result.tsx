@@ -228,7 +228,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             )}
 
             <div className="mt-4 flex items-center gap-4">
-              <Link href="/products">
+              <Link href="/product">
                 <Button className="border-rose-300 text-rose-700 hover:bg-rose-100" size="sm" variant="outline">
                   상품 매핑 관리로 이동
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -247,7 +247,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             사방넷 양식 다운로드
           </Button>
         )}
-        <Link href="/orders">
+        <Link href="/order">
           <Button className="bg-slate-900 hover:bg-slate-800">
             발주 생성으로 이동
             <ArrowRight className="ml-2 h-4 w-4" />

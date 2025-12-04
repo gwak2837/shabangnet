@@ -58,7 +58,7 @@ test.describe.serial('쇼핑몰 주문 변환 워크플로우', () => {
         }
 
         // 발주 페이지로 이동
-        await page.goto('/orders')
+        await page.goto('/order')
         await expect(page.getByRole('heading', { name: '발주 생성/발송' })).toBeVisible()
 
         // 테이블 로드 대기
@@ -106,7 +106,7 @@ test.describe.serial('쇼핑몰 변환 후 발주서 생성', () => {
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 발주 페이지에서 결과 확인
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
 
     // 테이블에 데이터가 있는지 확인
@@ -134,7 +134,7 @@ test.describe.serial('쇼핑몰 변환 후 발주서 생성', () => {
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 발주 페이지에서 결과 확인
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
   })
 
@@ -157,7 +157,7 @@ test.describe.serial('쇼핑몰 변환 후 발주서 생성', () => {
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 발주 페이지에서 결과 확인
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
   })
 })

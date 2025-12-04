@@ -25,7 +25,7 @@ async function fetchUsers(params: UserListParams): Promise<UserListResult> {
     searchParams.set('limit', String(params.limit))
   }
 
-  const response = await fetch(`/api/users?${searchParams.toString()}`)
+  const response = await fetch(`/api/user?${searchParams.toString()}`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch users')

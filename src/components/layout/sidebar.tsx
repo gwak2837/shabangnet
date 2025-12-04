@@ -35,7 +35,7 @@ const mainNavItems = [
   },
   {
     title: '발주 생성',
-    href: '/orders',
+    href: '/order',
     icon: FileSpreadsheet,
   },
   {
@@ -49,25 +49,25 @@ const managementNavItems = [
   {
     title: '제조사 관리',
     description: '거래처 연락처, 이메일, 발주 양식 설정',
-    href: '/manufacturers',
+    href: '/manufacturer',
     icon: Building2,
   },
   {
     title: '상품 매핑',
     description: '상품코드 → 제조사 기본 연결',
-    href: '/products',
+    href: '/product',
     icon: Package,
   },
   {
     title: '옵션 매핑',
     description: '상품코드, 옵션명 → 제조사 우선 연결',
-    href: '/option-mappings',
+    href: '/option-mapping',
     icon: Settings2,
   },
   {
     title: '발송 로그',
     description: '이메일 발송 성공/실패 이력 조회',
-    href: '/logs',
+    href: '/log',
     icon: FileText,
   },
   {
@@ -79,7 +79,7 @@ const managementNavItems = [
   {
     title: '사용자 관리',
     description: '사용자 가입 승인 및 관리 (관리자 전용)',
-    href: '/users',
+    href: '/user',
     icon: Users,
   },
 ]

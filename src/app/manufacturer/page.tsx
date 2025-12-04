@@ -9,8 +9,8 @@ import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.typ
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
-import { ManufacturerModal } from '@/components/manufacturers/manufacturer-modal'
-import { ManufacturerTable } from '@/components/manufacturers/manufacturer-table'
+import { ManufacturerModal } from '@/components/manufacturer/manufacturer-modal'
+import { ManufacturerTable } from '@/components/manufacturer/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useServerAction } from '@/hooks/use-server-action'

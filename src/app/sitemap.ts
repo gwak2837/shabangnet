@@ -9,13 +9,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '',
     '/dashboard',
     '/upload',
-    '/orders',
-    '/manufacturers',
-    '/products',
-    '/option-mappings',
+    '/order',
+    '/manufacturer',
+    '/product',
+    '/option-mapping',
     '/invoice-convert',
     '/settlement',
-    '/logs',
+    '/log',
     '/settings',
   ]
 

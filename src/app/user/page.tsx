@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
-import { UserTable } from '@/components/users/user-table'
+import { UserTable } from '@/components/user/user-table'
 import { useUsers } from '@/hooks/use-users'
 import { type UserStatus } from '@/services/users'
 

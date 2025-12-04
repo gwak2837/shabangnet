@@ -39,7 +39,7 @@ test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
 
   test('2. 제조사별 분류 정확성 검증', async ({ page }) => {
     // 발주 페이지로 이동
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.getByRole('heading', { name: '발주 생성/발송' })).toBeVisible()
 
     // 테이블 로드 대기
@@ -64,7 +64,7 @@ test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
       }
 
       // 발주 페이지로 이동
-      await page.goto('/orders')
+      await page.goto('/order')
       await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
 
       // 해당 제조사 행 찾기
@@ -117,7 +117,7 @@ test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
 
   // 주문 건수만 검증하는 제조사들
   test('4. 예상 출력 파일 없는 제조사 주문 건수 확인', async ({ page }) => {
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
 
     // 몇 개의 대표 제조사만 확인
@@ -139,7 +139,7 @@ test.describe.serial('발주서 일괄 다운로드 테스트', () => {
     // 이 테스트는 시간이 오래 걸리므로 기본적으로 스킵
     // 필요시 test.skip()을 제거하고 실행
 
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.locator('table')).toBeVisible({ timeout: 15000 })
 
     // 모든 다운로드 버튼 찾기

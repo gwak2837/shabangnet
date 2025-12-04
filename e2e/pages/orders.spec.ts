@@ -11,7 +11,7 @@ test.describe('발주 생성/발송', () => {
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
     // 발주 페이지로 이동
-    await page.goto('/orders')
+    await page.goto('/order')
     await expect(page.getByRole('heading', { name: '발주 생성/발송' })).toBeVisible()
 
     // 발송 대상 탭이 선택되어 있는지 확인
@@ -30,7 +30,7 @@ test.describe('발주 생성/발송', () => {
     await fileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
-    await page.goto('/orders')
+    await page.goto('/order')
 
     // 테이블이 로드될 때까지 대기
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
@@ -57,7 +57,7 @@ test.describe('발주 생성/발송', () => {
     await uploadFileInput.setInputFiles(INPUT_FILES.sabangnet)
     await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 30000 })
 
-    await page.goto('/orders')
+    await page.goto('/order')
 
     // 전체 발송 버튼 확인
     const sendAllButton = page.getByRole('button', { name: /전체 발송/ })
@@ -69,7 +69,7 @@ test.describe('발주 생성/발송', () => {
   })
 
   test('발송 제외 주문 탭 확인', async ({ page }) => {
-    await page.goto('/orders')
+    await page.goto('/order')
 
     // 발송 제외 탭 클릭
     await page.getByRole('button', { name: /발송 제외/ }).click()

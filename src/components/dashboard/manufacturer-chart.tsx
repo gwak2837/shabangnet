@@ -38,7 +38,7 @@ export function ManufacturerChart({ data, isLoading }: ManufacturerChartProps) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">제조사별 발주 현황</CardTitle>
-          <a className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/orders">
+          <a className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/order">
             상세보기
           </a>
         </div>

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.describe('제조사 관리', () => {
   test('제조사 목록 페이지 확인', async ({ page }) => {
-    await page.goto('/manufacturers')
+    await page.goto('/manufacturer')
     await expect(page.getByRole('heading', { name: '제조사 관리' })).toBeVisible()
 
     // 테이블이 로드되어야 함
@@ -13,7 +13,7 @@ test.describe('제조사 관리', () => {
   })
 
   test('제조사 추가 모달 열기', async ({ page }) => {
-    await page.goto('/manufacturers')
+    await page.goto('/manufacturer')
 
     // 제조사 추가 버튼 클릭
     const addButton = page.getByRole('button', { name: /제조사 추가|추가/ })
@@ -27,7 +27,7 @@ test.describe('제조사 관리', () => {
   })
 
   test('제조사 검색 기능', async ({ page }) => {
-    await page.goto('/manufacturers')
+    await page.goto('/manufacturer')
 
     // 테이블 로드 대기
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
@@ -44,7 +44,7 @@ test.describe('제조사 관리', () => {
   })
 
   test('제조사 상세 정보 확인', async ({ page }) => {
-    await page.goto('/manufacturers')
+    await page.goto('/manufacturer')
 
     // 테이블 로드 대기
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 })

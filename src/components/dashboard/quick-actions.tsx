@@ -17,14 +17,14 @@ const actions = [
   {
     title: '발주 생성',
     description: '제조사별 발주서를 생성하세요',
-    href: '/orders',
+    href: '/order',
     icon: FileSpreadsheet,
     color: 'bg-emerald-50 text-emerald-600',
   },
   {
     title: '제조사 관리',
     description: '제조사 정보를 관리하세요',
-    href: '/manufacturers',
+    href: '/manufacturer',
     icon: Building2,
     color: 'bg-purple-50 text-purple-600',
   },

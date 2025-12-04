@@ -25,7 +25,7 @@ const settingsNavItems = [
   {
     title: '주문 처리',
     description: '택배사, 쇼핑몰, 중복 체크, 제외',
-    href: '/settings/orders',
+    href: '/settings/order',
     icon: Package,
   },
 ]
