@@ -149,14 +149,7 @@ export function LoginForm() {
           </Label>
         </div>
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isEmailPasswordPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              로그인 중
-            </>
-          ) : (
-            '로그인'
-          )}
+          {isEmailPasswordPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '로그인'}
         </Button>
       </form>
       <div className="relative">

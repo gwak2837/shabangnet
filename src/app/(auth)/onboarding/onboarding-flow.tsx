@@ -62,17 +62,17 @@ export function OnboardingFlow() {
         return
       }
 
-      // TOTP 활성화 후 세션 새로고침 (twoFactorEnabled가 업데이트됨)
-      await refetchSession()
-
       const data = result.data
-      if (data.totpURI) {
-        setTotpUri(data.totpURI)
-        if (data.backupCodes) {
-          setBackupCodes(data.backupCodes)
-        }
-        setStep(OnboardingStep.Step3b_TOTPSetup)
+
+      if (!data.totpURI) {
+        setError('TOTP 설정에 실패했어요')
+        return
       }
+
+      await refetchSession()
+      setTotpUri(data.totpURI)
+      setBackupCodes(data.backupCodes || [])
+      setStep(OnboardingStep.Step3b_TOTPSetup)
     } catch {
       setError('TOTP 설정 중 오류가 발생했어요')
     } finally {

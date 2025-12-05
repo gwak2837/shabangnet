@@ -490,7 +490,45 @@ export async function generateTemplateBasedOrderSheet(
 
   let worksheet = workbook.worksheets[0]
   if (!worksheet) {
-    worksheet = workbook.addWorksheet('발주서')
+    worksheet = workbook.addWorksheet('다온발주서')
+  }
+
+  // 템플릿이 없을 경우 헤더 행 생성
+  if (!templateBuffer) {
+    const headerRow = worksheet.getRow(config.headerRow)
+
+    // columnMappings를 기반으로 헤더 생성 (sabangnetKey를 한글 라벨로 변환)
+    const keyToLabel: Record<string, string> = {
+      productName: '상품명',
+      quantity: '수량',
+      orderName: '주문인',
+      recipientName: '받는인',
+      orderPhone: '주문인연락처',
+      orderMobile: '주문인핸드폰',
+      recipientPhone: '받는인연락처',
+      recipientMobile: '핸드폰',
+      postalCode: '우편',
+      address: '배송지',
+      memo: '전언',
+      shoppingMall: '쇼핑몰',
+      manufacturer: '제조사',
+      courier: '택배',
+      trackingNumber: '송장번호',
+      orderNumber: '주문번호',
+      optionName: '옵션',
+      paymentAmount: '결제금액',
+      productCode: '상품코드',
+      cost: '원가',
+      shippingCost: '배송비',
+    }
+
+    for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
+      const colIndex = columnLetterToIndex(column) + 1
+      const label = keyToLabel[sabangnetKey] || sabangnetKey
+      headerRow.getCell(colIndex).value = label
+    }
+
+    headerRow.commit()
   }
 
   // 데이터 시작 행부터 주문 데이터 입력
@@ -517,9 +555,6 @@ export async function generateTemplateBasedOrderSheet(
     row.commit()
     currentRow++
   }
-
-  // 빈 행 삭제 (템플릿에 미리 있던 빈 행)
-  // 필요시 구현
 
   const buffer = await workbook.xlsx.writeBuffer()
   return Buffer.from(buffer)

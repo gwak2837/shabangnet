@@ -124,6 +124,19 @@ export async function checkDuplicate(
   }
 }
 
+export async function downloadOrderExcel(params: { manufacturerId: string; orderIds: string[] }) {
+  const result = await generateOrderExcel(params)
+
+  if ('error' in result) {
+    return result
+  }
+
+  return {
+    fileName: result.fileName,
+    base64: result.buffer.toString('base64'),
+  }
+}
+
 /**
  * 발주서 엑셀 파일 생성 (다운로드용)
  * 이메일 발송 없이 엑셀 파일만 생성

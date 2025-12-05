@@ -16,6 +16,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
   secret: env.AUTH_SECRET,
   baseURL,
+  appName: SITE_CONFIG.name,
   trustedOrigins: [baseURL],
   emailAndPassword: {
     enabled: true,
@@ -64,7 +65,7 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
-    twoFactor({ issuer: SITE_CONFIG.name }),
+    twoFactor(),
     passkey({
       rpID: process.env.NODE_ENV === 'production' ? hostname : 'localhost',
       rpName: SITE_CONFIG.name,

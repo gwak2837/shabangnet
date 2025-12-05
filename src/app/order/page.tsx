@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useExcludedOrderBatches, useOrderBatches } from '@/hooks/use-orders'
+import { downloadOrderExcel } from '@/services/orders'
 
 type TabType = 'excluded' | 'sendable'
 
@@ -68,6 +69,43 @@ export default function OrdersPage() {
   const handlePreview = (batch: OrderBatch) => {
     // In real app, this would open a preview modal or navigate to preview page
     console.log('Preview batch:', batch)
+  }
+
+  const handleDownload = async (batch: OrderBatch) => {
+    try {
+      const orderIds = batch.orders.map((o) => o.id)
+      const result = await downloadOrderExcel({
+        manufacturerId: batch.manufacturerId,
+        orderIds,
+      })
+
+      if ('error' in result) {
+        console.error(result.error)
+        // TODO: Show error toast
+        return
+      }
+
+      // Create blob and download
+      const byteCharacters = atob(result.base64)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = result.fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Download failed', error)
+      // TODO: Show error toast
+    }
   }
 
   const handleRefresh = () => {
@@ -216,6 +254,7 @@ export default function OrdersPage() {
           <OrderTable
             batches={orderBatches}
             onBatchSend={handleBatchSend}
+            onDownload={handleDownload}
             onPreview={handlePreview}
             onSendEmail={handleSendEmail}
           />
