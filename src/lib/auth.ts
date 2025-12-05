@@ -5,10 +5,9 @@ import { nextCookies } from 'better-auth/next-js'
 import { twoFactor } from 'better-auth/plugins/two-factor'
 import 'server-only'
 
-import { getBaseURL } from '@/common/constants'
+import { getBaseURL, SITE_CONFIG } from '@/common/constants'
 import { env } from '@/common/env'
 import { db } from '@/db/client'
-import { sec } from '@/utils/sec'
 
 const baseURL = getBaseURL()
 const hostname = new URL(baseURL).hostname
@@ -56,14 +55,7 @@ export const auth = betterAuth({
       },
     },
   },
-  session: {
-    expiresIn: sec('7 days'),
-    updateAge: sec('1 day'),
-    cookieCache: {
-      enabled: true,
-      maxAge: sec('5 minutes'),
-    },
-  },
+  session: { cookieCache: { enabled: true } },
   account: {
     accountLinking: {
       enabled: true,
@@ -72,20 +64,10 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
-    twoFactor({
-      issuer: hostname,
-      totpOptions: {
-        digits: 6,
-        period: 30,
-      },
-      backupCodeOptions: {
-        length: 10,
-        amount: 10,
-      },
-    }),
+    twoFactor({ issuer: SITE_CONFIG.name }),
     passkey({
-      rpID: process.env.NODE_ENV === 'production' ? new URL(baseURL).hostname : 'localhost',
-      rpName: hostname,
+      rpID: process.env.NODE_ENV === 'production' ? hostname : 'localhost',
+      rpName: SITE_CONFIG.name,
       origin: baseURL,
     }),
   ],

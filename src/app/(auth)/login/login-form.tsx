@@ -2,8 +2,7 @@
 
 import { Eye, EyeOff, Fingerprint, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { GoogleOAuthButton } from '@/app/(auth)/google-oauth-button'
@@ -13,118 +12,97 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 
+import { AppleOAuthButton } from '../apple-oauth-button'
+
 export function LoginForm() {
-  const router = useRouter()
-  const routerRef = useRef(router)
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [isPending, setIsPending] = useState(false)
-
-  const handleSuccess = useCallback((user: Record<string, unknown>, twoFactorRedirect?: boolean) => {
-    // 2FA가 필요한 경우 MFA 페이지로 이동
-    if (twoFactorRedirect) {
-      routerRef.current.push('/mfa')
-      return
-    }
-
-    if (!user.onboardingComplete) {
-      routerRef.current.push('/onboarding')
-      return
-    }
-
-    if (user.status === 'pending') {
-      toast.info('관리자 승인을 기다려주세요')
-      routerRef.current.push('/pending-approval')
-      return
-    }
-
-    routerRef.current.push('/dashboard')
-  }, [])
-
-  async function handlePasskeyLogin() {
-    setError('')
-    setIsPending(true)
-
-    try {
-      const result = await authClient.signIn.passkey()
-
-      if (result.error) {
-        setError(result.error.message || '패스키 인증에 실패했어요')
-        return
-      }
-
-      if (result.data?.user) {
-        // 패스키 로그인은 MFA를 대체하므로 twoFactorRedirect는 false
-        handleSuccess(result.data.user, false)
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'NotAllowedError') {
-        toast.warning('패스키 인증이 취소됐어요')
-      } else {
-        setError('패스키 인증에 실패했어요')
-      }
-    } finally {
-      setIsPending(false)
-    }
-  }
+  const [isEmailPasswordPending, setIsEmailPasswordPending] = useState(false)
+  const [isPasskeyPending, setIsPasskeyPending] = useState(false)
+  const isPending = isEmailPasswordPending || isPasskeyPending
 
   async function handlePasswordLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
 
     const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const email = String(formData.get('email'))
+    const password = String(formData.get('password'))
     const rememberMe = formData.get('remember') === 'on'
 
     if (!email.trim()) {
-      setError('이메일을 입력해주세요')
+      toast.warning('이메일을 입력해주세요')
       return
     }
 
     if (!password) {
-      setError('비밀번호를 입력해주세요')
+      toast.warning('비밀번호를 입력해주세요')
       return
     }
 
-    setIsPending(true)
+    setIsEmailPasswordPending(true)
 
-    try {
-      const result = await authClient.signIn.email({
-        email,
-        password,
-        rememberMe,
-      })
+    await authClient.signIn.email({
+      email,
+      password,
+      rememberMe,
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/dashboard'
+        },
+        onError: (context) => {
+          toast.error(context.error.message || '이메일 또는 비밀번호가 올바르지 않아요')
+        },
+      },
+    })
 
-      if (result.error) {
-        setError(result.error.message || '이메일 또는 비밀번호가 올바르지 않아요')
-        return
-      }
-
-      if (result.data?.user) {
-        // better-auth에서 2FA가 필요한 경우 twoFactorRedirect가 true
-        const twoFactorRedirect = (result.data as { twoFactorRedirect?: boolean }).twoFactorRedirect
-        handleSuccess(result.data.user, twoFactorRedirect)
-      } else {
-        router.push('/dashboard')
-      }
-    } catch {
-      setError('로그인 중 오류가 발생했어요')
-    } finally {
-      setIsPending(false)
-    }
+    setIsEmailPasswordPending(false)
   }
+
+  async function handlePasskeyLogin() {
+    setIsPasskeyPending(true)
+
+    await authClient.signIn.passkey({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/dashboard'
+        },
+        onError: (context) => {
+          toast.error(context.error.message || '패스키 인증에 실패했어요')
+        },
+      },
+    })
+
+    setIsPasskeyPending(false)
+  }
+
+  // NOTE: Conditional UI 패스키 로그인
+  useEffect(() => {
+    if (
+      !PublicKeyCredential.isConditionalMediationAvailable ||
+      !PublicKeyCredential.isConditionalMediationAvailable()
+    ) {
+      return
+    }
+
+    void authClient.signIn.passkey({
+      autoFill: true,
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/dashboard'
+        },
+        onError: (context) => {
+          toast.error(context.error.message || '패스키 인증에 실패했어요')
+        },
+      },
+    })
+  }, [])
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 이메일/비밀번호 로그인 */}
       <form className="flex flex-col gap-4" onSubmit={handlePasswordLogin}>
         <div>
           <Label htmlFor="email">이메일</Label>
           <Input
-            autoComplete="email"
+            autoComplete="email webauthn"
             className="mt-2"
             disabled={isPending}
             id="email"
@@ -134,7 +112,6 @@ export function LoginForm() {
             variant="glass"
           />
         </div>
-
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">비밀번호</Label>
@@ -147,7 +124,7 @@ export function LoginForm() {
           </div>
           <div className="relative mt-2">
             <Input
-              autoComplete="current-password"
+              autoComplete="current-password webauthn"
               className="pr-10"
               disabled={isPending}
               id="password"
@@ -165,29 +142,23 @@ export function LoginForm() {
             </button>
           </div>
         </div>
-
         <div className="flex items-center gap-2">
           <Checkbox className="glass-checkbox" disabled={isPending} id="remember" name="remember" />
           <Label className="cursor-pointer font-normal text-sm" htmlFor="remember">
             로그인 유지
           </Label>
         </div>
-
-        {error && <div className="text-sm text-destructive">{error}</div>}
-
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isPending ? (
+          {isEmailPasswordPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              로그인 중...
+              로그인 중
             </>
           ) : (
             '로그인'
           )}
         </Button>
       </form>
-
-      {/* 구분선 */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="auth-divider w-full border-t" />
@@ -196,7 +167,6 @@ export function LoginForm() {
           <span className="bg-transparent px-3 text-muted-foreground">또는</span>
         </div>
       </div>
-
       <Button
         className="w-full"
         disabled={isPending}
@@ -204,11 +174,15 @@ export function LoginForm() {
         type="button"
         variant="glass-outline"
       >
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
+        {isPasskeyPending ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Fingerprint className="mr-2 h-4 w-4" />
+        )}
         패스키로 로그인
       </Button>
       <GoogleOAuthButton disabled={isPending} />
-
+      <AppleOAuthButton disabled={isPending} />
       <p className="text-center text-sm text-muted-foreground">
         계정이 없으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/register">
