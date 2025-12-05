@@ -7,7 +7,7 @@ import { getAllSynonyms } from '@/services/column-synonyms'
 import { getCourierMappings, getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 import { getShoppingMallTemplate, getShoppingMallTemplates } from '@/services/shopping-mall-templates'
 
-import { getMfaSettings } from './queries/mfa'
+import { getMFASettings } from './queries/mfa'
 
 // Column Synonyms
 export function useColumnSynonyms() {
@@ -42,11 +42,11 @@ export function useExclusionSettings() {
 }
 
 // MFA Settings
-export function useMfaSettings() {
+export function useMFASettings() {
   return useQuery({
     queryKey: queryKeys.settings.mfa,
     queryFn: async () => {
-      const result = await getMfaSettings()
+      const result = await getMFASettings()
       if (!result.success) throw new Error(result.error)
       return result.settings
     },

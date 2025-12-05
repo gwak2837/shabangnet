@@ -185,7 +185,7 @@ export async function deleteOrder() {
 export async function sendEmail() {
   /* ... */
 }
-export async function setupMfa() {
+export async function setupMFA() {
   /* ... */
 }
 export async function validateTotp() {
@@ -214,7 +214,7 @@ export async function testEmailConnection() {
 }
 
 // src/actions/mfa.ts
-export async function setupMfa() {
+export async function setupMFA() {
   /* ... */
 }
 export async function validateTotp() {
@@ -367,14 +367,14 @@ function DeleteOrderButton({ orderId }: { orderId: string }) {
 
 ### When to Use Which Hook
 
-| Use Case                     | Hook             |
-| ---------------------------- | ---------------- |
-| Form with multiple inputs    | `useActionState` |
-| Login/Register forms         | `useActionState` |
-| Search forms                 | `useActionState` |
-| Single button action         | `useTransition`  |
-| Delete/Toggle actions        | `useTransition`  |
-| Actions triggered by events  | `useTransition`  |
+| Use Case                    | Hook             |
+| --------------------------- | ---------------- |
+| Form with multiple inputs   | `useActionState` |
+| Login/Register forms        | `useActionState` |
+| Search forms                | `useActionState` |
+| Single button action        | `useTransition`  |
+| Delete/Toggle actions       | `useTransition`  |
+| Actions triggered by events | `useTransition`  |
 
 ---
 

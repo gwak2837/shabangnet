@@ -11,6 +11,7 @@ import { db } from '@/db/client'
 import { sec } from '@/utils/sec'
 
 const baseURL = getBaseURL()
+const hostname = new URL(baseURL).hostname
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
@@ -72,7 +73,7 @@ export const auth = betterAuth({
   plugins: [
     nextCookies(),
     twoFactor({
-      issuer: 'daonfnc',
+      issuer: hostname,
       totpOptions: {
         digits: 6,
         period: 30,
@@ -84,7 +85,7 @@ export const auth = betterAuth({
     }),
     passkey({
       rpID: process.env.NODE_ENV === 'production' ? new URL(baseURL).hostname : 'localhost',
-      rpName: 'daonfnc',
+      rpName: hostname,
       origin: baseURL,
     }),
   ],

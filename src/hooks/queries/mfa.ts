@@ -16,7 +16,7 @@ interface ActionResult {
   success: boolean
 }
 
-interface MfaSettingsResult extends ActionResult {
+interface MFASettingsResult extends ActionResult {
   settings?: {
     hasPassword: boolean
     passkeys: { createdAt: string; id: string; lastUsedAt: string | null; name: string | null }[]
@@ -33,7 +33,7 @@ interface MfaSettingsResult extends ActionResult {
 /**
  * 사용자의 MFA 설정을 가져옵니다.
  */
-export async function getMfaSettings(): Promise<MfaSettingsResult> {
+export async function getMFASettings(): Promise<MFASettingsResult> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

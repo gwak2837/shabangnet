@@ -1,8 +1,8 @@
 'use client'
 
-import { AlertTriangle, Fingerprint, KeyRound, Loader2, Smartphone } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { AlertTriangle, Fingerprint, KeyRound, Loader2, LogOut, Smartphone } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -10,23 +10,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 
-type MfaMethod = 'passkey' | 'recovery' | 'totp'
+type MFAMethod = 'passkey' | 'recovery' | 'totp'
 
-export function MfaChallenge() {
-  const router = useRouter()
+export function MFAChallenge() {
   const searchParams = useSearchParams()
   const [isPending, setIsPending] = useState(false)
-
-  const [selectedMethod, setSelectedMethod] = useState<MfaMethod>('totp')
+  const [isLoggingOut, startLogoutTransition] = useTransition()
+  const [selectedMethod, setSelectedMethod] = useState<MFAMethod>('totp')
   const [totpCode, setTotpCode] = useState('')
   const [recoveryCode, setRecoveryCode] = useState('')
   const [error, setError] = useState('')
   const [trustDevice, setTrustDevice] = useState(false)
-
-  // 복구 코드로 로그인한 경우 경고 표시
   const recoveryLogin = searchParams.get('recovery') === 'true'
 
-  // TOTP 검증
   async function handleTotpSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -38,7 +34,8 @@ export function MfaChallenge() {
         trustDevice,
         fetchOptions: {
           onSuccess: () => {
-            router.push('/dashboard')
+            // Full page navigation to ensure new session cookies are properly applied
+            window.location.href = '/dashboard'
           },
           onError: (ctx) => {
             setError(ctx.error.message || '인증 코드가 올바르지 않아요')
@@ -56,7 +53,6 @@ export function MfaChallenge() {
     }
   }
 
-  // 패스키 인증
   async function handlePasskeyAuth() {
     setError('')
     setIsPending(true)
@@ -65,7 +61,8 @@ export function MfaChallenge() {
       const result = await authClient.signIn.passkey({
         fetchOptions: {
           onSuccess: () => {
-            router.push('/dashboard')
+            // Full page navigation to ensure new session cookies are properly applied
+            window.location.href = '/dashboard'
           },
           onError: (ctx) => {
             setError(ctx.error.message || '패스키 인증에 실패했어요')
@@ -87,7 +84,6 @@ export function MfaChallenge() {
     }
   }
 
-  // 복구 코드 검증
   async function handleRecoverySubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -98,7 +94,8 @@ export function MfaChallenge() {
         code: recoveryCode,
         fetchOptions: {
           onSuccess: () => {
-            router.push('/settings?recovery=true')
+            // Full page navigation to ensure new session cookies are properly applied
+            window.location.href = '/settings?recovery=true'
           },
           onError: (ctx) => {
             setError(ctx.error.message || '복구 코드가 올바르지 않아요')
@@ -116,12 +113,18 @@ export function MfaChallenge() {
     }
   }
 
-  // 방식 변경
-  function handleMethodChange(method: MfaMethod) {
+  function handleMethodChange(method: MFAMethod) {
     setSelectedMethod(method)
     setError('')
     setTotpCode('')
     setRecoveryCode('')
+  }
+
+  function handleLogout() {
+    startLogoutTransition(async () => {
+      await authClient.signOut()
+      window.location.href = '/login'
+    })
   }
 
   return (
@@ -294,6 +297,17 @@ export function MfaChallenge() {
           </div>
         </>
       )}
+      <div className="text-center">
+        <button
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          disabled={isLoggingOut}
+          onClick={handleLogout}
+          type="button"
+        >
+          {isLoggingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+          다른 계정으로 로그인
+        </button>
+      </div>
     </div>
   )
 }

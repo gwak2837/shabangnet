@@ -33,18 +33,18 @@ import { getFirstPasswordError, validatePassword } from '@/utils/password'
 
 import { setPasswordAction } from './actions/mfa'
 
-interface MfaFormProps {
-  settings?: MfaSettings
+interface MFAFormProps {
+  settings?: MFASettings
 }
 
-interface MfaSettings {
+interface MFASettings {
   hasPassword?: boolean
   passkeys: { createdAt: string; id: string; lastUsedAt: string | null; name: string | null }[]
   recoveryCodesRemaining: number
   totpEnabled: boolean
 }
 
-export function MfaForm({ settings }: MfaFormProps) {
+export function MFAForm({ settings }: MFAFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
