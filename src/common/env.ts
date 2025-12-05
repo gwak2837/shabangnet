@@ -4,6 +4,8 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
+    AUTH_APPLE_ID: z.string().optional(),
+    AUTH_APPLE_SECRET: z.string().optional(),
     AUTH_GOOGLE_ID: z.string().optional(),
     AUTH_GOOGLE_SECRET: z.string().optional(),
     AUTH_SECRET: z.string().min(1),
@@ -15,6 +17,8 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: z.url().default('http://localhost:3000'),
   },
   runtimeEnv: {
+    AUTH_APPLE_ID: process.env.AUTH_APPLE_ID,
+    AUTH_APPLE_SECRET: process.env.AUTH_APPLE_SECRET,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     AUTH_SECRET: process.env.AUTH_SECRET,

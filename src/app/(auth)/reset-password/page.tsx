@@ -35,7 +35,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
           <XCircle className="h-8 w-8 text-red-600" />
         </div>
         <h1 className="text-2xl font-semibold text-foreground">링크가 만료됐어요</h1>
-        <div className="glass-button rounded-lg p-4 text-red-700 dark:text-red-300">
+        <div className="glass-panel rounded-lg p-4 text-red-700 dark:text-red-300">
           <p>{error}</p>
         </div>
         <p className="text-sm text-muted-foreground">새로운 재설정 링크를 받아보세요</p>

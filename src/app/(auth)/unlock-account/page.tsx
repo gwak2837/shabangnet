@@ -34,7 +34,7 @@ export default async function UnlockAccountPage({ searchParams }: PageProps<'/un
             <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
           </div>
           <h1 className="text-2xl font-semibold text-foreground">해제할 수 없어요</h1>
-          <div className="glass-button rounded-lg p-4 text-red-700 dark:text-red-300">
+          <div className="glass-panel rounded-lg p-4 text-red-700 dark:text-red-300">
             <p>{result.error}</p>
           </div>
           <p className="text-sm text-muted-foreground">링크가 만료됐거나 이미 사용됐어요</p>
@@ -45,7 +45,7 @@ export default async function UnlockAccountPage({ searchParams }: PageProps<'/un
             <LockOpen className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-2xl font-semibold text-foreground">다시 사용할 수 있어요!</h1>
-          <div className="glass-button rounded-lg p-4 text-emerald-700 dark:text-emerald-300">
+          <div className="glass-panel rounded-lg p-4 text-emerald-700 dark:text-emerald-300">
             <p>{result.success}</p>
           </div>
           <p className="text-sm text-muted-foreground">계정 잠금이 해제됐어요</p>

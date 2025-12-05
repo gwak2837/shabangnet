@@ -15,17 +15,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-
-import { logout } from './actions'
+import { authClient } from '@/lib/auth-client'
 
 export function LogoutDialog() {
   const [isPending, startTransition] = useTransition()
   const queryClient = useQueryClient()
 
-  function handleLogout() {
+  async function handleLogout() {
     startTransition(async () => {
       queryClient.clear()
-      await logout()
+      await authClient.signOut()
+      window.location.href = '/login'
     })
   }
 

@@ -10,5 +10,13 @@ import type { auth } from './auth'
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL(),
-  plugins: [twoFactorClient(), passkeyClient(), inferAdditionalFields<typeof auth>()],
+  plugins: [
+    twoFactorClient({
+      onTwoFactorRedirect: () => {
+        window.location.href = '/mfa'
+      },
+    }),
+    passkeyClient(),
+    inferAdditionalFields<typeof auth>(),
+  ],
 })

@@ -55,7 +55,7 @@ export function Step3bTOTPSetup({ error, formRef, isPending, onBack, onSubmit, t
         {totpUri && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground mb-2">또는 수동 입력</p>
-            <div className="flex items-center gap-2 w-full glass-button rounded-lg px-3 py-1">
+            <div className="flex items-center gap-2 w-full glass-panel rounded-lg px-3 py-1">
               <code className="flex-1 overflow-x-auto text-xs font-mono tracking-wide select-all whitespace-nowrap scrollbar-none">
                 {extractSecret(totpUri)}
               </code>

@@ -1,26 +1,6 @@
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-
-import { auth } from '@/lib/auth'
-
 import { OnboardingFlow } from './onboarding-flow'
 
-export default async function OnboardingPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
-
-  if (!session?.user) {
-    redirect('/login')
-  }
-
-  const { user } = session
-
-  if (user.onboardingComplete) {
-    if (user.status === 'pending') {
-      redirect('/pending-approval')
-    }
-    redirect('/dashboard')
-  }
-
+export default function OnboardingPage() {
   return (
     <>
       <div className="text-center">

@@ -23,7 +23,6 @@ export function GoogleOAuthButton({ disabled, label = 'Google로 로그인' }: G
         callbackURL: '/dashboard',
       })
     } catch {
-      // 에러 발생 시 pending 상태 해제
       setIsPending(false)
     }
   }

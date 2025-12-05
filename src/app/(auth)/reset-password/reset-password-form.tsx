@@ -29,7 +29,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   if (state && 'success' in state) {
     return (
       <div className="mt-8 flex flex-col gap-6 text-center">
-        <div className="glass-button rounded-lg p-4 text-emerald-700 dark:text-emerald-300">
+        <div className="glass-panel rounded-lg p-4 text-emerald-700 dark:text-emerald-300">
           <p>{state.success}</p>
         </div>
         <Button asChild variant="glass">

@@ -8,28 +8,24 @@ import 'server-only'
 import { getBaseURL } from '@/common/constants'
 import { env } from '@/common/env'
 import { db } from '@/db/client'
-import * as schema from '@/db/schema/auth'
 import { sec } from '@/utils/sec'
 
 const baseURL = getBaseURL()
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-    schema,
-  }),
+  database: drizzleAdapter(db, { provider: 'pg' }),
   secret: env.AUTH_SECRET,
   baseURL,
   trustedOrigins: [baseURL],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
-    sendResetPassword: async ({ user, url }) => {
-      // TODO: 이메일 전송 구현
-      console.log(`Password reset email for ${user.email}: ${url}`)
-    },
   },
   socialProviders: {
+    apple: {
+      clientId: env.AUTH_APPLE_ID || '',
+      clientSecret: env.AUTH_APPLE_SECRET || '',
+    },
     google: {
       clientId: env.AUTH_GOOGLE_ID || '',
       clientSecret: env.AUTH_GOOGLE_SECRET || '',
@@ -70,7 +66,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ['google'],
+      trustedProviders: ['apple', 'google'],
     },
   },
   plugins: [

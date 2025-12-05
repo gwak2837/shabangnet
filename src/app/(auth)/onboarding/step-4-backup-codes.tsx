@@ -51,7 +51,7 @@ export function Step4BackupCodes({ backupCodes, error, isPending, onComplete }: 
           인증 수단을 분실했을 때 필요합니다.
         </p>
       </div>
-      <div className="glass-button rounded-lg p-4">
+      <div className="glass-panel rounded-lg p-4">
         <div className="grid grid-cols-2 gap-2 font-mono text-sm">
           {backupCodes.map((code, index) => (
             <div className="glass-input px-2 py-1.5 rounded text-center" key={index}>

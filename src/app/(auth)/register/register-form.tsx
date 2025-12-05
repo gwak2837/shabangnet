@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 import { getFirstPasswordError, PASSWORD_ERROR_MESSAGES, validatePassword } from '@/utils/password'
 
+import { AppleOAuthButton } from '../apple-oauth-button'
+
 export function RegisterForm() {
   const router = useRouter()
   const [isPending, setIsPending] = useState(false)
@@ -29,10 +31,10 @@ export function RegisterForm() {
     e.preventDefault()
 
     const formData = new FormData(e.currentTarget)
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const formPassword = formData.get('password') as string
-    const confirmPassword = formData.get('confirmPassword') as string
+    const name = String(formData.get('name'))
+    const email = String(formData.get('email'))
+    const password = String(formData.get('password'))
+    const confirmPassword = String(formData.get('confirmPassword'))
 
     if (!name?.trim()) {
       setError('이름을 입력해주세요')
@@ -42,7 +44,7 @@ export function RegisterForm() {
       setError('이메일을 입력해주세요')
       return
     }
-    if (formPassword !== confirmPassword) {
+    if (password !== confirmPassword) {
       setError(PASSWORD_ERROR_MESSAGES.mismatch)
       return
     }
@@ -53,7 +55,7 @@ export function RegisterForm() {
     try {
       const result = await authClient.signUp.email({
         email,
-        password: formPassword,
+        password,
         name,
       })
 
@@ -181,9 +183,8 @@ export function RegisterForm() {
           <span className="bg-transparent px-3 text-muted-foreground">또는</span>
         </div>
       </div>
-
       <GoogleOAuthButton disabled={isPending} label="Google로 가입" />
-
+      <AppleOAuthButton disabled={isPending} label="Apple로 가입" />
       <p className="text-center text-sm text-muted-foreground">
         이미 계정이 있으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/login">

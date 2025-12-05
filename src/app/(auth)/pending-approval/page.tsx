@@ -7,13 +7,8 @@ import { authClient } from '@/lib/auth-client'
 
 export default function PendingApprovalPage() {
   async function handleLogout() {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = '/login'
-        },
-      },
-    })
+    await authClient.signOut()
+    window.location.href = '/login'
   }
 
   return (
@@ -31,7 +26,7 @@ export default function PendingApprovalPage() {
         </p>
       </div>
 
-      <div className="glass-button rounded-lg p-4 text-left text-sm">
+      <div className="glass-panel rounded-lg p-4 text-left text-sm">
         <p className="font-medium text-foreground/90">승인 후 이용 가능한 기능</p>
         <ul className="mt-2 flex flex-col gap-1 text-muted-foreground">
           <li>• 대시보드 접근</li>
