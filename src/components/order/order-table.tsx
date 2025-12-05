@@ -16,11 +16,12 @@ import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '
 interface OrderTableProps {
   batches: OrderBatch[]
   onBatchSend?: (batches: OrderBatch[]) => void
+  onDownload?: (batch: OrderBatch) => void
   onPreview: (batch: OrderBatch) => void
   onSendEmail: (batch: OrderBatch) => void
 }
 
-export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: OrderTableProps) {
+export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend, onDownload }: OrderTableProps) {
   const [selectedBatches, setSelectedBatches] = useState<string[]>([])
   const isAllSelected = batches.length > 0 && selectedBatches.length === batches.length
   const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
@@ -126,7 +127,12 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button className="h-8 w-8 text-slate-400 hover:text-slate-600" size="icon" variant="ghost">
+                      <Button
+                        className="h-8 w-8 text-slate-400 hover:text-slate-600"
+                        size="icon"
+                        title="작업 메뉴"
+                        variant="ghost"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -135,7 +141,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend }: Ord
                         <Eye className="mr-2 h-4 w-4" />
                         미리보기
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDownload?.(batch)}>
                         <Download className="mr-2 h-4 w-4" />
                         다운로드
                       </DropdownMenuItem>
