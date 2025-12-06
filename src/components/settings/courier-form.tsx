@@ -1,13 +1,12 @@
 'use client'
 
-import { CheckCircle2, Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
+import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { useState } from 'react'
 
 import type { CourierMapping } from '@/services/settings'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -19,7 +18,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface CourierFormProps {
   isSaving?: boolean
@@ -30,42 +28,42 @@ interface CourierFormProps {
 }
 
 export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = false }: CourierFormProps) {
-  const [saved, setSaved] = useState(false)
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newAlias, setNewAlias] = useState('')
   const [isNewCourier, setIsNewCourier] = useState(false)
 
-  // 새 택배사 추가용 빈 객체
-  const createEmptyCourier = (): CourierMapping => ({
-    id: `c${Date.now()}`,
-    name: '',
-    code: '',
-    aliases: [],
-    enabled: true,
-  })
+  function createEmptyCourier() {
+    return {
+      id: `c${Date.now()}`,
+      name: '',
+      code: '',
+      aliases: [],
+      enabled: true,
+    }
+  }
 
-  const handleAddCourier = () => {
+  function handleAddCourier() {
     setEditingCourier(createEmptyCourier())
     setIsNewCourier(true)
     setIsModalOpen(true)
   }
 
-  const handleEditCourier = (courier: CourierMapping) => {
+  function handleEditCourier(courier: CourierMapping) {
     setEditingCourier({ ...courier, aliases: [...courier.aliases] })
     setIsNewCourier(false)
     setIsModalOpen(true)
   }
 
-  const handleDeleteCourier = (id: string) => {
+  function handleDeleteCourier(id: string) {
     onRemove(id)
   }
 
-  const handleToggleEnabled = (id: string, currentEnabled: boolean) => {
+  function handleToggleEnabled(id: string, currentEnabled: boolean) {
     onUpdate(id, { enabled: !currentEnabled })
   }
 
-  const handleAddAlias = () => {
+  function handleAddAlias() {
     if (!editingCourier || !newAlias.trim()) return
     if (editingCourier.aliases.includes(newAlias.trim())) {
       setNewAlias('')
@@ -78,7 +76,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
     setNewAlias('')
   }
 
-  const handleRemoveAlias = (alias: string) => {
+  function handleRemoveAlias(alias: string) {
     if (!editingCourier) return
     setEditingCourier({
       ...editingCourier,
@@ -86,7 +84,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
     })
   }
 
-  const handleSaveCourier = () => {
+  function handleSaveCourier() {
     if (!editingCourier || !editingCourier.name || !editingCourier.code) return
 
     if (isNewCourier) {
@@ -102,134 +100,131 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
 
     setIsModalOpen(false)
     setEditingCourier(null)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
   }
 
   return (
     <>
-      <Card className="border-slate-200 bg-card shadow-sm py-6">
-        <CardHeader>
+      {/* Apple HIG: Glass Card with depth and hierarchy */}
+      <section className="glass-card p-0 overflow-hidden">
+        <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-                <Truck className="h-5 w-5 text-amber-600" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
+                <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <CardTitle className="text-lg">택배사 코드 매핑</CardTitle>
-                <CardDescription>거래처 송장의 택배사명을 사방넷 코드로 변환합니다</CardDescription>
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">택배사</h2>
+                <p className="text-sm text-muted-foreground">송장의 택배사명을 자동으로 인식합니다</p>
               </div>
             </div>
-            <Button className="gap-2" onClick={handleAddCourier} size="sm" variant="outline">
+            <button
+              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground transition-all hover:scale-[1.01] active:scale-[0.99]"
+              onClick={handleAddCourier}
+            >
               <Plus className="h-4 w-4" />
-              택배사 추가
-            </Button>
+              추가
+            </button>
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {/* Courier List Table */}
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="w-12">활성</TableHead>
-                  <TableHead>택배사명</TableHead>
-                  <TableHead className="w-20">코드</TableHead>
-                  <TableHead>별칭 (거래처 표기)</TableHead>
-                  <TableHead className="w-24 text-right">관리</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mappings.map((courier) => (
-                  <TableRow className={!courier.enabled ? 'opacity-50' : ''} key={courier.id}>
-                    <TableCell>
-                      <Switch
-                        checked={courier.enabled}
-                        className="data-[state=checked]:bg-emerald-500"
-                        onCheckedChange={() => handleToggleEnabled(courier.id, courier.enabled)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{courier.name}</TableCell>
-                    <TableCell>
-                      <Badge className="font-mono" variant="secondary">
+        </header>
+        <div className="p-6 space-y-5">
+          <div className="space-y-2">
+            {mappings.map((courier) => (
+              <div
+                className={`
+                  glass-panel rounded-lg p-4 transition-all duration-200
+                  ${!courier.enabled ? 'opacity-50' : ''}
+                `}
+                key={courier.id}
+              >
+                <div className="flex items-center gap-4">
+                  <Switch
+                    checked={courier.enabled}
+                    onCheckedChange={() => handleToggleEnabled(courier.id, courier.enabled)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <span className="font-medium text-base text-foreground truncate">{courier.name}</span>
+                      <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
                         {courier.code}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {courier.aliases.slice(0, 3).map((alias) => (
-                          <Badge className="text-xs" key={alias} variant="outline">
+                      </span>
+                    </div>
+                    {courier.aliases.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {courier.aliases.slice(0, 4).map((alias) => (
+                          <span
+                            className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
+                            key={alias}
+                          >
                             {alias}
-                          </Badge>
+                          </span>
                         ))}
-                        {courier.aliases.length > 3 && (
-                          <Badge className="text-xs text-slate-500" variant="outline">
-                            +{courier.aliases.length - 3}
-                          </Badge>
+                        {courier.aliases.length > 4 && (
+                          <span className="text-xs text-muted-foreground">+{courier.aliases.length - 4}개</span>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleEditCourier(courier)}
-                          size="sm"
-                          variant="ghost"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          className="h-8 w-8 p-0 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                          onClick={() => handleDeleteCourier(courier.id)}
-                          size="sm"
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Info */}
-          <div className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
-            <p>
-              <strong>별칭</strong>은 거래처 송장 파일에서 사용하는 다양한 택배사 표기를 인식합니다.
-            </p>
-            <p className="mt-1">
-              예: &quot;CJ대한통운&quot;, &quot;CJ택배&quot;, &quot;대한통운&quot; → 모두 코드 &quot;04&quot;로 변환
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-            {saved && (
-              <span className="flex items-center gap-1 text-sm text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" />
-                저장되었습니다
-              </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      onClick={() => handleEditCourier(courier)}
+                      type="button"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleDeleteCourier(courier.id)}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {mappings.length === 0 && (
+              <div className="glass-panel rounded-lg p-8 text-center">
+                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
+                  <Truck className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-base font-medium text-foreground">택배사 없음</p>
+                <p className="mt-1 text-sm text-muted-foreground">추가 버튼을 눌러 시작하세요</p>
+              </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+          <div className="rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground">별칭</span>을 추가하면 다양한 택배사 표기를 자동으로
+              인식합니다.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              CJ대한통운, CJ택배, 대한통운 →{' '}
+              <code className="rounded bg-secondary/80 px-1.5 py-0.5 font-mono text-xs text-secondary-foreground">
+                04
+              </code>
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Edit Modal */}
       <Dialog onOpenChange={setIsModalOpen} open={isModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{isNewCourier ? '택배사 추가' : '택배사 수정'}</DialogTitle>
-            <DialogDescription>택배사 정보와 별칭을 입력하세요</DialogDescription>
+        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              {isNewCourier ? '새 택배사' : '택배사 편집'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              이름, 코드, 별칭을 설정합니다
+            </DialogDescription>
           </DialogHeader>
-
           {editingCourier && (
-            <div className="flex flex-col gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="courierName">택배사명 (사방넷 기준)</Label>
+            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" htmlFor="courierName">
+                    이름
+                  </Label>
                   <Input
                     id="courierName"
                     onChange={(e) => setEditingCourier({ ...editingCourier, name: e.target.value })}
@@ -237,8 +232,10 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                     value={editingCourier.name}
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="courierCode">사방넷 코드</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" htmlFor="courierCode">
+                    사방넷 코드
+                  </Label>
                   <Input
                     className="font-mono"
                     id="courierCode"
@@ -248,9 +245,8 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                   />
                 </div>
               </div>
-
-              <div className="flex flex-col gap-2">
-                <Label>별칭 (거래처에서 사용하는 표기)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">별칭</Label>
                 <div className="flex gap-2">
                   <Input
                     onChange={(e) => setNewAlias(e.target.value)}
@@ -260,19 +256,19 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                         handleAddAlias()
                       }
                     }}
-                    placeholder="별칭 입력"
+                    placeholder="거래처에서 사용하는 표기"
                     value={newAlias}
                   />
-                  <Button onClick={handleAddAlias} type="button" variant="outline">
+                  <Button className="shrink-0" onClick={handleAddAlias} size="sm" type="button" variant="outline">
                     추가
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2 min-h-[32px]">
+                <div className="flex flex-wrap gap-1.5 min-h-[28px] pt-1">
                   {editingCourier.aliases.map((alias) => (
-                    <Badge className="gap-1 pr-1" key={alias} variant="secondary">
+                    <Badge className="gap-1 h-6 pl-2 pr-1 text-xs font-medium" key={alias} variant="secondary">
                       {alias}
                       <button
-                        className="ml-1 rounded-full p-0.5 hover:bg-slate-300"
+                        className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
                         onClick={() => handleRemoveAlias(alias)}
                         type="button"
                       >
@@ -282,36 +278,31 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                   ))}
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2.5">
+                <Label className="text-sm font-medium cursor-pointer" htmlFor="courierEnabled">
+                  사용
+                </Label>
                 <Switch
                   checked={editingCourier.enabled}
                   id="courierEnabled"
                   onCheckedChange={(checked) => setEditingCourier({ ...editingCourier, enabled: checked })}
                 />
-                <Label htmlFor="courierEnabled">활성화</Label>
               </div>
             </div>
           )}
-
-          <DialogFooter>
-            <Button onClick={() => setIsModalOpen(false)} variant="outline">
-              취소
-            </Button>
-            <Button
-              className="bg-slate-900 hover:bg-slate-800"
-              disabled={!editingCourier?.name || !editingCourier?.code || isSaving}
-              onClick={handleSaveCourier}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                '저장'
-              )}
-            </Button>
+          <DialogFooter className="px-6 py-4 bg-muted/30 border-t shrink-0">
+            <div className="flex w-full gap-3">
+              <Button className="flex-1" onClick={() => setIsModalOpen(false)} variant="outline">
+                취소
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={!editingCourier?.name || !editingCourier?.code || isSaving}
+                onClick={handleSaveCourier}
+              >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
