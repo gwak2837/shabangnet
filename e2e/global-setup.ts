@@ -48,11 +48,13 @@ async function globalSetup() {
   console.log('\n🌱 시드 데이터 적용 중...')
 
   // 각 시드 스크립트 실행
+  // 순서 중요: 제조사 → 템플릿 → 상품 매핑 (의존성 순서)
   const seedScripts = [
     'seed-settings.ts',
     'seed-column-synonyms.ts',
     'seed-shopping-mall-templates.ts',
     'seed-real-manufacturers.ts',
+    'seed-order-templates.ts', // 제조사별 발주서 템플릿 (제조사 이후에 실행)
     'seed-product-mappings.ts',
     'seed-test-user.ts',
   ]

@@ -164,7 +164,7 @@ async function seed() {
     process.exit(1)
   }
 
-  const templatesDir = path.join(__dirname, '../public/templates')
+  const templatesDir = path.join(__dirname, '../public/data/templates')
 
   if (!fs.existsSync(templatesDir)) {
     console.error('❌ Templates directory not found:', templatesDir)

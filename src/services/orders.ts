@@ -170,13 +170,14 @@ export async function generateOrderExcel(params: {
 
   let excelBuffer: Buffer
 
-  if (template?.columnMappings) {
+  // 유효한 템플릿 설정이 있으면 템플릿 기반으로 생성, 없으면 기본 다온발주양식 사용
+  if (hasValidColumnMappings(template?.columnMappings)) {
     // 템플릿 설정이 있으면 템플릿 기반으로 생성
     const templateConfig: OrderTemplateConfig = {
-      headerRow: template.headerRow || 1,
-      dataStartRow: template.dataStartRow || 2,
-      columnMappings: JSON.parse(template.columnMappings) as Record<string, string>,
-      fixedValues: template.fixedValues ? (JSON.parse(template.fixedValues) as Record<string, string>) : undefined,
+      headerRow: template!.headerRow || 1,
+      dataStartRow: template!.dataStartRow || 2,
+      columnMappings: JSON.parse(template!.columnMappings!) as Record<string, string>,
+      fixedValues: template!.fixedValues ? (JSON.parse(template!.fixedValues) as Record<string, string>) : undefined,
     }
 
     const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
@@ -207,7 +208,7 @@ export async function generateOrderExcel(params: {
 
     excelBuffer = await generateTemplateBasedOrderSheet(parsedOrders, null, templateConfig, mfr.name, date)
   } else {
-    // 기본 양식으로 생성
+    // 기본 다온발주양식으로 생성 (템플릿이 없거나 유효하지 않은 경우)
     const orderData: OrderData[] = ordersToExport.map((o) => ({
       orderNumber: o.orderNumber,
       customerName: o.recipientName || '',
@@ -400,15 +401,16 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
   })
 
   // 2. 발주서 엑셀 파일 생성
+  // 유효한 템플릿 설정이 있으면 템플릿 기반으로 생성, 없으면 기본 다온발주양식 사용
   let excelBuffer: Buffer
 
-  if (template?.columnMappings) {
+  if (hasValidColumnMappings(template?.columnMappings)) {
     // 템플릿 설정이 있으면 템플릿 기반으로 생성
     const templateConfig: OrderTemplateConfig = {
-      headerRow: template.headerRow || 1,
-      dataStartRow: template.dataStartRow || 2,
-      columnMappings: JSON.parse(template.columnMappings) as Record<string, string>,
-      fixedValues: template.fixedValues ? (JSON.parse(template.fixedValues) as Record<string, string>) : undefined,
+      headerRow: template!.headerRow || 1,
+      dataStartRow: template!.dataStartRow || 2,
+      columnMappings: JSON.parse(template!.columnMappings!) as Record<string, string>,
+      fixedValues: template!.fixedValues ? (JSON.parse(template!.fixedValues) as Record<string, string>) : undefined,
     }
 
     const parsedOrders: ParsedOrder[] = ordersToSend.map((o, idx) => ({
@@ -445,7 +447,7 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
       date,
     )
   } else {
-    // 기본 양식으로 생성
+    // 기본 다온발주양식으로 생성 (템플릿이 없거나 유효하지 않은 경우)
     const orderData: OrderData[] = ordersToSend.map((o) => ({
       orderNumber: o.orderNumber,
       customerName: o.recipientName || '',
@@ -617,6 +619,21 @@ function generateEmailBody(
       ${summaryHtml}
     </div>
   `
+}
+
+/**
+ * 템플릿의 columnMappings가 유효한지 확인
+ * - null/undefined/빈 문자열/빈 객체("{}")인 경우 false 반환
+ * - 유효한 매핑이 있는 경우 true 반환
+ */
+function hasValidColumnMappings(columnMappings: string | null | undefined): boolean {
+  if (!columnMappings) return false
+  try {
+    const parsed = JSON.parse(columnMappings)
+    return typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length > 0
+  } catch {
+    return false
+  }
 }
 
 // Helper function to normalize address for comparison

@@ -18,8 +18,52 @@ export const SHOPPING_MALL_CONVERTED = {
   sk: path.join(TEST_DATA_DIR, 'sk1203.xlsx'),
 } as const
 
+// ============================================================================
+// 핵심 검증 컬럼 정의 (유연한 비교용)
+// ============================================================================
+
+/** 발주서 핵심 검증 컬럼 - 배송 정보 */
+export const CORE_COLUMNS_DELIVERY = ['수취인명', '받는인', '연락처', '핸드폰', '주소', '배송지', '우편번호'] as const
+
+/** 발주서 핵심 검증 컬럼 - 주문 정보 */
+export const CORE_COLUMNS_ORDER = ['상품명', '옵션명', '옵션', '수량'] as const
+
+/** 발주서 핵심 검증 컬럼 - 매칭 키 */
+export const CORE_COLUMNS_KEYS = ['사방넷주문번호', '주문번호'] as const
+
+/** 발주서 전체 핵심 컬럼 */
+export const CORE_COLUMNS_ORDER_FORM = [
+  ...CORE_COLUMNS_DELIVERY,
+  ...CORE_COLUMNS_ORDER,
+  ...CORE_COLUMNS_KEYS,
+] as const
+
+/** 쇼핑몰 변환 후 필수 컬럼 (사방넷 양식) */
+export const CORE_COLUMNS_SABANGNET = [
+  '상품명',
+  '수량',
+  '주문인',
+  '받는인',
+  '주문인 연락처',
+  '받는인 연락처',
+  '받는인 핸드폰',
+  '우편번호',
+  '배송지',
+  '사이트',
+  '제조사',
+] as const
+
+/** 송장 변환 출력 컬럼 */
+export const CORE_COLUMNS_INVOICE = ['사방넷주문번호', '택배사코드', '송장번호'] as const
+
+// ============================================================================
+// 제조사별 테스트 케이스
+// ============================================================================
+
 // 제조사별 테스트 케이스 타입
 interface ManufacturerTestCase {
+  /** 비교할 핵심 컬럼 (지정 시 해당 컬럼만 비교) */
+  coreColumns?: readonly string[]
   /** 예상 출력 파일 경로 */
   expectedFile: string
   /** 예상 주문 건수 */
@@ -216,3 +260,104 @@ export const TOTAL_MANUFACTURERS_IN_SABANGNET = 42
 
 // 전체 주문 수 (사방넷 원본 파일 기준)
 export const TOTAL_ORDERS_IN_SABANGNET = 278
+
+// ============================================================================
+// 송장 변환 테스트 케이스
+// ============================================================================
+
+/** 송장 변환 테스트 케이스 타입 */
+interface InvoiceTestCase {
+  /** 송장 변환 후 예상 결과 파일 (사방넷 송장 양식) */
+  convertedFile?: string
+  /** 제조사명 */
+  manufacturer: string
+  /** 제조사 송장 원본 파일 */
+  originalFile?: string
+}
+
+/**
+ * 송장 변환 테스트 케이스
+ * 참고: 현재 real-data 폴더에 송장 테스트 데이터 파일이 없음
+ * 추후 송장 테스트 데이터가 추가되면 이 배열에 케이스 추가
+ */
+export const INVOICE_TEST_CASES: InvoiceTestCase[] = [
+  // TODO: 송장 테스트 데이터 파일 추가 시 케이스 정의
+  // {
+  //   manufacturer: '하늘명인',
+  //   originalFile: path.join(TEST_DATA_DIR, '하늘명인_송장원본.xlsx'),
+  //   convertedFile: path.join(TEST_DATA_DIR, '사방넷_송장업로드_하늘명인.xlsx'),
+  // },
+]
+
+// ============================================================================
+// 유연한 비교 옵션 프리셋
+// ============================================================================
+
+/** 발주서 비교용 기본 옵션 */
+export const FLEXIBLE_COMPARE_OPTIONS_ORDER = {
+  coreColumns: [...CORE_COLUMNS_ORDER_FORM],
+  dateOnly: true,
+  headerRow: 1,
+  ignoreEmptyCells: true,
+  ignoreRowOrder: false,
+  normalizeAddresses: true,
+  normalizePhoneNumbers: true,
+  numericTolerance: 0.01,
+  trimWhitespace: true,
+} as const
+
+/** 발주서 비교용 옵션 (키 컬럼 기준 행 매칭) */
+export const FLEXIBLE_COMPARE_OPTIONS_ORDER_KEYED = {
+  ...FLEXIBLE_COMPARE_OPTIONS_ORDER,
+  ignoreRowOrder: true,
+  keyColumn: '사방넷주문번호',
+} as const
+
+/** 쇼핑몰 변환 결과 비교용 옵션 */
+export const FLEXIBLE_COMPARE_OPTIONS_SHOPPING_MALL = {
+  coreColumns: [...CORE_COLUMNS_SABANGNET],
+  dateOnly: true,
+  headerRow: 1,
+  ignoreEmptyCells: true,
+  ignoreRowOrder: false,
+  normalizeAddresses: true,
+  normalizePhoneNumbers: true,
+  numericTolerance: 0.01,
+  trimWhitespace: true,
+} as const
+
+/** 송장 변환 결과 비교용 옵션 */
+export const FLEXIBLE_COMPARE_OPTIONS_INVOICE = {
+  coreColumns: [...CORE_COLUMNS_INVOICE],
+  dateOnly: false,
+  headerRow: 1,
+  ignoreEmptyCells: true,
+  ignoreRowOrder: true,
+  keyColumn: '사방넷주문번호',
+  trimWhitespace: true,
+} as const
+
+// ============================================================================
+// 테스트 헬퍼 함수
+// ============================================================================
+
+/** 쇼핑몰명으로 테스트 케이스 찾기 */
+export function findShoppingMallTestCase(mallName: string) {
+  return SHOPPING_MALL_TEST_CASES.find((tc) => tc.mallName === mallName)
+}
+
+/** 제조사명으로 테스트 케이스 찾기 */
+export function findTestCase(manufacturer: string): ManufacturerTestCase | undefined {
+  return SABANGNET_TEST_CASES.find((tc) => tc.manufacturer === manufacturer)
+}
+
+/** 전체 테스트 케이스 (Golden File + Count Only) */
+export function getAllManufacturerTestCases() {
+  return [
+    ...SABANGNET_TEST_CASES,
+    ...COUNT_ONLY_TEST_CASES.map((tc) => ({
+      ...tc,
+      expectedFile: '',
+    })),
+  ]
+}
