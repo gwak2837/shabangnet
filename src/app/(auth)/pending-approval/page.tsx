@@ -1,14 +1,19 @@
 'use client'
 
-import { Clock, LogOut } from 'lucide-react'
+import { Clock, Loader2, LogOut } from 'lucide-react'
+import { useTransition } from 'react'
 
+import { signOut } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
-import { authClient } from '@/lib/auth-client'
 
 export default function PendingApprovalPage() {
-  async function handleLogout() {
-    await authClient.signOut()
-    window.location.href = '/login'
+  const [isPending, startTransition] = useTransition()
+
+  function handleLogout() {
+    startTransition(async () => {
+      await signOut()
+      window.location.href = '/login'
+    })
   }
 
   return (
@@ -38,8 +43,8 @@ export default function PendingApprovalPage() {
 
       <p className="text-sm text-muted-foreground">문의사항이 있으시면 관리자에게 연락해주세요.</p>
 
-      <Button className="w-full" onClick={handleLogout} variant="glass-outline">
-        <LogOut className="mr-2 h-4 w-4" />
+      <Button className="w-full" disabled={isPending} onClick={handleLogout} variant="glass-outline">
+        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
         로그아웃
       </Button>
     </div>

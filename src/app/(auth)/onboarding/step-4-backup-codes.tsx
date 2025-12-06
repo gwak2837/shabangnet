@@ -14,7 +14,7 @@ interface Props extends StepProps {
   onComplete: () => void
 }
 
-export function Step4BackupCodes({ backupCodes, error, isPending, onComplete }: Props) {
+export function Step4BackupCodes({ backupCodes, isPending, onComplete }: Props) {
   const [codesConfirmed, setCodesConfirmed] = useState(false)
   const [codesCopied, setCodesCopied] = useState(false)
 
@@ -90,16 +90,8 @@ export function Step4BackupCodes({ backupCodes, error, isPending, onComplete }: 
           복구 코드를 안전하게 보관했습니다
         </Label>
       </div>
-      {error && <div className="text-sm text-destructive text-center">{error}</div>}
       <Button className="w-full" disabled={!codesConfirmed || isPending} onClick={onComplete} variant="glass">
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            완료 처리 중
-          </>
-        ) : (
-          '설정 완료'
-        )}
+        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '완료'}
       </Button>
     </div>
   )

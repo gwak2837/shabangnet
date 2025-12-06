@@ -15,7 +15,7 @@ interface Props extends StepProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
 }
 
-export function Step2EnterPassword({ error, formRef, isPending, onBack, onSubmit }: Props) {
+export function Step2EnterPassword({ formRef, isPending, onBack, onSubmit }: Props) {
   const [showPassword, setShowPassword] = useState(false)
 
   return (
@@ -55,16 +55,8 @@ export function Step2EnterPassword({ error, formRef, isPending, onBack, onSubmit
             </button>
           </div>
         </div>
-        {error && <div className="text-sm text-destructive text-center">{error}</div>}
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              확인 중...
-            </>
-          ) : (
-            '다음'
-          )}
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '다음'}
         </Button>
       </form>
     </div>

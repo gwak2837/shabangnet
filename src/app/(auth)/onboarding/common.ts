@@ -7,6 +7,5 @@ export enum OnboardingStep {
 }
 
 export interface StepProps {
-  error: string
   isPending: boolean
 }

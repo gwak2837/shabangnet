@@ -1,9 +1,10 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { toast } from 'sonner'
 
+import { signOut } from '@/app/(auth)/actions'
 import { authClient } from '@/lib/auth-client'
 
 import { OnboardingStep } from './common'
@@ -22,8 +23,8 @@ export function OnboardingFlow() {
   const router = useRouter()
   const { data: session, isPending: isSessionPending, refetch: refetchSession } = authClient.useSession()
   const [isPending, setIsPending] = useState(false)
+  const [isLoggingOut, startLogout] = useTransition()
   const [step, setStep] = useState(OnboardingStep.Step1_ChooseMethod)
-  const [error, setError] = useState('')
   const [hasExistingPasskey, setHasExistingPasskey] = useState(false)
   const [totpUri, setTotpUri] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[]>([])
@@ -32,6 +33,111 @@ export function OnboardingFlow() {
   const userEmail = session?.user?.email || ''
   const isSocialUser = session?.user?.authType === 'social'
 
+  async function handleEnableTOTP(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsPending(true)
+
+    const formData = new FormData(e.currentTarget)
+    const password = String(formData.get('password'))
+
+    await authClient.twoFactor.enable({
+      password,
+      fetchOptions: {
+        onError: (ctx) => {
+          toast.error(ctx.error.message || 'TOTP 설정에 실패했어요')
+        },
+        onSuccess: async (ctx) => {
+          const data = ctx.data as { totpURI?: string; backupCodes?: string[] }
+          if (data.totpURI) {
+            await refetchSession()
+            setTotpUri(data.totpURI)
+            setBackupCodes(data.backupCodes || [])
+            setStep(OnboardingStep.Step3b_TOTPSetup)
+          }
+        },
+      },
+    })
+
+    setIsPending(false)
+  }
+
+  async function handleVerifyTOTP(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    const formData = new FormData(e.currentTarget)
+    const code = String(formData.get('totpCode'))
+    setIsPending(true)
+
+    await authClient.twoFactor.verifyTotp({
+      code,
+      fetchOptions: {
+        onError: (ctx) => {
+          toast.error(ctx.error.message || '인증 코드가 올바르지 않아요')
+        },
+        onSuccess: () => {
+          if (backupCodes.length > 0) {
+            setStep(OnboardingStep.Step4_BackupCodes)
+          } else {
+            completeOnboarding()
+          }
+        },
+      },
+    })
+
+    setIsPending(false)
+  }
+
+  async function handlePasskeySetup() {
+    setIsPending(true)
+
+    await authClient.passkey.addPasskey({
+      name: userEmail,
+
+      fetchOptions: {
+        onError: (ctx) => {
+          toast.error(ctx.error.message || '패스키 등록에 실패했어요')
+        },
+        onSuccess: () => {
+          completeOnboarding()
+        },
+      },
+    })
+
+    setIsPending(false)
+  }
+
+  async function completeOnboarding() {
+    setIsPending(true)
+
+    try {
+      const response = await fetch('/api/auth/complete-onboarding', { method: 'POST' })
+
+      if (response.ok) {
+        router.push('/pending-approval')
+      } else {
+        toast.error('온보딩 완료 처리에 실패했어요')
+      }
+    } catch {
+      toast.error('온보딩 완료 처리에 실패했어요')
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  function handleBack() {
+    setStep(OnboardingStep.Step1_ChooseMethod)
+    passwordFormRef.current?.reset()
+    totpFormRef.current?.reset()
+  }
+
+  function handleLogout() {
+    startLogout(async () => {
+      await signOut()
+      window.location.href = '/login'
+    })
+  }
+
+  // NOTE: 패스키 존재 여부 확인
   useEffect(() => {
     async function checkExistingPasskey() {
       try {
@@ -46,137 +152,12 @@ export function OnboardingFlow() {
     checkExistingPasskey()
   }, [])
 
-  async function handleEnableTOTP(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setIsPending(true)
-
-    const formData = new FormData(e.currentTarget)
-    const password = formData.get('password') as string
-
-    try {
-      const result = await authClient.twoFactor.enable({ password })
-
-      if (result.error) {
-        setError(result.error.message || 'TOTP 설정에 실패했어요')
-        return
-      }
-
-      const data = result.data
-
-      if (!data.totpURI) {
-        setError('TOTP 설정에 실패했어요')
-        return
-      }
-
-      await refetchSession()
-      setTotpUri(data.totpURI)
-      setBackupCodes(data.backupCodes || [])
-      setStep(OnboardingStep.Step3b_TOTPSetup)
-    } catch {
-      setError('TOTP 설정 중 오류가 발생했어요')
-    } finally {
-      setIsPending(false)
-    }
-  }
-
-  async function handleVerifyTOTP(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setIsPending(true)
-
-    const formData = new FormData(e.currentTarget)
-    const code = formData.get('totpCode') as string
-
-    try {
-      const result = await authClient.twoFactor.verifyTotp({ code })
-
-      if (result.error) {
-        setError(result.error.message || '인증 코드가 올바르지 않아요')
-        return
-      }
-
-      if (backupCodes.length > 0) {
-        setStep(OnboardingStep.Step4_BackupCodes)
-      } else {
-        completeOnboarding()
-      }
-    } catch {
-      setError('인증 중 오류가 발생했어요')
-    } finally {
-      setIsPending(false)
-    }
-  }
-
-  async function handlePasskeySetup() {
-    setError('')
-    setIsPending(true)
-
-    try {
-      const result = await authClient.passkey.addPasskey({ name: userEmail })
-
-      if (result.error) {
-        setError(result.error.message || '패스키 등록에 실패했어요')
-        return
-      }
-
-      completeOnboarding()
-    } catch (err) {
-      if (err instanceof Error && err.name === 'NotAllowedError') {
-        setError('패스키 등록이 취소되었습니다.')
-      } else {
-        setError('패스키 등록에 실패했어요')
-      }
-    } finally {
-      setIsPending(false)
-    }
-  }
-
-  async function completeOnboarding() {
-    setIsPending(true)
-
-    try {
-      const response = await fetch('/api/auth/complete-onboarding', { method: 'POST' })
-
-      if (response.ok) {
-        router.push('/pending-approval')
-      } else {
-        setError('온보딩 완료 처리에 실패했어요')
-      }
-    } catch {
-      setError('온보딩 완료 처리에 실패했어요')
-    } finally {
-      setIsPending(false)
-    }
-  }
-
-  function handleBack() {
-    setStep(OnboardingStep.Step1_ChooseMethod)
-    passwordFormRef.current?.reset()
-    totpFormRef.current?.reset()
-    setError('')
-  }
-
-  async function handleLogout() {
-    await authClient.signOut()
-    window.location.href = '/login'
-  }
-
-  if (isSessionPending) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   switch (step) {
     case OnboardingStep.Step1_ChooseMethod:
       return (
         <Step1ChooseMethod
-          error={error}
           hasExistingPasskey={hasExistingPasskey}
-          isPending={isPending}
+          isPending={isLoggingOut || isSessionPending || isPending}
           isSocialUser={isSocialUser}
           onComplete={completeOnboarding}
           onLogout={handleLogout}
@@ -187,7 +168,6 @@ export function OnboardingFlow() {
     case OnboardingStep.Step2_EnterPassword:
       return (
         <Step2EnterPassword
-          error={error}
           formRef={passwordFormRef}
           isPending={isPending}
           onBack={handleBack}
@@ -197,7 +177,6 @@ export function OnboardingFlow() {
     case OnboardingStep.Step3a_PasskeySetup:
       return (
         <Step3aPasskeySetup
-          error={error}
           isPending={isPending}
           isSocialUser={isSocialUser}
           onBack={handleBack}
@@ -207,7 +186,6 @@ export function OnboardingFlow() {
     case OnboardingStep.Step3b_TOTPSetup:
       return (
         <Step3bTOTPSetup
-          error={error}
           formRef={totpFormRef}
           isPending={isPending}
           onBack={handleBack}
@@ -216,14 +194,7 @@ export function OnboardingFlow() {
         />
       )
     case OnboardingStep.Step4_BackupCodes:
-      return (
-        <Step4BackupCodes
-          backupCodes={backupCodes}
-          error={error}
-          isPending={isPending}
-          onComplete={completeOnboarding}
-        />
-      )
+      return <Step4BackupCodes backupCodes={backupCodes} isPending={isPending} onComplete={completeOnboarding} />
     default:
       return null
   }

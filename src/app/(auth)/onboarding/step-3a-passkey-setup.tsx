@@ -12,7 +12,7 @@ interface Props extends StepProps {
   onSetup: () => void
 }
 
-export function Step3aPasskeySetup({ error, isPending, isSocialUser, onBack, onSetup }: Props) {
+export function Step3aPasskeySetup({ isPending, isSocialUser, onBack, onSetup }: Props) {
   return (
     <div className="mt-6 flex flex-col gap-6">
       {!isSocialUser && (
@@ -35,19 +35,9 @@ export function Step3aPasskeySetup({ error, isPending, isSocialUser, onBack, onS
           </p>
         </div>
       </div>
-      {error && <div className="text-sm text-destructive text-center">{error}</div>}
       <Button className="w-full" disabled={isPending} onClick={onSetup} variant="glass">
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            등록 중
-          </>
-        ) : (
-          <>
-            <Fingerprint className="mr-2 h-4 w-4" />
-            패스키 등록하기
-          </>
-        )}
+        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
+        패스키 등록하기
       </Button>
     </div>
   )

@@ -17,7 +17,7 @@ interface Props extends StepProps {
   totpUri: string
 }
 
-export function Step3bTOTPSetup({ error, formRef, isPending, onBack, onSubmit, totpUri }: Props) {
+export function Step3bTOTPSetup({ formRef, isPending, onBack, onSubmit, totpUri }: Props) {
   const [secretCopied, setSecretCopied] = useState(false)
 
   function extractSecret(uri: string): string {
@@ -92,16 +92,8 @@ export function Step3bTOTPSetup({ error, formRef, isPending, onBack, onSubmit, t
             variant="glass"
           />
         </div>
-        {error && <div className="text-sm text-destructive text-center">{error}</div>}
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              확인 중
-            </>
-          ) : (
-            '확인'
-          )}
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
         </Button>
       </form>
     </div>

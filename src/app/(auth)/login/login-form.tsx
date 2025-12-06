@@ -174,8 +174,8 @@ export function LoginForm() {
         )}
         패스키로 로그인
       </Button>
-      <GoogleOAuthButton disabled={isPending} />
-      <AppleOAuthButton disabled={isPending} />
+      <GoogleOAuthButton disabled={isPending}>Google로 로그인</GoogleOAuthButton>
+      <AppleOAuthButton disabled={isPending}>Apple로 로그인</AppleOAuthButton>
       <p className="text-center text-sm text-muted-foreground">
         계정이 없으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/register">

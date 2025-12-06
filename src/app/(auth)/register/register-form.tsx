@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { GoogleOAuthButton } from '@/app/(auth)/google-oauth-button'
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
@@ -23,8 +24,6 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordTouched, setPasswordTouched] = useState(false)
-  const [error, setError] = useState('')
-
   const validation = validatePassword(password, COMMON_PASSWORDS)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -37,39 +36,38 @@ export function RegisterForm() {
     const confirmPassword = String(formData.get('confirmPassword'))
 
     if (!name?.trim()) {
-      setError('이름을 입력해주세요')
-      return
-    }
-    if (!email?.trim()) {
-      setError('이메일을 입력해주세요')
-      return
-    }
-    if (password !== confirmPassword) {
-      setError(PASSWORD_ERROR_MESSAGES.mismatch)
+      toast.warning('이름을 입력해주세요')
       return
     }
 
-    setError('')
+    if (!email?.trim()) {
+      toast.warning('이메일을 입력해주세요')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.warning(PASSWORD_ERROR_MESSAGES.mismatch)
+      return
+    }
+
     setIsPending(true)
 
-    try {
-      const result = await authClient.signUp.email({
-        email,
-        password,
-        name,
-      })
+    await authClient.signUp.email({
+      email,
+      password,
+      name,
+      fetchOptions: {
+        onSuccess: () => {
+          toast.success('가입이 완료됐어요')
+          router.push('/onboarding')
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message || '회원가입에 실패했어요')
+        },
+      },
+    })
 
-      if (result.error) {
-        setError(result.error.message || '회원가입에 실패했어요')
-        return
-      }
-
-      router.push('/onboarding')
-    } catch {
-      setError('회원가입 중 오류가 발생했어요')
-    } finally {
-      setIsPending(false)
-    }
+    setIsPending(false)
   }
 
   return (
@@ -88,7 +86,6 @@ export function RegisterForm() {
             variant="glass"
           />
         </div>
-
         <div>
           <Label htmlFor="email">이메일</Label>
           <Input
@@ -102,7 +99,6 @@ export function RegisterForm() {
             variant="glass"
           />
         </div>
-
         <div>
           <Label htmlFor="password">비밀번호</Label>
           <div className="relative mt-2">
@@ -135,7 +131,6 @@ export function RegisterForm() {
             />
           )}
         </div>
-
         <div>
           <Label htmlFor="confirmPassword">비밀번호 확인</Label>
           <div className="relative mt-2">
@@ -159,22 +154,10 @@ export function RegisterForm() {
             </button>
           </div>
         </div>
-
-        {error && <div className="text-sm text-destructive">{error}</div>}
-
         <Button className="w-full" disabled={isPending || !validation.isValid} type="submit" variant="glass">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              가입 중...
-            </>
-          ) : (
-            '가입하기'
-          )}
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '가입하기'}
         </Button>
       </form>
-
-      {/* 구분선 */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="auth-divider w-full border-t" />
@@ -183,8 +166,8 @@ export function RegisterForm() {
           <span className="bg-transparent px-3 text-muted-foreground">또는</span>
         </div>
       </div>
-      <GoogleOAuthButton disabled={isPending} label="Google로 가입" />
-      <AppleOAuthButton disabled={isPending} label="Apple로 가입" />
+      <GoogleOAuthButton disabled={isPending}>Google로 가입</GoogleOAuthButton>
+      <AppleOAuthButton disabled={isPending}>Apple로 가입</AppleOAuthButton>
       <p className="text-center text-sm text-muted-foreground">
         이미 계정이 있으신가요?{' '}
         <Link className="text-foreground underline-offset-4 hover:underline" href="/login">

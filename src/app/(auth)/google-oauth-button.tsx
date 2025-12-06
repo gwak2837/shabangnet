@@ -1,17 +1,17 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { authClient } from '@/lib/auth-client'
 
 interface GoogleOAuthButtonProps {
+  children?: ReactNode
   disabled?: boolean
-  label?: string
 }
 
-export function GoogleOAuthButton({ disabled, label = 'Google로 로그인' }: GoogleOAuthButtonProps) {
+export function GoogleOAuthButton({ disabled, children }: GoogleOAuthButtonProps) {
   const [isPending, setIsPending] = useState(false)
 
   async function handleGoogleLogin() {
@@ -57,7 +57,7 @@ export function GoogleOAuthButton({ disabled, label = 'Google로 로그인' }: G
           />
         </svg>
       )}
-      {label}
+      {children}
     </Button>
   )
 }

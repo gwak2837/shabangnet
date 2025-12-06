@@ -4,6 +4,7 @@ import { KeyRound, Loader2, LogOut, Smartphone } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
+import { signOut } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -13,17 +14,17 @@ import { authClient } from '@/lib/auth-client'
 type MFAMethod = 'passkey' | 'recovery' | 'totp'
 
 export function MFAChallenge() {
-  const [isPending, setIsPending] = useState(false)
+  const [isMFAChallengePending, setIsMFAChallengePending] = useState(false)
   const [isLoggingOut, startLogoutTransition] = useTransition()
   const [selectedMethod, setSelectedMethod] = useState<MFAMethod>('totp')
 
   async function handleTOTPSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setIsPending(true)
 
     const formData = new FormData(e.currentTarget)
     const code = String(formData.get('totpCode'))
     const trustDevice = formData.get('trustDevice') === 'on'
+    setIsMFAChallengePending(true)
 
     await authClient.twoFactor.verifyTotp({
       code,
@@ -34,20 +35,19 @@ export function MFAChallenge() {
         },
         onError: (ctx) => {
           toast.error(ctx.error.message || '인증 코드가 올바르지 않아요')
-          setIsPending(false)
         },
       },
     })
 
-    setIsPending(false)
+    setIsMFAChallengePending(false)
   }
 
   async function handleRecoverySubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setIsPending(true)
 
     const formData = new FormData(e.currentTarget)
     const code = String(formData.get('recoveryCode')).toUpperCase()
+    setIsMFAChallengePending(true)
 
     await authClient.twoFactor.verifyBackupCode({
       code,
@@ -61,22 +61,18 @@ export function MFAChallenge() {
       },
     })
 
-    setIsPending(false)
-  }
-
-  function handleMethodChange(method: MFAMethod) {
-    setSelectedMethod(method)
+    setIsMFAChallengePending(false)
   }
 
   function handleLogout() {
     startLogoutTransition(async () => {
-      await authClient.signOut()
+      await signOut()
       window.location.href = '/login'
     })
   }
 
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="mt-6 flex flex-col gap-4">
       {/* TOTP 인증 */}
       {selectedMethod === 'totp' && (
         <div className="flex flex-col gap-6">
@@ -105,16 +101,14 @@ export function MFAChallenge() {
                 variant="glass"
               />
             </div>
-
             <div className="flex items-center gap-2">
               <Checkbox className="glass-checkbox" id="trustDevice" name="trustDevice" />
               <Label className="cursor-pointer font-normal text-sm" htmlFor="trustDevice">
                 이 브라우저 신뢰
               </Label>
             </div>
-
-            <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
+            <Button className="w-full" disabled={isMFAChallengePending} type="submit" variant="glass">
+              {isMFAChallengePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
             </Button>
           </form>
         </div>
@@ -128,7 +122,6 @@ export function MFAChallenge() {
             <h3 className="mt-4 text-lg font-medium">복구 코드 입력</h3>
             <p className="mt-2 text-sm text-muted-foreground">가입 시 발급받은 복구 코드 중 하나를 입력해주세요.</p>
           </div>
-
           <form className="flex flex-col gap-4" onSubmit={handleRecoverySubmit}>
             <div>
               <Label htmlFor="recoveryCode">복구 코드</Label>
@@ -143,11 +136,11 @@ export function MFAChallenge() {
                 variant="glass"
               />
             </div>
-            <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
+            <Button className="w-full" disabled={isMFAChallengePending} type="submit" variant="glass">
+              {isMFAChallengePending ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
             </Button>
           </form>
-          <Button onClick={() => handleMethodChange('totp')} variant="glass-outline">
+          <Button onClick={() => setSelectedMethod('totp')} variant="glass-outline">
             <Smartphone className="h-4 w-4" />
             인증 앱으로 인증
           </Button>
@@ -158,7 +151,7 @@ export function MFAChallenge() {
       {selectedMethod !== 'recovery' && (
         <Button
           className="w-fit mx-auto text-muted-foreground hover:text-foreground"
-          onClick={() => handleMethodChange('recovery')}
+          onClick={() => setSelectedMethod('recovery')}
           type="button"
           variant="link"
         >
@@ -166,15 +159,16 @@ export function MFAChallenge() {
         </Button>
       )}
       <div className="text-center">
-        <button
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        <Button
+          className="w-fit mx-auto text-muted-foreground hover:text-foreground"
           disabled={isLoggingOut}
           onClick={handleLogout}
           type="button"
+          variant="link"
         >
           {isLoggingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
           다른 계정으로 로그인
-        </button>
+        </Button>
       </div>
     </div>
   )

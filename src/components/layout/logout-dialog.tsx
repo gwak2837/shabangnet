@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, LogOut } from 'lucide-react'
 import { useTransition } from 'react'
 
+import { signOut } from '@/app/(auth)/actions'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,16 +16,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { authClient } from '@/lib/auth-client'
 
 export function LogoutDialog() {
   const [isPending, startTransition] = useTransition()
   const queryClient = useQueryClient()
 
-  async function handleLogout() {
+  function handleLogout() {
     startTransition(async () => {
       queryClient.clear()
-      await authClient.signOut()
+      await signOut()
       window.location.href = '/login'
     })
   }
