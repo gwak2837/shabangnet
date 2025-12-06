@@ -4,9 +4,10 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { completeOnboarding, signOut } from '@/app/(auth)/actions'
+import { completeOnboarding } from '@/app/(auth)/actions'
 import { authClient } from '@/lib/auth-client'
 
+import { useSignOut } from '../useSignout'
 import { OnboardingStep } from './common'
 import { Step1ChooseMethod } from './step-1-choose-method'
 import { Step2EnterPassword } from './step-2-enter-password'
@@ -23,11 +24,11 @@ export function OnboardingFlow() {
   const router = useRouter()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isPending, setIsPending] = useState(false)
-  const [isLoggingOut, startLogout] = useTransition()
+  const { signOut, isSigningOut } = useSignOut()
   const [isCompletingOnboarding, startOnboardingCompletion] = useTransition()
   const [step, setStep] = useState(OnboardingStep.Step1_ChooseMethod)
   const [hasExistingPasskey, setHasExistingPasskey] = useState(false)
-  const [totpUri, setTotpUri] = useState('')
+  const [totpURI, setTOTPURI] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[]>([])
   const passwordFormRef = useRef<HTMLFormElement>(null)
   const totpFormRef = useRef<HTMLFormElement>(null)
@@ -41,19 +42,14 @@ export function OnboardingFlow() {
     setIsPending(true)
 
     const result = await authClient.twoFactor.enable({ password })
-    const data = result.data
 
     if (result.error) {
       toast.error(result.error.message || 'TOTP 설정에 실패했어요')
       return
     }
 
-    if (!data) {
-      toast.error('TOTP 설정에 실패했어요')
-      return
-    }
-
-    setTotpUri(data.totpURI)
+    const data = result.data
+    setTOTPURI(data.totpURI)
     setBackupCodes(data.backupCodes || [])
     setStep(OnboardingStep.Step3b_TOTPSetup)
     setIsPending(false)
@@ -121,13 +117,6 @@ export function OnboardingFlow() {
     totpFormRef.current?.reset()
   }
 
-  function handleLogout() {
-    startLogout(async () => {
-      await signOut()
-      window.location.href = '/login'
-    })
-  }
-
   // NOTE: 패스키 존재 여부 및 소셜 유저 확인
   useEffect(() => {
     async function checkInitialState() {
@@ -149,9 +138,9 @@ export function OnboardingFlow() {
       return (
         <Step1ChooseMethod
           hasExistingPasskey={hasExistingPasskey}
-          isPending={isLoggingOut || isSessionPending || isPending || isCompletingOnboarding}
+          isPending={isSigningOut || isSessionPending || isPending || isCompletingOnboarding}
           onComplete={handleCompleteOnboarding}
-          onLogout={handleLogout}
+          onLogout={signOut}
           onSelectPasskey={() => setStep(OnboardingStep.Step3a_PasskeySetup)}
           onSelectTOTP={() => setStep(OnboardingStep.Step2_EnterPassword)}
         />
@@ -174,7 +163,7 @@ export function OnboardingFlow() {
           isPending={isPending}
           onBack={handleBack}
           onSubmit={handleVerifyTOTP}
-          totpUri={totpUri}
+          totpUri={totpURI}
         />
       )
     case OnboardingStep.Step4_BackupCodes:

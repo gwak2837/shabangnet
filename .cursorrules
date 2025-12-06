@@ -188,7 +188,7 @@ export async function sendEmail() {
 export async function setupMFA() {
   /* ... */
 }
-export async function validateTotp() {
+export async function validateTOTP() {
   /* ... */
 }
 // ... 50 more functions
@@ -217,7 +217,7 @@ export async function testEmailConnection() {
 export async function setupMFA() {
   /* ... */
 }
-export async function validateTotp() {
+export async function validateTOTP() {
   /* ... */
 }
 ```

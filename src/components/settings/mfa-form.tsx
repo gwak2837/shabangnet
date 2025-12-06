@@ -50,11 +50,11 @@ export function MFAForm({ settings }: MFAFormProps) {
   const [success, setSuccess] = useState<string | null>(null)
 
   // TOTP Setup State
-  const [showTotpSetup, setShowTotpSetup] = useState(false)
-  const [showTotpPasswordDialog, setShowTotpPasswordDialog] = useState(false)
-  const [totpSetupPassword, setTotpSetupPassword] = useState('')
-  const [totpUri, setTotpUri] = useState<string | null>(null)
-  const [totpCode, setTotpCode] = useState('')
+  const [showTOTPSetup, setShowTOTPSetup] = useState(false)
+  const [showTOTPPasswordDialog, setShowTOTPPasswordDialog] = useState(false)
+  const [totpSetupPassword, setTOTPSetupPassword] = useState('')
+  const [totpUri, setTOTPUri] = useState<string | null>(null)
+  const [totpCode, setTOTPCode] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
 
   // Passkey State
@@ -68,8 +68,8 @@ export function MFAForm({ settings }: MFAFormProps) {
 
   // Delete Confirmation
   const [deletePasskeyId, setDeletePasskeyId] = useState<string | null>(null)
-  const [showDisableTotpDialog, setShowDisableTotpDialog] = useState(false)
-  const [disableTotpCode, setDisableTotpCode] = useState('')
+  const [showDisableTOTPDialog, setShowDisableTOTPDialog] = useState(false)
+  const [disableTOTPCode, setDisableTOTPCode] = useState('')
 
   // Password Setup State (for passwordless users)
   const [showSetPasswordDialog, setShowSetPasswordDialog] = useState(false)
@@ -100,7 +100,7 @@ export function MFAForm({ settings }: MFAFormProps) {
   }
 
   // TOTP Setup
-  async function handleStartTotpSetup() {
+  async function handleStartTOTPSetup() {
     if (!totpSetupPassword) {
       setError('비밀번호를 입력해주세요.')
       return
@@ -116,13 +116,13 @@ export function MFAForm({ settings }: MFAFormProps) {
           onSuccess: (ctx) => {
             const data = ctx.data as { totpURI?: string; backupCodes?: string[] }
             if (data.totpURI) {
-              setTotpUri(data.totpURI)
+              setTOTPUri(data.totpURI)
               if (data.backupCodes) {
                 setRecoveryCodes(data.backupCodes)
               }
-              setShowTotpPasswordDialog(false)
-              setTotpSetupPassword('')
-              setShowTotpSetup(true)
+              setShowTOTPPasswordDialog(false)
+              setTOTPSetupPassword('')
+              setShowTOTPSetup(true)
             }
           },
           onError: (ctx) => {
@@ -141,7 +141,7 @@ export function MFAForm({ settings }: MFAFormProps) {
     }
   }
 
-  async function handleVerifyTotp() {
+  async function handleVerifyTOTP() {
     setIsLoading(true)
     setError(null)
 
@@ -168,17 +168,17 @@ export function MFAForm({ settings }: MFAFormProps) {
     }
   }
 
-  async function handleDisableTotp() {
+  async function handleDisableTOTP() {
     setIsLoading(true)
     setError(null)
 
     try {
       const result = await authClient.twoFactor.disable({
-        password: disableTotpCode,
+        password: disableTOTPCode,
         fetchOptions: {
           onSuccess: () => {
-            setShowDisableTotpDialog(false)
-            setDisableTotpCode('')
+            setShowDisableTOTPDialog(false)
+            setDisableTOTPCode('')
             setSuccess('TOTP가 비활성화되었습니다.')
             window.location.reload()
           },
@@ -443,7 +443,7 @@ export function MFAForm({ settings }: MFAFormProps) {
                   <span className="text-sm text-green-600 font-medium">활성화됨</span>
                   <Button
                     disabled={isLoading}
-                    onClick={() => setShowDisableTotpDialog(true)}
+                    onClick={() => setShowDisableTOTPDialog(true)}
                     size="sm"
                     variant="outline"
                   >
@@ -453,7 +453,7 @@ export function MFAForm({ settings }: MFAFormProps) {
               ) : (
                 <Button
                   disabled={isLoading || settings?.hasPassword === false}
-                  onClick={() => setShowTotpPasswordDialog(true)}
+                  onClick={() => setShowTOTPPasswordDialog(true)}
                   size="sm"
                   title={settings?.hasPassword === false ? '비밀번호를 먼저 설정해주세요' : undefined}
                 >
@@ -536,12 +536,12 @@ export function MFAForm({ settings }: MFAFormProps) {
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
-            setShowTotpPasswordDialog(false)
-            setTotpSetupPassword('')
+            setShowTOTPPasswordDialog(false)
+            setTOTPSetupPassword('')
             setError(null)
           }
         }}
-        open={showTotpPasswordDialog}
+        open={showTOTPPasswordDialog}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -554,10 +554,10 @@ export function MFAForm({ settings }: MFAFormProps) {
               <Input
                 autoComplete="current-password"
                 id="totpSetupPassword"
-                onChange={(e) => setTotpSetupPassword(e.target.value)}
+                onChange={(e) => setTOTPSetupPassword(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && totpSetupPassword) {
-                    handleStartTotpSetup()
+                    handleStartTOTPSetup()
                   }
                 }}
                 type="password"
@@ -566,7 +566,7 @@ export function MFAForm({ settings }: MFAFormProps) {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
-              <Button disabled={isLoading || !totpSetupPassword} onClick={handleStartTotpSetup}>
+              <Button disabled={isLoading || !totpSetupPassword} onClick={handleStartTOTPSetup}>
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
               </Button>
             </DialogFooter>
@@ -575,7 +575,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       {/* TOTP Setup Dialog */}
-      <Dialog onOpenChange={(open) => !open && setShowTotpSetup(false)} open={showTotpSetup}>
+      <Dialog onOpenChange={(open) => !open && setShowTOTPSetup(false)} open={showTOTPSetup}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>인증 앱 설정</DialogTitle>
@@ -626,14 +626,14 @@ export function MFAForm({ settings }: MFAFormProps) {
                   id="totpVerifyCode"
                   inputMode="numeric"
                   maxLength={6}
-                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setTOTPCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
                   value={totpCode}
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <DialogFooter>
-                <Button disabled={isLoading || totpCode.length !== 6} onClick={handleVerifyTotp}>
+                <Button disabled={isLoading || totpCode.length !== 6} onClick={handleVerifyTOTP}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
                 </Button>
               </DialogFooter>
@@ -671,10 +671,10 @@ export function MFAForm({ settings }: MFAFormProps) {
               <DialogFooter>
                 <Button
                   onClick={() => {
-                    setShowTotpSetup(false)
+                    setShowTOTPSetup(false)
                     setRecoveryCodes(null)
-                    setTotpCode('')
-                    setTotpUri(null)
+                    setTOTPCode('')
+                    setTOTPUri(null)
                     setCopiedRecoveryCodes(false)
                     window.location.reload()
                   }}
@@ -809,7 +809,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       {/* Disable TOTP Dialog */}
-      <Dialog onOpenChange={(open) => !open && setShowDisableTotpDialog(false)} open={showDisableTotpDialog}>
+      <Dialog onOpenChange={(open) => !open && setShowDisableTOTPDialog(false)} open={showDisableTOTPDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>TOTP 비활성화</DialogTitle>
@@ -817,18 +817,18 @@ export function MFAForm({ settings }: MFAFormProps) {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="disableTotpCode">비밀번호</Label>
+              <Label htmlFor="disableTOTPCode">비밀번호</Label>
               <Input
                 autoComplete="current-password"
-                id="disableTotpCode"
-                onChange={(e) => setDisableTotpCode(e.target.value)}
+                id="disableTOTPCode"
+                onChange={(e) => setDisableTOTPCode(e.target.value)}
                 type="password"
-                value={disableTotpCode}
+                value={disableTOTPCode}
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
-              <Button disabled={isLoading || !disableTotpCode} onClick={handleDisableTotp} variant="destructive">
+              <Button disabled={isLoading || !disableTOTPCode} onClick={handleDisableTOTP} variant="destructive">
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '비활성화'}
               </Button>
             </DialogFooter>

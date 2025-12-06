@@ -1,21 +1,24 @@
 'use client'
 
 import { KeyRound, Loader2, LogOut, Smartphone } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { signOut } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 
+import { useSignOut } from '../useSignout'
+
 type MFAMethod = 'passkey' | 'recovery' | 'totp'
 
 export function MFAChallenge() {
+  const router = useRouter()
   const [isMFAChallengePending, setIsMFAChallengePending] = useState(false)
-  const [isLoggingOut, startLogoutTransition] = useTransition()
+  const { signOut, isSigningOut } = useSignOut()
   const [selectedMethod, setSelectedMethod] = useState<MFAMethod>('totp')
 
   async function handleTOTPSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -31,7 +34,7 @@ export function MFAChallenge() {
       trustDevice,
       fetchOptions: {
         onSuccess: () => {
-          window.location.href = '/dashboard'
+          router.push('/dashboard')
         },
         onError: (ctx) => {
           toast.error(ctx.error.message || '인증 코드가 올바르지 않아요')
@@ -53,7 +56,7 @@ export function MFAChallenge() {
       code,
       fetchOptions: {
         onSuccess: () => {
-          window.location.href = '/settings?recovery=true'
+          router.push('/settings?recovery=true')
         },
         onError: (ctx) => {
           toast.error(ctx.error.message || '복구 코드가 올바르지 않아요')
@@ -62,13 +65,6 @@ export function MFAChallenge() {
     })
 
     setIsMFAChallengePending(false)
-  }
-
-  function handleLogout() {
-    startLogoutTransition(async () => {
-      await signOut()
-      window.location.href = '/login'
-    })
   }
 
   return (
@@ -161,12 +157,12 @@ export function MFAChallenge() {
       <div className="text-center">
         <Button
           className="w-fit mx-auto text-muted-foreground hover:text-foreground"
-          disabled={isLoggingOut}
-          onClick={handleLogout}
+          disabled={isSigningOut}
+          onClick={signOut}
           type="button"
           variant="link"
         >
-          {isLoggingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+          {isSigningOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
           다른 계정으로 로그인
         </Button>
       </div>

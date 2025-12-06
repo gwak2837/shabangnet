@@ -1,10 +1,8 @@
 'use client'
 
-import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, LogOut } from 'lucide-react'
-import { useTransition } from 'react'
 
-import { signOut } from '@/app/(auth)/actions'
+import { useSignOut } from '@/app/(auth)/useSignout'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,16 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function LogoutDialog() {
-  const [isPending, startTransition] = useTransition()
-  const queryClient = useQueryClient()
-
-  function handleLogout() {
-    startTransition(async () => {
-      queryClient.clear()
-      await signOut()
-      window.location.href = '/login'
-    })
-  }
+  const { signOut, isSigningOut } = useSignOut()
 
   return (
     <AlertDialog>
@@ -43,16 +32,10 @@ export function LogoutDialog() {
           <AlertDialogDescription>정말 로그아웃하시겠습니까?</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
-          <AlertDialogAction disabled={isPending} onClick={handleLogout}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                로그아웃 중...
-              </>
-            ) : (
-              '로그아웃'
-            )}
+          <AlertDialogCancel disabled={isSigningOut}>취소</AlertDialogCancel>
+          <AlertDialogAction disabled={isSigningOut} onClick={signOut}>
+            {isSigningOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+            로그아웃
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

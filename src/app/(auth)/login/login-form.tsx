@@ -2,6 +2,7 @@
 
 import { Eye, EyeOff, Fingerprint, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -15,6 +16,7 @@ import { authClient } from '@/lib/auth-client'
 import { AppleOAuthButton } from '../apple-oauth-button'
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isEmailPasswordPending, setIsEmailPasswordPending] = useState(false)
   const [isPasskeyPending, setIsPasskeyPending] = useState(false)
@@ -40,38 +42,33 @@ export function LoginForm() {
 
     setIsEmailPasswordPending(true)
 
-    await authClient.signIn.email({
+    const result = await authClient.signIn.email({
       email,
       password,
       rememberMe,
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = '/dashboard'
-        },
-        onError: (context) => {
-          toast.error(context.error.message || '이메일 또는 비밀번호가 올바르지 않아요')
-        },
-      },
     })
 
     setIsEmailPasswordPending(false)
+
+    if (result.error) {
+      toast.error(result.error.message || '이메일 또는 비밀번호가 올바르지 않아요')
+      return
+    }
+
+    router.push('/dashboard')
   }
 
   async function handlePasskeyLogin() {
     setIsPasskeyPending(true)
-
-    await authClient.signIn.passkey({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = '/dashboard'
-        },
-        onError: (context) => {
-          toast.error(context.error.message || '패스키 인증에 실패했어요')
-        },
-      },
-    })
-
+    const result = await authClient.signIn.passkey()
     setIsPasskeyPending(false)
+
+    if (result.error) {
+      toast.error(result.error.message || '패스키 인증에 실패했어요')
+      return
+    }
+
+    router.push('/dashboard')
   }
 
   // NOTE: Conditional UI 패스키 로그인
@@ -87,14 +84,14 @@ export function LoginForm() {
       autoFill: true,
       fetchOptions: {
         onSuccess: () => {
-          window.location.href = '/dashboard'
+          router.push('/dashboard')
         },
         onError: (context) => {
           toast.error(context.error.message || '패스키 인증에 실패했어요')
         },
       },
     })
-  }, [])
+  }, [router])
 
   return (
     <div className="flex flex-col gap-6">
