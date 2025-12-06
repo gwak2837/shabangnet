@@ -4,7 +4,7 @@ import { Clock, Loader2, LogOut } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
-import { useSignOut } from '../useSignout'
+import { useSignOut } from '../useSignOut'
 
 export default function PendingApprovalPage() {
   const { signOut, isSigningOut } = useSignOut()

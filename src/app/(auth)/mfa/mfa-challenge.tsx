@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 
-import { useSignOut } from '../useSignout'
+import { useSignOut } from '../useSignOut'
 
 type MFAMethod = 'passkey' | 'recovery' | 'totp'
 

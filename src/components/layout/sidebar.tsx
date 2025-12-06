@@ -20,6 +20,7 @@ import { usePathname } from 'next/navigation'
 import { LogoutDialog } from '@/components/layout/logout-dialog'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { authClient } from '@/lib/auth-client'
 import { cn } from '@/utils/cn'
 
 const mainNavItems = [
@@ -91,6 +92,11 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+  const userName = user?.name || '사용자'
+  const userEmail = user?.email || ''
+  const userInitial = userName.charAt(0)
 
   return (
     <TooltipProvider>
@@ -176,11 +182,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="border-t p-4">
             <div className="flex items-center gap-3 rounded-lg px-3 py-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-                <span className="text-sm font-medium text-slate-700">관</span>
+                <span className="text-sm font-medium text-slate-700">{userInitial}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-slate-900">관리자</p>
-                <p className="truncate text-xs text-slate-500">admin@daonfnc.com</p>
+                <p className="truncate text-sm font-medium text-slate-900">{userName}</p>
+                <p className="truncate text-xs text-slate-500">{userEmail}</p>
               </div>
             </div>
             <div className="mt-2 flex gap-1">

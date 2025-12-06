@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { completeOnboarding } from '@/app/(auth)/actions'
 import { authClient } from '@/lib/auth-client'
 
-import { useSignOut } from '../useSignout'
+import { useSignOut } from '../useSignOut'
 import { OnboardingStep } from './common'
 import { Step1ChooseMethod } from './step-1-choose-method'
 import { Step2EnterPassword } from './step-2-enter-password'

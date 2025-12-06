@@ -32,11 +32,7 @@ export const CORE_COLUMNS_ORDER = ['상품명', '옵션명', '옵션', '수량']
 export const CORE_COLUMNS_KEYS = ['사방넷주문번호', '주문번호'] as const
 
 /** 발주서 전체 핵심 컬럼 */
-export const CORE_COLUMNS_ORDER_FORM = [
-  ...CORE_COLUMNS_DELIVERY,
-  ...CORE_COLUMNS_ORDER,
-  ...CORE_COLUMNS_KEYS,
-] as const
+export const CORE_COLUMNS_ORDER_FORM = [...CORE_COLUMNS_DELIVERY, ...CORE_COLUMNS_ORDER, ...CORE_COLUMNS_KEYS] as const
 
 /** 쇼핑몰 변환 후 필수 컬럼 (사방넷 양식) */
 export const CORE_COLUMNS_SABANGNET = [

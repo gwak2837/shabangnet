@@ -2,7 +2,7 @@
 
 import { Loader2, LogOut } from 'lucide-react'
 
-import { useSignOut } from '@/app/(auth)/useSignout'
+import { useSignOut } from '@/app/(auth)/useSignOut'
 import {
   AlertDialog,
   AlertDialogAction,
