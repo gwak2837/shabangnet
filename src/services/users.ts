@@ -4,7 +4,6 @@ import { db } from '@/db/client'
 import { user } from '@/db/schema/auth'
 
 export interface UserListItem {
-  authType: 'passkey' | 'password' | 'social'
   createdAt: Date
   email: string
   emailVerified: boolean
@@ -50,7 +49,6 @@ export async function getUserList(params: UserListParams = {}): Promise<UserList
       email: user.email,
       emailVerified: user.emailVerified,
       status: user.status,
-      authType: user.authType,
       isAdmin: user.isAdmin,
       createdAt: user.createdAt,
     })
@@ -63,7 +61,6 @@ export async function getUserList(params: UserListParams = {}): Promise<UserList
   const users: UserListItem[] = userList.map((u) => ({
     ...u,
     status: u.status as UserStatus,
-    authType: u.authType as 'passkey' | 'password' | 'social',
   }))
 
   return {

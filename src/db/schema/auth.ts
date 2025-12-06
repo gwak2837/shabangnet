@@ -1,7 +1,7 @@
 import { boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import 'server-only'
 
-import { authTypeEnum, userStatusEnum } from './enums'
+import { userStatusEnum } from './enums'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -17,7 +17,6 @@ export const user = pgTable('user', {
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
   status: userStatusEnum('status').notNull().default('pending'),
   onboardingComplete: boolean('onboarding_complete').notNull().default(false),
-  authType: authTypeEnum('auth_type').notNull().default('password'),
   isAdmin: boolean('is_admin').notNull().default(false),
 }).enableRLS()
 

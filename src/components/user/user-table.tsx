@@ -39,12 +39,6 @@ const statusConfig: Record<UserStatus, { label: string; className: string }> = {
   },
 }
 
-const authTypeLabels: Record<string, string> = {
-  password: '비밀번호',
-  passkey: '패스키',
-  social: '소셜',
-}
-
 export function UserTable({ users, isLoading }: UserTableProps) {
   const [confirmDialog, setConfirmDialog] = useState<{
     type: 'approve' | 'reinstate' | 'reject'
@@ -135,7 +129,6 @@ export function UserTable({ users, isLoading }: UserTableProps) {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">사용자</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">상태</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">인증 방식</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">가입일</th>
               <th className="px-4 py-3 text-right text-sm font-medium text-slate-600">작업</th>
             </tr>
@@ -161,7 +154,6 @@ export function UserTable({ users, isLoading }: UserTableProps) {
                       {config.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{authTypeLabels[user.authType] ?? user.authType}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{formatDate(user.createdAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">

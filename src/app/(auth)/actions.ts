@@ -1,14 +1,49 @@
 'use server'
 
+import { eq } from 'drizzle-orm'
 import { cookies, headers } from 'next/headers'
 
+import { db } from '@/db/client'
+import { passkey, user } from '@/db/schema/auth'
 import { auth } from '@/lib/auth'
 
-/**
- * 로그아웃 처리 + 2FA 관련 쿠키 정리
- * better-auth의 signOut은 세션만 삭제하고 2FA 쿠키는 남겨둘 수 있으므로
- * 서버에서 직접 정리
- */
+export async function completeOnboarding(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+
+    if (!session?.user) {
+      return { success: false, error: '인증되지 않은 사용자입니다' }
+    }
+
+    const hasTOTP = session.user.twoFactorEnabled === true
+    const userPasskeys = await db.select().from(passkey).where(eq(passkey.userId, session.user.id))
+    const hasPasskey = userPasskeys.length > 0
+
+    if (!hasTOTP && !hasPasskey) {
+      return { success: false, error: '2FA 설정이 필요합니다' }
+    }
+
+    await db
+      .update(user)
+      .set({
+        onboardingComplete: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, session.user.id))
+
+    // 세션 캐시 갱신 (DB에서 새로 fetch하고 쿠키 캐시 업데이트)
+    await auth.api.getSession({
+      headers: await headers(),
+      query: { disableCookieCache: true },
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Complete onboarding error:', error)
+    return { success: false, error: '온보딩 완료 처리에 실패했어요' }
+  }
+}
+
 export async function signOut() {
   await auth.api.signOut({ headers: await headers() })
   const cookieStore = await cookies()

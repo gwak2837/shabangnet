@@ -78,7 +78,6 @@ async function seed() {
       status: 'approved', // 승인된 상태
       onboardingComplete: true, // 온보딩 완료
       isAdmin: true, // 관리자 권한
-      authType: 'password',
     })
 
     // 계정(credential) 생성 - better-auth 호환

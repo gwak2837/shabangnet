@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { signOut } from '@/app/(auth)/actions'
+import { completeOnboarding, signOut } from '@/app/(auth)/actions'
 import { authClient } from '@/lib/auth-client'
 
 import { OnboardingStep } from './common'
@@ -21,9 +21,10 @@ import { Step4BackupCodes } from './step-4-backup-codes'
  */
 export function OnboardingFlow() {
   const router = useRouter()
-  const { data: session, isPending: isSessionPending, refetch: refetchSession } = authClient.useSession()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isPending, setIsPending] = useState(false)
   const [isLoggingOut, startLogout] = useTransition()
+  const [isCompletingOnboarding, startOnboardingCompletion] = useTransition()
   const [step, setStep] = useState(OnboardingStep.Step1_ChooseMethod)
   const [hasExistingPasskey, setHasExistingPasskey] = useState(false)
   const [totpUri, setTotpUri] = useState('')
@@ -31,33 +32,30 @@ export function OnboardingFlow() {
   const passwordFormRef = useRef<HTMLFormElement>(null)
   const totpFormRef = useRef<HTMLFormElement>(null)
   const userEmail = session?.user?.email || ''
-  const isSocialUser = session?.user?.authType === 'social'
 
   async function handleEnableTOTP(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setIsPending(true)
 
     const formData = new FormData(e.currentTarget)
     const password = String(formData.get('password'))
+    setIsPending(true)
 
-    await authClient.twoFactor.enable({
-      password,
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message || 'TOTP 설정에 실패했어요')
-        },
-        onSuccess: async (ctx) => {
-          const data = ctx.data as { totpURI?: string; backupCodes?: string[] }
-          if (data.totpURI) {
-            await refetchSession()
-            setTotpUri(data.totpURI)
-            setBackupCodes(data.backupCodes || [])
-            setStep(OnboardingStep.Step3b_TOTPSetup)
-          }
-        },
-      },
-    })
+    const result = await authClient.twoFactor.enable({ password })
+    const data = result.data
 
+    if (result.error) {
+      toast.error(result.error.message || 'TOTP 설정에 실패했어요')
+      return
+    }
+
+    if (!data) {
+      toast.error('TOTP 설정에 실패했어요')
+      return
+    }
+
+    setTotpUri(data.totpURI)
+    setBackupCodes(data.backupCodes || [])
+    setStep(OnboardingStep.Step3b_TOTPSetup)
     setIsPending(false)
   }
 
@@ -78,7 +76,7 @@ export function OnboardingFlow() {
           if (backupCodes.length > 0) {
             setStep(OnboardingStep.Step4_BackupCodes)
           } else {
-            completeOnboarding()
+            handleCompleteOnboarding()
           }
         },
       },
@@ -92,13 +90,12 @@ export function OnboardingFlow() {
 
     await authClient.passkey.addPasskey({
       name: userEmail,
-
       fetchOptions: {
         onError: (ctx) => {
           toast.error(ctx.error.message || '패스키 등록에 실패했어요')
         },
         onSuccess: () => {
-          completeOnboarding()
+          handleCompleteOnboarding()
         },
       },
     })
@@ -106,22 +103,16 @@ export function OnboardingFlow() {
     setIsPending(false)
   }
 
-  async function completeOnboarding() {
-    setIsPending(true)
+  function handleCompleteOnboarding() {
+    startOnboardingCompletion(async () => {
+      const result = await completeOnboarding()
 
-    try {
-      const response = await fetch('/api/auth/complete-onboarding', { method: 'POST' })
-
-      if (response.ok) {
+      if (result.success) {
         router.push('/pending-approval')
       } else {
-        toast.error('온보딩 완료 처리에 실패했어요')
+        toast.error(result.error || '온보딩 완료 처리에 실패했어요')
       }
-    } catch {
-      toast.error('온보딩 완료 처리에 실패했어요')
-    } finally {
-      setIsPending(false)
-    }
+    })
   }
 
   function handleBack() {
@@ -137,19 +128,20 @@ export function OnboardingFlow() {
     })
   }
 
-  // NOTE: 패스키 존재 여부 확인
+  // NOTE: 패스키 존재 여부 및 소셜 유저 확인
   useEffect(() => {
-    async function checkExistingPasskey() {
+    async function checkInitialState() {
       try {
-        const result = await authClient.passkey.listUserPasskeys()
-        if (result.data && result.data.length > 0) {
+        const passkeyResult = await authClient.passkey.listUserPasskeys()
+
+        if (passkeyResult.data && passkeyResult.data.length > 0) {
           setHasExistingPasskey(true)
         }
       } catch {
         // 무시
       }
     }
-    checkExistingPasskey()
+    checkInitialState()
   }, [])
 
   switch (step) {
@@ -157,9 +149,8 @@ export function OnboardingFlow() {
       return (
         <Step1ChooseMethod
           hasExistingPasskey={hasExistingPasskey}
-          isPending={isLoggingOut || isSessionPending || isPending}
-          isSocialUser={isSocialUser}
-          onComplete={completeOnboarding}
+          isPending={isLoggingOut || isSessionPending || isPending || isCompletingOnboarding}
+          onComplete={handleCompleteOnboarding}
           onLogout={handleLogout}
           onSelectPasskey={() => setStep(OnboardingStep.Step3a_PasskeySetup)}
           onSelectTOTP={() => setStep(OnboardingStep.Step2_EnterPassword)}
@@ -175,14 +166,7 @@ export function OnboardingFlow() {
         />
       )
     case OnboardingStep.Step3a_PasskeySetup:
-      return (
-        <Step3aPasskeySetup
-          isPending={isPending}
-          isSocialUser={isSocialUser}
-          onBack={handleBack}
-          onSetup={handlePasskeySetup}
-        />
-      )
+      return <Step3aPasskeySetup isPending={isPending} onBack={handleBack} onSetup={handlePasskeySetup} />
     case OnboardingStep.Step3b_TOTPSetup:
       return (
         <Step3bTOTPSetup
@@ -194,7 +178,13 @@ export function OnboardingFlow() {
         />
       )
     case OnboardingStep.Step4_BackupCodes:
-      return <Step4BackupCodes backupCodes={backupCodes} isPending={isPending} onComplete={completeOnboarding} />
+      return (
+        <Step4BackupCodes
+          backupCodes={backupCodes}
+          isPending={isPending || isCompletingOnboarding}
+          onComplete={handleCompleteOnboarding}
+        />
+      )
     default:
       return null
   }
