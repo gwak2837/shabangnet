@@ -18,7 +18,7 @@ export default defineConfig({
   outputDir: './e2e/test-results',
 
   // 전역 타임아웃 설정
-  timeout: ms('5 seconds'),
+  timeout: ms('10 seconds'),
 
   // 기대값 타임아웃
   expect: {

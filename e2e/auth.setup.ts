@@ -14,7 +14,7 @@ const authFile = 'e2e/.auth/user.json'
 setup('authenticate', async ({ page }) => {
   // 로그인 페이지로 이동
   await page.goto('/login')
-  await page.waitForLoadState('networkidle')
+  await page.locator('#email').waitFor({ state: 'visible' })
 
   // 이메일 입력
   await page.locator('#email').fill(TEST_USER.email)

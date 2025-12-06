@@ -1,7 +1,6 @@
 'use client'
 
-import { AlertTriangle, KeyRound, Loader2, LogOut, Smartphone } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { KeyRound, Loader2, LogOut, Smartphone } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
@@ -14,11 +13,9 @@ import { authClient } from '@/lib/auth-client'
 type MFAMethod = 'passkey' | 'recovery' | 'totp'
 
 export function MFAChallenge() {
-  const searchParams = useSearchParams()
   const [isPending, setIsPending] = useState(false)
   const [isLoggingOut, startLogoutTransition] = useTransition()
   const [selectedMethod, setSelectedMethod] = useState<MFAMethod>('totp')
-  const recoveryLogin = searchParams.get('recovery') === 'true'
 
   async function handleTOTPSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -80,17 +77,6 @@ export function MFAChallenge() {
 
   return (
     <div className="mt-6 flex flex-col gap-6">
-      {/* 복구 코드 경고 배너 */}
-      {recoveryLogin && (
-        <div className="glass-panel flex items-center gap-3 rounded-lg p-4 text-amber-700 dark:text-amber-300">
-          <AlertTriangle className="h-5 w-5 shrink-0" />
-          <div className="text-sm">
-            <p className="font-medium">복구 코드로 로그인했습니다</p>
-            <p className="mt-1 opacity-80">보안 설정을 점검해주세요.</p>
-          </div>
-        </div>
-      )}
-
       {/* TOTP 인증 */}
       {selectedMethod === 'totp' && (
         <div className="flex flex-col gap-6">

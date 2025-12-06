@@ -76,16 +76,28 @@ test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
         return
       }
 
-      // 다운로드 버튼 찾기
-      const downloadButton = manufacturerRow.getByRole('button', { name: /다운로드/i })
-      if (!(await downloadButton.isVisible({ timeout: 3000 }).catch(() => false))) {
-        console.log(`제조사 "${testCase.manufacturer}"의 다운로드 버튼을 찾을 수 없습니다.`)
+      // 작업 메뉴 버튼 찾기
+      const menuButton = manufacturerRow.getByRole('button', { name: '작업 메뉴' })
+      if (!(await menuButton.isVisible({ timeout: 3000 }).catch(() => false))) {
+        console.log(`제조사 "${testCase.manufacturer}"의 작업 메뉴를 찾을 수 없습니다.`)
+        return
+      }
+
+      // 메뉴 열기
+      await menuButton.click()
+
+      // 다운로드 메뉴 아이템 찾기
+      const downloadItem = page.getByRole('menuitem', { name: /다운로드/i })
+      if (!(await downloadItem.isVisible({ timeout: 3000 }).catch(() => false))) {
+        console.log(`제조사 "${testCase.manufacturer}"의 다운로드 메뉴를 찾을 수 없습니다.`)
+        // 메뉴 닫기
+        await page.keyboard.press('Escape')
         return
       }
 
       // 다운로드 이벤트 대기 및 클릭
       const downloadPromise = page.waitForEvent('download')
-      await downloadButton.click()
+      await downloadItem.click()
       const download = await downloadPromise
 
       // 파일명 검증
