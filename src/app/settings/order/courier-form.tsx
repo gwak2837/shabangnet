@@ -117,7 +117,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
             {mappings.map((courier) => (
               <div
                 aria-disabled={!courier.enabled}
-                className="glass-panel rounded-lg p-4 transition aria-disabled:opacity-50"
+                className="glass-panel rounded-lg p-4 py-3 transition aria-disabled:opacity-50"
                 key={courier.id}
               >
                 <div className="flex items-center gap-4">

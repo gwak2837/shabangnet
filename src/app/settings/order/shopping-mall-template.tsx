@@ -287,7 +287,7 @@ export function ShoppingMallTemplate({
             {templates.map((template) => (
               <div
                 aria-disabled={!template.enabled}
-                className="glass-panel rounded-lg p-4 transition-all duration-200 aria-disabled:opacity-50"
+                className="glass-panel rounded-lg p-4 py-3 transition aria-disabled:opacity-50"
                 key={template.id}
               >
                 <div className="flex items-center gap-4">

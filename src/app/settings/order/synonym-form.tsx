@@ -138,10 +138,10 @@ export function SynonymForm({
             </div>
           </div>
           <form className="glass-panel rounded-lg p-4 space-y-3" onSubmit={handleAddSynonym}>
-            <Label className="text-sm font-medium">새 동의어 추가</Label>
+            <p className="text-sm font-medium">새 동의어 추가</p>
             <div className="flex gap-2">
-              <Select onValueChange={setSelectedKey} required value={selectedKey}>
-                <SelectTrigger className="w-[200px]">
+              <Select name="standard-key" onValueChange={setSelectedKey} required value={selectedKey}>
+                <SelectTrigger aria-label="표준 컬럼 선택" className="w-[200px]">
                   <SelectValue placeholder="표준 컬럼 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,9 +152,15 @@ export function SynonymForm({
                   ))}
                 </SelectContent>
               </Select>
-              <Input className="flex-1" name="synonym" placeholder="동의어 입력 (예: 고객명, 수취인명)" required />
+              <Input
+                aria-label="동의어"
+                className="flex-1"
+                name="synonym"
+                placeholder="동의어 입력 (예: 고객명, 수취인명)"
+                required
+              />
               <Button className="shrink-0" disabled={!selectedKey || isAdding} type="submit">
-                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 추가
               </Button>
             </div>
@@ -284,7 +290,7 @@ function SynonymItem({ synonym, onToggle, onEdit, onRemove, isUpdating }: Synony
   return (
     <div
       aria-checked={synonym.enabled}
-      className="group/item inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ring-1 ring-inset aria-checked:bg-background aria-checked:ring-border/50 aria-checked:text-foreground aria-[checked=false]:bg-muted/50 aria-[checked=false]:ring-border/30 aria-[checked=false]:text-muted-foreground"
+      className="group/item inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition ring-1 ring-inset aria-checked:bg-background aria-checked:ring-border/50 aria-checked:text-foreground aria-[checked=false]:bg-muted/50 aria-[checked=false]:ring-border/30 aria-[checked=false]:text-muted-foreground"
     >
       <label className="inline-flex items-center gap-1.5 cursor-pointer">
         <Switch
