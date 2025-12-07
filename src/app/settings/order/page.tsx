@@ -3,11 +3,11 @@
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { CourierForm } from '@/app/settings/order/courier-form'
+import { ShoppingMallTemplate } from '@/app/settings/order/shopping-mall-template'
 import { queryKeys } from '@/common/constants/query-keys'
-import { CourierForm } from '@/components/settings/courier-form'
 import { DuplicateCheckForm } from '@/components/settings/duplicate-check-form'
 import { ExclusionForm } from '@/components/settings/exclusion-form'
-import { ShoppingMallForm } from '@/components/settings/shopping-mall-form'
 import { SynonymForm } from '@/components/settings/synonym-form'
 import { useServerAction } from '@/hooks/use-server-action'
 import {
@@ -198,7 +198,7 @@ export default function OrdersSettingsPage() {
         onRemove={(id) => removeCourier(id)}
         onUpdate={(id, data) => updateCourier({ id, data })}
       />
-      <ShoppingMallForm
+      <ShoppingMallTemplate
         isDeleting={isDeletingTemplate}
         isSaving={isCreatingTemplate || isUpdatingTemplate}
         onAnalyze={analyzeShoppingMallFile}

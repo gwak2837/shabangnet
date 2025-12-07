@@ -104,7 +104,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
               </div>
             </div>
             <button
-              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground"
               onClick={handleAddCourier}
             >
               <Plus className="h-4 w-4" />
@@ -123,9 +123,10 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                 <div className="flex items-center gap-4">
                   <Switch
                     checked={courier.enabled}
+                    id={`courier-${courier.id}`}
                     onCheckedChange={() => onUpdate(courier.id, { enabled: !courier.enabled })}
                   />
-                  <div className="flex-1 min-w-0">
+                  <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`courier-${courier.id}`}>
                     <div className="flex items-center gap-3 mb-1.5">
                       <span className="font-medium text-base text-foreground truncate">{courier.name}</span>
                       <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
@@ -147,7 +148,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                         )}
                       </div>
                     )}
-                  </div>
+                  </label>
                   <div className="flex items-center gap-0.5">
                     <button
                       className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

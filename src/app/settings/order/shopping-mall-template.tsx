@@ -57,7 +57,7 @@ interface MappingRowProps {
   value: string
 }
 
-interface ShoppingMallFormProps {
+interface ShoppingMallTemplateProps {
   isDeleting?: boolean
   isSaving?: boolean
   onAnalyze: (file: File, headerRow?: number) => Promise<AnalyzeResult>
@@ -83,7 +83,7 @@ interface ShoppingMallFormProps {
   templates: ShoppingMallTemplate[]
 }
 
-export function ShoppingMallForm({
+export function ShoppingMallTemplate({
   templates,
   onUpdate,
   onCreate,
@@ -91,7 +91,7 @@ export function ShoppingMallForm({
   onAnalyze,
   isSaving = false,
   isDeleting = false,
-}: ShoppingMallFormProps) {
+}: ShoppingMallTemplateProps) {
   const [editingTemplate, setEditingTemplate] = useState<EditingTemplate | null>(null)
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -274,7 +274,7 @@ export function ShoppingMallForm({
               </div>
             </div>
             <button
-              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground"
               onClick={handleAddTemplate}
             >
               <Plus className="h-4 w-4" />
@@ -293,9 +293,10 @@ export function ShoppingMallForm({
                 <div className="flex items-center gap-4">
                   <Switch
                     checked={template.enabled}
+                    id={`template-${template.id}`}
                     onCheckedChange={() => onUpdate(template.id, { enabled: !template.enabled })}
                   />
-                  <div className="flex-1 min-w-0">
+                  <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`template-${template.id}`}>
                     <div className="flex items-center gap-3 mb-1.5">
                       <span className="font-medium text-base text-foreground truncate">{template.displayName}</span>
                       <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
@@ -322,7 +323,7 @@ export function ShoppingMallForm({
                         </span>
                       )}
                     </div>
-                  </div>
+                  </label>
                   <div className="flex items-center gap-0.5">
                     <button
                       className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -523,18 +524,6 @@ export function ShoppingMallForm({
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-              {!isNewTemplate && (
-                <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2.5">
-                  <Label className="text-sm font-medium cursor-pointer" htmlFor="template-enabled">
-                    사용
-                  </Label>
-                  <Switch
-                    checked={editingTemplate.enabled}
-                    id="template-enabled"
-                    onCheckedChange={(checked) => setEditingTemplate({ ...editingTemplate, enabled: checked })}
-                  />
                 </div>
               )}
             </div>
