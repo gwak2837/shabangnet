@@ -1,20 +1,13 @@
 'use client'
 
 import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
 
 import type { CourierMapping } from '@/services/settings'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -30,7 +23,6 @@ interface CourierFormProps {
 export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = false }: CourierFormProps) {
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newAlias, setNewAlias] = useState('')
   const [isNewCourier, setIsNewCourier] = useState(false)
 
   function createEmptyCourier() {
@@ -55,37 +47,39 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
     setIsModalOpen(true)
   }
 
-  function handleDeleteCourier(id: string) {
-    onRemove(id)
-  }
+  function handleAddAlias(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
 
-  function handleToggleEnabled(id: string, currentEnabled: boolean) {
-    onUpdate(id, { enabled: !currentEnabled })
-  }
-
-  function handleAddAlias() {
-    if (!editingCourier || !newAlias.trim()) return
-    if (editingCourier.aliases.includes(newAlias.trim())) {
-      setNewAlias('')
+    if (!editingCourier) {
       return
     }
-    setEditingCourier({
-      ...editingCourier,
-      aliases: [...editingCourier.aliases, newAlias.trim()],
-    })
-    setNewAlias('')
+
+    const formData = new FormData(e.currentTarget)
+    const alias = String(formData.get('alias')).trim()
+
+    if (editingCourier.aliases.includes(alias)) {
+      e.currentTarget.reset()
+      return
+    }
+
+    setEditingCourier({ ...editingCourier, aliases: [...editingCourier.aliases, alias] })
+    e.currentTarget.reset()
   }
 
   function handleRemoveAlias(alias: string) {
-    if (!editingCourier) return
-    setEditingCourier({
-      ...editingCourier,
-      aliases: editingCourier.aliases.filter((a) => a !== alias),
-    })
+    if (!editingCourier) {
+      return
+    }
+
+    setEditingCourier({ ...editingCourier, aliases: editingCourier.aliases.filter((a) => a !== alias) })
   }
 
-  function handleSaveCourier() {
-    if (!editingCourier || !editingCourier.name || !editingCourier.code) return
+  function handleSaveCourier(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    if (!editingCourier) {
+      return
+    }
 
     if (isNewCourier) {
       onAdd({
@@ -110,7 +104,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
-                <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Truck className="h-5 w-5 text-blue-500" />
               </div>
               <div className="space-y-0.5">
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">택배사</h2>
@@ -130,16 +124,14 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
           <div className="space-y-2">
             {mappings.map((courier) => (
               <div
-                className={`
-                  glass-panel rounded-lg p-4 transition-all duration-200
-                  ${!courier.enabled ? 'opacity-50' : ''}
-                `}
+                aria-disabled={!courier.enabled}
+                className="glass-panel rounded-lg p-4 transition aria-disabled:opacity-50"
                 key={courier.id}
               >
                 <div className="flex items-center gap-4">
                   <Switch
                     checked={courier.enabled}
-                    onCheckedChange={() => handleToggleEnabled(courier.id, courier.enabled)}
+                    onCheckedChange={() => onUpdate(courier.id, { enabled: !courier.enabled })}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1.5">
@@ -174,7 +166,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                     </button>
                     <button
                       className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleDeleteCourier(courier.id)}
+                      onClick={() => onRemove(courier.id)}
                       type="button"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -207,103 +199,90 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
           </div>
         </div>
       </section>
-
       <Dialog onOpenChange={setIsModalOpen} open={isModalOpen}>
         <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+          <form id="alias-form" onSubmit={handleAddAlias} />
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">
               {isNewCourier ? '새 택배사' : '택배사 편집'}
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              이름, 코드, 별칭을 설정합니다
-            </DialogDescription>
           </DialogHeader>
           {editingCourier && (
-            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium" htmlFor="courierName">
-                    이름
-                  </Label>
-                  <Input
-                    id="courierName"
-                    onChange={(e) => setEditingCourier({ ...editingCourier, name: e.target.value })}
-                    placeholder="CJ대한통운"
-                    value={editingCourier.name}
-                  />
+            <form className="contents" onSubmit={handleSaveCourier}>
+              <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium" htmlFor="courier-name">
+                      이름
+                    </Label>
+                    <Input
+                      id="courier-name"
+                      onChange={(e) => setEditingCourier({ ...editingCourier, name: e.target.value })}
+                      placeholder="CJ대한통운"
+                      required
+                      value={editingCourier.name}
+                      variant="glass"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium" htmlFor="courier-code">
+                      사방넷 코드
+                    </Label>
+                    <Input
+                      className="font-mono"
+                      id="courier-code"
+                      onChange={(e) => setEditingCourier({ ...editingCourier, code: e.target.value })}
+                      placeholder="04"
+                      required
+                      value={editingCourier.code}
+                      variant="glass"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium" htmlFor="courierCode">
-                    사방넷 코드
+                <fieldset className="space-y-1.5">
+                  <Label asChild className="text-sm font-medium">
+                    <legend>별칭</legend>
                   </Label>
-                  <Input
-                    className="font-mono"
-                    id="courierCode"
-                    onChange={(e) => setEditingCourier({ ...editingCourier, code: e.target.value })}
-                    placeholder="04"
-                    value={editingCourier.code}
-                  />
-                </div>
+                  <div className="flex gap-2">
+                    <Input
+                      form="alias-form"
+                      name="alias"
+                      placeholder="거래처에서 사용하는 표기"
+                      required
+                      variant="glass"
+                    />
+                    <Button className="shrink-0" form="alias-form" size="sm" type="submit" variant="outline">
+                      추가
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 min-h-[28px] pt-1">
+                    {editingCourier.aliases.map((alias) => (
+                      <Badge className="gap-1 h-6 pl-2 pr-1 text-xs font-medium" key={alias} variant="secondary">
+                        {alias}
+                        <button
+                          className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
+                          onClick={() => handleRemoveAlias(alias)}
+                          type="button"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </fieldset>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium">별칭</Label>
-                <div className="flex gap-2">
-                  <Input
-                    onChange={(e) => setNewAlias(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleAddAlias()
-                      }
-                    }}
-                    placeholder="거래처에서 사용하는 표기"
-                    value={newAlias}
-                  />
-                  <Button className="shrink-0" onClick={handleAddAlias} size="sm" type="button" variant="outline">
-                    추가
+              <DialogFooter className="px-6 py-4 bg-muted/30 border-t shrink-0">
+                <div className="flex w-full gap-3">
+                  <Button className="flex-1" onClick={() => setIsModalOpen(false)} type="button" variant="outline">
+                    취소
+                  </Button>
+                  <Button className="flex-1" disabled={isSaving} type="submit">
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-1.5 min-h-[28px] pt-1">
-                  {editingCourier.aliases.map((alias) => (
-                    <Badge className="gap-1 h-6 pl-2 pr-1 text-xs font-medium" key={alias} variant="secondary">
-                      {alias}
-                      <button
-                        className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
-                        onClick={() => handleRemoveAlias(alias)}
-                        type="button"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2.5">
-                <Label className="text-sm font-medium cursor-pointer" htmlFor="courierEnabled">
-                  사용
-                </Label>
-                <Switch
-                  checked={editingCourier.enabled}
-                  id="courierEnabled"
-                  onCheckedChange={(checked) => setEditingCourier({ ...editingCourier, enabled: checked })}
-                />
-              </div>
-            </div>
+              </DialogFooter>
+            </form>
           )}
-          <DialogFooter className="px-6 py-4 bg-muted/30 border-t shrink-0">
-            <div className="flex w-full gap-3">
-              <Button className="flex-1" onClick={() => setIsModalOpen(false)} variant="outline">
-                취소
-              </Button>
-              <Button
-                className="flex-1"
-                disabled={!editingCourier?.name || !editingCourier?.code || isSaving}
-                onClick={handleSaveCourier}
-              >
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
-              </Button>
-            </div>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

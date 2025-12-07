@@ -276,7 +276,7 @@ body {
     inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.2));
 }
 
-/* Glass Panel - 정적 정보 표시용 (인터랙티브하지 않음) */
+/* Glass Panel */
 .glass-panel {
   background: light-dark(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(12px) saturate(150%);
