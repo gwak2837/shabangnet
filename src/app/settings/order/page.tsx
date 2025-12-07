@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 
 import { CourierForm } from '@/app/settings/order/courier-form'
 import { ShoppingMallTemplate } from '@/app/settings/order/shopping-mall-template'
+import { SynonymForm } from '@/app/settings/order/synonym-form'
 import { queryKeys } from '@/common/constants/query-keys'
 import { DuplicateCheckForm } from '@/components/settings/duplicate-check-form'
 import { ExclusionForm } from '@/components/settings/exclusion-form'
-import { SynonymForm } from '@/components/settings/synonym-form'
 import { useServerAction } from '@/hooks/use-server-action'
 import {
   useColumnSynonyms,
@@ -142,14 +142,11 @@ export default function OrdersSettingsPage() {
     },
   )
 
-  const { execute: removeSynonymAction, isPending: isRemovingSynonym } = useServerAction(
-    (id: string) => removeSynonym(id),
-    {
-      invalidateKeys: [queryKeys.settings.synonyms],
-      onSuccess: () => toast.success('동의어가 삭제되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
+  const { execute: removeSynonymAction } = useServerAction((id: string) => removeSynonym(id), {
+    invalidateKeys: [queryKeys.settings.synonyms],
+    onSuccess: () => toast.success('동의어가 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
   const { execute: createTemplate, isPending: isCreatingTemplate } = useServerAction(
     (data: CreateTemplateData) => createShoppingMallTemplate(data),
@@ -209,7 +206,6 @@ export default function OrdersSettingsPage() {
       />
       <SynonymForm
         isAdding={isAddingSynonym}
-        isRemoving={isRemovingSynonym}
         isUpdating={isUpdatingSynonym}
         onAdd={(data) => addSynonymAction(data)}
         onRemove={(id) => removeSynonymAction(id)}

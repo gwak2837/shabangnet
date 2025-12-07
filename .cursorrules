@@ -296,17 +296,24 @@ function AddItemForm() {
 </form>
 ```
 
-### Disabled State Styling
+### Conditional Styling with Attributes
 
-- **Use `aria-disabled` with CSS** instead of conditional className for disabled states.
-- This provides both styling and accessibility benefits.
+- **Use `aria-*` or `data-*` attributes with Tailwind variants** instead of conditional className.
+- This provides cleaner code and better accessibility.
+- Use `aria-disabled`, `aria-selected`, `aria-checked`, `data-state`, etc.
 
 ```tsx
-// ❌ Bad - Conditional className
+// ❌ Bad - Conditional className with template literals
 <div className={`card ${!enabled ? 'opacity-50' : ''}`}>
 
-// ✅ Good - aria-disabled with CSS
+<div className={`item ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+
+// ✅ Good - aria/data attributes with Tailwind variants
 <div aria-disabled={!enabled} className="card aria-disabled:opacity-50">
+
+<div aria-selected={isActive} className="item aria-selected:bg-blue-500 aria-selected:text-white bg-gray-100 text-gray-600">
+
+<div data-state={status} className="item data-[state=active]:bg-blue-500 data-[state=pending]:bg-yellow-500">
 ```
 
 ### HTML id Naming
@@ -338,6 +345,34 @@ function handleDelete(id: string) {
 
 // ✅ Good - Direct prop call
 <button onClick={() => onDelete(item.id)}>삭제</button>
+```
+
+### Expandable/Collapsible UI
+
+- **Use `<details>` and `<summary>`** instead of JavaScript state for toggle/accordion UI.
+- Browser handles open/close natively with built-in accessibility.
+- Use `group` and `group-open:` for styling and animations.
+
+```tsx
+// ❌ Bad - JavaScript state for toggle
+const [isOpen, setIsOpen] = useState(false)
+
+<div>
+  <button onClick={() => setIsOpen(!isOpen)}>
+    {isOpen ? <ChevronDown /> : <ChevronRight />}
+    Toggle
+  </button>
+  {isOpen && <div>Content</div>}
+</div>
+
+// ✅ Good - Native HTML details/summary
+<details className="group">
+  <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+    <ChevronRight className="transition-transform group-open:rotate-90" />
+    Toggle
+  </summary>
+  <div>Content</div>
+</details>
 ```
 
 ---
