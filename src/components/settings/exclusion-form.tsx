@@ -1,13 +1,12 @@
 'use client'
 
-import { CheckCircle2, Filter, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Filter, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
 
 import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -36,7 +35,7 @@ const defaultSettings: ExclusionSettings = {
 }
 
 export function ExclusionForm({
-  settings,
+  settings = defaultSettings,
   onUpdateSettings,
   onAddPattern,
   onRemovePattern,
@@ -44,58 +43,31 @@ export function ExclusionForm({
   isSaving = false,
   isUpdating = false,
 }: ExclusionFormProps) {
-  const [formData, setFormData] = useState<ExclusionSettings>(settings ?? defaultSettings)
-  const [newPattern, setNewPattern] = useState('')
-  const [newDescription, setNewDescription] = useState('')
-  const [saved, setSaved] = useState(false)
-  const [prevSettings, setPrevSettings] = useState(settings)
-
-  // Edit modal state
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPattern, setEditingPattern] = useState<ExclusionPattern | null>(null)
+  const enabledCount = settings.patterns.filter((p) => p.enabled).length
 
-  const enabledCount = formData.patterns.filter((p) => p.enabled).length
+  function handleAddPattern(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
 
-  if (settings !== prevSettings) {
-    setPrevSettings(settings)
-    if (settings) {
-      setFormData(settings)
-    }
-  }
-
-  function handleToggleEnabled(checked: boolean) {
-    setFormData({ ...formData, enabled: checked })
-    onUpdateSettings({ enabled: checked })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-
-  function handleAddPattern() {
-    if (!newPattern.trim()) return
+    const data = new FormData(e.currentTarget)
+    const pattern = String(data.get('pattern')).trim()
+    const description = String(data.get('description')).trim()
 
     onAddPattern({
-      pattern: newPattern.trim(),
+      pattern,
       enabled: true,
-      description: newDescription.trim() || undefined,
+      description: description || undefined,
     })
 
-    setNewPattern('')
-    setNewDescription('')
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    e.currentTarget.reset()
   }
 
-  function handleRemovePattern(id: string) {
-    onRemovePattern(id)
-  }
+  function handleSavePattern(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
 
-  function handleEditPattern(pattern: ExclusionPattern) {
-    setEditingPattern({ ...pattern })
-    setIsModalOpen(true)
-  }
-
-  function handleSavePattern() {
-    if (!editingPattern || !editingPattern.pattern.trim()) return
+    if (!editingPattern) {
+      return
+    }
 
     onUpdatePattern(editingPattern.id, {
       pattern: editingPattern.pattern.trim(),
@@ -103,216 +75,172 @@ export function ExclusionForm({
       enabled: editingPattern.enabled,
     })
 
-    setIsModalOpen(false)
     setEditingPattern(null)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-
-  function handleTogglePattern(id: string, enabled: boolean) {
-    onUpdatePattern(id, { enabled })
   }
 
   return (
     <>
-      <Card className="border-slate-200 bg-card shadow-sm py-6">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
-              <Filter className="h-5 w-5 text-violet-600" />
+      <section className="glass-card p-0 overflow-hidden">
+        <header className="px-6 pt-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/10 to-violet-600/5 ring-1 ring-violet-500/10">
+              <Filter className="h-5 w-5 text-violet-500" />
             </div>
-            <div>
-              <CardTitle className="text-lg">발송 제외 설정</CardTitle>
-              <CardDescription>F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {/* Enable/Disable Toggle */}
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-            <div className="flex flex-col gap-0.5">
-              <Label className="text-base" htmlFor="exclusion-enabled">
-                발송 제외 필터 활성화
-              </Label>
-              <p className="text-sm text-slate-500">F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다</p>
-            </div>
-            <Switch checked={formData.enabled} id="exclusion-enabled" onCheckedChange={handleToggleEnabled} />
-          </div>
-
-          {/* Patterns List */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <Label>제외 패턴 목록</Label>
-              <Badge className="bg-slate-100 text-slate-600" variant="secondary">
-                {enabledCount}/{formData.patterns.length} 활성화
-              </Badge>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {formData.patterns.map((pattern) => (
-                <div
-                  className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-                    pattern.enabled ? 'border-slate-200 bg-card' : 'border-slate-100 bg-slate-50'
-                  }`}
-                  key={pattern.id}
-                >
-                  <Switch
-                    checked={pattern.enabled}
-                    disabled={!formData.enabled || isUpdating}
-                    onCheckedChange={(checked) => handleTogglePattern(pattern.id, checked)}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`font-mono text-sm truncate ${pattern.enabled ? 'text-slate-900' : 'text-slate-400'}`}
-                    >
-                      {pattern.pattern}
-                    </p>
-                    {pattern.description && <p className="text-xs text-slate-500 truncate">{pattern.description}</p>}
-                  </div>
-                  <Button
-                    className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0"
-                    onClick={() => handleEditPattern(pattern)}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
-                    onClick={() => handleRemovePattern(pattern.id)}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-
-              {formData.patterns.length === 0 && (
-                <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
-                  <p className="text-sm text-slate-500">등록된 제외 패턴이 없습니다</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Add New Pattern */}
-          <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <Label>새 패턴 추가</Label>
-            <div className="flex gap-2">
-              <div className="flex-1 flex flex-col gap-2">
-                <Input
-                  className="bg-card font-mono text-sm"
-                  onChange={(e) => setNewPattern(e.target.value)}
-                  placeholder="예: [30002002]주문_센터택배"
-                  value={newPattern}
-                />
-                <Input
-                  className="bg-card text-sm"
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="설명 (선택사항)"
-                  value={newDescription}
-                />
-              </div>
-              <Button
-                className="shrink-0 bg-violet-600 hover:bg-violet-700"
-                disabled={!newPattern.trim() || isSaving}
-                onClick={handleAddPattern}
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
-                추가
-              </Button>
-            </div>
-            <p className="text-xs text-slate-500">
-              F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다
-            </p>
-          </div>
-
-          {/* Info Box */}
-          <div className="flex items-start gap-3 rounded-lg border border-violet-200 bg-violet-50 p-4">
-            <Filter className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
-            <div className="text-sm text-violet-800">
-              <p className="font-medium">발송 제외 동작</p>
-              <p className="mt-1">
-                제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수 있습니다. 이메일 발송 배치에는
-                포함되지 않습니다.
+            <div className="space-y-0.5">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">발송 제외 설정</h2>
+              <p className="text-sm text-muted-foreground">
+                F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다
               </p>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
-            {saved && (
-              <span className="flex items-center gap-1 text-sm text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" />
-                저장되었습니다
-              </span>
-            )}
+        </header>
+        <div className="p-6 space-y-5">
+          <label className="glass-panel rounded-lg p-4 flex items-center justify-between cursor-pointer">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-base font-medium">발송 제외 필터 사용</span>
+              <p className="text-sm text-muted-foreground">
+                F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다
+              </p>
+            </div>
+            <Switch checked={settings.enabled} onCheckedChange={(checked) => onUpdateSettings({ enabled: checked })} />
+          </label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">제외 패턴</Label>
+              <Badge className="text-xs" variant="secondary">
+                {enabledCount}/{settings.patterns.length} 활성화
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              {settings.patterns.map((pattern) => (
+                <div
+                  aria-disabled={!pattern.enabled}
+                  className="glass-panel rounded-lg p-3 transition aria-disabled:opacity-50"
+                  key={pattern.id}
+                >
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={pattern.enabled}
+                      disabled={!settings.enabled || isUpdating}
+                      onCheckedChange={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-sm truncate text-foreground">{pattern.pattern}</p>
+                      {pattern.description && (
+                        <p className="text-xs text-muted-foreground truncate">{pattern.description}</p>
+                      )}
+                    </div>
+                    <button
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      onClick={() => setEditingPattern({ ...pattern })}
+                      type="button"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => onRemovePattern(pattern.id)}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {settings.patterns.length === 0 && (
+                <div className="glass-panel rounded-lg p-8 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
+                    <Filter className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-base font-medium text-foreground">제외 패턴 없음</p>
+                  <p className="mt-1 text-sm text-muted-foreground">아래에서 패턴을 추가하세요</p>
+                </div>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Edit Pattern Modal */}
-      <Dialog onOpenChange={setIsModalOpen} open={isModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>패턴 수정</DialogTitle>
-            <DialogDescription>발송 제외 패턴 정보를 수정합니다</DialogDescription>
-          </DialogHeader>
-
-          {editingPattern && (
-            <div className="flex flex-col gap-4 py-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="editPattern">패턴</Label>
+          <form className="glass-panel rounded-lg p-4 space-y-3" onSubmit={handleAddPattern}>
+            <p className="text-sm font-medium">새 패턴 추가</p>
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-2">
                 <Input
+                  aria-label="패턴"
                   className="font-mono"
-                  id="editPattern"
-                  onChange={(e) => setEditingPattern({ ...editingPattern, pattern: e.target.value })}
+                  name="pattern"
                   placeholder="예: [30002002]주문_센터택배"
-                  value={editingPattern.pattern}
+                  required
                 />
+                <Input aria-label="설명" name="description" placeholder="설명 (선택사항)" />
               </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="editDescription">설명 (선택)</Label>
-                <Input
-                  id="editDescription"
-                  onChange={(e) => setEditingPattern({ ...editingPattern, description: e.target.value })}
-                  placeholder="패턴에 대한 설명"
-                  value={editingPattern.description || ''}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={editingPattern.enabled}
-                  id="editEnabled"
-                  onCheckedChange={(checked) => setEditingPattern({ ...editingPattern, enabled: checked })}
-                />
-                <Label htmlFor="editEnabled">활성화</Label>
+              <Button className="shrink-0 self-start" disabled={isSaving} type="submit">
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                추가
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다
+            </p>
+          </form>
+          <div className="rounded-lg bg-violet-500/10 p-4 ring-1 ring-violet-500/20">
+            <div className="flex items-start gap-3">
+              <Filter className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" />
+              <div className="text-sm">
+                <p className="font-medium text-violet-600">발송 제외 동작</p>
+                <p className="mt-1 text-violet-500">
+                  제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수 있습니다.
+                </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+      <Dialog onOpenChange={(open) => !open && setEditingPattern(null)} open={editingPattern !== null}>
+        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
+            <DialogTitle className="text-lg font-semibold tracking-tight">패턴 편집</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              발송 제외 패턴 정보를 수정합니다
+            </DialogDescription>
+          </DialogHeader>
+          {editingPattern && (
+            <form className="contents" onSubmit={handleSavePattern}>
+              <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" htmlFor="edit-pattern">
+                    패턴
+                  </Label>
+                  <Input
+                    className="font-mono"
+                    id="edit-pattern"
+                    onChange={(e) => setEditingPattern({ ...editingPattern, pattern: e.target.value })}
+                    placeholder="예: [30002002]주문_센터택배"
+                    required
+                    value={editingPattern.pattern}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" htmlFor="edit-description">
+                    설명 (선택)
+                  </Label>
+                  <Input
+                    id="edit-description"
+                    onChange={(e) => setEditingPattern({ ...editingPattern, description: e.target.value })}
+                    placeholder="패턴에 대한 설명"
+                    value={editingPattern.description || ''}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="px-6 py-4 bg-muted/50 border-t shrink-0">
+                <div className="flex w-full gap-3">
+                  <Button className="flex-1" onClick={() => setEditingPattern(null)} type="button" variant="outline">
+                    취소
+                  </Button>
+                  <Button className="flex-1" disabled={isUpdating} type="submit">
+                    {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
+                  </Button>
+                </div>
+              </DialogFooter>
+            </form>
           )}
-
-          <DialogFooter>
-            <Button onClick={() => setIsModalOpen(false)} variant="outline">
-              취소
-            </Button>
-            <Button
-              className="bg-slate-900 hover:bg-slate-800"
-              disabled={!editingPattern?.pattern.trim() || isUpdating}
-              onClick={handleSavePattern}
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                '저장'
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
