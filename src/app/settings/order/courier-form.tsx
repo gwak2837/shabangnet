@@ -2,25 +2,55 @@
 
 import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
+import { toast } from 'sonner'
 
-import type { CourierMapping } from '@/services/settings'
-
+import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { useServerAction } from '@/hooks/use-server-action'
+import { useCourierMappings } from '@/hooks/use-settings'
+import { addCourierMapping, type CourierMapping, removeCourierMapping, updateCourierMapping } from '@/services/settings'
 
-interface CourierFormProps {
-  isSaving?: boolean
-  mappings: CourierMapping[]
-  onAdd: (data: Omit<CourierMapping, 'id'>) => void
-  onRemove: (id: string) => void
-  onUpdate: (id: string, data: Partial<CourierMapping>) => void
+const SKELETON_COURIER: CourierMapping = {
+  id: 'skeleton',
+  name: '택배사 이름',
+  code: '00',
+  aliases: ['별칭 1', '별칭 2'],
+  enabled: true,
 }
 
-export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = false }: CourierFormProps) {
+export function CourierForm() {
+  const { data: mappings = [], isLoading } = useCourierMappings()
+
+  const { execute: updateCourier, isPending: isUpdatingCourier } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<CourierMapping> }) => updateCourierMapping(id, data),
+    {
+      invalidateKeys: [queryKeys.settings.courier],
+      onSuccess: () => toast.success('택배사 매핑이 수정되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: addCourier, isPending: isAddingCourier } = useServerAction(
+    (data: Omit<CourierMapping, 'id'>) => addCourierMapping(data),
+    {
+      invalidateKeys: [queryKeys.settings.courier],
+      onSuccess: () => toast.success('택배사 매핑이 추가되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: removeCourier } = useServerAction((id: string) => removeCourierMapping(id), {
+    invalidateKeys: [queryKeys.settings.courier],
+    onSuccess: () => toast.success('택배사 매핑이 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
+
+  const isSaving = isUpdatingCourier || isAddingCourier
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
 
   const isModalOpen = editingCourier !== null
@@ -75,14 +105,14 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
     }
 
     if (isNewCourier) {
-      onAdd({
+      addCourier({
         name: editingCourier.name,
         code: editingCourier.code,
         aliases: editingCourier.aliases,
         enabled: editingCourier.enabled,
       })
     } else {
-      onUpdate(editingCourier.id, editingCourier)
+      updateCourier({ id: editingCourier.id, data: editingCourier })
     }
 
     setEditingCourier(null)
@@ -114,16 +144,9 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
         </header>
         <div className="p-6 space-y-5">
           <div className="space-y-2">
-            {mappings.map((courier) => (
-              <CourierItem
-                courier={courier}
-                key={courier.id}
-                onEdit={() => handleEditCourier(courier)}
-                onRemove={() => onRemove(courier.id)}
-                onToggle={() => onUpdate(courier.id, { enabled: !courier.enabled })}
-              />
-            ))}
-            {mappings.length === 0 && (
+            {isLoading ? (
+              <CourierItem courier={SKELETON_COURIER} skeleton />
+            ) : mappings.length === 0 ? (
               <div className="glass-panel rounded-lg p-8 text-center">
                 <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                   <Truck className="h-5 w-5 text-muted-foreground" />
@@ -131,6 +154,16 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
                 <p className="text-base font-medium text-foreground">택배사 없음</p>
                 <p className="mt-1 text-sm text-muted-foreground">추가 버튼을 눌러 시작하세요</p>
               </div>
+            ) : (
+              mappings.map((courier) => (
+                <CourierItem
+                  courier={courier}
+                  key={courier.id}
+                  onEdit={() => handleEditCourier(courier)}
+                  onRemove={() => removeCourier(courier.id)}
+                  onToggle={() => updateCourier({ id: courier.id, data: { enabled: !courier.enabled } })}
+                />
+              ))
             )}
           </div>
           <div className="rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
@@ -238,23 +271,26 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
 }
 
 function CourierItem({
-  courier,
+  courier = SKELETON_COURIER,
+  skeleton,
   onToggle,
   onEdit,
   onRemove,
 }: {
   courier: CourierMapping
-  onEdit: () => void
-  onRemove: () => void
-  onToggle: () => void
+  skeleton?: boolean
+  onEdit?: () => void
+  onRemove?: () => void
+  onToggle?: () => void
 }) {
   return (
     <div
-      aria-disabled={!courier.enabled}
-      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50"
+      aria-busy={skeleton}
+      aria-disabled={!skeleton && !courier.enabled}
+      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed aria-busy:text-muted-foreground"
     >
       <Switch checked={courier.enabled} id={`courier-${courier.id}`} onCheckedChange={onToggle} />
-      <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`courier-${courier.id}`}>
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 mb-1.5">
           <span className="font-medium text-base text-foreground truncate">{courier.name}</span>
           <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
@@ -263,10 +299,10 @@ function CourierItem({
         </div>
         {courier.aliases.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
-            {courier.aliases.slice(0, 4).map((alias) => (
+            {courier.aliases.slice(0, 4).map((alias, i) => (
               <span
                 className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
-                key={alias}
+                key={skeleton ? i : alias}
               >
                 {alias}
               </span>
@@ -276,7 +312,7 @@ function CourierItem({
             )}
           </div>
         )}
-      </label>
+      </div>
       <div className="flex items-center gap-0.5">
         <button
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
