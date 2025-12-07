@@ -115,56 +115,13 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
         <div className="p-6 space-y-5">
           <div className="space-y-2">
             {mappings.map((courier) => (
-              <div
-                aria-disabled={!courier.enabled}
-                className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50"
+              <CourierItem
+                courier={courier}
                 key={courier.id}
-              >
-                <Switch
-                  checked={courier.enabled}
-                  id={`courier-${courier.id}`}
-                  onCheckedChange={() => onUpdate(courier.id, { enabled: !courier.enabled })}
-                />
-                <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`courier-${courier.id}`}>
-                  <div className="flex items-center gap-3 mb-1.5">
-                    <span className="font-medium text-base text-foreground truncate">{courier.name}</span>
-                    <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
-                      {courier.code}
-                    </span>
-                  </div>
-                  {courier.aliases.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {courier.aliases.slice(0, 4).map((alias) => (
-                        <span
-                          className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
-                          key={alias}
-                        >
-                          {alias}
-                        </span>
-                      ))}
-                      {courier.aliases.length > 4 && (
-                        <span className="text-xs text-muted-foreground">+{courier.aliases.length - 4}개</span>
-                      )}
-                    </div>
-                  )}
-                </label>
-                <div className="flex items-center gap-0.5">
-                  <button
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    onClick={() => handleEditCourier(courier)}
-                    type="button"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => onRemove(courier.id)}
-                    type="button"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+                onEdit={() => handleEditCourier(courier)}
+                onRemove={() => onRemove(courier.id)}
+                onToggle={() => onUpdate(courier.id, { enabled: !courier.enabled })}
+              />
             ))}
             {mappings.length === 0 && (
               <div className="glass-panel rounded-lg p-8 text-center">
@@ -277,5 +234,65 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+function CourierItem({
+  courier,
+  onToggle,
+  onEdit,
+  onRemove,
+}: {
+  courier: CourierMapping
+  onEdit: () => void
+  onRemove: () => void
+  onToggle: () => void
+}) {
+  return (
+    <div
+      aria-disabled={!courier.enabled}
+      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50"
+    >
+      <Switch checked={courier.enabled} id={`courier-${courier.id}`} onCheckedChange={onToggle} />
+      <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`courier-${courier.id}`}>
+        <div className="flex items-center gap-3 mb-1.5">
+          <span className="font-medium text-base text-foreground truncate">{courier.name}</span>
+          <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
+            {courier.code}
+          </span>
+        </div>
+        {courier.aliases.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {courier.aliases.slice(0, 4).map((alias) => (
+              <span
+                className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
+                key={alias}
+              >
+                {alias}
+              </span>
+            ))}
+            {courier.aliases.length > 4 && (
+              <span className="text-xs text-muted-foreground">+{courier.aliases.length - 4}개</span>
+            )}
+          </div>
+        )}
+      </label>
+      <div className="flex items-center gap-0.5">
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          onClick={onEdit}
+          type="button"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          onClick={onRemove}
+          type="button"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   )
 }

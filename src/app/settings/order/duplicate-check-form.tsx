@@ -1,11 +1,9 @@
 'use client'
 
-import { AlertTriangle, Loader2, ShieldCheck } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { AlertTriangle, ShieldCheck } from 'lucide-react'
 
 import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/services/settings'
 
-import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -28,18 +26,7 @@ const periodOptions: { label: string; value: DuplicateCheckPeriod }[] = [
   { value: 30, label: '30일' },
 ]
 
-export function DuplicateCheckForm({ settings, onSave, isSaving = false }: DuplicateCheckFormProps) {
-  const [isEnabled, setIsEnabled] = useState(settings?.enabled ?? defaultSettings.enabled)
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const enabled = formData.get('enabled') === 'on'
-    const periodDays = parseInt(String(formData.get('period-days')), 10) as DuplicateCheckPeriod
-
-    onSave({ enabled, periodDays })
-  }
-
+export function DuplicateCheckForm({ settings = defaultSettings, onSave }: DuplicateCheckFormProps) {
   return (
     <section className="glass-card p-0 overflow-hidden">
       <header className="px-6 pt-6">
@@ -53,7 +40,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
           </div>
         </div>
       </header>
-      <form className="p-6 space-y-5" onSubmit={handleSubmit}>
+      <div className="p-6 space-y-5">
         <label className="glass-panel rounded-lg p-4 flex items-center justify-between cursor-pointer">
           <div className="flex flex-col gap-0.5">
             <span className="text-base font-medium">중복 체크 사용</span>
@@ -61,23 +48,19 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
               동일 제조사 + 동일 수취인 주소로 최근 발송 이력을 체크합니다
             </p>
           </div>
-          <Switch
-            defaultChecked={settings?.enabled ?? defaultSettings.enabled}
-            name="enabled"
-            onCheckedChange={setIsEnabled}
-          />
+          <Switch checked={settings.enabled} onCheckedChange={(checked) => onSave({ enabled: checked })} />
         </label>
         <div className="space-y-2">
           <Label className="text-sm font-medium" htmlFor="duplicate-check-period">
             체크 기간
           </Label>
           <Select
-            defaultValue={(settings?.periodDays ?? defaultSettings.periodDays).toString()}
-            disabled={!isEnabled}
-            name="period-days"
+            disabled={!settings.enabled}
+            onValueChange={(value) => onSave({ periodDays: parseInt(value, 10) as DuplicateCheckPeriod })}
+            value={settings.periodDays.toString()}
           >
             <SelectTrigger
-              aria-disabled={!isEnabled}
+              aria-disabled={!settings.enabled}
               className="w-full aria-disabled:opacity-50"
               id="duplicate-check-period"
             >
@@ -104,12 +87,7 @@ export function DuplicateCheckForm({ settings, onSave, isSaving = false }: Dupli
             </div>
           </div>
         </div>
-        <div className="flex justify-end pt-2">
-          <Button disabled={isSaving} type="submit">
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
-          </Button>
-        </div>
-      </form>
+      </div>
     </section>
   )
 }
