@@ -161,10 +161,13 @@ export async function getEmailTemplatesAction(): Promise<GetTemplatesResult> {
 /**
  * 템플릿을 미리보기합니다.
  */
-export async function previewEmailTemplateAction(
-  template: { subject: string; body: string },
-  variables: Record<string, unknown>,
-): Promise<PreviewResult> {
+export async function previewEmailTemplateAction({
+  template,
+  variables,
+}: {
+  template: { subject: string; body: string }
+  variables: Record<string, unknown>
+}): Promise<PreviewResult> {
   try {
     const result = renderTemplate(template, variables)
 
@@ -182,12 +185,9 @@ export async function previewEmailTemplateAction(
 /**
  * 이메일 템플릿을 업데이트합니다.
  */
-export async function updateEmailTemplateAction(
-  id: number,
-  data: Partial<EmailTemplateFormData>,
-): Promise<ActionResult> {
+export async function updateEmailTemplateAction({ id, data }: { id: number; data: Partial<EmailTemplateInput> }) {
   try {
-    await updateEmailTemplate(id, data as Partial<EmailTemplateInput>)
+    await updateEmailTemplate(id, data)
 
     return {
       success: true,
@@ -198,10 +198,6 @@ export async function updateEmailTemplateAction(
     return { success: false, error: errorMessage }
   }
 }
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function templateToDisplay(template: EmailTemplate): EmailTemplateDisplay {
   return {

@@ -5,10 +5,6 @@ import 'server-only'
 import { db } from '@/db/client'
 import { emailTemplate } from '@/db/schema/settings'
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface EmailTemplate {
   body: string
   createdAt: Date
@@ -27,10 +23,6 @@ export interface TemplateRenderResult {
   body: string
   subject: string
 }
-
-// ============================================================================
-// Default Order Email Template
-// ============================================================================
 
 const DEFAULT_ORDER_TEMPLATE: EmailTemplateInput = {
   name: '발주서 기본 템플릿',
@@ -114,10 +106,6 @@ const DEFAULT_ORDER_TEMPLATE: EmailTemplateInput = {
   enabled: true,
 }
 
-// ============================================================================
-// Template Variables
-// ============================================================================
-
 export const ORDER_TEMPLATE_VARIABLES = {
   manufacturerName: '제조사명',
   senderName: '발신자명',
@@ -134,13 +122,6 @@ export type OrderTemplateVariables = {
   note?: string
 }
 
-// ============================================================================
-// Template Functions
-// ============================================================================
-
-/**
- * 이메일 템플릿을 생성합니다.
- */
 export async function createEmailTemplate(input: EmailTemplateInput): Promise<EmailTemplate> {
   const [template] = await db
     .insert(emailTemplate)
@@ -169,16 +150,10 @@ export async function createEmailTemplate(input: EmailTemplateInput): Promise<Em
   }
 }
 
-/**
- * 이메일 템플릿을 삭제합니다.
- */
 export async function deleteEmailTemplate(id: number): Promise<void> {
   await db.delete(emailTemplate).where(eq(emailTemplate.id, id))
 }
 
-/**
- * 기본 발주서 템플릿을 초기화합니다. (없는 경우에만 생성)
- */
 export async function ensureDefaultOrderTemplate(): Promise<EmailTemplate> {
   const existing = await getEmailTemplateBySlug('order-default')
 
@@ -189,9 +164,6 @@ export async function ensureDefaultOrderTemplate(): Promise<EmailTemplate> {
   return createEmailTemplate(DEFAULT_ORDER_TEMPLATE)
 }
 
-/**
- * 슬러그로 이메일 템플릿을 조회합니다.
- */
 export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplate | null> {
   const [template] = await db.select().from(emailTemplate).where(eq(emailTemplate.slug, slug)).limit(1)
 
@@ -212,9 +184,6 @@ export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplat
   }
 }
 
-/**
- * 이메일 템플릿 목록을 조회합니다.
- */
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
   const templates = await db.select().from(emailTemplate).orderBy(emailTemplate.createdAt)
 
@@ -231,19 +200,12 @@ export async function getEmailTemplates(): Promise<EmailTemplate[]> {
   }))
 }
 
-/**
- * 발주서 이메일 템플릿을 렌더링합니다.
- * 기본 템플릿이 없으면 자동으로 생성합니다.
- */
 export async function renderOrderEmailTemplate(variables: OrderTemplateVariables): Promise<TemplateRenderResult> {
   const template = await ensureDefaultOrderTemplate()
 
   return renderTemplate(template, variables)
 }
 
-/**
- * 템플릿을 렌더링합니다.
- */
 export function renderTemplate(
   template: { subject: string; body: string },
   variables: Record<string, unknown>,
@@ -257,18 +219,8 @@ export function renderTemplate(
   }
 }
 
-/**
- * 이메일 템플릿을 업데이트합니다.
- */
 export async function updateEmailTemplate(id: number, updates: Partial<EmailTemplateInput>): Promise<EmailTemplate> {
-  const [template] = await db
-    .update(emailTemplate)
-    .set({
-      ...updates,
-      updatedAt: new Date(),
-    })
-    .where(eq(emailTemplate.id, id))
-    .returning()
+  const [template] = await db.update(emailTemplate).set(updates).where(eq(emailTemplate.id, id)).returning()
 
   if (!template) {
     throw new Error('템플릿을 찾을 수 없습니다.')

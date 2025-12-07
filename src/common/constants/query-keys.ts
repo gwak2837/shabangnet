@@ -25,11 +25,13 @@ export const queryKeys = {
   },
   settings: {
     smtp: ['settings', 'smtp'] as const,
+    smtpByPurpose: (purpose: string) => ['settings', 'smtp', purpose] as const,
     exclusion: ['settings', 'exclusion'] as const,
     duplicateCheck: ['settings', 'duplicate-check'] as const,
     courier: ['settings', 'courier'] as const,
     mfa: ['settings', 'mfa'] as const,
     synonyms: ['settings', 'synonyms'] as const,
+    emailTemplate: ['settings', 'email-template'] as const,
   },
   settlement: {
     data: (filters: {

@@ -1,6 +1,10 @@
 'use server'
 
-import { sendEmail } from '@/lib/email/send'
+import { headers } from 'next/headers'
+
+import { auth } from '@/lib/auth'
+import { getSMTPAccount, sendEmail } from '@/lib/email/send'
+import { renderOrderEmailTemplate } from '@/lib/email/templates'
 import { generateOrderFileName, generateOrderSheet, type OrderData } from '@/lib/excel'
 
 // ============================================================================
@@ -28,16 +32,22 @@ interface SendOrderResult extends ActionResult {
   totalAmount?: number
 }
 
-// ============================================================================
-// Orders Actions
-// ============================================================================
-
-/**
- * 발주서를 이메일로 발송합니다.
- */
 export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult> {
   try {
-    // 필수 필드 검증
+    // 현재 로그인 사용자 세션에서 이메일 가져오기
+    const session = await auth.api.getSession({ headers: await headers() })
+    const userEmail = session?.user?.email
+
+    if (!userEmail) {
+      return { success: false, error: '로그인이 필요해요' }
+    }
+
+    const smtpAccount = await getSMTPAccount(userEmail)
+
+    if (!smtpAccount) {
+      return { success: false, error: 'SMTP 계정이 설정되지 않았습니다. 설정 > 이메일에서 설정해주세요.' }
+    }
+
     if (!input.manufacturerId) {
       return { success: false, error: '제조사 ID는 필수입니다.' }
     }
@@ -54,11 +64,8 @@ export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult>
       return { success: false, error: '발송할 주문이 없습니다.' }
     }
 
-    // 날짜 정보
     const now = new Date()
-    const dateStr = formatDate(now)
 
-    // 엑셀 파일 생성
     const excelBuffer = await generateOrderSheet({
       manufacturerName: input.manufacturerName,
       orders: input.orders,
@@ -66,33 +73,23 @@ export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult>
     })
 
     const fileName = generateOrderFileName(input.manufacturerName, now)
+    const fromName = smtpAccount.fromName || '(주)다온에프앤씨'
 
-    // 이메일 제목 및 본문
-    const subject = `[다온에프앤씨 발주서]_${input.manufacturerName}_${dateStr}`
-    const htmlBody = `
-      <div style="font-family: 'Malgun Gothic', sans-serif; line-height: 1.6;">
-        <p>안녕하세요.</p>
-        <p>(주)다온에프앤씨 발주 첨부파일 드립니다.</p>
-        <br/>
-        <p><strong>발주 정보</strong></p>
-        <ul>
-          <li>제조사: ${input.manufacturerName}</li>
-          <li>주문 건수: ${input.orders.length}건</li>
-          <li>발주일: ${formatDateKorean(now)}</li>
-        </ul>
-        <br/>
-        <p>감사합니다.</p>
-        <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;"/>
-        <p style="color: #666; font-size: 12px;">(주)다온에프앤씨</p>
-      </div>
-    `
+    const { subject, body } = await renderOrderEmailTemplate({
+      manufacturerName: input.manufacturerName,
+      senderName: fromName,
+      orderDate: formatDateKorean(now),
+      totalItems: input.orders.length,
+    })
 
     // 이메일 발송
     const result = await sendEmail({
       to: input.email,
       cc: input.ccEmail,
       subject,
-      html: htmlBody,
+      html: body,
+      fromEmail: smtpAccount.email,
+      fromName,
       attachments: [
         {
           filename: fileName,
@@ -102,7 +99,7 @@ export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult>
       ],
     })
 
-    if (result.success) {
+    if (result?.messageId) {
       // 발송 성공
       const totalAmount = input.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
 
@@ -115,7 +112,7 @@ export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult>
       }
     } else {
       // 발송 실패
-      return { success: false, error: result.error || '이메일 발송에 실패했습니다.' }
+      return { success: false, error: '이메일 발송에 실패했습니다.' }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -126,14 +123,6 @@ export async function sendOrder(input: SendOrderInput): Promise<SendOrderResult>
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-// 날짜 포맷 (YYYYMMDD)
-function formatDate(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}${month}${day}`
-}
 
 // 한국어 날짜 포맷
 function formatDateKorean(date: Date): string {

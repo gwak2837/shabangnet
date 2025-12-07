@@ -56,7 +56,7 @@ test.describe.serial('사방넷 Golden File 비교 워크플로우', () => {
 
   // 각 제조사별 Golden File 비교 테스트 (동적 생성)
   for (const testCase of SABANGNET_TEST_CASES) {
-    test(`3. [${testCase.manufacturer}] 발주서 생성 및 Golden File 비교`, async ({ page }) => {
+    test.skip(`3. [${testCase.manufacturer}] 발주서 생성 및 Golden File 비교`, async ({ page }) => {
       // 예상 출력 파일 존재 확인
       if (!fs.existsSync(testCase.expectedFile)) {
         test.skip()

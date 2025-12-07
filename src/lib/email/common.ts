@@ -1,10 +1,3 @@
-// ============================================================================
-// SMTP Configuration Types
-// ============================================================================
-
-/**
- * SMTP 계정 설정 (DB 저장용)
- */
 export interface SMTPAccount {
   createdAt: Date
   enabled: boolean
@@ -26,6 +19,16 @@ export interface SMTPAccount {
 export interface SMTPAccountDisplay extends Omit<SMTPAccount, 'password'> {
   hasPassword: boolean
   maskedPassword: string
+}
+
+export interface SMTPAccountFormData {
+  email: string
+  enabled: boolean
+  fromName: string
+  host: string
+  name: string
+  password: string
+  port: number
 }
 
 /**
@@ -54,30 +57,8 @@ export interface SMTPConnectionConfig {
   port: number
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
-/**
- * 기본 SMTP 포트 (STARTTLS)
- */
 export const SMTP_DEFAULT_PORT = 587
 
-/**
- * 레거시 SMTP 설정 키 (마이그레이션 및 fallback용)
- * @deprecated 새 코드에서는 smtp_accounts 테이블을 사용하세요
- */
-export const LEGACY_SMTP_KEYS = {
-  fromName: 'smtp.fromName',
-  host: 'smtp.host',
-  pass: 'smtp.pass',
-  user: 'smtp.user',
-} as const
-
-/**
- * SMTP 계정 용도별 기본 이름
- */
-export const SMTP_PURPOSE_LABELS: Record<SMTPAccountPurpose, string> = {
-  system: '시스템 알림',
-  order: '발주서 발송',
+export function formatFromAddress(fromEmail: string, fromName: string): string {
+  return fromName ? `"${fromName}" <${fromEmail}>` : fromEmail
 }

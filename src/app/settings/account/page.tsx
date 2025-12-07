@@ -2,7 +2,6 @@
 
 import { Loader2 } from 'lucide-react'
 
-import { EmailVerificationForm } from '@/components/settings/email-verification-form'
 import { MFAForm } from '@/components/settings/mfa-form'
 import { useMFASettings } from '@/hooks/use-settings'
 
@@ -19,7 +18,6 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="max-w-3xl flex flex-col gap-6">
-      <EmailVerificationForm />
       <MFAForm settings={mfaSettings} />
     </div>
   )

@@ -2,29 +2,26 @@ import 'server-only'
 
 import type { Attachment } from 'nodemailer/lib/mailer'
 
-import { Transporter } from 'nodemailer'
-import Mail from 'nodemailer/lib/mailer'
+import { eq } from 'drizzle-orm'
 
-import type { SMTPAccountPurpose } from './config'
+import { db } from '@/db/client'
+import { smtpAccount } from '@/db/schema/settings'
+import { formatFromAddress } from '@/lib/email/common'
+import { decrypt } from '@/utils/crypto'
 
-import { createTransporter, formatFromAddress, loadSMTPConfig } from './transporter'
+import { createTransporter } from './transporter'
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * 이메일 발송 옵션
- */
 export interface SendEmailOptions {
   /** 첨부파일 */
   attachments?: Attachment[]
   /** 참조 수신자 */
   cc?: string | string[]
+  /** 발신자 이메일 */
+  fromEmail: string
+  /** 발신자 이름 */
+  fromName: string
   /** HTML 본문 */
   html?: string
-  /** SMTP 계정 용도 (기본: system) */
-  purpose?: SMTPAccountPurpose
   /** 이메일 제목 */
   subject: string
   /** 텍스트 본문 */
@@ -33,96 +30,74 @@ export interface SendEmailOptions {
   to: string | string[]
 }
 
-/**
- * 이메일 발송 결과
- */
-export interface SendEmailResult {
-  error?: string
-  messageId?: string
-  success: boolean
+export async function getSMTPAccount(email: string) {
+  const [account] = await db
+    .select({
+      email: smtpAccount.email,
+      password: smtpAccount.password,
+      host: smtpAccount.host,
+      enabled: smtpAccount.enabled,
+      fromName: smtpAccount.fromName,
+    })
+    .from(smtpAccount)
+    .where(eq(smtpAccount.email, email))
+
+  if (!account || !account.enabled) {
+    return
+  }
+
+  return {
+    email: account.email,
+    password: decrypt(account.password),
+    host: account.host,
+    fromName: account.fromName,
+  }
 }
 
-// ============================================================================
-// Send Functions
-// ============================================================================
-
-/**
- * 이메일을 발송합니다.
- * @param options 이메일 발송 옵션
- * @returns 발송 결과
- */
-export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
-  const purpose = options.purpose || 'system'
+export async function sendEmail(options: SendEmailOptions) {
   const recipients = Array.isArray(options.to) ? options.to : [options.to]
   const ccRecipients = options.cc ? (Array.isArray(options.cc) ? options.cc : [options.cc]) : undefined
+  const account = await getSMTPAccount(options.fromEmail)
 
-  try {
-    const transporter = await createTransporter(purpose)
-    const config = await loadSMTPConfig(purpose)
-
-    const info = await sendTransporterEmail(transporter, {
-      from: formatFromAddress(config),
-      to: recipients.join(', '),
-      cc: ccRecipients?.join(', '),
-      subject: options.subject,
-      text: options.text,
-      html: options.html,
-      attachments: options.attachments,
-    })
-
-    return {
-      success: true,
-      messageId: info.messageId,
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-
-    return {
-      success: false,
-      error: errorMessage,
-    }
+  if (!account) {
+    return
   }
-}
 
-export async function sendOrderEmail(
-  manufacturerEmail: string,
-  subject: string,
-  body: string,
-  attachments?: Attachment[],
-): Promise<SendEmailResult> {
-  return sendEmail({
-    to: manufacturerEmail,
-    subject,
-    html: body,
-    attachments,
-    purpose: 'order',
-  })
-}
+  const transporter = await createTransporter(account)
 
-export async function testSMTPConnection(
-  purpose: SMTPAccountPurpose = 'system',
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const transporter = await createTransporter(purpose)
-    await transporter.verify()
-
-    return { success: true }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-
-    return {
-      success: false,
-      error: errorMessage,
-    }
+  if (!transporter) {
+    return
   }
-}
 
-async function sendTransporterEmail(transporter: Transporter, mailOptions: Mail.Options) {
   if (process.env.NODE_ENV === 'test') {
-    return {
-      messageId: `test-mock-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    }
+    return { messageId: `test-mock-${Date.now()}-${Math.random().toString(36).slice(2, 9)}` }
   }
 
-  return await transporter.sendMail(mailOptions)
+  const info = await transporter.sendMail({
+    from: formatFromAddress(options.fromEmail, options.fromName),
+    to: recipients.join(', '),
+    cc: ccRecipients?.join(', '),
+    subject: options.subject,
+    text: options.text,
+    html: options.html,
+    attachments: options.attachments,
+  })
+
+  return { messageId: info.messageId }
+}
+
+export async function testSMTPConnection(email: string) {
+  const account = await getSMTPAccount(email)
+
+  if (!account) {
+    return
+  }
+
+  const transporter = await createTransporter(account)
+
+  if (!transporter) {
+    return
+  }
+
+  return await transporter.verify()
 }

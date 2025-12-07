@@ -54,7 +54,7 @@ async function globalSetup() {
     'seed-column-synonyms.ts',
     'seed-shopping-mall-templates.ts',
     'seed-real-manufacturers.ts',
-    'seed-order-templates.ts', // 제조사별 발주서 템플릿 (제조사 이후에 실행)
+    'seed-order-templates.ts',
     'seed-product-mappings.ts',
     'seed-test-user.ts',
   ]
@@ -65,7 +65,7 @@ async function globalSetup() {
       const output = execSync(`pnpm tsx tools/${script}`, {
         cwd: path.join(__dirname, '..'),
         encoding: 'utf-8',
-        env: process.env,
+        env: { ...process.env, DB_ENV: 'test' },
       })
       const lines = output.trim().split('\n').slice(0, 1)
       if (lines.length > 0) console.log(`   ${lines.join('\n   ')}`)

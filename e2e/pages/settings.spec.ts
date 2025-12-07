@@ -99,30 +99,34 @@ test.describe('주문 설정 페이지', () => {
       const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
       const firstItem = courierSection.locator('.glass-panel').first()
       const toggle = firstItem.locator('button[role="switch"]')
+      const initialState = await toggle.getAttribute('data-state')
 
       // 토글 클릭
       await toggle.click()
+      await expect(page.getByText('택배사 매핑이 수정됐어요').first()).toBeVisible()
 
-      // 토스트 메시지로 성공 확인
-      await expect(page.getByText('택배사 매핑이 수정되었습니다')).toBeVisible({ timeout: 5000 })
+      // 네트워크 요청 완료 및 데이터 상태 변경 대기
+      await page.waitForLoadState('networkidle')
+      await expect(toggle).toHaveAttribute('data-state', initialState === 'checked' ? 'unchecked' : 'checked')
+
+      // 다시 토글해서 원래 상태로 복원
+      await toggle.click()
+      await expect(page.getByText('택배사 매핑이 수정됐어요').first()).toBeVisible()
     })
 
     test('택배사 삭제', async ({ page }) => {
       // 택배사 섹션 찾기
       const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
-      // 테스트용 택배사가 있는지 확인하고 삭제
       const testCourierItem = courierSection.locator('.glass-panel').filter({ hasText: TEST_COURIER.name })
 
-      if (await testCourierItem.isVisible({ timeout: 2000 }).catch(() => false)) {
-        // 삭제 버튼 클릭 (휴지통 아이콘)
-        await testCourierItem
-          .locator('button')
-          .filter({ has: page.locator('svg.lucide-trash-2') })
-          .click()
+      // 삭제 버튼 클릭 (휴지통 아이콘)
+      await testCourierItem
+        .locator('button')
+        .filter({ has: page.locator('svg.lucide-trash-2') })
+        .click()
 
-        // 삭제 확인
-        await expect(testCourierItem).not.toBeVisible()
-      }
+      // 삭제 확인
+      await expect(testCourierItem).not.toBeVisible()
     })
   })
 
@@ -188,7 +192,9 @@ test.describe('주문 설정 페이지', () => {
       // 메인 토글이 비활성화되어 있으면 먼저 활성화
       if (!isMainEnabled) {
         await mainToggle.click()
-        await expect(page.getByText('설정이 저장되었습니다')).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText('설정이 저장됐어요').first()).toBeVisible()
+        await page.waitForLoadState('networkidle')
+        await expect(mainToggle).toHaveAttribute('data-state', 'checked')
       }
 
       // 첫 번째 패턴의 토글 스위치
@@ -197,27 +203,41 @@ test.describe('주문 설정 페이지', () => {
         .filter({ has: page.locator('.font-mono') })
         .first()
       const toggle = firstPatternItem.locator('button[role="switch"]')
+      const initialState = await toggle.getAttribute('data-state')
 
-      // 토글이 활성화되어 있는지 확인 후 클릭
-      if (await toggle.isEnabled()) {
-        await toggle.click()
-        // 토스트 메시지로 성공 확인
-        await expect(page.getByText('패턴이 수정되었습니다')).toBeVisible({ timeout: 5000 })
-      }
+      // 토글 클릭
+      await toggle.click()
+      await expect(page.getByText('패턴이 수정됐어요').first()).toBeVisible()
+
+      // 네트워크 요청 완료 및 데이터 상태 변경 대기
+      await page.waitForLoadState('networkidle')
+      await expect(toggle).toHaveAttribute('data-state', initialState === 'checked' ? 'unchecked' : 'checked')
+
+      // 다시 토글해서 원래 상태로 복원
+      await toggle.click()
+      await expect(page.getByText('패턴이 수정됐어요').first()).toBeVisible()
     })
 
     test('발송 제외 필터 전체 활성화/비활성화', async ({ page }) => {
       // 발송 제외 설정 섹션 찾기
       const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("발송 제외 설정")') })
-      // 전체 활성화 토글
       const mainToggle = section
         .locator('.glass-panel')
         .filter({ hasText: '자동 필터링 사용' })
         .locator('button[role="switch"]')
-      await mainToggle.click()
+      const initialState = await mainToggle.getAttribute('data-state')
 
-      // 저장 메시지 확인 (정확한 텍스트 매칭)
-      await expect(page.getByText('설정이 저장되었습니다', { exact: true })).toBeVisible()
+      // 전체 활성화 토글
+      await mainToggle.click()
+      await expect(page.getByText('설정이 저장됐어요', { exact: true }).first()).toBeVisible()
+
+      // 네트워크 요청 완료 및 데이터 상태 변경 대기
+      await page.waitForLoadState('networkidle')
+      await expect(mainToggle).toHaveAttribute('data-state', initialState === 'checked' ? 'unchecked' : 'checked')
+
+      // 다시 토글해서 원래 상태로 복원
+      await mainToggle.click()
+      await expect(page.getByText('설정이 저장됐어요', { exact: true }).first()).toBeVisible()
     })
   })
 
@@ -247,7 +267,7 @@ test.describe('주문 설정 페이지', () => {
 
       // 해당 표준 컬럼 섹션 펼치기 (details 요소의 summary 클릭)
       const detailsGroup = section.locator('details').filter({ hasText: TEST_SYNONYM.standardKeyLabel })
-      await expect(detailsGroup).toBeVisible({ timeout: 5000 })
+      await expect(detailsGroup).toBeVisible()
       await detailsGroup.locator('summary').click()
 
       // 추가된 동의어 확인
@@ -282,7 +302,7 @@ test.describe('주문 설정 페이지', () => {
       await section.getByRole('button', { name: '추가' }).click()
 
       // 에러 토스트 확인
-      await expect(page.locator('[data-sonner-toast]').getByText(/이미 존재/)).toBeVisible({ timeout: 5000 })
+      await expect(page.locator('[data-sonner-toast]').getByText(/이미 존재/)).toBeVisible()
     })
 
     test('동의어 그룹 펼치기/접기', async ({ page }) => {
@@ -316,13 +336,13 @@ test.describe('주문 설정 페이지', () => {
       const synonymItem = productNameGroup.locator('[aria-checked]').first()
       const toggle = synonymItem.locator('button[role="switch"]')
 
-      if (await toggle.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await toggle.click()
-        await page.waitForTimeout(500)
-        // 원래 상태로 복원
-        await toggle.click()
-        await page.waitForTimeout(500)
-      }
+      // 토글 클릭
+      await toggle.click()
+      await page.waitForTimeout(500)
+
+      // 원래 상태로 복원
+      await toggle.click()
+      await page.waitForTimeout(500)
     })
   })
 
@@ -356,36 +376,36 @@ test.describe('주문 설정 페이지', () => {
       // 시드된 템플릿이 있다면 수정 버튼 클릭
       const firstItem = section.locator('.glass-panel').first()
 
-      if (await firstItem.isVisible({ timeout: 3000 }).catch(() => false)) {
-        // 수정 버튼 클릭 (Pencil 아이콘)
-        await firstItem
-          .locator('button')
-          .filter({ has: page.locator('svg.lucide-pencil') })
-          .click()
+      // 수정 버튼 클릭 (Pencil 아이콘)
+      await firstItem
+        .locator('button')
+        .filter({ has: page.locator('svg.lucide-pencil') })
+        .click()
 
-        // 모달 확인
-        await expect(page.getByRole('dialog')).toBeVisible()
+      // 모달 확인
+      await expect(page.getByRole('dialog')).toBeVisible()
 
-        // 취소
-        await page.getByRole('dialog').getByRole('button', { name: '취소' }).click()
-      }
+      // 취소
+      await page.getByRole('dialog').getByRole('button', { name: '취소' }).click()
     })
 
     test('쇼핑몰 템플릿 활성화/비활성화 토글', async ({ page }) => {
       // 쇼핑몰 템플릿 섹션 찾기
       const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("쇼핑몰 템플릿")') })
       const firstItem = section.locator('.glass-panel').first()
+      const toggle = firstItem.locator('button[role="switch"]')
 
-      if (await firstItem.isVisible({ timeout: 3000 }).catch(() => false)) {
-        const toggle = firstItem.locator('button[role="switch"]')
-        if (await toggle.isVisible()) {
-          // 토글 클릭
-          await toggle.click()
+      // 토글 클릭 (비활성화)
+      await toggle.click()
+      const firstToast = page.getByText('쇼핑몰 템플릿이 수정됐어요').first()
+      await expect(firstToast).toBeVisible()
 
-          // 토스트 메시지로 성공 확인
-          await expect(page.getByText('쇼핑몰 템플릿이 수정되었습니다')).toBeVisible({ timeout: 5000 })
-        }
-      }
+      // 토스트가 사라질 때까지 대기 (mutation 완료 및 UI 안정화)
+      await expect(firstToast).not.toBeVisible({ timeout: 10000 })
+
+      // 다시 토글해서 원래 상태로 복원
+      await toggle.click()
+      await expect(page.getByText('쇼핑몰 템플릿이 수정됐어요').first()).toBeVisible()
     })
   })
 })

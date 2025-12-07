@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { getAllSynonyms } from '@/services/column-synonyms'
-import { getCourierMappings, getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
+import { getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 import { getShoppingMallTemplate, getShoppingMallTemplates } from '@/services/shopping-mall-templates'
 
 import { getMFASettings } from './queries/mfa'
@@ -16,8 +16,6 @@ export function useColumnSynonyms() {
     queryFn: getAllSynonyms,
   })
 }
-
-// Courier Mappings
 
 // Duplicate Check Settings
 export function useDuplicateCheckSettings() {

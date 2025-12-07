@@ -69,11 +69,10 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
 
 export const smtpAccount = pgTable('smtp_account', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  name: varchar('name', { length: 100 }).notNull(), // "시스템 알림", "발주서 발송"
-  purpose: varchar('purpose', { length: 50 }).notNull().unique(), // "system" | "order"
+  name: varchar('name', { length: 100 }).notNull(),
   host: varchar('host', { length: 255 }).notNull(),
   port: integer('port').default(587).notNull(),
-  username: varchar('username', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
   password: text('password').notNull(), // 암호화됨
   fromName: varchar('from_name', { length: 100 }),
   isDefault: boolean('is_default').default(false),
