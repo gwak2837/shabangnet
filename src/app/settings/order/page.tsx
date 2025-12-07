@@ -1,4 +1,4 @@
-import { CourierForm } from '@/app/settings/order/courier-form'
+import { CourierForm } from '@/app/settings/order/courier/courier-form'
 import { DuplicateCheckForm } from '@/app/settings/order/duplicate-check-form'
 import { ExclusionForm } from '@/app/settings/order/exclusion-form'
 import { ShoppingMallTemplate } from '@/app/settings/order/shopping-mall-template'

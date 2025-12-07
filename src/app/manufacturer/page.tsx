@@ -22,13 +22,13 @@ export default function ManufacturersPage() {
 
   const { data: manufacturers = [], isLoading } = useManufacturers()
 
-  const { execute: createManufacturer, isPending: isCreating } = useServerAction(create, {
+  const [isCreating, createManufacturer] = useServerAction(create, {
     invalidateKeys: [queryKeys.manufacturers.all],
     onSuccess: () => toast.success('제조사가 등록되었습니다'),
     onError: (error) => toast.error(error),
   })
 
-  const { execute: updateManufacturer, isPending: isUpdating } = useServerAction(
+  const [isUpdating, updateManufacturer] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Manufacturer> }) => update(id, data),
     {
       invalidateKeys: [queryKeys.manufacturers.all],
@@ -37,13 +37,13 @@ export default function ManufacturersPage() {
     },
   )
 
-  const { execute: deleteManufacturer, isPending: isDeleting } = useServerAction(remove, {
+  const [isDeleting, deleteManufacturer] = useServerAction(remove, {
     invalidateKeys: [queryKeys.manufacturers.all],
     onSuccess: () => toast.success('제조사가 삭제되었습니다'),
     onError: (error) => toast.error(error),
   })
 
-  const { execute: saveInvoiceTemplate, isPending: isSavingInvoice } = useServerAction(
+  const [isSavingInvoice, saveInvoiceTemplate] = useServerAction(
     ({ manufacturerId, template }: { manufacturerId: number; template: InvoiceTemplate }) =>
       updateInvoiceTemplate(manufacturerId, template),
     {
@@ -51,7 +51,7 @@ export default function ManufacturersPage() {
     },
   )
 
-  const { execute: saveOrderTemplate, isPending: isSavingOrder } = useServerAction(
+  const [isSavingOrder, saveOrderTemplate] = useServerAction(
     ({
       manufacturerId,
       template,

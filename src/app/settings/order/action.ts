@@ -10,32 +10,6 @@ import { db } from '@/db/client'
 import { columnSynonym, courierMapping, exclusionPattern, settings, shoppingMallTemplate } from '@/db/schema/settings'
 import { getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 
-export async function addCourierMapping(data: Omit<CourierMapping, 'id'>) {
-  const [newMapping] = await db
-    .insert(courierMapping)
-    .values({
-      name: data.name,
-      code: data.code,
-      aliases: data.aliases,
-      enabled: data.enabled,
-    })
-    .returning({
-      id: courierMapping.id,
-      name: courierMapping.name,
-      code: courierMapping.code,
-      aliases: courierMapping.aliases,
-      enabled: courierMapping.enabled,
-    })
-
-  return {
-    id: newMapping.id,
-    name: newMapping.name,
-    code: newMapping.code,
-    aliases: (newMapping.aliases as string[]) || [],
-    enabled: newMapping.enabled || false,
-  }
-}
-
 export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>) {
   const [newPattern] = await db
     .insert(exclusionPattern)
@@ -57,6 +31,32 @@ export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>)
     description: newPattern.description || undefined,
     enabled: newPattern.enabled || false,
   }
+}
+
+export async function addShoppingMallTemplate(data: CreateTemplateData) {
+  const [created] = await db
+    .insert(shoppingMallTemplate)
+    .values({
+      mallName: data.mallName,
+      displayName: data.displayName,
+      columnMappings: JSON.stringify(data.columnMappings),
+      headerRow: data.headerRow,
+      dataStartRow: data.dataStartRow,
+      enabled: true,
+    })
+    .returning({
+      id: shoppingMallTemplate.id,
+      mallName: shoppingMallTemplate.mallName,
+      displayName: shoppingMallTemplate.displayName,
+      columnMappings: shoppingMallTemplate.columnMappings,
+      headerRow: shoppingMallTemplate.headerRow,
+      dataStartRow: shoppingMallTemplate.dataStartRow,
+      enabled: shoppingMallTemplate.enabled,
+      createdAt: shoppingMallTemplate.createdAt,
+      updatedAt: shoppingMallTemplate.updatedAt,
+    })
+
+  return mapToShoppingMallTemplate(created)
 }
 
 export async function addSynonym(data: { standardKey: string; synonym: string }) {
@@ -90,38 +90,8 @@ export async function addSynonym(data: { standardKey: string; synonym: string })
   }
 }
 
-export async function createShoppingMallTemplate(data: CreateTemplateData) {
-  const [created] = await db
-    .insert(shoppingMallTemplate)
-    .values({
-      mallName: data.mallName,
-      displayName: data.displayName,
-      columnMappings: JSON.stringify(data.columnMappings),
-      headerRow: data.headerRow,
-      dataStartRow: data.dataStartRow,
-      enabled: true,
-    })
-    .returning({
-      id: shoppingMallTemplate.id,
-      mallName: shoppingMallTemplate.mallName,
-      displayName: shoppingMallTemplate.displayName,
-      columnMappings: shoppingMallTemplate.columnMappings,
-      headerRow: shoppingMallTemplate.headerRow,
-      dataStartRow: shoppingMallTemplate.dataStartRow,
-      enabled: shoppingMallTemplate.enabled,
-      createdAt: shoppingMallTemplate.createdAt,
-      updatedAt: shoppingMallTemplate.updatedAt,
-    })
-
-  return mapToShoppingMallTemplate(created)
-}
-
 export async function deleteShoppingMallTemplate(id: number) {
   await db.delete(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
-}
-
-export async function removeCourierMapping(id: number) {
-  await db.delete(courierMapping).where(eq(courierMapping.id, id))
 }
 
 export async function removeExclusionPattern(id: number) {
@@ -130,37 +100,6 @@ export async function removeExclusionPattern(id: number) {
 
 export async function removeSynonym(id: number) {
   await db.delete(columnSynonym).where(eq(columnSynonym.id, id))
-}
-
-export async function updateCourierMapping(id: number, data: Partial<CourierMapping>) {
-  const [updated] = await db
-    .update(courierMapping)
-    .set({
-      name: data.name,
-      code: data.code,
-      aliases: data.aliases,
-      enabled: data.enabled,
-    })
-    .where(eq(courierMapping.id, id))
-    .returning({
-      id: courierMapping.id,
-      name: courierMapping.name,
-      code: courierMapping.code,
-      aliases: courierMapping.aliases,
-      enabled: courierMapping.enabled,
-    })
-
-  if (!updated) {
-    throw new Error('Courier mapping not found')
-  }
-
-  return {
-    id: updated.id,
-    name: updated.name,
-    code: updated.code,
-    aliases: updated.aliases ?? [],
-    enabled: updated.enabled || false,
-  }
 }
 
 export async function updateDuplicateCheckSettings(data: Partial<DuplicateCheckSettings>) {

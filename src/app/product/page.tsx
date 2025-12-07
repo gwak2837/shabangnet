@@ -29,7 +29,7 @@ export default function ProductsPage() {
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
 
-  const { execute: updateProduct } = useServerAction(
+  const [, updateProduct] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Product> }) => update(id, data),
     {
       invalidateKeys: [queryKeys.products.all],
@@ -37,7 +37,7 @@ export default function ProductsPage() {
     },
   )
 
-  const { execute: createProduct } = useServerAction(create, {
+  const [, createProduct] = useServerAction(create, {
     invalidateKeys: [queryKeys.products.all],
     onSuccess: () => toast.success('상품이 등록되었습니다'),
     onError: (error) => toast.error(error),

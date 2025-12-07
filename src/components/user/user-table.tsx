@@ -45,7 +45,7 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     user: UserListItem
   } | null>(null)
 
-  const { execute: executeApprove, isPending: isApproving } = useServerAction(approveUser, {
+  const [isApproving, executeApprove] = useServerAction(approveUser, {
     invalidateKeys: [queryKeys.users.all],
     onSuccess: (result) => {
       if (result.success) toast.success(result.success)
@@ -57,7 +57,7 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     },
   })
 
-  const { execute: executeReject, isPending: isRejecting } = useServerAction(rejectUser, {
+  const [isRejecting, executeReject] = useServerAction(rejectUser, {
     invalidateKeys: [queryKeys.users.all],
     onSuccess: (result) => {
       if (result.success) toast.success(result.success)
@@ -69,7 +69,7 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     },
   })
 
-  const { execute: executeReinstate, isPending: isReinstating } = useServerAction(reinstateUser, {
+  const [isReinstating, executeReinstate] = useServerAction(reinstateUser, {
     invalidateKeys: [queryKeys.users.all],
     onSuccess: (result) => {
       if (result.success) toast.success(result.success)

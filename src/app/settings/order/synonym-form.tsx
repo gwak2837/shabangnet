@@ -59,16 +59,13 @@ export function SynonymForm() {
   const [selectedKey, setSelectedKey] = useState('')
   const [editingSynonym, setEditingSynonym] = useState<ColumnSynonym | null>(null)
 
-  const { execute: onAdd, isPending: isAdding } = useServerAction(
-    (data: { standardKey: string; synonym: string }) => addSynonym(data),
-    {
-      invalidateKeys: [queryKeys.settings.synonyms],
-      onSuccess: () => toast.success('동의어가 추가되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
+  const [isAdding, onAdd] = useServerAction((data: { standardKey: string; synonym: string }) => addSynonym(data), {
+    invalidateKeys: [queryKeys.settings.synonyms],
+    onSuccess: () => toast.success('동의어가 추가되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
-  const { execute: updateSynonymAction, isPending: isUpdating } = useServerAction(
+  const [isUpdating, updateSynonymAction] = useServerAction(
     ({ id, data }: { id: number; data: Partial<{ enabled: boolean; standardKey: string; synonym: string }> }) =>
       updateSynonym(id, data),
     {
@@ -78,7 +75,7 @@ export function SynonymForm() {
     },
   )
 
-  const { execute: onRemove } = useServerAction((id: number) => removeSynonym(id), {
+  const [, onRemove] = useServerAction((id: number) => removeSynonym(id), {
     invalidateKeys: [queryKeys.settings.synonyms],
     onSuccess: () => toast.success('동의어가 삭제되었습니다'),
     onError: (error) => toast.error(error),

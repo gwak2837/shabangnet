@@ -38,7 +38,7 @@ const SKELETON_PATTERN: ExclusionPattern = {
 }
 
 export function ExclusionForm() {
-  const { execute: onUpdateSettings, isPending: isUpdatingSettings } = useServerAction(
+  const [isUpdatingSettings, onUpdateSettings] = useServerAction(
     (data: Partial<ExclusionSettings>) => updateExclusionSettings(data),
     {
       invalidateKeys: [queryKeys.settings.exclusion],
@@ -47,7 +47,7 @@ export function ExclusionForm() {
     },
   )
 
-  const { execute: onAddPattern, isPending: isAddingPattern } = useServerAction(
+  const [isAddingPattern, onAddPattern] = useServerAction(
     (pattern: Omit<ExclusionPattern, 'id'>) => addExclusionPattern(pattern),
     {
       invalidateKeys: [queryKeys.settings.exclusion],
@@ -56,13 +56,13 @@ export function ExclusionForm() {
     },
   )
 
-  const { execute: onRemovePattern } = useServerAction((id: number) => removeExclusionPattern(id), {
+  const [, onRemovePattern] = useServerAction((id: number) => removeExclusionPattern(id), {
     invalidateKeys: [queryKeys.settings.exclusion],
     onSuccess: () => toast.success('패턴이 삭제되었습니다'),
     onError: (error) => toast.error(error),
   })
 
-  const { execute: updatePattern, isPending: isUpdatingPattern } = useServerAction(
+  const [isUpdatingPattern, updatePattern] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Omit<ExclusionPattern, 'id'>> }) => updateExclusionPattern(id, data),
     {
       invalidateKeys: [queryKeys.settings.exclusion],

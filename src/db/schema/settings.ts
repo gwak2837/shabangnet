@@ -27,8 +27,8 @@ export const settings = pgTable('settings', {
 
 export const courierMapping = pgTable('courier_mapping', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  name: varchar('name', { length: 100 }).notNull(),
-  code: varchar('code', { length: 10 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  code: varchar('code', { length: 10 }).notNull().unique(),
   aliases: text('aliases').array(), // 별칭 배열
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -36,7 +36,7 @@ export const courierMapping = pgTable('courier_mapping', {
 
 export const exclusionPattern = pgTable('exclusion_pattern', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  pattern: varchar('pattern', { length: 255 }).notNull(),
+  pattern: varchar('pattern', { length: 255 }).notNull().unique(),
   description: text('description'),
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

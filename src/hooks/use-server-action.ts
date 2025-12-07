@@ -59,7 +59,7 @@ export function useFormAction<TState, TPayload>(
  * 버튼 클릭용 Server Action 래퍼 훅 (useTransition 기반)
  *
  * @example
- * const { execute: deleteItem, isPending } = useServerAction(deleteAction, {
+ * const [isPending, deleteItem] = useServerAction(deleteAction, {
  *   invalidateKeys: [queryKeys.items.all],
  *   onSuccess: () => toast.success('삭제되었습니다'),
  * })
@@ -96,5 +96,5 @@ export function useServerAction<TInput, TResult>(
     [action, options, queryClient],
   )
 
-  return { execute, isPending }
+  return [isPending, execute] as const
 }

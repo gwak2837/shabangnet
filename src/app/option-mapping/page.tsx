@@ -26,7 +26,7 @@ export default function OptionMappingsPage() {
   const { data: mappings = [], isLoading: isLoadingMappings } = useOptionMappings()
   const { data: manufacturers = [] } = useManufacturers()
 
-  const { execute: createMapping, isPending: isCreating } = useServerAction(create, {
+  const [isCreating, createMapping] = useServerAction(create, {
     invalidateKeys: [queryKeys.optionMappings.all],
     onSuccess: () => {
       toast.success('매핑이 추가되었습니다')
@@ -35,7 +35,7 @@ export default function OptionMappingsPage() {
     onError: (error) => toast.error(error),
   })
 
-  const { execute: updateMapping, isPending: isUpdating } = useServerAction(
+  const [isUpdating, updateMapping] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
       update(id, data),
     {
@@ -48,7 +48,7 @@ export default function OptionMappingsPage() {
     },
   )
 
-  const { execute: deleteMapping } = useServerAction(remove, {
+  const [, deleteMapping] = useServerAction(remove, {
     invalidateKeys: [queryKeys.optionMappings.all],
     onSuccess: () => toast.success('매핑이 삭제되었습니다'),
     onError: (error) => toast.error(error),
@@ -60,8 +60,7 @@ export default function OptionMappingsPage() {
         m.productCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.optionName.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesManufacturer =
-        selectedManufacturer === 'all' || m.manufacturerId === Number(selectedManufacturer)
+      const matchesManufacturer = selectedManufacturer === 'all' || m.manufacturerId === Number(selectedManufacturer)
 
       return matchesSearch && matchesManufacturer
     })

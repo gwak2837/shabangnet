@@ -24,14 +24,11 @@ const periodOptions: { label: string; value: DuplicateCheckPeriod }[] = [
 export function DuplicateCheckForm() {
   const { data: settings = {} as DuplicateCheckSettings, isLoading } = useDuplicateCheckSettings()
 
-  const { execute: onSave } = useServerAction(
-    (data: Partial<DuplicateCheckSettings>) => updateDuplicateCheckSettings(data),
-    {
-      invalidateKeys: [queryKeys.settings.duplicateCheck],
-      onSuccess: () => toast.success('설정이 저장되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
+  const [, onSave] = useServerAction((data: Partial<DuplicateCheckSettings>) => updateDuplicateCheckSettings(data), {
+    invalidateKeys: [queryKeys.settings.duplicateCheck],
+    onSuccess: () => toast.success('설정이 저장되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
   return (
     <section className="glass-card p-0 overflow-hidden">

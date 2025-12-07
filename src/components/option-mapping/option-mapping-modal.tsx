@@ -191,6 +191,6 @@ function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
   return {
     productCode: mapping?.productCode ?? '',
     optionName: mapping?.optionName ?? '',
-    manufacturerId: mapping?.manufacturerId ?? null as number | null,
+    manufacturerId: mapping?.manufacturerId ?? (null as number | null),
   }
 }

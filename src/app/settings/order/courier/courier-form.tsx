@@ -4,8 +4,6 @@ import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
-import type { CourierMapping } from '@/services/settings'
-
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useCourierMappings } from '@/hooks/use-settings'
 
-import { addCourierMapping, removeCourierMapping, updateCourierMapping } from './action'
+import { addCourierMapping, CourierMapping, removeCourierMapping, updateCourierMapping } from './action'
 
 const SKELETON_COURIER: CourierMapping = {
   id: 0,
@@ -29,74 +27,54 @@ const SKELETON_COURIER: CourierMapping = {
 export function CourierForm() {
   const { data: mappings = [], isLoading } = useCourierMappings()
 
-  const { execute: updateCourier, isPending: isUpdatingCourier } = useServerAction(
-    ({ id, data }: { id: number; data: Partial<CourierMapping> }) => updateCourierMapping(id, data),
-    {
-      invalidateKeys: [queryKeys.settings.courier],
-      onSuccess: () => toast.success('택배사 매핑이 수정되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const { execute: addCourier, isPending: isAddingCourier } = useServerAction(
-    (data: Omit<CourierMapping, 'id'>) => addCourierMapping(data),
-    {
-      invalidateKeys: [queryKeys.settings.courier],
-      onSuccess: () => toast.success('택배사 매핑이 추가되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const { execute: removeCourier } = useServerAction((id: number) => removeCourierMapping(id), {
+  const [isUpdatingCourier, updateCourier] = useServerAction(updateCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
-    onSuccess: () => toast.success('택배사 매핑이 삭제되었습니다'),
+    onSuccess: () => toast.success('택배사 매핑이 수정됐어요'),
+    onError: (error) => toast.error(error),
+  })
+
+  const [isAddingCourier, addCourier] = useServerAction(addCourierMapping, {
+    invalidateKeys: [queryKeys.settings.courier],
+    onSuccess: () => toast.success('택배사 매핑이 추가됐어요'),
+    onError: (error) => toast.error(error),
+  })
+
+  const [, removeCourier] = useServerAction(removeCourierMapping, {
+    invalidateKeys: [queryKeys.settings.courier],
+    onSuccess: () => toast.success('택배사 매핑이 삭제됐어요'),
     onError: (error) => toast.error(error),
   })
 
   const isSaving = isUpdatingCourier || isAddingCourier
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
+  const [aliases, setAliases] = useState<string[]>([])
   const isModalOpen = editingCourier !== null
   const isNewCourier = editingCourier?.id === 0
 
   function handleAddCourier() {
-    setEditingCourier({
-      id: 0,
-      name: '',
-      code: '',
-      aliases: [],
-      enabled: true,
-    })
+    setAliases([])
+    setEditingCourier({ id: 0, name: '', code: '', aliases: [], enabled: true })
   }
 
   function handleEditCourier(courier: CourierMapping) {
-    setEditingCourier({ ...courier, aliases: [...courier.aliases] })
+    setAliases(courier.aliases)
+    setEditingCourier(courier)
   }
 
   function handleAddAlias(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-
-    if (!editingCourier) {
-      return
-    }
-
     const formData = new FormData(e.currentTarget)
     const alias = String(formData.get('alias')).trim()
 
-    if (editingCourier.aliases.includes(alias)) {
-      e.currentTarget.reset()
-      return
+    if (!aliases.includes(alias)) {
+      setAliases([...aliases, alias])
     }
 
-    setEditingCourier({ ...editingCourier, aliases: [...editingCourier.aliases, alias] })
     e.currentTarget.reset()
   }
 
   function handleRemoveAlias(alias: string) {
-    if (!editingCourier) {
-      return
-    }
-
-    setEditingCourier({ ...editingCourier, aliases: editingCourier.aliases.filter((a) => a !== alias) })
+    setAliases(aliases.filter((a) => a !== alias))
   }
 
   function handleSaveCourier(e: FormEvent<HTMLFormElement>) {
@@ -106,15 +84,14 @@ export function CourierForm() {
       return
     }
 
+    const formData = new FormData(e.currentTarget)
+    const name = String(formData.get('name')).trim()
+    const code = String(formData.get('code')).trim()
+
     if (isNewCourier) {
-      addCourier({
-        name: editingCourier.name,
-        code: editingCourier.code,
-        aliases: editingCourier.aliases,
-        enabled: editingCourier.enabled,
-      })
+      addCourier({ name, code, aliases, enabled: true })
     } else {
-      updateCourier({ id: editingCourier.id, data: editingCourier })
+      updateCourier({ id: editingCourier.id, name, code, aliases, enabled: editingCourier.enabled })
     }
 
     setEditingCourier(null)
@@ -122,7 +99,6 @@ export function CourierForm() {
 
   return (
     <>
-      {/* Apple HIG: Glass Card with depth and hierarchy */}
       <section className="glass-card p-0 overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
@@ -163,7 +139,7 @@ export function CourierForm() {
                   key={courier.id}
                   onEdit={() => handleEditCourier(courier)}
                   onRemove={() => removeCourier(courier.id)}
-                  onToggle={() => updateCourier({ id: courier.id, data: { enabled: !courier.enabled } })}
+                  onToggle={() => updateCourier({ id: courier.id, enabled: !courier.enabled })}
                 />
               ))
             )}
@@ -199,11 +175,11 @@ export function CourierForm() {
                       이름
                     </Label>
                     <Input
+                      defaultValue={editingCourier.name}
                       id="courier-name"
-                      onChange={(e) => setEditingCourier({ ...editingCourier, name: e.target.value })}
+                      name="name"
                       placeholder="CJ대한통운"
                       required
-                      value={editingCourier.name}
                       variant="glass"
                     />
                   </div>
@@ -213,11 +189,11 @@ export function CourierForm() {
                     </Label>
                     <Input
                       className="font-mono"
+                      defaultValue={editingCourier.code}
                       id="courier-code"
-                      onChange={(e) => setEditingCourier({ ...editingCourier, code: e.target.value })}
+                      name="code"
                       placeholder="04"
                       required
-                      value={editingCourier.code}
                       variant="glass"
                     />
                   </div>
@@ -239,7 +215,7 @@ export function CourierForm() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5 min-h-[28px] pt-1">
-                    {editingCourier.aliases.map((alias) => (
+                    {aliases.map((alias) => (
                       <Badge className="gap-1 h-6 pl-2 pr-1 text-xs font-medium" key={alias} variant="secondary">
                         {alias}
                         <button

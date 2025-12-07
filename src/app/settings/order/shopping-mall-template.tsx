@@ -42,7 +42,7 @@ import {
 } from '@/services/shopping-mall-templates'
 import { cn } from '@/utils/cn'
 
-import { createShoppingMallTemplate, deleteShoppingMallTemplate, updateShoppingMallTemplate } from './action'
+import { addShoppingMallTemplate, deleteShoppingMallTemplate, updateShoppingMallTemplate } from './action'
 
 const SABANGNET_FIELD_OPTIONS = SABANGNET_COLUMNS.map((col) => ({
   key: col.key,
@@ -83,8 +83,8 @@ interface MappingRowProps {
 export function ShoppingMallTemplate() {
   const { data: templates = [], isLoading } = useShoppingMallTemplates()
 
-  const { execute: createTemplate, isPending: isCreatingTemplate } = useServerAction(
-    (data: CreateTemplateData) => createShoppingMallTemplate(data),
+  const [isCreatingTemplate, createTemplate] = useServerAction(
+    (data: CreateTemplateData) => addShoppingMallTemplate(data),
     {
       invalidateKeys: [queryKeys.shoppingMallTemplates.all],
       onSuccess: () => toast.success('쇼핑몰 템플릿이 생성되었습니다'),
@@ -92,7 +92,7 @@ export function ShoppingMallTemplate() {
     },
   )
 
-  const { execute: updateTemplate, isPending: isUpdatingTemplate } = useServerAction(
+  const [isUpdatingTemplate, updateTemplate] = useServerAction(
     ({ id, data }: { id: number; data: UpdateTemplateData }) => updateShoppingMallTemplate(id, data),
     {
       invalidateKeys: [queryKeys.shoppingMallTemplates.all],
@@ -101,14 +101,11 @@ export function ShoppingMallTemplate() {
     },
   )
 
-  const { execute: deleteTemplate, isPending: isDeletingTemplate } = useServerAction(
-    (id: number) => deleteShoppingMallTemplate(id),
-    {
-      invalidateKeys: [queryKeys.shoppingMallTemplates.all],
-      onSuccess: () => toast.success('쇼핑몰 템플릿이 삭제되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
+  const [isDeletingTemplate, deleteTemplate] = useServerAction((id: number) => deleteShoppingMallTemplate(id), {
+    invalidateKeys: [queryKeys.shoppingMallTemplates.all],
+    onSuccess: () => toast.success('쇼핑몰 템플릿이 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
 
   const isSaving = isCreatingTemplate || isUpdatingTemplate
   const isDeleting = isDeletingTemplate
