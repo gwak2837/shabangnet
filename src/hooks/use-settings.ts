@@ -18,12 +18,6 @@ export function useColumnSynonyms() {
 }
 
 // Courier Mappings
-export function useCourierMappings() {
-  return useQuery({
-    queryKey: queryKeys.settings.courier,
-    queryFn: getCourierMappings,
-  })
-}
 
 // Duplicate Check Settings
 export function useDuplicateCheckSettings() {

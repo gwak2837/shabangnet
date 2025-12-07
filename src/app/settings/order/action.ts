@@ -2,12 +2,11 @@
 
 import { eq } from 'drizzle-orm'
 
-import type { CourierMapping, DuplicateCheckSettings, ExclusionPattern, ExclusionSettings } from '@/services/settings'
-import type { CreateTemplateData, UpdateTemplateData } from '@/services/shopping-mall-templates'
+import type { DuplicateCheckSettings, ExclusionPattern, ExclusionSettings } from '@/services/settings'
 
 import { isUniqueViolation } from '@/common/constants/postgres-errors'
 import { db } from '@/db/client'
-import { columnSynonym, courierMapping, exclusionPattern, settings, shoppingMallTemplate } from '@/db/schema/settings'
+import { columnSynonym, exclusionPattern, settings } from '@/db/schema/settings'
 import { getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 
 export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>) {
@@ -31,32 +30,6 @@ export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>)
     description: newPattern.description || undefined,
     enabled: newPattern.enabled || false,
   }
-}
-
-export async function addShoppingMallTemplate(data: CreateTemplateData) {
-  const [created] = await db
-    .insert(shoppingMallTemplate)
-    .values({
-      mallName: data.mallName,
-      displayName: data.displayName,
-      columnMappings: JSON.stringify(data.columnMappings),
-      headerRow: data.headerRow,
-      dataStartRow: data.dataStartRow,
-      enabled: true,
-    })
-    .returning({
-      id: shoppingMallTemplate.id,
-      mallName: shoppingMallTemplate.mallName,
-      displayName: shoppingMallTemplate.displayName,
-      columnMappings: shoppingMallTemplate.columnMappings,
-      headerRow: shoppingMallTemplate.headerRow,
-      dataStartRow: shoppingMallTemplate.dataStartRow,
-      enabled: shoppingMallTemplate.enabled,
-      createdAt: shoppingMallTemplate.createdAt,
-      updatedAt: shoppingMallTemplate.updatedAt,
-    })
-
-  return mapToShoppingMallTemplate(created)
 }
 
 export async function addSynonym(data: { standardKey: string; synonym: string }) {
@@ -88,10 +61,6 @@ export async function addSynonym(data: { standardKey: string; synonym: string })
     console.error('동의어 추가 에러:', error)
     return { error: '동의어 추가 중 오류가 발생했습니다' }
   }
-}
-
-export async function deleteShoppingMallTemplate(id: number) {
-  await db.delete(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
 }
 
 export async function removeExclusionPattern(id: number) {
@@ -145,47 +114,23 @@ export async function updateExclusionSettings(data: Partial<ExclusionSettings>) 
   return getExclusionSettings()
 }
 
-export async function updateShoppingMallTemplate(id: number, data: UpdateTemplateData) {
-  const [updated] = await db
-    .update(shoppingMallTemplate)
-    .set({
-      mallName: data.mallName,
-      displayName: data.displayName,
-      columnMappings: data.columnMappings ? JSON.stringify(data.columnMappings) : undefined,
-      headerRow: data.headerRow,
-      dataStartRow: data.dataStartRow,
-      enabled: data.enabled,
-      updatedAt: new Date(),
-    })
-    .where(eq(shoppingMallTemplate.id, id))
-    .returning({
-      id: shoppingMallTemplate.id,
-      mallName: shoppingMallTemplate.mallName,
-      displayName: shoppingMallTemplate.displayName,
-      columnMappings: shoppingMallTemplate.columnMappings,
-      headerRow: shoppingMallTemplate.headerRow,
-      dataStartRow: shoppingMallTemplate.dataStartRow,
-      enabled: shoppingMallTemplate.enabled,
-      createdAt: shoppingMallTemplate.createdAt,
-      updatedAt: shoppingMallTemplate.updatedAt,
-    })
-
-  if (!updated) {
-    throw new Error('Template not found')
-  }
-
-  return mapToShoppingMallTemplate(updated)
-}
-
-export async function updateSynonym(
-  id: number,
-  data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>,
-) {
+export async function updateSynonym({
+  id,
+  enabled,
+  standardKey,
+  synonym,
+}: {
+  id: number
+  enabled?: boolean
+  standardKey?: string
+  synonym?: string
+}) {
   const [updated] = await db
     .update(columnSynonym)
     .set({
-      ...data,
-      updatedAt: new Date(),
+      enabled,
+      standardKey,
+      synonym,
     })
     .where(eq(columnSynonym.id, id))
     .returning()
@@ -197,28 +142,6 @@ export async function updateSynonym(
     standardKey: updated.standardKey,
     synonym: updated.synonym,
     enabled: updated.enabled ?? true,
-  }
-}
-
-function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect) {
-  let columnMappings: Record<string, string> = {}
-
-  try {
-    columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
-  } catch {
-    columnMappings = {}
-  }
-
-  return {
-    id: record.id,
-    mallName: record.mallName,
-    displayName: record.displayName,
-    columnMappings,
-    headerRow: record.headerRow ?? 1,
-    dataStartRow: record.dataStartRow ?? 2,
-    enabled: record.enabled ?? true,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
   }
 }
 

@@ -6,6 +6,11 @@ import ExcelJS from 'exceljs'
 import { db } from '@/db/client'
 import { shoppingMallTemplate } from '@/db/schema/settings'
 
+export interface AnalyzeInput {
+  file: File
+  headerRow?: number
+}
+
 // Types
 export interface AnalyzeResult {
   detectedHeaderRow: number
@@ -44,13 +49,12 @@ export interface UpdateTemplateData {
 }
 
 // Analyze shopping mall file
-export async function analyzeShoppingMallFile(file: File, headerRow?: number): Promise<AnalyzeResult> {
+export async function analyzeShoppingMallFile({ file, headerRow }: AnalyzeInput) {
   const fileBuffer = await file.arrayBuffer()
-
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(fileBuffer)
-
   const worksheet = workbook.worksheets[0]
+
   if (!worksheet) {
     throw new Error('워크시트를 찾을 수 없습니다')
   }

@@ -24,10 +24,9 @@ const periodOptions: { label: string; value: DuplicateCheckPeriod }[] = [
 export function DuplicateCheckForm() {
   const { data: settings = {} as DuplicateCheckSettings, isLoading } = useDuplicateCheckSettings()
 
-  const [, onSave] = useServerAction((data: Partial<DuplicateCheckSettings>) => updateDuplicateCheckSettings(data), {
+  const [, updateSettings] = useServerAction(updateDuplicateCheckSettings, {
     invalidateKeys: [queryKeys.settings.duplicateCheck],
-    onSuccess: () => toast.success('설정이 저장되었습니다'),
-    onError: (error) => toast.error(error),
+    onSuccess: () => toast.success('설정이 저장됐어요'),
   })
 
   return (
@@ -57,7 +56,7 @@ export function DuplicateCheckForm() {
                   동일 제조사 + 동일 수취인 주소로 최근 발송 이력을 체크합니다
                 </p>
               </div>
-              <Switch checked={settings.enabled} onCheckedChange={(checked) => onSave({ enabled: checked })} />
+              <Switch checked={settings.enabled} onCheckedChange={(checked) => updateSettings({ enabled: checked })} />
             </label>
             <div className="space-y-2">
               <Label className="text-sm font-medium" htmlFor="duplicate-check-period">
@@ -65,7 +64,7 @@ export function DuplicateCheckForm() {
               </Label>
               <Select
                 disabled={!settings.enabled}
-                onValueChange={(value) => onSave({ periodDays: parseInt(value, 10) as DuplicateCheckPeriod })}
+                onValueChange={(value) => updateSettings({ periodDays: parseInt(value, 10) as DuplicateCheckPeriod })}
                 value={settings.periodDays.toString()}
               >
                 <SelectTrigger

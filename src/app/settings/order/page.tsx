@@ -1,8 +1,8 @@
-import { CourierForm } from '@/app/settings/order/courier/courier-form'
-import { DuplicateCheckForm } from '@/app/settings/order/duplicate-check-form'
-import { ExclusionForm } from '@/app/settings/order/exclusion-form'
-import { ShoppingMallTemplate } from '@/app/settings/order/shopping-mall-template'
-import { SynonymForm } from '@/app/settings/order/synonym-form'
+import { CourierForm } from './courier/courier-form'
+import { DuplicateCheckForm } from './duplicate-check-form'
+import { ExclusionForm } from './exclusion-form'
+import { ShoppingMallTemplate } from './shopping-mall-template/shopping-mall-template'
+import { SynonymForm } from './synonym-form'
 
 export default function OrdersSettingsPage() {
   return (

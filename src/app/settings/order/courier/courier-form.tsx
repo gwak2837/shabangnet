@@ -12,9 +12,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
-import { useCourierMappings } from '@/hooks/use-settings'
 
 import { addCourierMapping, CourierMapping, removeCourierMapping, updateCourierMapping } from './action'
+import { useCourierMappings } from './hook'
 
 const SKELETON_COURIER: CourierMapping = {
   id: 0,
@@ -30,26 +30,23 @@ export function CourierForm() {
   const [isUpdatingCourier, updateCourier] = useServerAction(updateCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
     onSuccess: () => toast.success('택배사 매핑이 수정됐어요'),
-    onError: (error) => toast.error(error),
   })
 
   const [isAddingCourier, addCourier] = useServerAction(addCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
     onSuccess: () => toast.success('택배사 매핑이 추가됐어요'),
-    onError: (error) => toast.error(error),
   })
 
   const [, removeCourier] = useServerAction(removeCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
     onSuccess: () => toast.success('택배사 매핑이 삭제됐어요'),
-    onError: (error) => toast.error(error),
   })
 
-  const isSaving = isUpdatingCourier || isAddingCourier
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
   const [aliases, setAliases] = useState<string[]>([])
   const isModalOpen = editingCourier !== null
   const isNewCourier = editingCourier?.id === 0
+  const isSaving = isUpdatingCourier || isAddingCourier
 
   function handleAddCourier() {
     setAliases([])

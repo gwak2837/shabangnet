@@ -59,31 +59,20 @@ export function SynonymForm() {
   const [selectedKey, setSelectedKey] = useState('')
   const [editingSynonym, setEditingSynonym] = useState<ColumnSynonym | null>(null)
 
-  const [isAdding, onAdd] = useServerAction((data: { standardKey: string; synonym: string }) => addSynonym(data), {
+  const [isAdding, add] = useServerAction(addSynonym, {
     invalidateKeys: [queryKeys.settings.synonyms],
     onSuccess: () => toast.success('동의어가 추가되었습니다'),
-    onError: (error) => toast.error(error),
   })
 
-  const [isUpdating, updateSynonymAction] = useServerAction(
-    ({ id, data }: { id: number; data: Partial<{ enabled: boolean; standardKey: string; synonym: string }> }) =>
-      updateSynonym(id, data),
-    {
-      invalidateKeys: [queryKeys.settings.synonyms],
-      onSuccess: () => toast.success('동의어가 수정되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
+  const [isUpdating, update] = useServerAction(updateSynonym, {
+    invalidateKeys: [queryKeys.settings.synonyms],
+    onSuccess: () => toast.success('동의어가 수정되었습니다'),
+  })
 
-  const [, onRemove] = useServerAction((id: number) => removeSynonym(id), {
+  const [, remove] = useServerAction(removeSynonym, {
     invalidateKeys: [queryKeys.settings.synonyms],
     onSuccess: () => toast.success('동의어가 삭제되었습니다'),
-    onError: (error) => toast.error(error),
   })
-
-  function onUpdate(id: number, data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>) {
-    updateSynonymAction({ id, data })
-  }
 
   function handleAddSynonym(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -94,7 +83,7 @@ export function SynonymForm() {
 
     const data = new FormData(e.currentTarget)
     const synonym = String(data.get('synonym')).trim()
-    onAdd({ standardKey: selectedKey, synonym })
+    add({ standardKey: selectedKey, synonym })
     e.currentTarget.reset()
   }
 
@@ -109,10 +98,11 @@ export function SynonymForm() {
       return
     }
 
-    onUpdate(editingSynonym.id, {
-      synonym: editingSynonym.synonym.trim(),
-      standardKey: editingSynonym.standardKey,
+    update({
+      id: editingSynonym.id,
       enabled: editingSynonym.enabled,
+      standardKey: editingSynonym.standardKey,
+      synonym: editingSynonym.synonym.trim(),
     })
 
     setEditingSynonym(null)
@@ -151,8 +141,8 @@ export function SynonymForm() {
                     isUpdating={isUpdating}
                     key={option.key}
                     onEdit={handleEditSynonym}
-                    onRemove={onRemove}
-                    onToggle={(id, enabled) => onUpdate(id, { enabled })}
+                    onRemove={remove}
+                    onToggle={(id, enabled) => update({ id, enabled })}
                     option={option}
                     synonyms={synonyms}
                   />

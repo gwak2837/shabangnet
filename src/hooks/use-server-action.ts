@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useActionState, useCallback, useTransition } from 'react'
+import { toast } from 'sonner'
 
 interface UseFormActionOptions<TState> {
   invalidateKeys?: readonly (readonly unknown[])[] // 무효화할 queryKey 배열들
@@ -87,7 +88,11 @@ export function useServerAction<TInput, TResult>(
 
         // 콜백 처리
         if (result && typeof result === 'object' && 'error' in result) {
-          options?.onError?.(result.error as string)
+          if (options?.onError) {
+            options.onError(String(result.error))
+          } else {
+            toast.error(String(result.error))
+          }
         } else {
           options?.onSuccess?.(result)
         }

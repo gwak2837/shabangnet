@@ -38,36 +38,26 @@ const SKELETON_PATTERN: ExclusionPattern = {
 }
 
 export function ExclusionForm() {
-  const [isUpdatingSettings, onUpdateSettings] = useServerAction(
-    (data: Partial<ExclusionSettings>) => updateExclusionSettings(data),
-    {
-      invalidateKeys: [queryKeys.settings.exclusion],
-      onSuccess: () => toast.success('설정이 저장되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const [isAddingPattern, onAddPattern] = useServerAction(
-    (pattern: Omit<ExclusionPattern, 'id'>) => addExclusionPattern(pattern),
-    {
-      invalidateKeys: [queryKeys.settings.exclusion],
-      onSuccess: () => toast.success('패턴이 추가되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const [, onRemovePattern] = useServerAction((id: number) => removeExclusionPattern(id), {
+  const [isUpdatingSettings, updateSettings] = useServerAction(updateExclusionSettings, {
     invalidateKeys: [queryKeys.settings.exclusion],
-    onSuccess: () => toast.success('패턴이 삭제되었습니다'),
-    onError: (error) => toast.error(error),
+    onSuccess: () => toast.success('설정이 저장됐어요'),
+  })
+
+  const [isAddingPattern, addPattern] = useServerAction(addExclusionPattern, {
+    invalidateKeys: [queryKeys.settings.exclusion],
+    onSuccess: () => toast.success('패턴이 추가됐어요'),
+  })
+
+  const [, removePattern] = useServerAction(removeExclusionPattern, {
+    invalidateKeys: [queryKeys.settings.exclusion],
+    onSuccess: () => toast.success('패턴이 삭제됐어요'),
   })
 
   const [isUpdatingPattern, updatePattern] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Omit<ExclusionPattern, 'id'>> }) => updateExclusionPattern(id, data),
     {
       invalidateKeys: [queryKeys.settings.exclusion],
-      onSuccess: () => toast.success('패턴이 수정되었습니다'),
-      onError: (error) => toast.error(error),
+      onSuccess: () => toast.success('패턴이 수정됐어요'),
     },
   )
 
@@ -84,7 +74,7 @@ export function ExclusionForm() {
     const pattern = String(data.get('pattern')).trim()
     const description = String(data.get('description')).trim()
 
-    onAddPattern({
+    addPattern({
       pattern,
       enabled: true,
       description: description || undefined,
@@ -138,7 +128,7 @@ export function ExclusionForm() {
                 주문 유형(F열)이 아래 패턴과 일치하면 발송 대상에서 자동 제외됩니다
               </p>
             </div>
-            <Switch checked={settings.enabled} onCheckedChange={(checked) => onUpdateSettings({ enabled: checked })} />
+            <Switch checked={settings.enabled} onCheckedChange={(checked) => updateSettings({ enabled: checked })} />
           </label>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -166,7 +156,7 @@ export function ExclusionForm() {
                     disabled={!settings.enabled || isUpdating}
                     key={pattern.id}
                     onEdit={() => setEditingPattern({ ...pattern })}
-                    onRemove={() => onRemovePattern(pattern.id)}
+                    onRemove={() => removePattern(pattern.id)}
                     onToggle={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
                     pattern={pattern}
                   />

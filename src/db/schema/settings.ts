@@ -9,7 +9,10 @@ export const columnSynonym = pgTable(
     synonym: varchar('synonym', { length: 100 }).notNull(), // 동의어 (상품명, 품명 등)
     enabled: boolean('enabled').default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => [
     index('idx_column_synonym_standard_key').on(table.standardKey),
@@ -22,7 +25,10 @@ export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),
   value: text('value'),
   description: text('description'),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 }).enableRLS()
 
 export const courierMapping = pgTable('courier_mapping', {
@@ -40,7 +46,10 @@ export const exclusionPattern = pgTable('exclusion_pattern', {
   description: text('description'),
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 }).enableRLS()
 
 export const shoppingMallTemplate = pgTable('shopping_mall_template', {
@@ -52,7 +61,10 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
   dataStartRow: integer('data_start_row').default(2),
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 }).enableRLS()
 
 export const smtpAccount = pgTable('smtp_account', {
@@ -67,7 +79,10 @@ export const smtpAccount = pgTable('smtp_account', {
   isDefault: boolean('is_default').default(false),
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 }).enableRLS()
 
 export const emailTemplate = pgTable('email_template', {
@@ -79,5 +94,8 @@ export const emailTemplate = pgTable('email_template', {
   variables: jsonb('variables'), // 사용 가능한 변수 목록 { key: description }
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 }).enableRLS()
