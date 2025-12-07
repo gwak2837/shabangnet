@@ -19,7 +19,7 @@ export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()
 
   // Filter states
-  const [selectedManufacturerId, setSelectedManufacturerId] = useState('')
+  const [selectedManufacturerId, setSelectedManufacturerId] = useState<number | null>(null)
   const [periodType, setPeriodType] = useState<'month' | 'range'>('month')
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
@@ -32,6 +32,7 @@ export default function SettlementPage() {
   const [searchParams, setSearchParams] = useState<SettlementFiltersType | null>(null)
 
   const handleSearch = () => {
+    if (!selectedManufacturerId) return
     setSearchParams({
       manufacturerId: selectedManufacturerId,
       periodType,

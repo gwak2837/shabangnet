@@ -32,8 +32,8 @@ export interface Order {
   createdAt: string
   customerName: string
   fulfillmentType?: string
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number
   manufacturerName: string
   optionName: string
   orderName?: string
@@ -49,7 +49,7 @@ export interface Order {
 export interface OrderBatch {
   email: string
   lastSentAt?: string
-  manufacturerId: string
+  manufacturerId: number
   manufacturerName: string
   orders: Order[]
   status: 'error' | 'pending' | 'ready' | 'sent'
@@ -58,7 +58,7 @@ export interface OrderBatch {
 }
 
 export interface SendLogSummary {
-  id: string
+  id: number
   manufacturerName: string
   orderCount: number
   recipientAddresses: string[]
@@ -68,8 +68,8 @@ export interface SendLogSummary {
 
 export interface SendOrdersParams {
   duplicateReason?: string
-  manufacturerId: string
-  orderIds: string[]
+  manufacturerId: number
+  orderIds: number[]
 }
 
 export interface SendOrdersResult {
@@ -79,7 +79,7 @@ export interface SendOrdersResult {
 }
 
 export async function checkDuplicate(
-  manufacturerId: string,
+  manufacturerId: number,
   recipientAddresses: string[],
   periodDays: DuplicateCheckPeriod = 10,
 ): Promise<DuplicateCheckResult> {
@@ -124,7 +124,7 @@ export async function checkDuplicate(
   }
 }
 
-export async function downloadOrderExcel(params: { manufacturerId: string; orderIds: string[] }) {
+export async function downloadOrderExcel(params: { manufacturerId: number; orderIds: number[] }) {
   const result = await generateOrderExcel(params)
 
   if ('error' in result) {
@@ -142,8 +142,8 @@ export async function downloadOrderExcel(params: { manufacturerId: string; order
  * 이메일 발송 없이 엑셀 파일만 생성
  */
 export async function generateOrderExcel(params: {
-  manufacturerId: string
-  orderIds: string[]
+  manufacturerId: number
+  orderIds: number[]
 }): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
   const mfr = await db.query.manufacturer.findFirst({
     where: eq(manufacturer.id, params.manufacturerId),
@@ -243,7 +243,7 @@ export async function getBatches(): Promise<OrderBatch[]> {
     where: (order, { isNotNull }) => isNotNull(order.manufacturerId),
   })
 
-  const batchesMap = new Map<string, OrderBatch>()
+  const batchesMap = new Map<number, OrderBatch>()
   const allManufacturers = await db
     .select({
       id: manufacturer.id,
@@ -316,7 +316,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
     where: (order, { isNotNull }) => isNotNull(order.manufacturerId),
   })
 
-  const batchesMap = new Map<string, OrderBatch>()
+  const batchesMap = new Map<number, OrderBatch>()
   const allManufacturers = await db
     .select({
       id: manufacturer.id,
@@ -510,13 +510,12 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
   })
 
   // 6. DB 트랜잭션으로 로그 저장 및 주문 상태 업데이트
-  const logId = `log_${Date.now()}`
-
   return await db.transaction(async (tx) => {
     // 이메일 로그 저장
-    await tx.insert(orderEmailLog).values({
-      id: logId,
-      manufacturerId: mfr.id,
+    const [logRecord] = await tx
+      .insert(orderEmailLog)
+      .values({
+        manufacturerId: mfr.id,
       manufacturerName: mfr.name,
       email: mfr.email,
       subject: emailSubject,
@@ -526,16 +525,16 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
       status: emailResult.success ? 'success' : 'failed',
       errorMessage: emailResult.error || null,
       recipientAddresses,
-      duplicateReason: params.duplicateReason || null,
-      sentAt: new Date(),
-      sentBy: 'system',
-    })
+        duplicateReason: params.duplicateReason || null,
+        sentAt: new Date(),
+        sentBy: 'system',
+      })
+      .returning()
 
     // 이메일 로그 상세 (주문 정보) 저장
     for (const o of ordersToSend) {
       await tx.insert(orderEmailLogItem).values({
-        id: `elo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        emailLogId: logId,
+        emailLogId: logRecord.id,
         orderNumber: o.orderNumber,
         productName: o.productName || '',
         optionName: o.optionName || null,

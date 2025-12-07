@@ -5,8 +5,8 @@ export interface InvoiceTemplate {
   courierColumn: string
   dataStartRow: number
   headerRow: number
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number
   manufacturerName: string
   orderNumberColumn: string
   trackingNumberColumn: string
@@ -17,7 +17,7 @@ export interface Manufacturer {
   ccEmail?: string
   contactName: string
   email: string
-  id: string
+  id: number
   lastOrderDate: string
   name: string
   orderCount: number

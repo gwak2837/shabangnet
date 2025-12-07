@@ -3,17 +3,16 @@
 import { AlertTriangle, Loader2, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
+import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/services/settings'
+
 import { queryKeys } from '@/common/constants/query-keys'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useDuplicateCheckSettings } from '@/hooks/use-settings'
-import {
-  type DuplicateCheckPeriod,
-  type DuplicateCheckSettings,
-  updateDuplicateCheckSettings,
-} from '@/services/settings'
+
+import { updateDuplicateCheckSettings } from './action'
 
 const periodOptions: { label: string; value: DuplicateCheckPeriod }[] = [
   { value: 10, label: '10일' },

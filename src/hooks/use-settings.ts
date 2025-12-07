@@ -54,7 +54,7 @@ export function useMFASettings() {
 }
 
 // 쇼핑몰 템플릿 상세 조회
-export function useShoppingMallTemplate(id: string) {
+export function useShoppingMallTemplate(id: number) {
   return useQuery({
     queryKey: queryKeys.shoppingMallTemplates.detail(id),
     queryFn: () => getShoppingMallTemplate(id),

@@ -36,14 +36,13 @@ import { useShoppingMallTemplates } from '@/hooks/use-settings'
 import {
   type AnalyzeResult,
   analyzeShoppingMallFile,
-  createShoppingMallTemplate,
   type CreateTemplateData,
-  deleteShoppingMallTemplate,
   type ShoppingMallTemplate as ShoppingMallTemplateType,
-  updateShoppingMallTemplate,
   type UpdateTemplateData,
 } from '@/services/shopping-mall-templates'
 import { cn } from '@/utils/cn'
+
+import { createShoppingMallTemplate, deleteShoppingMallTemplate, updateShoppingMallTemplate } from './action'
 
 const SABANGNET_FIELD_OPTIONS = SABANGNET_COLUMNS.map((col) => ({
   key: col.key,
@@ -54,7 +53,7 @@ const SABANGNET_FIELD_OPTIONS = SABANGNET_COLUMNS.map((col) => ({
 const REQUIRED_FIELDS = SABANGNET_COLUMNS.filter((col) => col.required).map((col) => col.key)
 
 const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
-  id: 'skeleton',
+  id: 0,
   mallName: 'sample_mall',
   displayName: '쇼핑몰 이름',
   headerRow: 1,
@@ -71,7 +70,7 @@ interface EditingTemplate {
   displayName: string
   enabled: boolean
   headerRow: number
-  id: string
+  id: number
   mallName: string
 }
 
@@ -94,7 +93,7 @@ export function ShoppingMallTemplate() {
   )
 
   const { execute: updateTemplate, isPending: isUpdatingTemplate } = useServerAction(
-    ({ id, data }: { id: string; data: UpdateTemplateData }) => updateShoppingMallTemplate(id, data),
+    ({ id, data }: { id: number; data: UpdateTemplateData }) => updateShoppingMallTemplate(id, data),
     {
       invalidateKeys: [queryKeys.shoppingMallTemplates.all],
       onSuccess: () => toast.success('쇼핑몰 템플릿이 수정되었습니다'),
@@ -103,7 +102,7 @@ export function ShoppingMallTemplate() {
   )
 
   const { execute: deleteTemplate, isPending: isDeletingTemplate } = useServerAction(
-    (id: string) => deleteShoppingMallTemplate(id),
+    (id: number) => deleteShoppingMallTemplate(id),
     {
       invalidateKeys: [queryKeys.shoppingMallTemplates.all],
       onSuccess: () => toast.success('쇼핑몰 템플릿이 삭제되었습니다'),
@@ -120,7 +119,7 @@ export function ShoppingMallTemplate() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [showMissingFieldsWarning, setShowMissingFieldsWarning] = useState(false)
   const isModalOpen = editingTemplate !== null
-  const isNewTemplate = editingTemplate?.id === ''
+  const isNewTemplate = editingTemplate?.id === 0
 
   function onAnalyze(file: File, headerRow?: number): Promise<AnalyzeResult> {
     return analyzeShoppingMallFile(file, headerRow)
@@ -130,17 +129,17 @@ export function ShoppingMallTemplate() {
     createTemplate(data)
   }
 
-  function onUpdate(id: string, data: UpdateTemplateData) {
+  function onUpdate(id: number, data: UpdateTemplateData) {
     updateTemplate({ id, data })
   }
 
-  function onDelete(id: string) {
+  function onDelete(id: number) {
     deleteTemplate(id)
   }
 
   function handleAddTemplate() {
     setEditingTemplate({
-      id: '',
+      id: 0,
       mallName: '',
       displayName: '',
       headerRow: 1,

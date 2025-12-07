@@ -4,6 +4,8 @@ import { BookOpen, ChevronRight, Loader2, Pencil, Plus, Trash2 } from 'lucide-re
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
+import type { ColumnSynonym } from '@/services/column-synonyms'
+
 import { SABANGNET_COLUMNS } from '@/common/constants'
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useColumnSynonyms } from '@/hooks/use-settings'
-import { addSynonym, type ColumnSynonym, removeSynonym, updateSynonym } from '@/services/column-synonyms'
+
+import { addSynonym, removeSynonym, updateSynonym } from './action'
 
 const STANDARD_KEY_OPTIONS = SABANGNET_COLUMNS.filter(
   (col) =>
@@ -37,8 +40,8 @@ const STANDARD_KEY_OPTIONS = SABANGNET_COLUMNS.filter(
 interface SynonymGroupProps {
   isUpdating: boolean
   onEdit: (syn: ColumnSynonym) => void
-  onRemove: (id: string) => void
-  onToggle: (id: string, enabled: boolean) => void
+  onRemove: (id: number) => void
+  onToggle: (id: number, enabled: boolean) => void
   option: { key: string; label: string }
   synonyms: ColumnSynonym[]
 }
@@ -46,8 +49,8 @@ interface SynonymGroupProps {
 interface SynonymItemProps {
   isUpdating: boolean
   onEdit: (syn: ColumnSynonym) => void
-  onRemove: (id: string) => void
-  onToggle: (id: string, enabled: boolean) => void
+  onRemove: (id: number) => void
+  onToggle: (id: number, enabled: boolean) => void
   synonym: ColumnSynonym
 }
 
@@ -66,7 +69,7 @@ export function SynonymForm() {
   )
 
   const { execute: updateSynonymAction, isPending: isUpdating } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<{ enabled: boolean; standardKey: string; synonym: string }> }) =>
+    ({ id, data }: { id: number; data: Partial<{ enabled: boolean; standardKey: string; synonym: string }> }) =>
       updateSynonym(id, data),
     {
       invalidateKeys: [queryKeys.settings.synonyms],
@@ -75,13 +78,13 @@ export function SynonymForm() {
     },
   )
 
-  const { execute: onRemove } = useServerAction((id: string) => removeSynonym(id), {
+  const { execute: onRemove } = useServerAction((id: number) => removeSynonym(id), {
     invalidateKeys: [queryKeys.settings.synonyms],
     onSuccess: () => toast.success('동의어가 삭제되었습니다'),
     onError: (error) => toast.error(error),
   })
 
-  function onUpdate(id: string, data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>) {
+  function onUpdate(id: number, data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>) {
     updateSynonymAction({ id, data })
   }
 

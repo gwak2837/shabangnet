@@ -15,17 +15,6 @@ interface ExtractedManufacturer {
   productCodeCount: number
 }
 
-// 제조사 ID 생성 (이름 기반)
-function generateManufacturerId(name: string): string {
-  // 특수문자 제거하고 소문자로 변환
-  const normalized = name
-    .replace(/[()]/g, '')
-    .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_가-힣]/g, '')
-    .toLowerCase()
-  return `mfr_${normalized}_${Date.now().toString(36)}`
-}
-
 // 이메일 placeholder 생성 (실제 이메일은 UI에서 설정)
 function generatePlaceholderEmail(name: string): string {
   const normalized = name
@@ -86,7 +75,6 @@ async function seed() {
 
         // 새 제조사 등록
         await db.insert(manufacturer).values({
-          id: generateManufacturerId(mfr.name),
           name: mfr.name,
           email: generatePlaceholderEmail(mfr.name),
           orderCount: mfr.orderCount,
@@ -98,9 +86,6 @@ async function seed() {
         console.error(`❌ 오류: ${mfr.name}:`, error)
         errors++
       }
-
-      // ID 충돌 방지를 위한 딜레이
-      await new Promise((resolve) => setTimeout(resolve, 10))
     }
 
     // 결과 요약

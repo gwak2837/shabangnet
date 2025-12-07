@@ -9,8 +9,8 @@ import { manufacturer, product } from '@/db/schema/manufacturers'
 export interface Product {
   cost: number
   createdAt: string
-  id: string
-  manufacturerId: string | null
+  id: number
+  manufacturerId: number | null
   manufacturerName: string | null
   optionName: string
   price: number
@@ -23,7 +23,6 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
   const [newProduct] = await db
     .insert(product)
     .values({
-      id: `p${Date.now()}`,
       productCode: data.productCode,
       productName: data.productName,
       optionName: data.optionName,
@@ -53,7 +52,7 @@ export async function getAll(): Promise<Product[]> {
   return result.map(mapToProduct)
 }
 
-export async function getById(id: string): Promise<Product | undefined> {
+export async function getById(id: number): Promise<Product | undefined> {
   const result = await db.query.product.findFirst({
     where: eq(product.id, id),
     with: {
@@ -65,11 +64,11 @@ export async function getById(id: string): Promise<Product | undefined> {
   return mapToProduct(result)
 }
 
-export async function remove(id: string): Promise<void> {
+export async function remove(id: number): Promise<void> {
   await db.delete(product).where(eq(product.id, id))
 }
 
-export async function update(id: string, data: Partial<Product>): Promise<Product> {
+export async function update(id: number, data: Partial<Product>): Promise<Product> {
   const [updated] = await db
     .update(product)
     .set({

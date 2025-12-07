@@ -13,7 +13,7 @@ export interface SettlementData {
 
 export interface SettlementFilters {
   endDate?: string
-  manufacturerId: string
+  manufacturerId: number
   month?: string
   periodType?: 'month' | 'range'
   startDate?: string
@@ -26,7 +26,7 @@ export interface SettlementOrder {
   customerName: string
   excludedFromEmail: boolean
   excludedReason?: string
-  id: string
+  id: number
   optionName: string
   orderNumber: string
   productName: string

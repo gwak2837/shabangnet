@@ -20,7 +20,7 @@ export type { InvoiceConvertResultItem }
 // 변환 요청 파라미터
 export interface ConvertInvoiceParams {
   file: ArrayBuffer
-  manufacturerId: string
+  manufacturerId: number
   manufacturerName: string
   template: InvoiceTemplate
 }
@@ -78,7 +78,7 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
 
     // 4. 변환 수행
     const results: InvoiceConvertResultItem[] = []
-    const ordersToUpdate: { id: string; courier: string; trackingNumber: string }[] = []
+    const ordersToUpdate: { id: number; courier: string; trackingNumber: string }[] = []
 
     for (const invoice of parseResult.invoices) {
       const result = convertSingleInvoice(invoice, courierLookup, orderMap)
@@ -184,7 +184,7 @@ function buildCourierLookup(
 function convertSingleInvoice(
   invoice: InvoiceRow,
   courierLookup: Map<string, string>,
-  orderMap: Map<string, string>,
+  orderMap: Map<string, number>,
 ): InvoiceConvertResultItem {
   // 주문번호 존재 여부 확인
   if (!orderMap.has(invoice.orderNumber)) {

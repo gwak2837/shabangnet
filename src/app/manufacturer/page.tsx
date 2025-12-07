@@ -29,7 +29,7 @@ export default function ManufacturersPage() {
   })
 
   const { execute: updateManufacturer, isPending: isUpdating } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<Manufacturer> }) => update(id, data),
+    ({ id, data }: { id: number; data: Partial<Manufacturer> }) => update(id, data),
     {
       invalidateKeys: [queryKeys.manufacturers.all],
       onSuccess: () => toast.success('제조사 정보가 수정되었습니다'),
@@ -44,7 +44,7 @@ export default function ManufacturersPage() {
   })
 
   const { execute: saveInvoiceTemplate, isPending: isSavingInvoice } = useServerAction(
-    ({ manufacturerId, template }: { manufacturerId: string; template: InvoiceTemplate }) =>
+    ({ manufacturerId, template }: { manufacturerId: number; template: InvoiceTemplate }) =>
       updateInvoiceTemplate(manufacturerId, template),
     {
       invalidateKeys: [['invoiceTemplate']],
@@ -56,7 +56,7 @@ export default function ManufacturersPage() {
       manufacturerId,
       template,
     }: {
-      manufacturerId: string
+      manufacturerId: number
       template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>
     }) => updateOrderTemplate(manufacturerId, template),
     {
@@ -74,7 +74,7 @@ export default function ManufacturersPage() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
     deleteManufacturer(id)
   }
 
@@ -92,7 +92,7 @@ export default function ManufacturersPage() {
         saveInvoiceTemplate({
           manufacturerId: editingManufacturer.id,
           template: {
-            id: `it_${editingManufacturer.id}`,
+            id: 0,
             manufacturerId: editingManufacturer.id,
             manufacturerName: data.name || editingManufacturer.name,
             orderNumberColumn: invoiceTemplate.orderNumberColumn || 'A',

@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { downloadExcel, parseExcelToJson } from '@/lib/excel-client'
 
 interface BulkUploadData {
-  manufacturerId: string | null
+  manufacturerId: number | null
   manufacturerName: string
   message?: string
   optionName: string
@@ -35,7 +35,7 @@ export function BulkUploadModal({ open, onOpenChange, onUpload, manufacturers }:
 
   // 제조사명으로 제조사 ID 찾기
   const findManufacturerId = useCallback(
-    (manufacturerName: string): { id: string | null; status: BulkUploadData['status'] } => {
+    (manufacturerName: string): { id: number | null; status: BulkUploadData['status'] } => {
       if (!manufacturerName || manufacturerName.trim() === '') {
         return { id: null, status: 'success' } // 제조사명이 비어있으면 미지정으로 처리
       }

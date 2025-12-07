@@ -4,6 +4,8 @@ import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
+import type { CourierMapping } from '@/services/settings'
+
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,10 +15,11 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useCourierMappings } from '@/hooks/use-settings'
-import { addCourierMapping, type CourierMapping, removeCourierMapping, updateCourierMapping } from '@/services/settings'
+
+import { addCourierMapping, removeCourierMapping, updateCourierMapping } from './action'
 
 const SKELETON_COURIER: CourierMapping = {
-  id: 'skeleton',
+  id: 0,
   name: '택배사 이름',
   code: '00',
   aliases: ['별칭 1', '별칭 2'],
@@ -27,7 +30,7 @@ export function CourierForm() {
   const { data: mappings = [], isLoading } = useCourierMappings()
 
   const { execute: updateCourier, isPending: isUpdatingCourier } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<CourierMapping> }) => updateCourierMapping(id, data),
+    ({ id, data }: { id: number; data: Partial<CourierMapping> }) => updateCourierMapping(id, data),
     {
       invalidateKeys: [queryKeys.settings.courier],
       onSuccess: () => toast.success('택배사 매핑이 수정되었습니다'),
@@ -44,7 +47,7 @@ export function CourierForm() {
     },
   )
 
-  const { execute: removeCourier } = useServerAction((id: string) => removeCourierMapping(id), {
+  const { execute: removeCourier } = useServerAction((id: number) => removeCourierMapping(id), {
     invalidateKeys: [queryKeys.settings.courier],
     onSuccess: () => toast.success('택배사 매핑이 삭제되었습니다'),
     onError: (error) => toast.error(error),
@@ -53,11 +56,11 @@ export function CourierForm() {
   const isSaving = isUpdatingCourier || isAddingCourier
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
   const isModalOpen = editingCourier !== null
-  const isNewCourier = editingCourier?.id === ''
+  const isNewCourier = editingCourier?.id === 0
 
   function handleAddCourier() {
     setEditingCourier({
-      id: '',
+      id: 0,
       name: '',
       code: '',
       aliases: [],

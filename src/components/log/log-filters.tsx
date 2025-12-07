@@ -85,7 +85,7 @@ export function LogFilters({
         <SelectContent>
           <SelectItem value="all">전체 제조사</SelectItem>
           {manufacturers.map((m) => (
-            <SelectItem key={m.id} value={m.id}>
+            <SelectItem key={m.id} value={m.id.toString()}>
               {m.name}
             </SelectItem>
           ))}

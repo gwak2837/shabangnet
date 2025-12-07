@@ -2,7 +2,6 @@
 
 import { and, eq } from 'drizzle-orm'
 
-import { isUniqueViolation } from '@/common/constants/postgres-errors'
 import { db } from '@/db/client'
 import { columnSynonym } from '@/db/schema/settings'
 
@@ -12,7 +11,7 @@ import { columnSynonym } from '@/db/schema/settings'
 
 export interface ColumnSynonym {
   enabled: boolean
-  id: string
+  id: number
   standardKey: string
   synonym: string
 }
@@ -44,42 +43,6 @@ const CACHE_TTL = 5 * 60 * 1000
 // ============================================
 // Cache Management
 // ============================================
-
-/**
- * 동의어 추가
- */
-export async function addSynonym(data: {
-  standardKey: string
-  synonym: string
-}): Promise<ColumnSynonym | { error: string }> {
-  try {
-    const [newSynonym] = await db
-      .insert(columnSynonym)
-      .values({
-        id: `syn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        standardKey: data.standardKey,
-        synonym: data.synonym,
-        enabled: true,
-      })
-      .returning()
-
-    // 캐시 무효화
-    await invalidateSynonymCache()
-
-    return {
-      id: newSynonym.id,
-      standardKey: newSynonym.standardKey,
-      synonym: newSynonym.synonym,
-      enabled: newSynonym.enabled ?? true,
-    }
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      return { error: `이미 존재하는 동의어입니다: "${data.synonym}"` }
-    }
-    console.error('동의어 추가 에러:', error)
-    return { error: '동의어 추가 중 오류가 발생했습니다' }
-  }
-}
 
 /**
  * 두 컬럼명 배열 간 자동 매핑 수행 (캐시 사용)
@@ -186,16 +149,6 @@ export async function invalidateSynonymCache(): Promise<void> {
   }
 }
 
-/**
- * 동의어 삭제
- */
-export async function removeSynonym(id: string): Promise<void> {
-  await db.delete(columnSynonym).where(eq(columnSynonym.id, id))
-
-  // 캐시 무효화
-  await invalidateSynonymCache()
-}
-
 // ============================================
 // Lookup Functions
 // ============================================
@@ -221,35 +174,6 @@ export async function synonymExists(standardKey: string, synonym: string): Promi
     .limit(1)
 
   return result.length > 0
-}
-
-/**
- * 동의어 업데이트
- */
-export async function updateSynonym(
-  id: string,
-  data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>,
-): Promise<ColumnSynonym> {
-  const [updated] = await db
-    .update(columnSynonym)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(eq(columnSynonym.id, id))
-    .returning()
-
-  if (!updated) throw new Error('Synonym not found')
-
-  // 캐시 무효화
-  await invalidateSynonymCache()
-
-  return {
-    id: updated.id,
-    standardKey: updated.standardKey,
-    synonym: updated.synonym,
-    enabled: updated.enabled ?? true,
-  }
 }
 
 /**

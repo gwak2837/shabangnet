@@ -1,10 +1,10 @@
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 export const columnSynonym = pgTable(
   'column_synonym',
   {
-    id: text('id').primaryKey(),
+    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
     standardKey: varchar('standard_key', { length: 50 }).notNull(), // 사방넷 표준 키 (productName, quantity 등)
     synonym: varchar('synonym', { length: 100 }).notNull(), // 동의어 (상품명, 품명 등)
     enabled: boolean('enabled').default(true),
@@ -26,7 +26,7 @@ export const settings = pgTable('settings', {
 }).enableRLS()
 
 export const courierMapping = pgTable('courier_mapping', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 100 }).notNull(),
   code: varchar('code', { length: 10 }).notNull(),
   aliases: text('aliases').array(), // 별칭 배열
@@ -35,7 +35,7 @@ export const courierMapping = pgTable('courier_mapping', {
 }).enableRLS()
 
 export const exclusionPattern = pgTable('exclusion_pattern', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   pattern: varchar('pattern', { length: 255 }).notNull(),
   description: text('description'),
   enabled: boolean('enabled').default(true),
@@ -44,7 +44,7 @@ export const exclusionPattern = pgTable('exclusion_pattern', {
 }).enableRLS()
 
 export const shoppingMallTemplate = pgTable('shopping_mall_template', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
   displayName: varchar('display_name', { length: 100 }).notNull(),
   columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 매핑
@@ -56,7 +56,7 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
 }).enableRLS()
 
 export const smtpAccount = pgTable('smtp_account', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 100 }).notNull(), // "시스템 알림", "발주서 발송"
   purpose: varchar('purpose', { length: 50 }).notNull().unique(), // "system" | "order"
   host: varchar('host', { length: 255 }).notNull(),
@@ -71,7 +71,7 @@ export const smtpAccount = pgTable('smtp_account', {
 }).enableRLS()
 
 export const emailTemplate = pgTable('email_template', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 100 }).notNull(), // "발주서 기본"
   slug: varchar('slug', { length: 50 }).notNull().unique(), // "order-default"
   subject: text('subject').notNull(), // "{{manufacturer_name}} 발주서 - {{date}}"

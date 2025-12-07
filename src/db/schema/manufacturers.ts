@@ -1,4 +1,4 @@
-import { boolean, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 // ============================================
@@ -6,7 +6,7 @@ import 'server-only'
 // ============================================
 
 export const manufacturer = pgTable('manufacturer', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 255 }).notNull(),
   contactName: varchar('contact_name', { length: 255 }),
   email: varchar('email', { length: 255 }).notNull(),
@@ -30,11 +30,13 @@ export const manufacturer = pgTable('manufacturer', {
 // ============================================
 
 export const product = pgTable('product', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   productCode: varchar('product_code', { length: 100 }).notNull().unique(),
   productName: varchar('product_name', { length: 500 }).notNull(),
   optionName: varchar('option_name', { length: 255 }),
-  manufacturerId: text('manufacturer_id').references(() => manufacturer.id, { onDelete: 'set null' }),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id, {
+    onDelete: 'set null',
+  }),
   price: decimal('price', { precision: 12, scale: 2 }).default('0'),
   cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 원가
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -47,10 +49,10 @@ export const product = pgTable('product', {
 // ============================================
 
 export const optionMapping = pgTable('option_mapping', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   productCode: varchar('product_code', { length: 100 }).notNull(),
   optionName: varchar('option_name', { length: 255 }).notNull(),
-  manufacturerId: text('manufacturer_id')
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' })
     .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -62,8 +64,8 @@ export const optionMapping = pgTable('option_mapping', {
 // ============================================
 
 export const orderTemplate = pgTable('order_template', {
-  id: text('id').primaryKey(),
-  manufacturerId: text('manufacturer_id')
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' })
     .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull()
     .unique(),
@@ -81,8 +83,8 @@ export const orderTemplate = pgTable('order_template', {
 // ============================================
 
 export const invoiceTemplate = pgTable('invoice_template', {
-  id: text('id').primaryKey(),
-  manufacturerId: text('manufacturer_id')
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' })
     .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull()
     .unique(),

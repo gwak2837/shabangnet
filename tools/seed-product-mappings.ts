@@ -17,14 +17,9 @@ interface ExtractedMapping {
 }
 
 // 제조사 이름으로 ID 찾기
-async function findManufacturerId(db: ReturnType<typeof drizzle>, name: string): Promise<string | null> {
+async function findManufacturerId(db: ReturnType<typeof drizzle>, name: string): Promise<number | null> {
   const result = await db.select().from(manufacturer).where(eq(manufacturer.name, name)).limit(1)
   return result.length > 0 ? result[0].id : null
-}
-
-// ID 생성 헬퍼
-function generateId(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`
 }
 
 async function seed() {
@@ -60,7 +55,7 @@ async function seed() {
     console.log(`📄 ${extractedData.length}개 매핑 데이터 로드\n`)
 
     // 제조사 ID 캐시 (성능 최적화)
-    const manufacturerCache = new Map<string, string | null>()
+    const manufacturerCache = new Map<string, number | null>()
 
     // 통계
     let productsCreated = 0
@@ -114,7 +109,6 @@ async function seed() {
 
         // 새 상품 등록
         await db.insert(product).values({
-          id: generateId('prod'),
           productCode,
           productName: firstMapping.productName,
           optionName: firstMapping.optionName || null,
@@ -182,7 +176,6 @@ async function seed() {
 
         // 새 옵션 매핑 등록
         await db.insert(optionMapping).values({
-          id: generateId('opt'),
           productCode: productCodeFromName,
           optionName: mapping.optionName || '기본',
           manufacturerId,

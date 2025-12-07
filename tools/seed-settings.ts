@@ -61,7 +61,6 @@ async function seed() {
         await db
           .insert(exclusionPattern)
           .values({
-            id: `exc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             pattern: pattern.pattern,
             description: pattern.description,
             enabled: true,
@@ -74,9 +73,6 @@ async function seed() {
         exclusionSkipped++
         console.log(`  ⏭️  ${pattern.pattern} (already exists or error)`)
       }
-
-      // 유니크 ID를 위한 약간의 딜레이
-      await new Promise((resolve) => setTimeout(resolve, 10))
     }
 
     // 택배사 매핑 시드
@@ -89,7 +85,6 @@ async function seed() {
         await db
           .insert(courierMapping)
           .values({
-            id: `courier_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             name: courier.name,
             code: courier.code,
             aliases: courier.aliases,
@@ -103,9 +98,6 @@ async function seed() {
         courierSkipped++
         console.log(`  ⏭️  ${courier.name} (already exists or error)`)
       }
-
-      // 유니크 ID를 위한 약간의 딜레이
-      await new Promise((resolve) => setTimeout(resolve, 10))
     }
 
     // 결과 요약

@@ -72,6 +72,7 @@ export function OptionMappingModal({
     e.preventDefault()
 
     if (!validate()) return
+    if (!formData.manufacturerId) return
 
     const selectedManufacturer = manufacturers.find((m) => m.id === formData.manufacturerId)
 
@@ -137,15 +138,15 @@ export function OptionMappingModal({
               제조사 <span className="text-rose-500">*</span>
             </Label>
             <Select
-              onValueChange={(v) => setFormData({ ...formData, manufacturerId: v })}
-              value={formData.manufacturerId}
+              onValueChange={(v) => setFormData({ ...formData, manufacturerId: Number(v) })}
+              value={formData.manufacturerId?.toString() ?? ''}
             >
               <SelectTrigger className={errors.manufacturerId ? 'border-rose-500' : ''}>
                 <SelectValue placeholder="제조사 선택" />
               </SelectTrigger>
               <SelectContent>
                 {manufacturers.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
+                  <SelectItem key={m.id} value={m.id.toString()}>
                     {m.name}
                   </SelectItem>
                 ))}
@@ -190,6 +191,6 @@ function getFormDataFromMapping(mapping: OptionManufacturerMapping | null) {
   return {
     productCode: mapping?.productCode ?? '',
     optionName: mapping?.optionName ?? '',
-    manufacturerId: mapping?.manufacturerId ?? '',
+    manufacturerId: mapping?.manufacturerId ?? null as number | null,
   }
 }

@@ -34,7 +34,7 @@ export default function InvoiceConvertPage() {
   const { data: logs = [], isLoading: isLoadingLogs } = useSendLogs()
 
   // 제조사 선택 시 템플릿 로드
-  const loadTemplate = useCallback(async (manufacturerId: string) => {
+  const loadTemplate = useCallback(async (manufacturerId: number) => {
     try {
       const template = await getInvoiceTemplateOrDefault(manufacturerId)
       setCurrentTemplate(template)
@@ -42,7 +42,7 @@ export default function InvoiceConvertPage() {
       console.error('Failed to load template:', error)
       setCurrentTemplate({
         ...defaultInvoiceTemplate,
-        id: 'default',
+        id: 0,
         manufacturerId,
         manufacturerName: '알 수 없음',
       })
@@ -50,7 +50,7 @@ export default function InvoiceConvertPage() {
   }, [])
 
   useEffect(() => {
-    if (selectedLog?.manufacturerId) {
+    if (selectedLog?.manufacturerId !== null && selectedLog?.manufacturerId !== undefined) {
       loadTemplate(selectedLog.manufacturerId)
     }
   }, [selectedLog?.manufacturerId, loadTemplate])
@@ -68,7 +68,7 @@ export default function InvoiceConvertPage() {
   }
 
   const handleConvert = async () => {
-    if (!selectedLog || !selectedFile || !currentTemplate) return
+    if (!selectedLog || !selectedFile || !currentTemplate || selectedLog.manufacturerId === null) return
 
     setIsProcessing(true)
 

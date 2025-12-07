@@ -7,7 +7,7 @@ import { orderEmailLog } from '@/db/schema/orders'
 
 export interface LogFilters {
   endDate?: string
-  manufacturerId?: string
+  manufacturerId?: number
   startDate?: string
   status?: 'all' | 'failed' | 'pending' | 'success'
 }
@@ -17,8 +17,8 @@ export interface SendLog {
   email: string
   errorMessage?: string
   fileName: string
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number | null
   manufacturerName: string
   orderCount: number
   orders: SendLogOrder[]
@@ -47,7 +47,7 @@ export async function getAll(): Promise<SendLog[]> {
   return result.map(mapToSendLog)
 }
 
-export async function getById(id: string): Promise<SendLog | undefined> {
+export async function getById(id: number): Promise<SendLog | undefined> {
   const result = await db.query.orderEmailLog.findFirst({
     where: eq(orderEmailLog.id, id),
     with: {
@@ -75,7 +75,7 @@ export async function getById(id: string): Promise<SendLog | undefined> {
 export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
   const conditions = []
 
-  if (filters.manufacturerId && filters.manufacturerId !== 'all') {
+  if (filters.manufacturerId) {
     conditions.push(eq(orderEmailLog.manufacturerId, filters.manufacturerId))
   }
 
@@ -105,7 +105,7 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
 function mapToSendLog(log: typeof orderEmailLog.$inferSelect): SendLog {
   return {
     id: log.id,
-    manufacturerId: log.manufacturerId || '',
+    manufacturerId: log.manufacturerId ?? null,
     manufacturerName: log.manufacturerName,
     email: log.email,
     subject: log.subject,

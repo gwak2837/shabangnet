@@ -17,27 +17,27 @@ import { formatCurrency, formatDate } from '@/utils/format'
 
 interface ProductTableProps {
   manufacturers: Manufacturer[]
-  onUpdateCost?: (productId: string, cost: number) => void
-  onUpdateManufacturer: (productId: string, manufacturerId: string | null) => void
+  onUpdateCost?: (productId: number, cost: number) => void
+  onUpdateManufacturer: (productId: number, manufacturerId: number | null) => void
   products: Product[]
 }
 
 export function ProductTable({ products, manufacturers, onUpdateManufacturer, onUpdateCost }: ProductTableProps) {
-  const [editingProductId, setEditingProductId] = useState<string | null>(null)
-  const [editingCostProductId, setEditingCostProductId] = useState<string | null>(null)
+  const [editingProductId, setEditingProductId] = useState<number | null>(null)
+  const [editingCostProductId, setEditingCostProductId] = useState<number | null>(null)
   const [costInputValue, setCostInputValue] = useState<string>('')
 
-  function handleManufacturerChange(productId: string, value: string) {
-    onUpdateManufacturer(productId, value === 'none' ? null : value)
+  function handleManufacturerChange(productId: number, value: string) {
+    onUpdateManufacturer(productId, value === 'none' ? null : Number(value))
     setEditingProductId(null)
   }
 
-  function handleCostEdit(productId: string, currentCost: number) {
+  function handleCostEdit(productId: number, currentCost: number) {
     setEditingCostProductId(productId)
     setCostInputValue(currentCost.toString())
   }
 
-  function handleCostSave(productId: string) {
+  function handleCostSave(productId: number) {
     const cost = parseFloat(costInputValue) || 0
     if (onUpdateCost) {
       onUpdateCost(productId, cost)
@@ -46,7 +46,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
     setCostInputValue('')
   }
 
-  function handleCostKeyDown(e: React.KeyboardEvent, productId: string) {
+  function handleCostKeyDown(e: React.KeyboardEvent, productId: number) {
     if (e.key === 'Enter') {
       handleCostSave(productId)
     } else if (e.key === 'Escape') {
@@ -140,7 +140,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                     <TableCell>
                       {isEditing ? (
                         <Select
-                          defaultValue={product.manufacturerId || 'none'}
+                          defaultValue={product.manufacturerId?.toString() || 'none'}
                           onValueChange={(value) => handleManufacturerChange(product.id, value)}
                         >
                           <SelectTrigger className="w-[180px] h-9">
@@ -151,7 +151,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                               <span className="text-slate-500">미지정</span>
                             </SelectItem>
                             {manufacturers.map((m) => (
-                              <SelectItem key={m.id} value={m.id}>
+                              <SelectItem key={m.id} value={m.id.toString()}>
                                 {m.name}
                               </SelectItem>
                             ))}

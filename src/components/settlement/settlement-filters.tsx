@@ -14,13 +14,13 @@ interface SettlementFiltersProps {
   endDate: string
   manufacturers: Manufacturer[]
   onEndDateChange: (date: string) => void
-  onManufacturerChange: (id: string) => void
+  onManufacturerChange: (id: number | null) => void
   onMonthChange: (month: string) => void
   onPeriodTypeChange: (type: 'month' | 'range') => void
   onSearch: () => void
   onStartDateChange: (date: string) => void
   periodType: 'month' | 'range'
-  selectedManufacturerId: string
+  selectedManufacturerId: number | null
   selectedMonth: string // YYYY-MM format
   startDate: string // YYYY-MM-DD format
 }
@@ -44,13 +44,16 @@ export function SettlementFilters({
       {/* Manufacturer Select */}
       <div className="flex flex-col gap-2">
         <Label className="text-sm font-medium text-slate-700">제조사 선택</Label>
-        <Select onValueChange={onManufacturerChange} value={selectedManufacturerId}>
+        <Select
+          onValueChange={(v) => onManufacturerChange(v ? Number(v) : null)}
+          value={selectedManufacturerId?.toString() ?? ''}
+        >
           <SelectTrigger className="w-full md:w-[300px]">
             <SelectValue placeholder="제조사를 선택하세요" />
           </SelectTrigger>
           <SelectContent>
             {manufacturers.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
+              <SelectItem key={m.id} value={m.id.toString()}>
                 {m.name}
               </SelectItem>
             ))}

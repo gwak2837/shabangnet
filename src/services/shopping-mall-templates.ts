@@ -29,7 +29,7 @@ export interface ShoppingMallTemplate {
   displayName: string
   enabled: boolean
   headerRow: number
-  id: string
+  id: number
   mallName: string
   updatedAt: string
 }
@@ -104,29 +104,8 @@ export async function analyzeShoppingMallFile(file: File, headerRow?: number): P
   }
 }
 
-// CRUD operations
-export async function createShoppingMallTemplate(data: CreateTemplateData): Promise<ShoppingMallTemplate> {
-  const [created] = await db
-    .insert(shoppingMallTemplate)
-    .values({
-      id: `smt_${Date.now()}`,
-      mallName: data.mallName,
-      displayName: data.displayName,
-      columnMappings: JSON.stringify(data.columnMappings),
-      headerRow: data.headerRow,
-      dataStartRow: data.dataStartRow,
-      enabled: true,
-    })
-    .returning()
-
-  return mapToShoppingMallTemplate(created)
-}
-
-export async function deleteShoppingMallTemplate(id: string): Promise<void> {
-  await db.delete(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
-}
-
-export async function getShoppingMallTemplate(id: string): Promise<ShoppingMallTemplate | null> {
+// Read operations
+export async function getShoppingMallTemplate(id: number): Promise<ShoppingMallTemplate | null> {
   const [result] = await db.select().from(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
 
   if (!result) return null
@@ -136,25 +115,6 @@ export async function getShoppingMallTemplate(id: string): Promise<ShoppingMallT
 export async function getShoppingMallTemplates(): Promise<ShoppingMallTemplate[]> {
   const result = await db.select().from(shoppingMallTemplate).orderBy(shoppingMallTemplate.displayName)
   return result.map(mapToShoppingMallTemplate)
-}
-
-export async function updateShoppingMallTemplate(id: string, data: UpdateTemplateData): Promise<ShoppingMallTemplate> {
-  const [updated] = await db
-    .update(shoppingMallTemplate)
-    .set({
-      mallName: data.mallName,
-      displayName: data.displayName,
-      columnMappings: data.columnMappings ? JSON.stringify(data.columnMappings) : undefined,
-      headerRow: data.headerRow,
-      dataStartRow: data.dataStartRow,
-      enabled: data.enabled,
-      updatedAt: new Date(),
-    })
-    .where(eq(shoppingMallTemplate.id, id))
-    .returning()
-
-  if (!updated) throw new Error('Template not found')
-  return mapToShoppingMallTemplate(updated)
 }
 
 // Helper functions

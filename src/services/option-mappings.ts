@@ -8,8 +8,8 @@ import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
 // Option mapping types
 export interface OptionManufacturerMapping {
   createdAt: string
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number
   manufacturerName: string
   optionName: string
   productCode: string
@@ -22,7 +22,6 @@ export async function create(
   const [newMapping] = await db
     .insert(optionMapping)
     .values({
-      id: `om${Date.now()}`,
       productCode: data.productCode,
       optionName: data.optionName,
       manufacturerId: data.manufacturerId,
@@ -47,7 +46,7 @@ export async function getAll(): Promise<OptionManufacturerMapping[]> {
   return result.map(mapToOptionMapping)
 }
 
-export async function getById(id: string): Promise<OptionManufacturerMapping | undefined> {
+export async function getById(id: number): Promise<OptionManufacturerMapping | undefined> {
   const result = await db.query.optionMapping.findFirst({
     where: eq(optionMapping.id, id),
     with: {
@@ -59,12 +58,12 @@ export async function getById(id: string): Promise<OptionManufacturerMapping | u
   return mapToOptionMapping(result)
 }
 
-export async function remove(id: string): Promise<void> {
+export async function remove(id: number): Promise<void> {
   await db.delete(optionMapping).where(eq(optionMapping.id, id))
 }
 
 export async function update(
-  id: string,
+  id: number,
   data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>>,
 ): Promise<OptionManufacturerMapping> {
   const [updated] = await db

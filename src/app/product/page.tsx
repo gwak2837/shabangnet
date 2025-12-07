@@ -30,7 +30,7 @@ export default function ProductsPage() {
   const { data: manufacturers = [] } = useManufacturers()
 
   const { execute: updateProduct } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<Product> }) => update(id, data),
+    ({ id, data }: { id: number; data: Partial<Product> }) => update(id, data),
     {
       invalidateKeys: [queryKeys.products.all],
       onError: (error) => toast.error(error),
@@ -56,7 +56,7 @@ export default function ProductsPage() {
     })
   }, [products, searchQuery, showUnmappedOnly, showPriceErrorsOnly])
 
-  const handleUpdateManufacturer = (productId: string, manufacturerId: string | null) => {
+  const handleUpdateManufacturer = (productId: number, manufacturerId: number | null) => {
     const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
     updateProduct({
       id: productId,
@@ -67,7 +67,7 @@ export default function ProductsPage() {
     })
   }
 
-  const handleUpdateCost = (productId: string, cost: number) => {
+  const handleUpdateCost = (productId: number, cost: number) => {
     updateProduct({
       id: productId,
       data: { cost },
@@ -94,7 +94,7 @@ export default function ProductsPage() {
       productCode: string
       productName: string
       optionName: string
-      manufacturerId: string | null
+      manufacturerId: number | null
       manufacturerName: string
     }[],
   ) => {

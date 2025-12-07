@@ -1,11 +1,11 @@
 export const queryKeys = {
   manufacturers: {
     all: ['manufacturers'] as const,
-    detail: (id: string) => ['manufacturers', id] as const,
+    detail: (id: number) => ['manufacturers', id] as const,
   },
   products: {
     all: ['products'] as const,
-    detail: (id: string) => ['products', id] as const,
+    detail: (id: number) => ['products', id] as const,
   },
   orders: {
     batches: ['orders', 'batches'] as const,
@@ -13,7 +13,7 @@ export const queryKeys = {
   },
   logs: {
     all: ['logs'] as const,
-    detail: (id: string) => ['logs', id] as const,
+    detail: (id: number) => ['logs', id] as const,
   },
   optionMappings: {
     all: ['option-mappings'] as const,
@@ -33,7 +33,7 @@ export const queryKeys = {
   },
   settlement: {
     data: (filters: {
-      manufacturerId: string
+      manufacturerId: number
       periodType: string
       month?: string
       startDate?: string
@@ -42,7 +42,7 @@ export const queryKeys = {
   },
   shoppingMallTemplates: {
     all: ['shopping-mall-templates'] as const,
-    detail: (id: string) => ['shopping-mall-templates', id] as const,
+    detail: (id: number) => ['shopping-mall-templates', id] as const,
   },
   users: {
     all: ['users'] as const,

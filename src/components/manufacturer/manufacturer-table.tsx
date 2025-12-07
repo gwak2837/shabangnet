@@ -26,7 +26,7 @@ import { formatDate } from '@/utils/format'
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]
   onAdd: () => void
-  onDelete: (id: string) => void
+  onDelete: (id: number) => void
   onEdit: (manufacturer: Manufacturer) => void
 }
 

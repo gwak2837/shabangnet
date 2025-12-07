@@ -14,7 +14,7 @@ export interface SettlementOrder {
   customerName: string
   excludedFromEmail?: boolean
   excludedReason?: string
-  id: string
+  id: number
   optionName: string
   orderNumber: string
   productName: string

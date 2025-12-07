@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/common/constants/query-keys'
 import { getAll, getById } from '@/services/products'
 
-export function useProduct(id: string) {
+export function useProduct(id: number) {
   return useQuery({
     queryKey: queryKeys.products.detail(id),
     queryFn: () => getById(id),

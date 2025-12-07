@@ -12,8 +12,8 @@ interface InvoiceTemplate {
   courierColumn: string
   dataStartRow: number
   headerRow: number
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number
   manufacturerName: string
   orderNumberColumn: string
   trackingNumberColumn: string
@@ -24,7 +24,7 @@ interface Manufacturer {
   ccEmail?: string
   contactName: string
   email: string
-  id: string
+  id: number
   lastOrderDate: string
   name: string
   orderCount: number
@@ -37,8 +37,8 @@ interface OrderTemplate {
   dataStartRow: number
   fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
   headerRow: number
-  id: string
-  manufacturerId: string
+  id: number
+  manufacturerId: number
   manufacturerName: string
   templateFileName?: string
 }
@@ -75,7 +75,6 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
   const [newManufacturer] = await db
     .insert(manufacturer)
     .values({
-      id: `m${Date.now()}`,
       name: data.name,
       contactName: data.contactName,
       email: data.email,
@@ -88,7 +87,7 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
   return mapToManufacturer(newManufacturer)
 }
 
-export async function deleteOrderTemplate(manufacturerId: string): Promise<void> {
+export async function deleteOrderTemplate(manufacturerId: number): Promise<void> {
   await db.delete(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
 }
 
@@ -97,13 +96,13 @@ export async function getAll(): Promise<Manufacturer[]> {
   return result.map(mapToManufacturer)
 }
 
-export async function getById(id: string): Promise<Manufacturer | undefined> {
+export async function getById(id: number): Promise<Manufacturer | undefined> {
   const [result] = await db.select().from(manufacturer).where(eq(manufacturer.id, id))
   if (!result) return undefined
   return mapToManufacturer(result)
 }
 
-export async function getInvoiceTemplate(manufacturerId: string): Promise<InvoiceTemplate | null> {
+export async function getInvoiceTemplate(manufacturerId: number): Promise<InvoiceTemplate | null> {
   const [template] = await db.select().from(invoiceTemplate).where(eq(invoiceTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
@@ -114,20 +113,20 @@ export async function getInvoiceTemplate(manufacturerId: string): Promise<Invoic
   return mapToInvoiceTemplate(template, mfr.name)
 }
 
-export async function getInvoiceTemplateOrDefault(manufacturerId: string): Promise<InvoiceTemplate> {
+export async function getInvoiceTemplateOrDefault(manufacturerId: number): Promise<InvoiceTemplate> {
   const customTemplate = await getInvoiceTemplate(manufacturerId)
   if (customTemplate) return customTemplate
 
   const mfr = await getById(manufacturerId)
   return {
-    id: 'default',
+    id: 0,
     manufacturerId,
     manufacturerName: mfr?.name || '알 수 없음',
     ...DEFAULT_INVOICE_TEMPLATE,
   }
 }
 
-export async function getOrderTemplate(manufacturerId: string): Promise<OrderTemplate | null> {
+export async function getOrderTemplate(manufacturerId: number): Promise<OrderTemplate | null> {
   const [template] = await db.select().from(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
@@ -138,24 +137,24 @@ export async function getOrderTemplate(manufacturerId: string): Promise<OrderTem
   return mapToOrderTemplate(template, mfr.name)
 }
 
-export async function getOrderTemplateOrDefault(manufacturerId: string): Promise<OrderTemplate> {
+export async function getOrderTemplateOrDefault(manufacturerId: number): Promise<OrderTemplate> {
   const customTemplate = await getOrderTemplate(manufacturerId)
   if (customTemplate) return customTemplate
 
   const mfr = await getById(manufacturerId)
   return {
-    id: 'default',
+    id: 0,
     manufacturerId,
     manufacturerName: mfr?.name || '알 수 없음',
     ...DEFAULT_ORDER_TEMPLATE,
   }
 }
 
-export async function remove(id: string): Promise<void> {
+export async function remove(id: number): Promise<void> {
   await db.delete(manufacturer).where(eq(manufacturer.id, id))
 }
 
-export async function update(id: string, data: Partial<Manufacturer>): Promise<Manufacturer> {
+export async function update(id: number, data: Partial<Manufacturer>): Promise<Manufacturer> {
   const [updated] = await db
     .update(manufacturer)
     .set({
@@ -174,7 +173,7 @@ export async function update(id: string, data: Partial<Manufacturer>): Promise<M
 }
 
 export async function updateInvoiceTemplate(
-  manufacturerId: string,
+  manufacturerId: number,
   template: InvoiceTemplate,
 ): Promise<InvoiceTemplate> {
   const existing = await getInvoiceTemplate(manufacturerId)
@@ -198,7 +197,6 @@ export async function updateInvoiceTemplate(
     const [created] = await db
       .insert(invoiceTemplate)
       .values({
-        id: `it${Date.now()}`,
         manufacturerId,
         orderNumberColumn: template.orderNumberColumn,
         courierColumn: template.courierColumn,
@@ -213,7 +211,7 @@ export async function updateInvoiceTemplate(
 }
 
 export async function updateOrderTemplate(
-  manufacturerId: string,
+  manufacturerId: number,
   template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>,
 ): Promise<OrderTemplate> {
   const existing = await getOrderTemplate(manufacturerId)
@@ -239,7 +237,6 @@ export async function updateOrderTemplate(
     const [created] = await db
       .insert(orderTemplate)
       .values({
-        id: `ot${Date.now()}`,
         manufacturerId,
         templateFileName: template.templateFileName || null,
         headerRow: template.headerRow,

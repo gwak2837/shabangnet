@@ -108,7 +108,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
 
     try {
       const result = await sendOrder({
-        manufacturerId: batch.manufacturerId,
+        manufacturerId: batch.manufacturerId.toString(),
         manufacturerName: batch.manufacturerName,
         email: batch.email,
         orders: batch.orders.map((order) => ({

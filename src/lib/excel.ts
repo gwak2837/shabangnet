@@ -107,7 +107,6 @@ export interface ShoppingMallConfig {
   dataStartRow: number
   displayName: string
   headerRow: number
-  id: string
   mallName: string
 }
 

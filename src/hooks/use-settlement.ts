@@ -8,7 +8,7 @@ import { getSettlementData, type SettlementData, type SettlementFilters } from '
 export function useSettlement(filters: SettlementFilters | null) {
   return useQuery<SettlementData>({
     queryKey: queryKeys.settlement.data({
-      manufacturerId: filters?.manufacturerId || '',
+      manufacturerId: filters?.manufacturerId || 0,
       periodType: filters?.periodType || 'month',
       month: filters?.month,
       startDate: filters?.startDate,

@@ -23,7 +23,7 @@ import { formatDate } from '@/utils/format'
 
 interface OptionMappingTableProps {
   mappings: OptionManufacturerMapping[]
-  onDelete: (mappingId: string) => void
+  onDelete: (mappingId: number) => void
   onEdit: (mapping: OptionManufacturerMapping) => void
 }
 

@@ -22,7 +22,7 @@ interface OrderTableProps {
 }
 
 export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend, onDownload }: OrderTableProps) {
-  const [selectedBatches, setSelectedBatches] = useState<string[]>([])
+  const [selectedBatches, setSelectedBatches] = useState<number[]>([])
   const isAllSelected = batches.length > 0 && selectedBatches.length === batches.length
   const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
 
@@ -34,7 +34,7 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend, onDow
     }
   }
 
-  function handleSelectBatch(manufacturerId: string, checked: boolean) {
+  function handleSelectBatch(manufacturerId: number, checked: boolean) {
     if (checked) {
       setSelectedBatches([...selectedBatches, manufacturerId])
     } else {

@@ -29,7 +29,7 @@ interface UploadResult {
   processedOrders: number
   success: boolean
   totalOrders: number
-  uploadId: string
+  uploadId: number
 }
 
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
@@ -56,9 +56,6 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     // 파싱
     const parseResult = await parseSabangnetFile(buffer)
 
-    // 업로드 ID 생성
-    const uploadId = generateId()
-
     // 제조사 목록 조회
     const allManufacturers = await db.select().from(manufacturer)
     const manufacturerMap = new Map(allManufacturers.map((m) => [m.name.toLowerCase(), m]))
@@ -73,82 +70,88 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
     )
 
-    // 주문 데이터 준비 (제조사 매칭 포함)
-    const orderValues = parseResult.orders.map((o) => {
-      // 제조사 매칭 로직 (우선순위: 옵션 매핑 > 상품 매핑 > 파일 내 제조사명)
-      let matchedManufacturerId: string | null = null
+    // 주문 데이터 준비 함수 (uploadId를 나중에 받아서 사용)
+    const prepareOrderValues = (uploadId: number) =>
+      parseResult.orders.map((o) => {
+        // 제조사 매칭 로직 (우선순위: 옵션 매핑 > 상품 매핑 > 파일 내 제조사명)
+        let matchedManufacturerId: number | null = null
 
-      // 1) 옵션 매핑 확인
-      if (o.productCode && o.optionName) {
-        const optionKey = `${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`
-        const om = optionMap.get(optionKey)
-        if (om) {
-          matchedManufacturerId = om.manufacturerId
+        // 1) 옵션 매핑 확인
+        if (o.productCode && o.optionName) {
+          const optionKey = `${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`
+          const om = optionMap.get(optionKey)
+          if (om) {
+            matchedManufacturerId = om.manufacturerId
+          }
         }
-      }
 
-      // 2) 상품 매핑 확인 (옵션 매핑이 없는 경우)
-      if (!matchedManufacturerId && o.productCode) {
-        const p = productMap.get(o.productCode.toLowerCase())
-        if (p?.manufacturerId) {
-          matchedManufacturerId = p.manufacturerId
+        // 2) 상품 매핑 확인 (옵션 매핑이 없는 경우)
+        if (!matchedManufacturerId && o.productCode) {
+          const p = productMap.get(o.productCode.toLowerCase())
+          if (p?.manufacturerId) {
+            matchedManufacturerId = p.manufacturerId
+          }
         }
-      }
 
-      // 3) 파일 내 제조사명으로 매칭
-      if (!matchedManufacturerId && o.manufacturer) {
-        const mfr = manufacturerMap.get(o.manufacturer.toLowerCase())
-        if (mfr) {
-          matchedManufacturerId = mfr.id
+        // 3) 파일 내 제조사명으로 매칭
+        if (!matchedManufacturerId && o.manufacturer) {
+          const mfr = manufacturerMap.get(o.manufacturer.toLowerCase())
+          if (mfr) {
+            matchedManufacturerId = mfr.id
+          }
         }
-      }
 
-      return {
-        id: generateOrderId(),
-        uploadId,
-        orderNumber: o.orderNumber,
-        productName: o.productName || null,
-        quantity: o.quantity || 1,
-        orderName: o.orderName || null,
-        recipientName: o.recipientName || null,
-        orderPhone: o.orderPhone || null,
-        orderMobile: o.orderMobile || null,
-        recipientPhone: o.recipientPhone || null,
-        recipientMobile: o.recipientMobile || null,
-        postalCode: o.postalCode || null,
-        address: o.address || null,
-        memo: o.memo || null,
-        shoppingMall: o.shoppingMall || null,
-        manufacturerName: o.manufacturer || null,
-        manufacturerId: matchedManufacturerId,
-        courier: o.courier || null,
-        trackingNumber: o.trackingNumber || null,
-        optionName: o.optionName || null,
-        paymentAmount: o.paymentAmount?.toString() || '0',
-        productAbbr: o.productAbbr || null,
-        productCode: o.productCode || null,
-        cost: o.cost?.toString() || '0',
-        shippingCost: o.shippingCost?.toString() || '0',
-        status: 'pending' as const,
-      }
-    })
+        return {
+          uploadId,
+          orderNumber: o.orderNumber,
+          productName: o.productName || null,
+          quantity: o.quantity || 1,
+          orderName: o.orderName || null,
+          recipientName: o.recipientName || null,
+          orderPhone: o.orderPhone || null,
+          orderMobile: o.orderMobile || null,
+          recipientPhone: o.recipientPhone || null,
+          recipientMobile: o.recipientMobile || null,
+          postalCode: o.postalCode || null,
+          address: o.address || null,
+          memo: o.memo || null,
+          shoppingMall: o.shoppingMall || null,
+          manufacturerName: o.manufacturer || null,
+          manufacturerId: matchedManufacturerId,
+          courier: o.courier || null,
+          trackingNumber: o.trackingNumber || null,
+          optionName: o.optionName || null,
+          paymentAmount: o.paymentAmount?.toString() || '0',
+          productAbbr: o.productAbbr || null,
+          productCode: o.productCode || null,
+          cost: o.cost?.toString() || '0',
+          shippingCost: o.shippingCost?.toString() || '0',
+          status: 'pending' as const,
+        }
+      })
 
     // DB 트랜잭션으로 저장 (중복 주문번호는 건너뜀)
     let insertedCount = 0
+    let uploadId = 0
     await db.transaction(async (tx) => {
       // 1. 업로드 레코드 생성
-      await tx.insert(upload).values({
-        id: uploadId,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: 'sabangnet',
-        totalOrders: parseResult.totalRows - 1,
-        processedOrders: parseResult.orders.length,
-        errorOrders: parseResult.errors.length,
-        status: 'completed',
-      })
+      const [uploadRecord] = await tx
+        .insert(upload)
+        .values({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: 'sabangnet',
+          totalOrders: parseResult.totalRows - 1,
+          processedOrders: parseResult.orders.length,
+          errorOrders: parseResult.errors.length,
+          status: 'completed',
+        })
+        .returning()
+
+      uploadId = uploadRecord.id
 
       // 2. 주문 레코드 일괄 생성 (중복 주문번호는 건너뜀)
+      const orderValues = prepareOrderValues(uploadId)
       if (orderValues.length > 0) {
         const insertResult = await tx
           .insert(order)
@@ -161,7 +164,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     })
 
     // 중복으로 건너뛴 주문 수 계산
-    const duplicateCount = orderValues.length - insertedCount
+    const duplicateCount = parseResult.orders.length - insertedCount
 
     // 제조사별 그룹화
     const groupedOrders = groupOrdersByManufacturer(parseResult.orders)
@@ -207,14 +210,4 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
-}
-
-// 업로드 ID 생성 함수
-function generateId(): string {
-  return `upl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
-}
-
-// 주문 ID 생성 함수
-function generateOrderId(): string {
-  return `ord_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`
 }

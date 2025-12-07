@@ -28,7 +28,7 @@ export interface Upload {
   errorOrders: number
   fileName: string
   fileSize: number
-  id: string
+  id: number
   processedOrders: number
   status: 'completed' | 'error' | 'processing'
   totalOrders: number

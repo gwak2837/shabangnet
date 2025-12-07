@@ -13,7 +13,7 @@ export interface EmailTemplate {
   body: string
   createdAt: Date
   enabled: boolean
-  id: string
+  id: number
   name: string
   slug: string
   subject: string
@@ -145,7 +145,6 @@ export async function createEmailTemplate(input: EmailTemplateInput): Promise<Em
   const [template] = await db
     .insert(emailTemplate)
     .values({
-      id: `template_${Date.now()}`,
       name: input.name,
       slug: input.slug,
       subject: input.subject,
@@ -173,7 +172,7 @@ export async function createEmailTemplate(input: EmailTemplateInput): Promise<Em
 /**
  * 이메일 템플릿을 삭제합니다.
  */
-export async function deleteEmailTemplate(id: string): Promise<void> {
+export async function deleteEmailTemplate(id: number): Promise<void> {
   await db.delete(emailTemplate).where(eq(emailTemplate.id, id))
 }
 
@@ -261,7 +260,7 @@ export function renderTemplate(
 /**
  * 이메일 템플릿을 업데이트합니다.
  */
-export async function updateEmailTemplate(id: string, updates: Partial<EmailTemplateInput>): Promise<EmailTemplate> {
+export async function updateEmailTemplate(id: number, updates: Partial<EmailTemplateInput>): Promise<EmailTemplate> {
   const [template] = await db
     .update(emailTemplate)
     .set({

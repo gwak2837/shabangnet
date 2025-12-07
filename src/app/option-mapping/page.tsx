@@ -36,7 +36,7 @@ export default function OptionMappingsPage() {
   })
 
   const { execute: updateMapping, isPending: isUpdating } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
+    ({ id, data }: { id: number; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
       update(id, data),
     {
       invalidateKeys: [queryKeys.optionMappings.all],
@@ -60,7 +60,8 @@ export default function OptionMappingsPage() {
         m.productCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.optionName.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesManufacturer = selectedManufacturer === 'all' || m.manufacturerId === selectedManufacturer
+      const matchesManufacturer =
+        selectedManufacturer === 'all' || m.manufacturerId === Number(selectedManufacturer)
 
       return matchesSearch && matchesManufacturer
     })
@@ -76,7 +77,7 @@ export default function OptionMappingsPage() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (mappingId: string) => {
+  const handleDelete = (mappingId: number) => {
     deleteMapping(mappingId)
   }
 

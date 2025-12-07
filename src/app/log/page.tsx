@@ -41,7 +41,7 @@ export default function LogsPage() {
         if (status !== 'all' && log.status !== status) return false
 
         // Manufacturer filter
-        if (manufacturer !== 'all' && log.manufacturerId !== manufacturer) return false
+        if (manufacturer !== 'all' && log.manufacturerId !== Number(manufacturer)) return false
 
         return true
       })

@@ -113,7 +113,7 @@ function extractManufacturerName(fileName: string): string {
 }
 
 // 제조사 이름으로 ID 찾기
-async function findManufacturerId(db: ReturnType<typeof drizzle>, name: string): Promise<string | null> {
+async function findManufacturerId(db: ReturnType<typeof drizzle>, name: string): Promise<number | null> {
   const result = await db.select().from(manufacturer).where(eq(manufacturer.name, name)).limit(1)
 
   return result.length > 0 ? result[0].id : null
@@ -253,7 +253,6 @@ async function seed() {
 
         // 템플릿 저장
         await db.insert(orderTemplate).values({
-          id: `ot_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           manufacturerId,
           templateFileName: fileName,
           headerRow: analysis.headerRow,

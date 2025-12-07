@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/common/constants/query-keys'
 import { getAll, getById, getOrderTemplateOrDefault } from '@/services/manufacturers'
 
-export function useManufacturer(id: string) {
+export function useManufacturer(id: number) {
   return useQuery({
     queryKey: queryKeys.manufacturers.detail(id),
     queryFn: () => getById(id),
@@ -20,7 +20,7 @@ export function useManufacturers() {
   })
 }
 
-export function useOrderTemplate(manufacturerId: string | undefined) {
+export function useOrderTemplate(manufacturerId: number | undefined) {
   return useQuery({
     queryKey: ['orderTemplate', manufacturerId],
     queryFn: () => (manufacturerId ? getOrderTemplateOrDefault(manufacturerId) : null),

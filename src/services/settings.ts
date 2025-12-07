@@ -10,7 +10,7 @@ export interface CourierMapping {
   aliases: string[]
   code: string
   enabled: boolean
-  id: string
+  id: number
   name: string
 }
 
@@ -25,7 +25,7 @@ export interface ExclusionPattern {
   description?: string
   displayLabel?: string
   enabled: boolean
-  id: string
+  id: number
   pattern: string
 }
 
@@ -38,48 +38,6 @@ export interface ExclusionSettings {
 const defaultDuplicateCheckSettings: DuplicateCheckSettings = {
   enabled: true,
   periodDays: 10,
-}
-
-// Courier Mappings
-export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promise<CourierMapping> {
-  const [newMapping] = await db
-    .insert(courierMapping)
-    .values({
-      id: `courier${Date.now()}`,
-      name: data.name,
-      code: data.code,
-      aliases: data.aliases,
-      enabled: data.enabled,
-    })
-    .returning()
-
-  return {
-    id: newMapping.id,
-    name: newMapping.name,
-    code: newMapping.code,
-    aliases: (newMapping.aliases as string[]) || [],
-    enabled: newMapping.enabled || false,
-  }
-}
-
-// Exclusion Settings
-export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>): Promise<ExclusionPattern> {
-  const [newPattern] = await db
-    .insert(exclusionPattern)
-    .values({
-      id: `exc${Date.now()}`,
-      pattern: pattern.pattern,
-      description: pattern.description,
-      enabled: pattern.enabled,
-    })
-    .returning()
-
-  return {
-    id: newPattern.id,
-    pattern: newPattern.pattern,
-    description: newPattern.description || undefined,
-    enabled: newPattern.enabled || false,
-  }
 }
 
 // Helper function to get courier code from name
@@ -140,78 +98,6 @@ export async function getExclusionSettings(): Promise<ExclusionSettings> {
   }
 }
 
-export async function removeCourierMapping(id: string): Promise<void> {
-  await db.delete(courierMapping).where(eq(courierMapping.id, id))
-}
-
-export async function removeExclusionPattern(id: string): Promise<void> {
-  await db.delete(exclusionPattern).where(eq(exclusionPattern.id, id))
-}
-
-export async function updateCourierMapping(id: string, data: Partial<CourierMapping>): Promise<CourierMapping> {
-  const [updated] = await db
-    .update(courierMapping)
-    .set({
-      name: data.name,
-      code: data.code,
-      aliases: data.aliases,
-      enabled: data.enabled,
-    })
-    .where(eq(courierMapping.id, id))
-    .returning()
-
-  if (!updated) throw new Error('Courier mapping not found')
-
-  return {
-    id: updated.id,
-    name: updated.name,
-    code: updated.code,
-    aliases: (updated.aliases as string[]) || [],
-    enabled: updated.enabled || false,
-  }
-}
-
-export async function updateDuplicateCheckSettings(
-  data: Partial<DuplicateCheckSettings>,
-): Promise<DuplicateCheckSettings> {
-  const current = await getDuplicateCheckSettings()
-  const updated = { ...current, ...data }
-  return setSetting('duplicate_check', updated)
-}
-
-export async function updateExclusionPattern(
-  id: string,
-  data: Partial<Omit<ExclusionPattern, 'id'>>,
-): Promise<ExclusionPattern> {
-  const [updated] = await db
-    .update(exclusionPattern)
-    .set({
-      pattern: data.pattern,
-      description: data.description,
-      enabled: data.enabled,
-      updatedAt: new Date(),
-    })
-    .where(eq(exclusionPattern.id, id))
-    .returning()
-
-  if (!updated) throw new Error('Exclusion pattern not found')
-
-  return {
-    id: updated.id,
-    pattern: updated.pattern,
-    description: updated.description || undefined,
-    enabled: updated.enabled || false,
-  }
-}
-
-export async function updateExclusionSettings(data: Partial<ExclusionSettings>): Promise<ExclusionSettings> {
-  if (data.enabled !== undefined) {
-    await setSetting('exclusion_enabled', data.enabled)
-  }
-
-  return getExclusionSettings()
-}
-
 // Helper to get generic setting
 async function getSetting<T>(key: string, defaultValue: T): Promise<T> {
   const [record] = await db.select().from(settings).where(eq(settings.key, key))
@@ -221,25 +107,4 @@ async function getSetting<T>(key: string, defaultValue: T): Promise<T> {
   } catch {
     return defaultValue
   }
-}
-
-// Helper to set generic setting
-async function setSetting<T>(key: string, value: T, description?: string): Promise<T> {
-  const [record] = await db
-    .insert(settings)
-    .values({
-      key,
-      value: JSON.stringify(value),
-      description,
-    })
-    .onConflictDoUpdate({
-      target: settings.key,
-      set: {
-        value: JSON.stringify(value),
-        updatedAt: new Date(),
-      },
-    })
-    .returning()
-
-  return JSON.parse(record.value!) as T
 }

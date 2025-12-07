@@ -20,7 +20,7 @@ export interface EmailTemplateDisplay {
   body: string
   createdAt: string
   enabled: boolean
-  id: string
+  id: number
   name: string
   slug: string
   subject: string
@@ -93,7 +93,7 @@ export async function createEmailTemplateAction(data: EmailTemplateFormData): Pr
 /**
  * 이메일 템플릿을 삭제합니다.
  */
-export async function deleteEmailTemplateAction(id: string): Promise<ActionResult> {
+export async function deleteEmailTemplateAction(id: number): Promise<ActionResult> {
   try {
     await deleteEmailTemplate(id)
 
@@ -183,7 +183,7 @@ export async function previewEmailTemplateAction(
  * 이메일 템플릿을 업데이트합니다.
  */
 export async function updateEmailTemplateAction(
-  id: string,
+  id: number,
   data: Partial<EmailTemplateFormData>,
 ): Promise<ActionResult> {
   try {

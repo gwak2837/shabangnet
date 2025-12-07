@@ -157,7 +157,7 @@ export default function UploadPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {enabledTemplates.map((mall) => (
-                        <SelectItem key={mall.id} value={mall.id}>
+                        <SelectItem key={mall.id} value={mall.id.toString()}>
                           {mall.displayName}
                         </SelectItem>
                       ))}

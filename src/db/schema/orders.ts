@@ -1,4 +1,4 @@
-import { decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
@@ -10,11 +10,11 @@ import { shoppingMallTemplate } from './settings'
 // ============================================
 
 export const upload = pgTable('upload', {
-  id: text('id').primaryKey(),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
   fileSize: integer('file_size').default(0),
   fileType: uploadTypeEnum('file_type').default('sabangnet'), // 파일 유형
-  shoppingMallId: text('shopping_mall_id').references(() => shoppingMallTemplate.id), // 쇼핑몰 템플릿
+  shoppingMallId: bigint('shopping_mall_id', { mode: 'number' }).references(() => shoppingMallTemplate.id), // 쇼핑몰 템플릿
   totalOrders: integer('total_orders').default(0),
   processedOrders: integer('processed_orders').default(0),
   errorOrders: integer('error_orders').default(0),
@@ -27,8 +27,8 @@ export const upload = pgTable('upload', {
 // ============================================
 
 export const order = pgTable('order', {
-  id: text('id').primaryKey(),
-  uploadId: text('upload_id').references(() => upload.id),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  uploadId: bigint('upload_id', { mode: 'number' }).references(() => upload.id),
   orderNumber: varchar('order_number', { length: 100 }).notNull().unique(),
   productName: varchar('product_name', { length: 500 }),
   quantity: integer('quantity').default(1),
@@ -52,7 +52,7 @@ export const order = pgTable('order', {
   cost: decimal('cost', { precision: 12, scale: 2 }), // 원가
   shippingCost: decimal('shipping_cost', { precision: 12, scale: 2 }).default('0'), // 택배비
   // 시스템 필드
-  manufacturerId: text('manufacturer_id').references(() => manufacturer.id),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
   status: orderStatusEnum('status').default('pending'),
   excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -63,8 +63,8 @@ export const order = pgTable('order', {
 // ============================================
 
 export const orderEmailLog = pgTable('order_email_log', {
-  id: text('id').primaryKey(),
-  manufacturerId: text('manufacturer_id').references(() => manufacturer.id),
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
   manufacturerName: varchar('manufacturer_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
   subject: text('subject').notNull(),
@@ -88,8 +88,8 @@ export const orderEmailLog = pgTable('order_email_log', {
 // ============================================
 
 export const orderEmailLogItem = pgTable('order_email_log_item', {
-  id: text('id').primaryKey(),
-  emailLogId: text('email_log_id')
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  emailLogId: bigint('email_log_id', { mode: 'number' })
     .references(() => orderEmailLog.id)
     .notNull(),
   orderNumber: varchar('order_number', { length: 100 }).notNull(),

@@ -73,7 +73,6 @@ async function seed() {
           await db
             .insert(columnSynonym)
             .values({
-              id: `syn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
               standardKey,
               synonym,
               enabled: true,
@@ -86,9 +85,6 @@ async function seed() {
           skipped++
           console.log(`  ⏭️  ${standardKey}: ${synonym} (already exists or error)`)
         }
-
-        // 유니크 ID를 위한 약간의 딜레이
-        await new Promise((resolve) => setTimeout(resolve, 5))
       }
     }
 

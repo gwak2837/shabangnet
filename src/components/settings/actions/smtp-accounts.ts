@@ -20,7 +20,7 @@ export interface SMTPAccountDisplay {
   fromName: string
   hasPassword: boolean
   host: string
-  id: string
+  id: number
   isDefault: boolean
   maskedPassword: string
   name: string
@@ -54,7 +54,7 @@ interface ActionResult {
 /**
  * SMTP 계정을 삭제합니다.
  */
-export async function deleteSmtpAccountAction(id: string): Promise<ActionResult> {
+export async function deleteSmtpAccountAction(id: number): Promise<ActionResult> {
   try {
     await db.delete(smtpAccount).where(eq(smtpAccount.id, id))
 
@@ -198,7 +198,7 @@ export async function testSmtpAccountConnectionAction(purpose: SMTPAccountPurpos
 /**
  * SMTP 계정의 활성화/비활성화 상태를 토글합니다.
  */
-export async function toggleSmtpAccountAction(id: string): Promise<ActionResult> {
+export async function toggleSmtpAccountAction(id: number): Promise<ActionResult> {
   try {
     const [account] = await db
       .select({ enabled: smtpAccount.enabled })
@@ -271,7 +271,6 @@ export async function upsertSmtpAccountAction(data: SMTPAccountFormData): Promis
       }
 
       await db.insert(smtpAccount).values({
-        id: `smtp_${data.purpose}_${Date.now()}`,
         name: data.name,
         purpose: data.purpose,
         host: data.host,

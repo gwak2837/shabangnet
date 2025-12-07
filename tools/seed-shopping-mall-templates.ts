@@ -10,7 +10,6 @@ import { shoppingMallTemplate } from '../src/db/schema/settings'
 // 컬럼 매핑: { 쇼핑몰컬럼명: 사방넷키 }
 const SHOPPING_MALL_SEED_DATA = [
   {
-    id: 'mall_sk_stoa',
     mallName: 'sk_stoa',
     displayName: 'SK스토아',
     headerRow: 3, // 1-2행은 제목, 3행이 실제 헤더
@@ -33,7 +32,6 @@ const SHOPPING_MALL_SEED_DATA = [
     enabled: true,
   },
   {
-    id: 'mall_samsung_card',
     mallName: 'samsung_card',
     displayName: '삼성카드몰',
     headerRow: 1,
@@ -57,7 +55,6 @@ const SHOPPING_MALL_SEED_DATA = [
     enabled: true,
   },
   {
-    id: 'mall_samsung_welfare',
     mallName: 'samsung_welfare',
     displayName: '삼성복지몰',
     headerRow: 1,
@@ -117,7 +114,6 @@ async function seed() {
 
       // 새로 추가
       await db.insert(shoppingMallTemplate).values({
-        id: template.id,
         mallName: template.mallName,
         displayName: template.displayName,
         headerRow: template.headerRow,

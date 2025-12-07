@@ -4,6 +4,8 @@ import { Filter, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
+import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
+
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,14 +22,8 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useExclusionSettings } from '@/hooks/use-settings'
-import {
-  addExclusionPattern,
-  type ExclusionPattern,
-  type ExclusionSettings,
-  removeExclusionPattern,
-  updateExclusionPattern,
-  updateExclusionSettings,
-} from '@/services/settings'
+
+import { addExclusionPattern, removeExclusionPattern, updateExclusionPattern, updateExclusionSettings } from './action'
 
 const defaultSettings: ExclusionSettings = {
   enabled: true,
@@ -35,7 +31,7 @@ const defaultSettings: ExclusionSettings = {
 }
 
 const SKELETON_PATTERN: ExclusionPattern = {
-  id: 'skeleton',
+  id: 0,
   pattern: '[00000000]주문_샘플패턴',
   description: '패턴 설명',
   enabled: true,
@@ -60,14 +56,14 @@ export function ExclusionForm() {
     },
   )
 
-  const { execute: onRemovePattern } = useServerAction((id: string) => removeExclusionPattern(id), {
+  const { execute: onRemovePattern } = useServerAction((id: number) => removeExclusionPattern(id), {
     invalidateKeys: [queryKeys.settings.exclusion],
     onSuccess: () => toast.success('패턴이 삭제되었습니다'),
     onError: (error) => toast.error(error),
   })
 
   const { execute: updatePattern, isPending: isUpdatingPattern } = useServerAction(
-    ({ id, data }: { id: string; data: Partial<Omit<ExclusionPattern, 'id'>> }) => updateExclusionPattern(id, data),
+    ({ id, data }: { id: number; data: Partial<Omit<ExclusionPattern, 'id'>> }) => updateExclusionPattern(id, data),
     {
       invalidateKeys: [queryKeys.settings.exclusion],
       onSuccess: () => toast.success('패턴이 수정되었습니다'),
@@ -116,7 +112,7 @@ export function ExclusionForm() {
     setEditingPattern(null)
   }
 
-  function onUpdatePattern(id: string, data: Partial<Omit<ExclusionPattern, 'id'>>) {
+  function onUpdatePattern(id: number, data: Partial<Omit<ExclusionPattern, 'id'>>) {
     updatePattern({ id, data })
   }
 
