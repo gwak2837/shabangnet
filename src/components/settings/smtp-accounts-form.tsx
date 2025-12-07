@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Bell, CheckCircle2, Loader2, Lock, Mail, Package, Server, ShieldCheck } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
+import { useActionState, useEffect, useState, useTransition } from 'react'
 
 import type { SMTPAccountPurpose } from '@/lib/email/config'
 
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SMTP_PURPOSE_LABELS } from '@/lib/email/config'
 
-import type { SMTPAccountDisplay, SMTPAccountFormData } from './actions/smtp-accounts'
+import type { SMTPAccountDisplay } from './actions/smtp-accounts'
 
 import {
   getSmtpAccountByPurposeAction,
@@ -18,59 +18,59 @@ import {
   upsertSmtpAccountAction,
 } from './actions/smtp-accounts'
 
-interface AccountFormState {
-  formData: SMTPAccountFormData
-  hasExistingPassword: boolean
+interface LoadedState {
+  account: SMTPAccountDisplay | null
   isLoading: boolean
-  isSaving: boolean
-  isTesting: boolean
-  maskedPassword: string
-  saveError: string | null
-  testError: string | null
-  testResult: 'error' | 'success' | null
+  loadKey: number
+}
+
+interface SaveActionState {
+  error: string | null
+  success: boolean
+}
+
+interface TestState {
+  error: string | null
+  result: 'error' | 'success' | null
 }
 
 export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
-  const [state, setState] = useState<AccountFormState>({
-    formData: defaultFormData(purpose),
-    hasExistingPassword: false,
-    maskedPassword: '',
+  const [loaded, setLoaded] = useState<LoadedState>({
+    account: null,
     isLoading: true,
-    isSaving: false,
-    isTesting: false,
-    testResult: null,
-    testError: null,
-    saveError: null,
+    loadKey: 0,
+  })
+
+  const [testState, setTestState] = useState<TestState>({
+    result: null,
+    error: null,
+  })
+
+  const [isTesting, startTestTransition] = useTransition()
+
+  const boundSaveAction = saveSmtpAccountAction.bind(null, purpose)
+  const [saveState, formAction, isSaving] = useActionState(boundSaveAction, {
+    success: false,
+    error: null,
   })
 
   async function loadSettings() {
-    setState((prev) => ({ ...prev, isLoading: true }))
+    setLoaded((prev) => ({ ...prev, isLoading: true }))
 
     try {
       const result = await getSmtpAccountByPurposeAction(purpose)
 
-      if (result.success && result.account) {
-        const account: SMTPAccountDisplay = result.account
-        setState((prev) => ({
-          ...prev,
-          formData: {
-            name: account.name,
-            purpose: account.purpose,
-            host: account.host,
-            port: account.port,
-            username: account.username,
-            password: '',
-            fromName: account.fromName,
-            enabled: account.enabled,
-          },
-          hasExistingPassword: account.hasPassword,
-          maskedPassword: account.maskedPassword,
+      if (result.success) {
+        setLoaded((prev) => ({
+          account: result.account,
+          isLoading: false,
+          loadKey: prev.loadKey + 1,
         }))
+      } else {
+        setLoaded((prev) => ({ ...prev, isLoading: false }))
       }
     } catch {
-      // 로드 실패 시 기본값 유지
-    } finally {
-      setState((prev) => ({ ...prev, isLoading: false }))
+      setLoaded((prev) => ({ ...prev, isLoading: false }))
     }
   }
 
@@ -79,59 +79,35 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purpose])
 
-  async function handleSave(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setState((prev) => ({ ...prev, isSaving: true, saveError: null }))
-
-    try {
-      const result = await upsertSmtpAccountAction(state.formData)
-
-      if (result.success) {
-        await loadSettings()
-        setState((prev) => ({ ...prev, formData: { ...prev.formData, password: '' } }))
-      } else {
-        setState((prev) => ({ ...prev, saveError: result.error || '저장에 실패했습니다.' }))
-      }
-    } catch {
-      setState((prev) => ({ ...prev, saveError: '서버와 통신 중 오류가 발생했습니다.' }))
-    } finally {
-      setState((prev) => ({ ...prev, isSaving: false }))
+  // 저장 성공 시 데이터 다시 로드
+  useEffect(() => {
+    if (saveState.success) {
+      loadSettings()
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveState.success])
 
-  async function handleTest() {
-    setState((prev) => ({ ...prev, isTesting: true, testResult: null, testError: null }))
+  function handleTest() {
+    startTestTransition(async () => {
+      setTestState({ result: null, error: null })
 
-    try {
       const result = await testSmtpAccountConnectionAction(purpose)
 
       if (result.success) {
-        setState((prev) => ({ ...prev, testResult: 'success' }))
+        setTestState({ result: 'success', error: null })
       } else {
-        setState((prev) => ({
-          ...prev,
-          testResult: 'error',
-          testError: result.error || '연결 테스트에 실패했습니다.',
-        }))
+        setTestState({
+          result: 'error',
+          error: result.error || '연결 테스트에 실패했습니다.',
+        })
       }
-    } catch {
-      setState((prev) => ({
-        ...prev,
-        testResult: 'error',
-        testError: '서버와 통신 중 오류가 발생했습니다.',
-      }))
-    } finally {
-      setState((prev) => ({ ...prev, isTesting: false }))
-    }
-  }
-
-  function updateFormData(updates: Partial<SMTPAccountFormData>) {
-    setState((prev) => ({ ...prev, formData: { ...prev.formData, ...updates } }))
+    })
   }
 
   const Icon = purpose === 'system' ? Bell : Package
+  const account = loaded.account
 
-  if (state.isLoading) {
+  if (loaded.isLoading) {
     return (
       <section className="glass-card p-0 overflow-hidden">
         <div className="flex items-center justify-center py-16">
@@ -159,7 +135,8 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
           </div>
         </div>
       </header>
-      <form className="p-6 space-y-5" onSubmit={handleSave}>
+      <form action={formAction} className="p-6 space-y-5" key={loaded.loadKey}>
+        <input name="name" type="hidden" value={SMTP_PURPOSE_LABELS[purpose]} />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium" htmlFor={`${purpose}-host`}>
@@ -169,10 +146,11 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
               <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
+                defaultValue={account?.host ?? ''}
                 id={`${purpose}-host`}
-                onChange={(e) => updateFormData({ host: e.target.value })}
+                name="host"
                 placeholder="smtp.gmail.com"
-                value={state.formData.host}
+                required
               />
             </div>
           </div>
@@ -193,11 +171,12 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
+                defaultValue={account?.username ?? ''}
                 id={`${purpose}-username`}
-                onChange={(e) => updateFormData({ username: e.target.value })}
+                name="username"
                 placeholder="your-email@gmail.com"
+                required
                 type="email"
-                value={state.formData.username}
               />
             </div>
             <p className="text-xs text-muted-foreground">발신자 이메일로도 사용됩니다</p>
@@ -211,26 +190,26 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
               <Input
                 className="pl-9"
                 id={`${purpose}-password`}
-                onChange={(e) => updateFormData({ password: e.target.value })}
-                placeholder={state.hasExistingPassword ? state.maskedPassword : '앱 비밀번호 입력'}
+                name="password"
+                placeholder={account?.hasPassword ? account.maskedPassword : '앱 비밀번호 입력'}
+                required={!account?.hasPassword}
                 type="password"
-                value={state.formData.password}
               />
             </div>
-            {state.hasExistingPassword && (
+            {account?.hasPassword && (
               <p className="text-xs text-muted-foreground">비밀번호를 변경하려면 새 비밀번호를 입력하세요</p>
             )}
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-sm font-medium" htmlFor={`${purpose}-fromName`}>
+          <Label className="text-sm font-medium" htmlFor={`${purpose}-from-name`}>
             발신자 이름
           </Label>
           <Input
-            id={`${purpose}-fromName`}
-            onChange={(e) => updateFormData({ fromName: e.target.value })}
+            defaultValue={account?.fromName ?? ''}
+            id={`${purpose}-from-name`}
+            name="from-name"
             placeholder="(주)다온에프앤씨"
-            value={state.formData.fromName}
           />
           <p className="text-xs text-muted-foreground">수신자에게 표시되는 발신자 이름입니다</p>
         </div>
@@ -245,12 +224,12 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             </div>
           </div>
         </div>
-        {state.testResult && (
+        {testState.result && (
           <div
             className="flex items-start gap-2 rounded-lg p-3 ring-1 data-[result=success]:bg-emerald-500/10 data-[result=success]:ring-emerald-500/20 data-[result=success]:text-emerald-600 data-[result=error]:bg-destructive/10 data-[result=error]:ring-destructive/20 data-[result=error]:text-destructive"
-            data-result={state.testResult}
+            data-result={testState.result}
           >
-            {state.testResult === 'success' ? (
+            {testState.result === 'success' ? (
               <>
                 <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
                 <span className="font-medium">연결 테스트 성공! SMTP 서버에 정상적으로 연결되었습니다.</span>
@@ -260,29 +239,29 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
                 <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium">연결 테스트 실패</span>
-                  {state.testError && <p className="text-sm mt-1 opacity-80">{state.testError}</p>}
+                  {testState.error && <p className="text-sm mt-1 opacity-80">{testState.error}</p>}
                 </div>
               </>
             )}
           </div>
         )}
-        {state.saveError && (
+        {saveState.error && (
           <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 ring-1 ring-destructive/20 text-destructive">
             <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
             <div>
               <span className="font-medium">저장 실패</span>
-              <p className="text-sm mt-1 opacity-80">{state.saveError}</p>
+              <p className="text-sm mt-1 opacity-80">{saveState.error}</p>
             </div>
           </div>
         )}
         <div className="flex items-center justify-between pt-2">
-          <Button disabled={state.isTesting || state.isSaving} onClick={handleTest} type="button" variant="outline">
-            {state.isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {state.isTesting ? '테스트 중...' : '연결 테스트'}
+          <Button disabled={isTesting || isSaving} onClick={handleTest} type="button" variant="outline">
+            {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isTesting ? '테스트 중...' : '연결 테스트'}
           </Button>
-          <Button disabled={state.isSaving || state.isTesting} type="submit">
-            {state.isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {state.isSaving ? '저장 중...' : '저장'}
+          <Button disabled={isSaving || isTesting} type="submit">
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSaving ? '저장 중...' : '저장'}
           </Button>
         </div>
       </form>
@@ -290,15 +269,24 @@ export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
   )
 }
 
-function defaultFormData(purpose: SMTPAccountPurpose): SMTPAccountFormData {
-  return {
-    name: SMTP_PURPOSE_LABELS[purpose],
+async function saveSmtpAccountAction(
+  purpose: SMTPAccountPurpose,
+  _prevState: SaveActionState,
+  formData: FormData,
+): Promise<SaveActionState> {
+  const result = await upsertSmtpAccountAction({
+    name: String(formData.get('name')),
     purpose,
-    host: '',
+    host: String(formData.get('host')),
     port: 587,
-    username: '',
-    password: '',
-    fromName: '',
+    username: String(formData.get('username')),
+    password: String(formData.get('password')),
+    fromName: String(formData.get('from-name')),
     enabled: true,
+  })
+
+  if (result.success) {
+    return { success: true, error: null }
   }
+  return { success: false, error: result.error || '저장에 실패했습니다.' }
 }

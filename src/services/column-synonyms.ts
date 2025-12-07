@@ -21,41 +21,21 @@ export interface ColumnSynonymsMap {
 }
 
 // ============================================
-// Cache
-// ============================================
-
-interface SynonymCache {
-  data: ColumnSynonymsMap | null
-  lastUpdated: number
-  reverseMap: Map<string, string> | null
-}
-
-// 메모리 캐시 (서버 인스턴스별)
-let cache: SynonymCache = {
-  data: null,
-  reverseMap: null,
-  lastUpdated: 0,
-}
-
-// 캐시 유효 시간 (5분)
-const CACHE_TTL = 5 * 60 * 1000
-
-// ============================================
-// Cache Management
+// Query Functions
 // ============================================
 
 /**
- * 두 컬럼명 배열 간 자동 매핑 수행 (캐시 사용)
+ * 두 컬럼명 배열 간 자동 매핑 수행
  */
 export async function autoMapColumns(
   sourceHeaders: string[],
   targetHeaders: string[],
 ): Promise<Record<string, string>> {
-  const { map } = await getCachedSynonyms()
+  const { map, reverseMap } = await loadSynonyms()
   const mappings: Record<string, string> = {}
 
   for (const sourceHeader of sourceHeaders) {
-    const sourceKey = await findStandardKeyByLabel(sourceHeader)
+    const sourceKey = findStandardKey(sourceHeader, reverseMap)
     if (!sourceKey) continue
 
     // 타겟에서 같은 키에 해당하는 컬럼 찾기
@@ -73,29 +53,12 @@ export async function autoMapColumns(
   return mappings
 }
 
-// ============================================
-// CRUD Operations
-// ============================================
-
 /**
- * 컬럼명으로 사방넷 표준 키 찾기 (캐시 사용)
+ * 컬럼명으로 사방넷 표준 키 찾기
  */
 export async function findStandardKeyByLabel(label: string): Promise<string | null> {
-  const { reverseMap } = await getCachedSynonyms()
-  const normalized = label.trim().toLowerCase()
-
-  // 직접 매칭 시도
-  const directMatch = reverseMap.get(normalized)
-  if (directMatch) return directMatch
-
-  // 부분 매칭 시도 (포함 관계)
-  for (const [synonym, key] of reverseMap.entries()) {
-    if (normalized.includes(synonym) || synonym.includes(normalized)) {
-      return key
-    }
-  }
-
-  return null
+  const { reverseMap } = await loadSynonyms()
+  return findStandardKey(label, reverseMap)
 }
 
 /**
@@ -131,36 +94,18 @@ export async function getSynonymsByKey(standardKey: string): Promise<ColumnSynon
 }
 
 /**
- * 동의어 맵 조회 (캐시 사용)
+ * 동의어 맵 조회
  */
 export async function getSynonymsMap(): Promise<ColumnSynonymsMap> {
-  const { map } = await getCachedSynonyms()
+  const { map } = await loadSynonyms()
   return map
 }
-
-/**
- * 캐시 무효화
- */
-export async function invalidateSynonymCache(): Promise<void> {
-  cache = {
-    data: null,
-    reverseMap: null,
-    lastUpdated: 0,
-  }
-}
-
-// ============================================
-// Lookup Functions
-// ============================================
 
 /**
  * 표준 키의 모든 동의어 삭제
  */
 export async function removeSynonymsByKey(standardKey: string): Promise<void> {
   await db.delete(columnSynonym).where(eq(columnSynonym.standardKey, standardKey))
-
-  // 캐시 무효화
-  await invalidateSynonymCache()
 }
 
 /**
@@ -176,18 +121,34 @@ export async function synonymExists(standardKey: string, synonym: string): Promi
   return result.length > 0
 }
 
-/**
- * 캐시된 동의어 맵 조회
- */
-async function getCachedSynonyms(): Promise<{ map: ColumnSynonymsMap; reverseMap: Map<string, string> }> {
-  const now = Date.now()
+// ============================================
+// Private Helpers
+// ============================================
 
-  // 캐시가 유효한 경우
-  if (cache.data && cache.reverseMap && now - cache.lastUpdated < CACHE_TTL) {
-    return { map: cache.data, reverseMap: cache.reverseMap }
+/**
+ * 표준 키 찾기 (동기 함수)
+ */
+function findStandardKey(label: string, reverseMap: Map<string, string>): string | null {
+  const normalized = label.trim().toLowerCase()
+
+  // 직접 매칭 시도
+  const directMatch = reverseMap.get(normalized)
+  if (directMatch) return directMatch
+
+  // 부분 매칭 시도 (포함 관계)
+  for (const [synonym, key] of reverseMap.entries()) {
+    if (normalized.includes(synonym) || synonym.includes(normalized)) {
+      return key
+    }
   }
 
-  // DB에서 새로 로드
+  return null
+}
+
+/**
+ * 동의어 맵과 역방향 맵 로드
+ */
+async function loadSynonyms(): Promise<{ map: ColumnSynonymsMap; reverseMap: Map<string, string> }> {
   const synonyms = await db.select().from(columnSynonym).where(eq(columnSynonym.enabled, true))
 
   const map: ColumnSynonymsMap = {}
@@ -199,13 +160,6 @@ async function getCachedSynonyms(): Promise<{ map: ColumnSynonymsMap; reverseMap
     }
     map[syn.standardKey].push(syn.synonym)
     reverseMap.set(syn.synonym.toLowerCase(), syn.standardKey)
-  }
-
-  // 캐시 업데이트
-  cache = {
-    data: map,
-    reverseMap,
-    lastUpdated: now,
   }
 
   return { map, reverseMap }

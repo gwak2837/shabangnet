@@ -3,15 +3,14 @@
 import { eq } from 'drizzle-orm'
 
 import type { CourierMapping, DuplicateCheckSettings, ExclusionPattern, ExclusionSettings } from '@/services/settings'
-import type { CreateTemplateData, ShoppingMallTemplate, UpdateTemplateData } from '@/services/shopping-mall-templates'
+import type { CreateTemplateData, UpdateTemplateData } from '@/services/shopping-mall-templates'
 
 import { isUniqueViolation } from '@/common/constants/postgres-errors'
 import { db } from '@/db/client'
 import { columnSynonym, courierMapping, exclusionPattern, settings, shoppingMallTemplate } from '@/db/schema/settings'
-import { type ColumnSynonym, invalidateSynonymCache } from '@/services/column-synonyms'
 import { getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
 
-export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promise<CourierMapping> {
+export async function addCourierMapping(data: Omit<CourierMapping, 'id'>) {
   const [newMapping] = await db
     .insert(courierMapping)
     .values({
@@ -20,7 +19,13 @@ export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promi
       aliases: data.aliases,
       enabled: data.enabled,
     })
-    .returning()
+    .returning({
+      id: courierMapping.id,
+      name: courierMapping.name,
+      code: courierMapping.code,
+      aliases: courierMapping.aliases,
+      enabled: courierMapping.enabled,
+    })
 
   return {
     id: newMapping.id,
@@ -31,7 +36,7 @@ export async function addCourierMapping(data: Omit<CourierMapping, 'id'>): Promi
   }
 }
 
-export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>): Promise<ExclusionPattern> {
+export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>) {
   const [newPattern] = await db
     .insert(exclusionPattern)
     .values({
@@ -39,7 +44,12 @@ export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>)
       description: pattern.description,
       enabled: pattern.enabled,
     })
-    .returning()
+    .returning({
+      id: exclusionPattern.id,
+      pattern: exclusionPattern.pattern,
+      description: exclusionPattern.description,
+      enabled: exclusionPattern.enabled,
+    })
 
   return {
     id: newPattern.id,
@@ -49,10 +59,7 @@ export async function addExclusionPattern(pattern: Omit<ExclusionPattern, 'id'>)
   }
 }
 
-export async function addSynonym(data: {
-  standardKey: string
-  synonym: string
-}): Promise<ColumnSynonym | { error: string }> {
+export async function addSynonym(data: { standardKey: string; synonym: string }) {
   try {
     const [newSynonym] = await db
       .insert(columnSynonym)
@@ -61,9 +68,12 @@ export async function addSynonym(data: {
         synonym: data.synonym,
         enabled: true,
       })
-      .returning()
-
-    await invalidateSynonymCache()
+      .returning({
+        id: columnSynonym.id,
+        standardKey: columnSynonym.standardKey,
+        synonym: columnSynonym.synonym,
+        enabled: columnSynonym.enabled,
+      })
 
     return {
       id: newSynonym.id,
@@ -80,7 +90,7 @@ export async function addSynonym(data: {
   }
 }
 
-export async function createShoppingMallTemplate(data: CreateTemplateData): Promise<ShoppingMallTemplate> {
+export async function createShoppingMallTemplate(data: CreateTemplateData) {
   const [created] = await db
     .insert(shoppingMallTemplate)
     .values({
@@ -91,29 +101,38 @@ export async function createShoppingMallTemplate(data: CreateTemplateData): Prom
       dataStartRow: data.dataStartRow,
       enabled: true,
     })
-    .returning()
+    .returning({
+      id: shoppingMallTemplate.id,
+      mallName: shoppingMallTemplate.mallName,
+      displayName: shoppingMallTemplate.displayName,
+      columnMappings: shoppingMallTemplate.columnMappings,
+      headerRow: shoppingMallTemplate.headerRow,
+      dataStartRow: shoppingMallTemplate.dataStartRow,
+      enabled: shoppingMallTemplate.enabled,
+      createdAt: shoppingMallTemplate.createdAt,
+      updatedAt: shoppingMallTemplate.updatedAt,
+    })
 
   return mapToShoppingMallTemplate(created)
 }
 
-export async function deleteShoppingMallTemplate(id: number): Promise<void> {
+export async function deleteShoppingMallTemplate(id: number) {
   await db.delete(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
 }
 
-export async function removeCourierMapping(id: number): Promise<void> {
+export async function removeCourierMapping(id: number) {
   await db.delete(courierMapping).where(eq(courierMapping.id, id))
 }
 
-export async function removeExclusionPattern(id: number): Promise<void> {
+export async function removeExclusionPattern(id: number) {
   await db.delete(exclusionPattern).where(eq(exclusionPattern.id, id))
 }
 
-export async function removeSynonym(id: number): Promise<void> {
+export async function removeSynonym(id: number) {
   await db.delete(columnSynonym).where(eq(columnSynonym.id, id))
-  await invalidateSynonymCache()
 }
 
-export async function updateCourierMapping(id: number, data: Partial<CourierMapping>): Promise<CourierMapping> {
+export async function updateCourierMapping(id: number, data: Partial<CourierMapping>) {
   const [updated] = await db
     .update(courierMapping)
     .set({
@@ -123,31 +142,34 @@ export async function updateCourierMapping(id: number, data: Partial<CourierMapp
       enabled: data.enabled,
     })
     .where(eq(courierMapping.id, id))
-    .returning()
+    .returning({
+      id: courierMapping.id,
+      name: courierMapping.name,
+      code: courierMapping.code,
+      aliases: courierMapping.aliases,
+      enabled: courierMapping.enabled,
+    })
 
-  if (!updated) throw new Error('Courier mapping not found')
+  if (!updated) {
+    throw new Error('Courier mapping not found')
+  }
 
   return {
     id: updated.id,
     name: updated.name,
     code: updated.code,
-    aliases: (updated.aliases as string[]) || [],
+    aliases: updated.aliases ?? [],
     enabled: updated.enabled || false,
   }
 }
 
-export async function updateDuplicateCheckSettings(
-  data: Partial<DuplicateCheckSettings>,
-): Promise<DuplicateCheckSettings> {
+export async function updateDuplicateCheckSettings(data: Partial<DuplicateCheckSettings>) {
   const current = await getDuplicateCheckSettings()
   const updated = { ...current, ...data }
   return setSetting('duplicate_check', updated)
 }
 
-export async function updateExclusionPattern(
-  id: number,
-  data: Partial<Omit<ExclusionPattern, 'id'>>,
-): Promise<ExclusionPattern> {
+export async function updateExclusionPattern(id: number, data: Partial<Omit<ExclusionPattern, 'id'>>) {
   const [updated] = await db
     .update(exclusionPattern)
     .set({
@@ -157,19 +179,26 @@ export async function updateExclusionPattern(
       updatedAt: new Date(),
     })
     .where(eq(exclusionPattern.id, id))
-    .returning()
+    .returning({
+      id: exclusionPattern.id,
+      pattern: exclusionPattern.pattern,
+      description: exclusionPattern.description,
+      enabled: exclusionPattern.enabled,
+    })
 
-  if (!updated) throw new Error('Exclusion pattern not found')
+  if (!updated) {
+    throw new Error('Exclusion pattern not found')
+  }
 
   return {
     id: updated.id,
     pattern: updated.pattern,
-    description: updated.description || undefined,
+    description: updated.description ?? undefined,
     enabled: updated.enabled || false,
   }
 }
 
-export async function updateExclusionSettings(data: Partial<ExclusionSettings>): Promise<ExclusionSettings> {
+export async function updateExclusionSettings(data: Partial<ExclusionSettings>) {
   if (data.enabled !== undefined) {
     await setSetting('exclusion_enabled', data.enabled)
   }
@@ -177,7 +206,7 @@ export async function updateExclusionSettings(data: Partial<ExclusionSettings>):
   return getExclusionSettings()
 }
 
-export async function updateShoppingMallTemplate(id: number, data: UpdateTemplateData): Promise<ShoppingMallTemplate> {
+export async function updateShoppingMallTemplate(id: number, data: UpdateTemplateData) {
   const [updated] = await db
     .update(shoppingMallTemplate)
     .set({
@@ -190,16 +219,29 @@ export async function updateShoppingMallTemplate(id: number, data: UpdateTemplat
       updatedAt: new Date(),
     })
     .where(eq(shoppingMallTemplate.id, id))
-    .returning()
+    .returning({
+      id: shoppingMallTemplate.id,
+      mallName: shoppingMallTemplate.mallName,
+      displayName: shoppingMallTemplate.displayName,
+      columnMappings: shoppingMallTemplate.columnMappings,
+      headerRow: shoppingMallTemplate.headerRow,
+      dataStartRow: shoppingMallTemplate.dataStartRow,
+      enabled: shoppingMallTemplate.enabled,
+      createdAt: shoppingMallTemplate.createdAt,
+      updatedAt: shoppingMallTemplate.updatedAt,
+    })
 
-  if (!updated) throw new Error('Template not found')
+  if (!updated) {
+    throw new Error('Template not found')
+  }
+
   return mapToShoppingMallTemplate(updated)
 }
 
 export async function updateSynonym(
   id: number,
   data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>,
-): Promise<ColumnSynonym> {
+) {
   const [updated] = await db
     .update(columnSynonym)
     .set({
@@ -211,8 +253,6 @@ export async function updateSynonym(
 
   if (!updated) throw new Error('Synonym not found')
 
-  await invalidateSynonymCache()
-
   return {
     id: updated.id,
     standardKey: updated.standardKey,
@@ -221,8 +261,9 @@ export async function updateSynonym(
   }
 }
 
-function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect): ShoppingMallTemplate {
+function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect) {
   let columnMappings: Record<string, string> = {}
+
   try {
     columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
   } catch {
@@ -234,15 +275,15 @@ function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSel
     mallName: record.mallName,
     displayName: record.displayName,
     columnMappings,
-    headerRow: record.headerRow || 1,
-    dataStartRow: record.dataStartRow || 2,
+    headerRow: record.headerRow ?? 1,
+    dataStartRow: record.dataStartRow ?? 2,
     enabled: record.enabled ?? true,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
   }
 }
 
-async function setSetting<T>(key: string, value: T, description?: string): Promise<T> {
+async function setSetting<T>(key: string, value: T, description?: string) {
   const [record] = await db
     .insert(settings)
     .values({
