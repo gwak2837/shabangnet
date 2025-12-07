@@ -82,7 +82,14 @@ export async function analyzeShoppingMallFile(file: File, headerRow?: number): P
     headerRowIndex = findHeaderRow(data)
   }
 
-  const headers = (data[headerRowIndex] || []).map((h) => String(h ?? '').trim()).filter((h) => h !== '')
+  // Extract headers and filter out duplicates (from merged cells)
+  const rawHeaders = (data[headerRowIndex] || []).map((h) => String(h ?? '').trim()).filter((h) => h !== '')
+  const seen = new Set<string>()
+  const headers = rawHeaders.filter((h) => {
+    if (seen.has(h)) return false
+    seen.add(h)
+    return true
+  })
 
   const previewStartIndex = headerRowIndex + 1
   const previewRows = data
@@ -158,7 +165,16 @@ function findHeaderRow(data: string[][]): number {
 
     const nonEmptyCells = row.filter((cell) => String(cell ?? '').trim() !== '')
 
-    if (nonEmptyCells.length >= 3) {
+    // Need at least 3 non-empty cells
+    if (nonEmptyCells.length < 3) continue
+
+    // Check for unique values - if most cells have the same value,
+    // it's likely a merged title row, not a header row
+    const uniqueValues = new Set(nonEmptyCells)
+    const uniqueRatio = uniqueValues.size / nonEmptyCells.length
+
+    // If more than 50% of cells are unique, this is likely a header row
+    if (uniqueRatio > 0.5) {
       return i
     }
   }

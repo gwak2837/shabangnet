@@ -51,6 +51,12 @@ interface EditingTemplate {
   mallName: string
 }
 
+interface MappingRowProps {
+  header: string
+  onChange: (header: string, value: string) => void
+  value: string
+}
+
 interface ShoppingMallFormProps {
   isDeleting?: boolean
   isSaving?: boolean
@@ -165,7 +171,7 @@ export function ShoppingMallForm({
     }
   }
 
-  async function handleHeaderRowChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleHeaderRowChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!editingTemplate) {
       return
     }
@@ -177,21 +183,29 @@ export function ShoppingMallForm({
       headerRow,
       dataStartRow: headerRow + 1,
     })
+  }
 
-    if (selectedFile) {
-      await runAnalyze(selectedFile, headerRow)
+  async function handleHeaderRowBlur() {
+    if (!editingTemplate || !selectedFile) {
+      return
     }
+
+    await runAnalyze(selectedFile, editingTemplate.headerRow)
   }
 
   function handleMappingChange(header: string, sabangnetField: string) {
-    if (!editingTemplate) return
+    if (!editingTemplate) {
+      return
+    }
 
     const newMappings = { ...editingTemplate.columnMappings }
+
     if (sabangnetField === '_none') {
       delete newMappings[header]
     } else {
       newMappings[header] = sabangnetField
     }
+
     setEditingTemplate({
       ...editingTemplate,
       columnMappings: newMappings,
@@ -199,7 +213,9 @@ export function ShoppingMallForm({
   }
 
   function getMissingRequiredFields() {
-    if (!editingTemplate) return []
+    if (!editingTemplate) {
+      return []
+    }
 
     const mappedFields = new Set(Object.values(editingTemplate.columnMappings))
     return REQUIRED_FIELDS.filter((field) => !mappedFields.has(field))
@@ -407,7 +423,6 @@ export function ShoppingMallForm({
                   />
                 </div>
               </div>
-
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">샘플 파일 업로드</Label>
                 <div
@@ -422,13 +437,7 @@ export function ShoppingMallForm({
                     onChange={handleFileSelect}
                     type="file"
                   />
-
-                  {isAnalyzing ? (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>파일 분석 중...</span>
-                    </div>
-                  ) : selectedFile ? (
+                  {selectedFile ? (
                     <div className="flex items-center gap-3">
                       <FileSpreadsheet className="h-8 w-8 text-emerald-500" />
                       <div>
@@ -455,6 +464,7 @@ export function ShoppingMallForm({
                     <Input
                       id="header-row"
                       min={1}
+                      onBlur={handleHeaderRowBlur}
                       onChange={handleHeaderRowChange}
                       type="number"
                       value={editingTemplate.headerRow}
@@ -477,11 +487,11 @@ export function ShoppingMallForm({
                   </div>
                 </div>
               )}
-              {analyzeResult && analyzeResult.headers.length > 0 && (
+              {(analyzeResult || isAnalyzing) && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">컬럼 매핑</Label>
-                    {getMissingRequiredFields().length > 0 && (
+                    {!isAnalyzing && getMissingRequiredFields().length > 0 && (
                       <span className="text-xs text-amber-500">
                         필수 필드 미매핑:{' '}
                         {getMissingRequiredFields()
@@ -491,32 +501,27 @@ export function ShoppingMallForm({
                     )}
                   </div>
                   <div className="rounded-lg ring-1 ring-border/50 overflow-hidden max-h-52 overflow-y-auto">
-                    <div className="divide-y divide-border/50">
-                      {analyzeResult.headers.map((header) => (
-                        <div className="flex items-center gap-4 px-3 py-2 bg-muted/20" key={header}>
-                          <span className="flex-1 text-sm font-medium text-foreground truncate">{header}</span>
-                          <Select
-                            onValueChange={(value) => handleMappingChange(header, value)}
+                    {isAnalyzing ? (
+                      <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>컬럼 분석 중...</span>
+                      </div>
+                    ) : analyzeResult && analyzeResult.headers.length > 0 ? (
+                      <div className="divide-y divide-border/50">
+                        {analyzeResult.headers.map((header) => (
+                          <MappingRow
+                            header={header}
+                            key={header}
+                            onChange={handleMappingChange}
                             value={editingTemplate.columnMappings[header] || '_none'}
-                          >
-                            <SelectTrigger className="w-48">
-                              <SelectValue placeholder="선택하세요" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="_none">
-                                <span className="text-muted-foreground">매핑 안함</span>
-                              </SelectItem>
-                              {SABANGNET_FIELD_OPTIONS.map((field) => (
-                                <SelectItem key={field.key} value={field.key}>
-                                  {field.label}
-                                  {field.required && <span className="text-destructive ml-1">*</span>}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
-                    </div>
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                        컬럼이 없습니다
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -571,5 +576,29 @@ export function ShoppingMallForm({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  )
+}
+
+function MappingRow({ header, value, onChange }: MappingRowProps) {
+  return (
+    <div className="flex items-center gap-4 px-3 py-2 bg-muted/20">
+      <span className="flex-1 text-sm font-medium text-foreground truncate">{header}</span>
+      <Select onValueChange={(v) => onChange(header, v)} value={value}>
+        <SelectTrigger className="w-48">
+          <SelectValue placeholder="선택하세요" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="_none">
+            <span className="text-muted-foreground">매핑 안함</span>
+          </SelectItem>
+          {SABANGNET_FIELD_OPTIONS.map((field) => (
+            <SelectItem key={field.key} value={field.key}>
+              {field.label}
+              {field.required && <span className="text-destructive ml-1">*</span>}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
