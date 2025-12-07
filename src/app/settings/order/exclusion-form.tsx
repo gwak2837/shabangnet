@@ -88,18 +88,16 @@ export function ExclusionForm({
             </div>
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">발송 제외 설정</h2>
-              <p className="text-sm text-muted-foreground">
-                F열 값에 따라 이메일 발송 대상에서 제외할 패턴을 관리합니다
-              </p>
+              <p className="text-sm text-muted-foreground">특정 주문 유형을 이메일 발송에서 자동으로 제외합니다</p>
             </div>
           </div>
         </header>
         <div className="p-6 space-y-5">
           <label className="glass-panel rounded-lg p-4 flex items-center justify-between cursor-pointer">
             <div className="flex flex-col gap-0.5">
-              <span className="text-base font-medium">발송 제외 필터 사용</span>
+              <span className="text-base font-medium">자동 필터링 사용</span>
               <p className="text-sm text-muted-foreground">
-                F열 값이 아래 패턴과 일치하는 주문은 이메일 발송에서 제외됩니다
+                주문 유형(F열)이 아래 패턴과 일치하면 발송 대상에서 자동 제외됩니다
               </p>
             </div>
             <Switch checked={settings.enabled} onCheckedChange={(checked) => onUpdateSettings({ enabled: checked })} />
@@ -113,47 +111,24 @@ export function ExclusionForm({
             </div>
             <div className="space-y-2">
               {settings.patterns.map((pattern) => (
-                <div
-                  aria-disabled={!pattern.enabled}
-                  className="glass-panel rounded-lg p-3 transition aria-disabled:opacity-50"
+                <PatternItem
+                  disabled={!settings.enabled || isUpdating}
                   key={pattern.id}
-                >
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={pattern.enabled}
-                      disabled={!settings.enabled || isUpdating}
-                      onCheckedChange={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-mono text-sm truncate text-foreground">{pattern.pattern}</p>
-                      {pattern.description && (
-                        <p className="text-xs text-muted-foreground truncate">{pattern.description}</p>
-                      )}
-                    </div>
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                      onClick={() => setEditingPattern({ ...pattern })}
-                      type="button"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => onRemovePattern(pattern.id)}
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                  onEdit={() => setEditingPattern({ ...pattern })}
+                  onRemove={() => onRemovePattern(pattern.id)}
+                  onToggle={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
+                  pattern={pattern}
+                />
               ))}
               {settings.patterns.length === 0 && (
                 <div className="glass-panel rounded-lg p-8 text-center">
                   <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                     <Filter className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <p className="text-base font-medium text-foreground">제외 패턴 없음</p>
-                  <p className="mt-1 text-sm text-muted-foreground">아래에서 패턴을 추가하세요</p>
+                  <p className="text-base font-medium text-foreground">아직 제외 패턴이 없습니다</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    첫 번째 패턴을 추가하면 해당 주문이 자동으로 제외됩니다
+                  </p>
                 </div>
               )}
             </div>
@@ -177,16 +152,16 @@ export function ExclusionForm({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              F열 값에 입력한 패턴이 포함되어 있으면 발송 제외 대상으로 분류됩니다
+              주문 유형에 패턴이 포함되면 자동으로 발송 제외 대상으로 분류됩니다
             </p>
           </form>
           <div className="rounded-lg bg-violet-500/10 p-4 ring-1 ring-violet-500/20">
             <div className="flex items-start gap-3">
               <Filter className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" />
               <div className="text-sm">
-                <p className="font-medium text-violet-600">발송 제외 동작</p>
+                <p className="font-medium text-violet-600">제외된 주문 확인하기</p>
                 <p className="mt-1 text-violet-500">
-                  제외된 주문은 주문 페이지의 &quot;발송제외&quot; 탭에서 별도로 확인할 수 있습니다.
+                  자동 제외된 주문은 주문 페이지 &quot;발송제외&quot; 탭에서 검토하고 필요시 복원할 수 있습니다.
                 </p>
               </div>
             </div>
@@ -244,5 +219,48 @@ export function ExclusionForm({
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+function PatternItem({
+  pattern,
+  disabled,
+  onEdit,
+  onRemove,
+  onToggle,
+}: {
+  pattern: ExclusionPattern
+  disabled: boolean
+  onEdit: () => void
+  onRemove: () => void
+  onToggle: (enabled: boolean) => void
+}) {
+  return (
+    <div
+      aria-disabled={!pattern.enabled}
+      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition aria-disabled:opacity-50"
+    >
+      <label className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer">
+        <Switch checked={pattern.enabled} disabled={disabled} onCheckedChange={onToggle} />
+        <div className="flex-1 min-w-0">
+          <p className="font-mono text-sm truncate text-foreground">{pattern.pattern}</p>
+          {pattern.description && <p className="text-xs text-muted-foreground truncate">{pattern.description}</p>}
+        </div>
+      </label>
+      <button
+        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        onClick={onEdit}
+        type="button"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        onClick={onRemove}
+        type="button"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
   )
 }

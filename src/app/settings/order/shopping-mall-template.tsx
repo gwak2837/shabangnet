@@ -287,81 +287,79 @@ export function ShoppingMallTemplate({
             {templates.map((template) => (
               <div
                 aria-disabled={!template.enabled}
-                className="glass-panel rounded-lg p-4 py-3 transition aria-disabled:opacity-50"
+                className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50"
                 key={template.id}
               >
-                <div className="flex items-center gap-4">
-                  <Switch
-                    checked={template.enabled}
-                    id={`template-${template.id}`}
-                    onCheckedChange={() => onUpdate(template.id, { enabled: !template.enabled })}
-                  />
-                  <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`template-${template.id}`}>
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <span className="font-medium text-base text-foreground truncate">{template.displayName}</span>
-                      <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
-                        {template.mallName}
-                      </span>
-                      <Badge className="text-xs" variant="secondary">
-                        {template.headerRow}행
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {Object.keys(template.columnMappings)
-                        .slice(0, 4)
-                        .map((col) => (
-                          <span
-                            className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
-                            key={col}
-                          >
-                            {col}
-                          </span>
-                        ))}
-                      {Object.keys(template.columnMappings).length > 4 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{Object.keys(template.columnMappings).length - 4}개
-                        </span>
-                      )}
-                    </div>
-                  </label>
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                      onClick={() => handleEditTemplate(template)}
-                      type="button"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button
-                          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-                          disabled={isDeleting}
-                          type="button"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>쇼핑몰 템플릿 삭제</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            정말 &ldquo;{template.displayName}&rdquo; 템플릿을 삭제하시겠습니까?
-                            <br />이 작업은 되돌릴 수 없습니다.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>취소</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-rose-600 hover:bg-rose-700"
-                            onClick={() => onDelete(template.id)}
-                          >
-                            삭제
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                <Switch
+                  checked={template.enabled}
+                  id={`template-${template.id}`}
+                  onCheckedChange={() => onUpdate(template.id, { enabled: !template.enabled })}
+                />
+                <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`template-${template.id}`}>
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <span className="font-medium text-base text-foreground truncate">{template.displayName}</span>
+                    <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
+                      {template.mallName}
+                    </span>
+                    <Badge className="text-xs" variant="secondary">
+                      {template.headerRow}행
+                    </Badge>
                   </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {Object.keys(template.columnMappings)
+                      .slice(0, 4)
+                      .map((col) => (
+                        <span
+                          className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
+                          key={col}
+                        >
+                          {col}
+                        </span>
+                      ))}
+                    {Object.keys(template.columnMappings).length > 4 && (
+                      <span className="text-xs text-muted-foreground">
+                        +{Object.keys(template.columnMappings).length - 4}개
+                      </span>
+                    )}
+                  </div>
+                </label>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    onClick={() => handleEditTemplate(template)}
+                    type="button"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                        disabled={isDeleting}
+                        type="button"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>쇼핑몰 템플릿 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          정말 &ldquo;{template.displayName}&rdquo; 템플릿을 삭제하시겠습니까?
+                          <br />이 작업은 되돌릴 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-rose-600 hover:bg-rose-700"
+                          onClick={() => onDelete(template.id)}
+                        >
+                          삭제
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
