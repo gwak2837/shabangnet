@@ -1,5 +1,3 @@
-'use client'
-
 import { CourierForm } from '@/app/settings/order/courier-form'
 import { DuplicateCheckForm } from '@/app/settings/order/duplicate-check-form'
 import { ExclusionForm } from '@/app/settings/order/exclusion-form'

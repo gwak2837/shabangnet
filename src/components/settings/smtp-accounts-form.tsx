@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Bell, CheckCircle2, Loader2, Lock, Mail, Package, Server, ShieldCheck } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 
 import type { SMTPAccountPurpose } from '@/lib/email/config'
 
@@ -30,39 +30,7 @@ interface AccountFormState {
   testResult: 'error' | 'success' | null
 }
 
-export function SmtpAccountsForm() {
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
-          <Mail className="h-5 w-5 text-blue-500" />
-        </div>
-        <div className="space-y-0.5">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">SMTP 설정</h2>
-          <p className="text-sm text-muted-foreground">용도별로 다른 SMTP 계정을 설정할 수 있습니다</p>
-        </div>
-      </div>
-
-      <SmtpAccountCard purpose="system" />
-      <SmtpAccountCard purpose="order" />
-    </div>
-  )
-}
-
-function defaultFormData(purpose: SMTPAccountPurpose): SMTPAccountFormData {
-  return {
-    name: SMTP_PURPOSE_LABELS[purpose],
-    purpose,
-    host: '',
-    port: 587,
-    username: '',
-    password: '',
-    fromName: '',
-    enabled: true,
-  }
-}
-
-function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
+export function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
   const [state, setState] = useState<AccountFormState>({
     formData: defaultFormData(purpose),
     hasExistingPassword: false,
@@ -75,10 +43,12 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     saveError: null,
   })
 
-  const loadSettings = useCallback(async () => {
+  async function loadSettings() {
     setState((prev) => ({ ...prev, isLoading: true }))
+
     try {
       const result = await getSmtpAccountByPurposeAction(purpose)
+
       if (result.success && result.account) {
         const account: SMTPAccountDisplay = result.account
         setState((prev) => ({
@@ -102,13 +72,15 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     } finally {
       setState((prev) => ({ ...prev, isLoading: false }))
     }
-  }, [purpose])
+  }
 
   useEffect(() => {
     loadSettings()
-  }, [loadSettings])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purpose])
 
-  async function handleSave() {
+  async function handleSave(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setState((prev) => ({ ...prev, isSaving: true, saveError: null }))
 
     try {
@@ -158,10 +130,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
   }
 
   const Icon = purpose === 'system' ? Bell : Package
-  const iconColorFrom = purpose === 'system' ? 'from-violet-500/10' : 'from-orange-500/10'
-  const iconColorTo = purpose === 'system' ? 'to-violet-600/5' : 'to-orange-600/5'
-  const iconRing = purpose === 'system' ? 'ring-violet-500/10' : 'ring-orange-500/10'
-  const iconText = purpose === 'system' ? 'text-violet-500' : 'text-orange-500'
 
   if (state.isLoading) {
     return (
@@ -175,13 +143,11 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
   }
 
   return (
-    <section className="glass-card p-0 overflow-hidden">
+    <section className="glass-card p-0 overflow-hidden" data-purpose={purpose}>
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br ${iconColorFrom} ${iconColorTo} ring-1 ${iconRing}`}
-          >
-            <Icon className={`h-5 w-5 ${iconText}`} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br ring-1 in-data-[purpose=system]:from-violet-500/10 in-data-[purpose=system]:to-violet-600/5 in-data-[purpose=system]:ring-violet-500/10 in-data-[purpose=order]:from-orange-500/10 in-data-[purpose=order]:to-orange-600/5 in-data-[purpose=order]:ring-orange-500/10">
+            <Icon className="h-5 w-5 in-data-[purpose=system]:text-violet-500 in-data-[purpose=order]:text-orange-500" />
           </div>
           <div className="space-y-0.5">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">{SMTP_PURPOSE_LABELS[purpose]}</h2>
@@ -193,7 +159,7 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
           </div>
         </div>
       </header>
-      <div className="p-6 space-y-5">
+      <form className="p-6 space-y-5" onSubmit={handleSave}>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium" htmlFor={`${purpose}-host`}>
@@ -210,7 +176,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
               />
             </div>
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-sm font-medium" htmlFor={`${purpose}-port`}>
               포트
@@ -219,7 +184,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             <p className="text-xs text-muted-foreground">보안을 위해 587 포트로 고정됩니다</p>
           </div>
         </div>
-
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium" htmlFor={`${purpose}-username`}>
@@ -238,7 +202,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             </div>
             <p className="text-xs text-muted-foreground">발신자 이메일로도 사용됩니다</p>
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-sm font-medium" htmlFor={`${purpose}-password`}>
               비밀번호 (앱 비밀번호)
@@ -259,7 +222,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             )}
           </div>
         </div>
-
         <div className="space-y-1.5">
           <Label className="text-sm font-medium" htmlFor={`${purpose}-fromName`}>
             발신자 이름
@@ -272,7 +234,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
           />
           <p className="text-xs text-muted-foreground">수신자에게 표시되는 발신자 이름입니다</p>
         </div>
-
         <div className="rounded-lg bg-emerald-500/10 p-4 ring-1 ring-emerald-500/20">
           <div className="flex items-start gap-3">
             <ShieldCheck className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
@@ -284,14 +245,10 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             </div>
           </div>
         </div>
-
         {state.testResult && (
           <div
-            className={`flex items-start gap-2 rounded-lg p-3 ring-1 ${
-              state.testResult === 'success'
-                ? 'bg-emerald-500/10 ring-emerald-500/20 text-emerald-600'
-                : 'bg-destructive/10 ring-destructive/20 text-destructive'
-            }`}
+            className="flex items-start gap-2 rounded-lg p-3 ring-1 data-[result=success]:bg-emerald-500/10 data-[result=success]:ring-emerald-500/20 data-[result=success]:text-emerald-600 data-[result=error]:bg-destructive/10 data-[result=error]:ring-destructive/20 data-[result=error]:text-destructive"
+            data-result={state.testResult}
           >
             {state.testResult === 'success' ? (
               <>
@@ -309,7 +266,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             )}
           </div>
         )}
-
         {state.saveError && (
           <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 ring-1 ring-destructive/20 text-destructive">
             <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
@@ -319,19 +275,30 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             </div>
           </div>
         )}
-
         <div className="flex items-center justify-between pt-2">
-          <Button disabled={state.isTesting || state.isSaving} onClick={handleTest} variant="outline">
+          <Button disabled={state.isTesting || state.isSaving} onClick={handleTest} type="button" variant="outline">
             {state.isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {state.isTesting ? '테스트 중...' : '연결 테스트'}
           </Button>
-
-          <Button disabled={state.isSaving || state.isTesting} onClick={handleSave}>
+          <Button disabled={state.isSaving || state.isTesting} type="submit">
             {state.isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {state.isSaving ? '저장 중...' : '저장'}
           </Button>
         </div>
-      </div>
+      </form>
     </section>
   )
+}
+
+function defaultFormData(purpose: SMTPAccountPurpose): SMTPAccountFormData {
+  return {
+    name: SMTP_PURPOSE_LABELS[purpose],
+    purpose,
+    host: '',
+    port: 587,
+    username: '',
+    password: '',
+    fromName: '',
+    enabled: true,
+  }
 }

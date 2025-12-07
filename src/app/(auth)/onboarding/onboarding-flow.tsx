@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { completeOnboarding } from '@/app/(auth)/actions'
+import { completeOnboarding } from '@/app/(auth)/action'
 import { authClient } from '@/lib/auth-client'
 
 import { useSignOut } from '../useSignOut'

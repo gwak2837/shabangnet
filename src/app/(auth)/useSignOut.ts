@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useTransition } from 'react'
 
-import { signOut } from './actions'
+import { signOut } from './action'
 
 export function useSignOut() {
   const [isSigningOut, startTransition] = useTransition()
