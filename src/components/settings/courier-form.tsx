@@ -22,29 +22,22 @@ interface CourierFormProps {
 
 export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = false }: CourierFormProps) {
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isNewCourier, setIsNewCourier] = useState(false)
 
-  function createEmptyCourier() {
-    return {
-      id: `c${Date.now()}`,
+  const isModalOpen = editingCourier !== null
+  const isNewCourier = editingCourier?.id === ''
+
+  function handleAddCourier() {
+    setEditingCourier({
+      id: '',
       name: '',
       code: '',
       aliases: [],
       enabled: true,
-    }
-  }
-
-  function handleAddCourier() {
-    setEditingCourier(createEmptyCourier())
-    setIsNewCourier(true)
-    setIsModalOpen(true)
+    })
   }
 
   function handleEditCourier(courier: CourierMapping) {
     setEditingCourier({ ...courier, aliases: [...courier.aliases] })
-    setIsNewCourier(false)
-    setIsModalOpen(true)
   }
 
   function handleAddAlias(e: FormEvent<HTMLFormElement>) {
@@ -92,7 +85,6 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
       onUpdate(editingCourier.id, editingCourier)
     }
 
-    setIsModalOpen(false)
     setEditingCourier(null)
   }
 
@@ -199,7 +191,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
           </div>
         </div>
       </section>
-      <Dialog onOpenChange={setIsModalOpen} open={isModalOpen}>
+      <Dialog onOpenChange={(open) => !open && setEditingCourier(null)} open={isModalOpen}>
         <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
           <form id="alias-form" onSubmit={handleAddAlias} />
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
@@ -273,7 +265,7 @@ export function CourierForm({ mappings, onUpdate, onAdd, onRemove, isSaving = fa
               </div>
               <DialogFooter className="px-6 py-4 bg-muted/30 border-t shrink-0">
                 <div className="flex w-full gap-3">
-                  <Button className="flex-1" onClick={() => setIsModalOpen(false)} type="button" variant="outline">
+                  <Button className="flex-1" onClick={() => setEditingCourier(null)} type="button" variant="outline">
                     취소
                   </Button>
                   <Button className="flex-1" disabled={isSaving} type="submit">

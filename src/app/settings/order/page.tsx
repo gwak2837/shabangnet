@@ -178,11 +178,6 @@ export default function OrdersSettingsPage() {
     },
   )
 
-  // Analyze function - returns a promise directly for mutateAsync-like behavior
-  const handleAnalyze = async (file: File, headerRow?: number) => {
-    return analyzeShoppingMallFile(file, headerRow)
-  }
-
   const isLoading =
     isLoadingExclusion || isLoadingDuplicateCheck || isLoadingCourier || isLoadingShoppingMall || isLoadingSynonyms
 
@@ -206,7 +201,7 @@ export default function OrdersSettingsPage() {
       <ShoppingMallForm
         isDeleting={isDeletingTemplate}
         isSaving={isCreatingTemplate || isUpdatingTemplate}
-        onAnalyze={handleAnalyze}
+        onAnalyze={analyzeShoppingMallFile}
         onCreate={(data) => createTemplate(data)}
         onDelete={(id) => deleteTemplate(id)}
         onUpdate={(id, data) => updateTemplate({ id, data })}

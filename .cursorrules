@@ -227,6 +227,121 @@ export async function validateTOTP() {
 
 ---
 
+## HTML/CSS Patterns
+
+### Prefer HTML over JavaScript
+
+Use native HTML features instead of JavaScript where possible. HTML handles validation, form submission, and accessibility better than custom JS implementations.
+
+### Form Submission
+
+- **Use `<form>` with `onSubmit`** instead of button `onClick` for form handling.
+- **Use `FormData`** to get form values instead of controlled state where possible.
+- **Use `form` attribute** to associate inputs with forms (for nested form patterns).
+
+```tsx
+// ❌ Bad - Button onClick with controlled state
+function AddItemForm() {
+  const [value, setValue] = useState('')
+
+  function handleAdd() {
+    if (!value.trim()) return
+    onAdd(value.trim())
+    setValue('')
+  }
+
+  return (
+    <div>
+      <Input value={value} onChange={(e) => setValue(e.target.value)} />
+      <Button onClick={handleAdd}>추가</Button>
+    </div>
+  )
+}
+
+// ✅ Good - Native form with FormData
+function AddItemForm() {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const data = new FormData(e.currentTarget)
+    const value = String(data.get('item')).trim()
+    onAdd(value)
+    e.currentTarget.reset()
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Input name="item" required />
+      <Button type="submit">추가</Button>
+    </form>
+  )
+}
+```
+
+### HTML Validation
+
+- **Use HTML `required` attribute** instead of JS validation for empty checks.
+- Let browser handle basic validation, use JS only for complex rules.
+
+```tsx
+// ❌ Bad - JS validation for empty check
+<Button disabled={!name || !email || isSaving} onClick={handleSave}>
+  저장
+</Button>
+
+// ✅ Good - HTML required + form submission
+<form onSubmit={handleSave}>
+  <Input name="name" required />
+  <Input name="email" type="email" required />
+  <Button type="submit" disabled={isSaving}>저장</Button>
+</form>
+```
+
+### Disabled State Styling
+
+- **Use `aria-disabled` with CSS** instead of conditional className for disabled states.
+- This provides both styling and accessibility benefits.
+
+```tsx
+// ❌ Bad - Conditional className
+<div className={`card ${!enabled ? 'opacity-50' : ''}`}>
+
+// ✅ Good - aria-disabled with CSS
+<div aria-disabled={!enabled} className="card aria-disabled:opacity-50">
+```
+
+### HTML id Naming
+
+- **Use kebab-case for HTML `id` attributes** instead of camelCase.
+- This follows HTML conventions and improves consistency.
+
+```tsx
+// ❌ Bad - camelCase ids
+<Label htmlFor="userName">이름</Label>
+<Input id="userName" />
+
+// ✅ Good - kebab-case ids
+<Label htmlFor="user-name">이름</Label>
+<Input id="user-name" />
+```
+
+### Avoid Wrapper Functions
+
+- **Call props directly** instead of creating pass-through wrapper functions.
+
+```tsx
+// ❌ Bad - Unnecessary wrapper function
+function handleDelete(id: string) {
+  onDelete(id)
+}
+
+<button onClick={() => handleDelete(item.id)}>삭제</button>
+
+// ✅ Good - Direct prop call
+<button onClick={() => onDelete(item.id)}>삭제</button>
+```
+
+---
+
 ## API Patterns
 
 ### Server Actions vs API Routes
