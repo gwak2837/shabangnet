@@ -52,7 +52,6 @@ export function CourierForm() {
 
   const isSaving = isUpdatingCourier || isAddingCourier
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)
-
   const isModalOpen = editingCourier !== null
   const isNewCourier = editingCourier?.id === ''
 
@@ -271,7 +270,7 @@ export function CourierForm() {
 }
 
 function CourierItem({
-  courier = SKELETON_COURIER,
+  courier,
   skeleton,
   onToggle,
   onEdit,
@@ -287,7 +286,7 @@ function CourierItem({
     <div
       aria-busy={skeleton}
       aria-disabled={!skeleton && !courier.enabled}
-      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed aria-busy:text-muted-foreground"
+      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
     >
       <Switch checked={courier.enabled} id={`courier-${courier.id}`} onCheckedChange={onToggle} />
       <div className="flex-1 min-w-0">

@@ -2,10 +2,10 @@
 
 import { FileSpreadsheet, Loader2, Pencil, Plus, Store, Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
-
-import type { AnalyzeResult, ShoppingMallTemplate } from '@/services/shopping-mall-templates'
+import { toast } from 'sonner'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
+import { queryKeys } from '@/common/constants/query-keys'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +31,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useServerAction } from '@/hooks/use-server-action'
+import { useShoppingMallTemplates } from '@/hooks/use-settings'
+import {
+  type AnalyzeResult,
+  analyzeShoppingMallFile,
+  createShoppingMallTemplate,
+  type CreateTemplateData,
+  deleteShoppingMallTemplate,
+  type ShoppingMallTemplate as ShoppingMallTemplateType,
+  updateShoppingMallTemplate,
+  type UpdateTemplateData,
+} from '@/services/shopping-mall-templates'
 import { cn } from '@/utils/cn'
 
 const SABANGNET_FIELD_OPTIONS = SABANGNET_COLUMNS.map((col) => ({
@@ -40,6 +52,18 @@ const SABANGNET_FIELD_OPTIONS = SABANGNET_COLUMNS.map((col) => ({
 }))
 
 const REQUIRED_FIELDS = SABANGNET_COLUMNS.filter((col) => col.required).map((col) => col.key)
+
+const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
+  id: 'skeleton',
+  mallName: 'sample_mall',
+  displayName: '쇼핑몰 이름',
+  headerRow: 1,
+  dataStartRow: 2,
+  columnMappings: { 주문번호: 'orderNumber', 수취인명: 'receiverName', 연락처: 'receiverPhone' },
+  enabled: true,
+  createdAt: '',
+  updatedAt: '',
+}
 
 interface EditingTemplate {
   columnMappings: Record<string, string>
@@ -57,41 +81,38 @@ interface MappingRowProps {
   value: string
 }
 
-interface ShoppingMallTemplateProps {
-  isDeleting?: boolean
-  isSaving?: boolean
-  onAnalyze: (file: File, headerRow?: number) => Promise<AnalyzeResult>
-  onCreate: (data: {
-    columnMappings: Record<string, string>
-    dataStartRow: number
-    displayName: string
-    headerRow: number
-    mallName: string
-  }) => void
-  onDelete: (id: string) => void
-  onUpdate: (
-    id: string,
-    data: {
-      columnMappings?: Record<string, string>
-      dataStartRow?: number
-      displayName?: string
-      enabled?: boolean
-      headerRow?: number
-      mallName?: string
-    },
-  ) => void
-  templates: ShoppingMallTemplate[]
-}
+export function ShoppingMallTemplate() {
+  const { data: templates = [], isLoading } = useShoppingMallTemplates()
 
-export function ShoppingMallTemplate({
-  templates,
-  onUpdate,
-  onCreate,
-  onDelete,
-  onAnalyze,
-  isSaving = false,
-  isDeleting = false,
-}: ShoppingMallTemplateProps) {
+  const { execute: createTemplate, isPending: isCreatingTemplate } = useServerAction(
+    (data: CreateTemplateData) => createShoppingMallTemplate(data),
+    {
+      invalidateKeys: [queryKeys.shoppingMallTemplates.all],
+      onSuccess: () => toast.success('쇼핑몰 템플릿이 생성되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: updateTemplate, isPending: isUpdatingTemplate } = useServerAction(
+    ({ id, data }: { id: string; data: UpdateTemplateData }) => updateShoppingMallTemplate(id, data),
+    {
+      invalidateKeys: [queryKeys.shoppingMallTemplates.all],
+      onSuccess: () => toast.success('쇼핑몰 템플릿이 수정되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: deleteTemplate, isPending: isDeletingTemplate } = useServerAction(
+    (id: string) => deleteShoppingMallTemplate(id),
+    {
+      invalidateKeys: [queryKeys.shoppingMallTemplates.all],
+      onSuccess: () => toast.success('쇼핑몰 템플릿이 삭제되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const isSaving = isCreatingTemplate || isUpdatingTemplate
+  const isDeleting = isDeletingTemplate
   const [editingTemplate, setEditingTemplate] = useState<EditingTemplate | null>(null)
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -100,6 +121,22 @@ export function ShoppingMallTemplate({
   const [showMissingFieldsWarning, setShowMissingFieldsWarning] = useState(false)
   const isModalOpen = editingTemplate !== null
   const isNewTemplate = editingTemplate?.id === ''
+
+  function onAnalyze(file: File, headerRow?: number): Promise<AnalyzeResult> {
+    return analyzeShoppingMallFile(file, headerRow)
+  }
+
+  function onCreate(data: CreateTemplateData) {
+    createTemplate(data)
+  }
+
+  function onUpdate(id: string, data: UpdateTemplateData) {
+    updateTemplate({ id, data })
+  }
+
+  function onDelete(id: string) {
+    deleteTemplate(id)
+  }
 
   function handleAddTemplate() {
     setEditingTemplate({
@@ -116,7 +153,7 @@ export function ShoppingMallTemplate({
     setAnalyzeError(null)
   }
 
-  function handleEditTemplate(template: ShoppingMallTemplate) {
+  function handleEditTemplate(template: ShoppingMallTemplateType) {
     setEditingTemplate({
       id: template.id,
       mallName: template.mallName,
@@ -284,17 +321,9 @@ export function ShoppingMallTemplate({
         </header>
         <div className="p-6 space-y-5">
           <div className="space-y-2">
-            {templates.map((template) => (
-              <TemplateItem
-                isDeleting={isDeleting}
-                key={template.id}
-                onDelete={() => onDelete(template.id)}
-                onEdit={() => handleEditTemplate(template)}
-                onToggle={() => onUpdate(template.id, { enabled: !template.enabled })}
-                template={template}
-              />
-            ))}
-            {templates.length === 0 && (
+            {isLoading ? (
+              <TemplateItem skeleton template={SKELETON_TEMPLATE} />
+            ) : templates.length === 0 ? (
               <div className="glass-panel rounded-lg p-8 text-center">
                 <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                   <Store className="h-5 w-5 text-muted-foreground" />
@@ -302,6 +331,17 @@ export function ShoppingMallTemplate({
                 <p className="text-base font-medium text-foreground">템플릿 없음</p>
                 <p className="mt-1 text-sm text-muted-foreground">추가 버튼을 눌러 시작하세요</p>
               </div>
+            ) : (
+              templates.map((template) => (
+                <TemplateItem
+                  isDeleting={isDeleting}
+                  key={template.id}
+                  onDelete={() => onDelete(template.id)}
+                  onEdit={() => handleEditTemplate(template)}
+                  onToggle={() => onUpdate(template.id, { enabled: !template.enabled })}
+                  template={template}
+                />
+              ))
             )}
           </div>
           <div className="rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
@@ -522,22 +562,27 @@ function MappingRow({ header, value, onChange }: MappingRowProps) {
 }
 
 function TemplateItem({
-  template,
+  template = SKELETON_TEMPLATE,
+  skeleton,
   isDeleting,
   onToggle,
   onEdit,
   onDelete,
 }: {
-  isDeleting: boolean
-  onDelete: () => void
-  onEdit: () => void
-  onToggle: () => void
-  template: ShoppingMallTemplate
+  template: ShoppingMallTemplateType
+  skeleton?: boolean
+  isDeleting?: boolean
+  onDelete?: () => void
+  onEdit?: () => void
+  onToggle?: () => void
 }) {
+  const columnKeys = Object.keys(template.columnMappings)
+
   return (
     <div
-      aria-disabled={!template.enabled}
-      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50"
+      aria-busy={skeleton}
+      aria-disabled={!skeleton && !template.enabled}
+      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed aria-busy:text-muted-foreground"
     >
       <Switch checked={template.enabled} id={`template-${template.id}`} onCheckedChange={onToggle} />
       <label className="flex-1 min-w-0 cursor-pointer" htmlFor={`template-${template.id}`}>
@@ -551,19 +596,15 @@ function TemplateItem({
           </Badge>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          {Object.keys(template.columnMappings)
-            .slice(0, 4)
-            .map((col) => (
-              <span
-                className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
-                key={col}
-              >
-                {col}
-              </span>
-            ))}
-          {Object.keys(template.columnMappings).length > 4 && (
-            <span className="text-xs text-muted-foreground">+{Object.keys(template.columnMappings).length - 4}개</span>
-          )}
+          {columnKeys.slice(0, 4).map((col, i) => (
+            <span
+              className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
+              key={skeleton ? i : col}
+            >
+              {col}
+            </span>
+          ))}
+          {columnKeys.length > 4 && <span className="text-xs text-muted-foreground">+{columnKeys.length - 4}개</span>}
         </div>
       </label>
       <div className="flex items-center gap-0.5">

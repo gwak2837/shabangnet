@@ -2,10 +2,10 @@
 
 import { BookOpen, ChevronRight, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-
-import type { ColumnSynonym } from '@/services/column-synonyms'
+import { toast } from 'sonner'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
+import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +20,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useServerAction } from '@/hooks/use-server-action'
+import { useColumnSynonyms } from '@/hooks/use-settings'
+import { addSynonym, type ColumnSynonym, removeSynonym, updateSynonym } from '@/services/column-synonyms'
 
 const STANDARD_KEY_OPTIONS = SABANGNET_COLUMNS.filter(
   (col) =>
@@ -30,15 +33,6 @@ const STANDARD_KEY_OPTIONS = SABANGNET_COLUMNS.filter(
   key: col.key,
   label: col.label,
 }))
-
-interface SynonymFormProps {
-  isAdding?: boolean
-  isUpdating?: boolean
-  onAdd: (data: { standardKey: string; synonym: string }) => void
-  onRemove: (id: string) => void
-  onUpdate: (id: string, data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>) => void
-  synonyms?: ColumnSynonym[]
-}
 
 interface SynonymGroupProps {
   isUpdating: boolean
@@ -57,16 +51,39 @@ interface SynonymItemProps {
   synonym: ColumnSynonym
 }
 
-export function SynonymForm({
-  synonyms = [],
-  onAdd,
-  onRemove,
-  onUpdate,
-  isAdding = false,
-  isUpdating = false,
-}: SynonymFormProps) {
+export function SynonymForm() {
+  const { data: synonyms = [], isLoading } = useColumnSynonyms()
   const [selectedKey, setSelectedKey] = useState('')
   const [editingSynonym, setEditingSynonym] = useState<ColumnSynonym | null>(null)
+
+  const { execute: onAdd, isPending: isAdding } = useServerAction(
+    (data: { standardKey: string; synonym: string }) => addSynonym(data),
+    {
+      invalidateKeys: [queryKeys.settings.synonyms],
+      onSuccess: () => toast.success('동의어가 추가되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: updateSynonymAction, isPending: isUpdating } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<{ enabled: boolean; standardKey: string; synonym: string }> }) =>
+      updateSynonym(id, data),
+    {
+      invalidateKeys: [queryKeys.settings.synonyms],
+      onSuccess: () => toast.success('동의어가 수정되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: onRemove } = useServerAction((id: string) => removeSynonym(id), {
+    invalidateKeys: [queryKeys.settings.synonyms],
+    onSuccess: () => toast.success('동의어가 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
+
+  function onUpdate(id: string, data: Partial<{ enabled: boolean; standardKey: string; synonym: string }>) {
+    updateSynonymAction({ id, data })
+  }
 
   function handleAddSynonym(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -123,19 +140,25 @@ export function SynonymForm({
                 {synonyms.filter((s) => s.enabled).length}/{synonyms.length} 활성화
               </Badge>
             </div>
-            <div className="space-y-1.5">
-              {STANDARD_KEY_OPTIONS.map((option) => (
-                <SynonymGroup
-                  isUpdating={isUpdating}
-                  key={option.key}
-                  onEdit={handleEditSynonym}
-                  onRemove={onRemove}
-                  onToggle={(id, enabled) => onUpdate(id, { enabled })}
-                  option={option}
-                  synonyms={synonyms}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {STANDARD_KEY_OPTIONS.map((option) => (
+                  <SynonymGroup
+                    isUpdating={isUpdating}
+                    key={option.key}
+                    onEdit={handleEditSynonym}
+                    onRemove={onRemove}
+                    onToggle={(id, enabled) => onUpdate(id, { enabled })}
+                    option={option}
+                    synonyms={synonyms}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           <form className="glass-panel rounded-lg p-4 space-y-3" onSubmit={handleAddSynonym}>
             <p className="text-sm font-medium">새 동의어 추가</p>

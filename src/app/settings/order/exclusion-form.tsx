@@ -2,9 +2,9 @@
 
 import { Filter, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
+import { toast } from 'sonner'
 
-import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
-
+import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,33 +18,68 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-
-interface ExclusionFormProps {
-  isSaving?: boolean
-  isUpdating?: boolean
-  onAddPattern: (pattern: Omit<ExclusionPattern, 'id'>) => void
-  onRemovePattern: (id: string) => void
-  onUpdatePattern: (id: string, data: Partial<Omit<ExclusionPattern, 'id'>>) => void
-  onUpdateSettings: (data: Partial<ExclusionSettings>) => void
-  settings?: ExclusionSettings
-}
+import { useServerAction } from '@/hooks/use-server-action'
+import { useExclusionSettings } from '@/hooks/use-settings'
+import {
+  addExclusionPattern,
+  type ExclusionPattern,
+  type ExclusionSettings,
+  removeExclusionPattern,
+  updateExclusionPattern,
+  updateExclusionSettings,
+} from '@/services/settings'
 
 const defaultSettings: ExclusionSettings = {
   enabled: true,
   patterns: [],
 }
 
-export function ExclusionForm({
-  settings = defaultSettings,
-  onUpdateSettings,
-  onAddPattern,
-  onRemovePattern,
-  onUpdatePattern,
-  isSaving = false,
-  isUpdating = false,
-}: ExclusionFormProps) {
+const SKELETON_PATTERN: ExclusionPattern = {
+  id: 'skeleton',
+  pattern: '[00000000]주문_샘플패턴',
+  description: '패턴 설명',
+  enabled: true,
+}
+
+export function ExclusionForm() {
+  const { execute: onUpdateSettings, isPending: isUpdatingSettings } = useServerAction(
+    (data: Partial<ExclusionSettings>) => updateExclusionSettings(data),
+    {
+      invalidateKeys: [queryKeys.settings.exclusion],
+      onSuccess: () => toast.success('설정이 저장되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: onAddPattern, isPending: isAddingPattern } = useServerAction(
+    (pattern: Omit<ExclusionPattern, 'id'>) => addExclusionPattern(pattern),
+    {
+      invalidateKeys: [queryKeys.settings.exclusion],
+      onSuccess: () => toast.success('패턴이 추가되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { execute: onRemovePattern } = useServerAction((id: string) => removeExclusionPattern(id), {
+    invalidateKeys: [queryKeys.settings.exclusion],
+    onSuccess: () => toast.success('패턴이 삭제되었습니다'),
+    onError: (error) => toast.error(error),
+  })
+
+  const { execute: updatePattern, isPending: isUpdatingPattern } = useServerAction(
+    ({ id, data }: { id: string; data: Partial<Omit<ExclusionPattern, 'id'>> }) => updateExclusionPattern(id, data),
+    {
+      invalidateKeys: [queryKeys.settings.exclusion],
+      onSuccess: () => toast.success('패턴이 수정되었습니다'),
+      onError: (error) => toast.error(error),
+    },
+  )
+
+  const { data: settings = defaultSettings, isLoading } = useExclusionSettings()
   const [editingPattern, setEditingPattern] = useState<ExclusionPattern | null>(null)
   const enabledCount = settings.patterns.filter((p) => p.enabled).length
+  const isSaving = isUpdatingSettings || isAddingPattern
+  const isUpdating = isUpdatingPattern
 
   function handleAddPattern(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -69,13 +104,20 @@ export function ExclusionForm({
       return
     }
 
-    onUpdatePattern(editingPattern.id, {
-      pattern: editingPattern.pattern.trim(),
-      description: editingPattern.description?.trim() || undefined,
-      enabled: editingPattern.enabled,
+    updatePattern({
+      id: editingPattern.id,
+      data: {
+        pattern: editingPattern.pattern.trim(),
+        description: editingPattern.description?.trim() || undefined,
+        enabled: editingPattern.enabled,
+      },
     })
 
     setEditingPattern(null)
+  }
+
+  function onUpdatePattern(id: string, data: Partial<Omit<ExclusionPattern, 'id'>>) {
+    updatePattern({ id, data })
   }
 
   return (
@@ -110,17 +152,9 @@ export function ExclusionForm({
               </Badge>
             </div>
             <div className="space-y-2">
-              {settings.patterns.map((pattern) => (
-                <PatternItem
-                  disabled={!settings.enabled || isUpdating}
-                  key={pattern.id}
-                  onEdit={() => setEditingPattern({ ...pattern })}
-                  onRemove={() => onRemovePattern(pattern.id)}
-                  onToggle={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
-                  pattern={pattern}
-                />
-              ))}
-              {settings.patterns.length === 0 && (
+              {isLoading ? (
+                <PatternItem pattern={SKELETON_PATTERN} skeleton />
+              ) : settings.patterns.length === 0 ? (
                 <div className="glass-panel rounded-lg p-8 text-center">
                   <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                     <Filter className="h-5 w-5 text-muted-foreground" />
@@ -130,6 +164,17 @@ export function ExclusionForm({
                     첫 번째 패턴을 추가하면 해당 주문이 자동으로 제외됩니다
                   </p>
                 </div>
+              ) : (
+                settings.patterns.map((pattern) => (
+                  <PatternItem
+                    disabled={!settings.enabled || isUpdating}
+                    key={pattern.id}
+                    onEdit={() => setEditingPattern({ ...pattern })}
+                    onRemove={() => onRemovePattern(pattern.id)}
+                    onToggle={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
+                    pattern={pattern}
+                  />
+                ))
               )}
             </div>
           </div>
@@ -224,21 +269,24 @@ export function ExclusionForm({
 
 function PatternItem({
   pattern,
+  skeleton,
   disabled,
   onEdit,
   onRemove,
   onToggle,
 }: {
   pattern: ExclusionPattern
-  disabled: boolean
-  onEdit: () => void
-  onRemove: () => void
-  onToggle: (enabled: boolean) => void
+  skeleton?: boolean
+  disabled?: boolean
+  onEdit?: () => void
+  onRemove?: () => void
+  onToggle?: (enabled: boolean) => void
 }) {
   return (
     <div
-      aria-disabled={!pattern.enabled}
-      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition aria-disabled:opacity-50"
+      aria-busy={skeleton}
+      aria-disabled={!skeleton && !pattern.enabled}
+      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
     >
       <label className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer">
         <Switch checked={pattern.enabled} disabled={disabled} onCheckedChange={onToggle} />
