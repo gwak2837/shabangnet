@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react'
 import type { SMTPAccountPurpose } from '@/lib/email/config'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SMTP_PURPOSE_LABELS } from '@/lib/email/config'
@@ -26,33 +25,21 @@ interface AccountFormState {
   isSaving: boolean
   isTesting: boolean
   maskedPassword: string
-  saved: boolean
   saveError: string | null
   testError: string | null
   testResult: 'error' | 'success' | null
 }
 
-const defaultFormData = (purpose: SMTPAccountPurpose): SMTPAccountFormData => ({
-  name: SMTP_PURPOSE_LABELS[purpose],
-  purpose,
-  host: '',
-  port: 587,
-  username: '',
-  password: '',
-  fromName: '',
-  enabled: true,
-})
-
 export function SmtpAccountsForm() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-          <Mail className="h-5 w-5 text-blue-600" />
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
+          <Mail className="h-5 w-5 text-blue-500" />
         </div>
-        <div>
-          <h2 className="text-lg font-semibold">SMTP 설정</h2>
-          <p className="text-sm text-slate-500">용도별로 다른 SMTP 계정을 설정할 수 있습니다</p>
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">SMTP 설정</h2>
+          <p className="text-sm text-muted-foreground">용도별로 다른 SMTP 계정을 설정할 수 있습니다</p>
         </div>
       </div>
 
@@ -60,6 +47,19 @@ export function SmtpAccountsForm() {
       <SmtpAccountCard purpose="order" />
     </div>
   )
+}
+
+function defaultFormData(purpose: SMTPAccountPurpose): SMTPAccountFormData {
+  return {
+    name: SMTP_PURPOSE_LABELS[purpose],
+    purpose,
+    host: '',
+    port: 587,
+    username: '',
+    password: '',
+    fromName: '',
+    enabled: true,
+  }
 }
 
 function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
@@ -72,7 +72,6 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     isTesting: false,
     testResult: null,
     testError: null,
-    saved: false,
     saveError: null,
   })
 
@@ -116,10 +115,8 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
       const result = await upsertSmtpAccountAction(state.formData)
 
       if (result.success) {
-        setState((prev) => ({ ...prev, saved: true }))
         await loadSettings()
         setState((prev) => ({ ...prev, formData: { ...prev.formData, password: '' } }))
-        setTimeout(() => setState((prev) => ({ ...prev, saved: false })), 3000)
       } else {
         setState((prev) => ({ ...prev, saveError: result.error || '저장에 실패했습니다.' }))
       }
@@ -156,49 +153,54 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
     }
   }
 
-  const updateFormData = (updates: Partial<SMTPAccountFormData>) => {
+  function updateFormData(updates: Partial<SMTPAccountFormData>) {
     setState((prev) => ({ ...prev, formData: { ...prev.formData, ...updates } }))
   }
 
   const Icon = purpose === 'system' ? Bell : Package
-  const iconBgColor = purpose === 'system' ? 'bg-violet-50' : 'bg-orange-50'
-  const iconColor = purpose === 'system' ? 'text-violet-600' : 'text-orange-600'
+  const iconColorFrom = purpose === 'system' ? 'from-violet-500/10' : 'from-orange-500/10'
+  const iconColorTo = purpose === 'system' ? 'to-violet-600/5' : 'to-orange-600/5'
+  const iconRing = purpose === 'system' ? 'ring-violet-500/10' : 'ring-orange-500/10'
+  const iconText = purpose === 'system' ? 'text-violet-500' : 'text-orange-500'
 
   if (state.isLoading) {
     return (
-      <Card className="border-slate-200 bg-card shadow-sm py-6">
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-          <span className="ml-2 text-slate-500">설정을 불러오는 중...</span>
-        </CardContent>
-      </Card>
+      <section className="glass-card p-0 overflow-hidden">
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">설정을 불러오는 중...</span>
+        </div>
+      </section>
     )
   }
 
   return (
-    <Card className="border-slate-200 bg-card shadow-sm py-6">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBgColor}`}>
-            <Icon className={`h-5 w-5 ${iconColor}`} />
+    <section className="glass-card p-0 overflow-hidden">
+      <header className="px-6 pt-6">
+        <div className="flex items-center gap-4">
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br ${iconColorFrom} ${iconColorTo} ring-1 ${iconRing}`}
+          >
+            <Icon className={`h-5 w-5 ${iconText}`} />
           </div>
-          <div>
-            <CardTitle className="text-lg">{SMTP_PURPOSE_LABELS[purpose]}</CardTitle>
-            <CardDescription>
+          <div className="space-y-0.5">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">{SMTP_PURPOSE_LABELS[purpose]}</h2>
+            <p className="text-sm text-muted-foreground">
               {purpose === 'system'
                 ? '인증 이메일, 비밀번호 재설정 등 시스템 알림을 발송합니다'
                 : '제조사에게 발주서 이메일을 발송합니다'}
-            </CardDescription>
+            </p>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        {/* Server Settings */}
+      </header>
+      <div className="p-6 space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${purpose}-host`}>SMTP 서버 주소</Label>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium" htmlFor={`${purpose}-host`}>
+              SMTP 서버 주소
+            </Label>
             <div className="relative">
-              <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Server className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
                 id={`${purpose}-host`}
@@ -209,25 +211,22 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${purpose}-port`}>포트</Label>
-            <Input
-              className="bg-slate-50 text-slate-500"
-              disabled
-              id={`${purpose}-port`}
-              readOnly
-              value="587 (STARTTLS)"
-            />
-            <p className="text-xs text-slate-500">보안을 위해 587 포트로 고정됩니다</p>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium" htmlFor={`${purpose}-port`}>
+              포트
+            </Label>
+            <Input className="bg-muted/50" disabled id={`${purpose}-port`} readOnly value="587 (STARTTLS)" />
+            <p className="text-xs text-muted-foreground">보안을 위해 587 포트로 고정됩니다</p>
           </div>
         </div>
 
-        {/* Auth Settings */}
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${purpose}-username`}>사용자명 (이메일)</Label>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium" htmlFor={`${purpose}-username`}>
+              사용자명 (이메일)
+            </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
                 id={`${purpose}-username`}
@@ -237,13 +236,15 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
                 value={state.formData.username}
               />
             </div>
-            <p className="text-xs text-slate-500">발신자 이메일로도 사용됩니다</p>
+            <p className="text-xs text-muted-foreground">발신자 이메일로도 사용됩니다</p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${purpose}-password`}>비밀번호 (앱 비밀번호)</Label>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium" htmlFor={`${purpose}-password`}>
+              비밀번호 (앱 비밀번호)
+            </Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
                 id={`${purpose}-password`}
@@ -254,39 +255,42 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
               />
             </div>
             {state.hasExistingPassword && (
-              <p className="text-xs text-slate-500">비밀번호를 변경하려면 새 비밀번호를 입력하세요</p>
+              <p className="text-xs text-muted-foreground">비밀번호를 변경하려면 새 비밀번호를 입력하세요</p>
             )}
           </div>
         </div>
 
-        {/* From Name */}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${purpose}-fromName`}>발신자 이름</Label>
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium" htmlFor={`${purpose}-fromName`}>
+            발신자 이름
+          </Label>
           <Input
             id={`${purpose}-fromName`}
             onChange={(e) => updateFormData({ fromName: e.target.value })}
             placeholder="(주)다온에프앤씨"
             value={state.formData.fromName}
           />
-          <p className="text-xs text-slate-500">수신자에게 표시되는 발신자 이름입니다</p>
+          <p className="text-xs text-muted-foreground">수신자에게 표시되는 발신자 이름입니다</p>
         </div>
 
-        {/* Security Notice */}
-        <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-emerald-800">보안 연결 활성화됨</p>
-            <p className="text-xs text-emerald-700">
-              모든 이메일은 TLS 암호화 연결(STARTTLS)을 통해 안전하게 발송됩니다.
-            </p>
+        <div className="rounded-lg bg-emerald-500/10 p-4 ring-1 ring-emerald-500/20">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-emerald-600">보안 연결 활성화됨</p>
+              <p className="mt-0.5 text-emerald-500">
+                모든 이메일은 TLS 암호화 연결(STARTTLS)을 통해 안전하게 발송됩니다.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Test Result */}
         {state.testResult && (
           <div
-            className={`flex items-start gap-2 rounded-lg p-3 ${
-              state.testResult === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+            className={`flex items-start gap-2 rounded-lg p-3 ring-1 ${
+              state.testResult === 'success'
+                ? 'bg-emerald-500/10 ring-emerald-500/20 text-emerald-600'
+                : 'bg-destructive/10 ring-destructive/20 text-destructive'
             }`}
           >
             {state.testResult === 'success' ? (
@@ -299,61 +303,35 @@ function SmtpAccountCard({ purpose }: { purpose: SMTPAccountPurpose }) {
                 <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium">연결 테스트 실패</span>
-                  {state.testError && <p className="text-sm mt-1 opacity-90">{state.testError}</p>}
+                  {state.testError && <p className="text-sm mt-1 opacity-80">{state.testError}</p>}
                 </div>
               </>
             )}
           </div>
         )}
 
-        {/* Save Error */}
         {state.saveError && (
-          <div className="flex items-start gap-2 rounded-lg bg-rose-50 p-3 text-rose-700">
+          <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 ring-1 ring-destructive/20 text-destructive">
             <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
             <div>
               <span className="font-medium">저장 실패</span>
-              <p className="text-sm mt-1 opacity-90">{state.saveError}</p>
+              <p className="text-sm mt-1 opacity-80">{state.saveError}</p>
             </div>
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+        <div className="flex items-center justify-between pt-2">
           <Button disabled={state.isTesting || state.isSaving} onClick={handleTest} variant="outline">
-            {state.isTesting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                테스트 중...
-              </>
-            ) : (
-              '연결 테스트'
-            )}
+            {state.isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {state.isTesting ? '테스트 중...' : '연결 테스트'}
           </Button>
 
-          <div className="flex items-center gap-3">
-            {state.saved && (
-              <span className="flex items-center gap-1 text-sm text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" />
-                저장되었습니다
-              </span>
-            )}
-            <Button
-              className="bg-slate-900 hover:bg-slate-800"
-              disabled={state.isSaving || state.isTesting}
-              onClick={handleSave}
-            >
-              {state.isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                '설정 저장'
-              )}
-            </Button>
-          </div>
+          <Button disabled={state.isSaving || state.isTesting} onClick={handleSave}>
+            {state.isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {state.isSaving ? '저장 중...' : '저장'}
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

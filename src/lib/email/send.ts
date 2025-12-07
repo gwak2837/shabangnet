@@ -7,7 +7,6 @@ import Mail from 'nodemailer/lib/mailer'
 
 import type { SMTPAccountPurpose } from './config'
 
-import { createEmailLog, CreateEmailLogInput, getSmtpAccountIdByPurpose } from './logging'
 import { createTransporter, formatFromAddress, loadSMTPConfig } from './transporter'
 
 // ============================================================================
@@ -24,16 +23,10 @@ export interface SendEmailOptions {
   cc?: string | string[]
   /** HTML 본문 */
   html?: string
-  /** 메타데이터 (로그용) */
-  metadata?: Record<string, unknown>
   /** SMTP 계정 용도 (기본: system) */
   purpose?: SMTPAccountPurpose
-  /** 로그 비활성화 (기본: false) */
-  skipLogging?: boolean
   /** 이메일 제목 */
   subject: string
-  /** 템플릿 ID (로그용) */
-  templateId?: string
   /** 텍스트 본문 */
   text?: string
   /** 수신자 이메일 (단일 또는 배열) */
@@ -45,7 +38,6 @@ export interface SendEmailOptions {
  */
 export interface SendEmailResult {
   error?: string
-  logId?: string
   messageId?: string
   success: boolean
 }
@@ -64,12 +56,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   const recipients = Array.isArray(options.to) ? options.to : [options.to]
   const ccRecipients = options.cc ? (Array.isArray(options.cc) ? options.cc : [options.cc]) : undefined
 
-  // SMTP 계정 ID 조회 (로그용)
-  let smtpAccountId: string | null = null
-  if (!options.skipLogging) {
-    smtpAccountId = await getSmtpAccountIdByPurpose(purpose)
-  }
-
   try {
     const transporter = await createTransporter(purpose)
     const config = await loadSMTPConfig(purpose)
@@ -84,43 +70,16 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
       attachments: options.attachments,
     })
 
-    const log = await createEmailLogEntry({
-      skipLogging: options.skipLogging,
-      smtpAccountId: smtpAccountId || undefined,
-      templateId: options.templateId,
-      recipient: recipients.join(', '),
-      cc: ccRecipients,
-      subject: options.subject,
-      status: 'sent',
-      messageId: info.messageId,
-      metadata: options.metadata,
-      sentAt: new Date(),
-    })
-
     return {
       success: true,
       messageId: info.messageId,
-      logId: log.id,
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
 
-    const log = await createEmailLogEntry({
-      skipLogging: options.skipLogging,
-      smtpAccountId: smtpAccountId || undefined,
-      templateId: options.templateId,
-      recipient: recipients.join(', '),
-      cc: ccRecipients,
-      subject: options.subject,
-      status: 'failed',
-      errorMessage,
-      metadata: options.metadata,
-    })
-
     return {
       success: false,
       error: errorMessage,
-      logId: log.id,
     }
   }
 }
@@ -130,7 +89,6 @@ export async function sendOrderEmail(
   subject: string,
   body: string,
   attachments?: Attachment[],
-  metadata?: Record<string, unknown>,
 ): Promise<SendEmailResult> {
   return sendEmail({
     to: manufacturerEmail,
@@ -138,7 +96,6 @@ export async function sendOrderEmail(
     html: body,
     attachments,
     purpose: 'order',
-    metadata,
   })
 }
 
@@ -158,14 +115,6 @@ export async function testSMTPConnection(
       error: errorMessage,
     }
   }
-}
-
-async function createEmailLogEntry(options: CreateEmailLogInput & { skipLogging?: boolean }) {
-  if (options.skipLogging) {
-    return { id: '' }
-  }
-
-  return await createEmailLog(options)
 }
 
 async function sendTransporterEmail(transporter: Transporter, mailOptions: Mail.Options) {

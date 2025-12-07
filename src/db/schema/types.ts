@@ -8,7 +8,6 @@ import {
   settings,
   shoppingMallTemplate,
   smtpAccount,
-  systemEmailLog,
 } from './settings'
 
 export type Account = typeof account.$inferSelect
@@ -34,7 +33,6 @@ export type NewSession = typeof session.$inferInsert
 export type NewSetting = typeof settings.$inferInsert
 export type NewShoppingMallTemplate = typeof shoppingMallTemplate.$inferInsert
 export type NewSmtpAccount = typeof smtpAccount.$inferInsert
-export type NewSystemEmailLog = typeof systemEmailLog.$inferInsert
 export type NewTwoFactor = typeof twoFactor.$inferInsert
 export type NewUpload = typeof upload.$inferInsert
 export type NewUser = typeof user.$inferInsert
@@ -50,7 +48,6 @@ export type Session = typeof session.$inferSelect
 export type Setting = typeof settings.$inferSelect
 export type ShoppingMallTemplate = typeof shoppingMallTemplate.$inferSelect
 export type SmtpAccount = typeof smtpAccount.$inferSelect
-export type SystemEmailLog = typeof systemEmailLog.$inferSelect
 export type TwoFactor = typeof twoFactor.$inferSelect
 export type Upload = typeof upload.$inferSelect
 export type User = typeof user.$inferSelect

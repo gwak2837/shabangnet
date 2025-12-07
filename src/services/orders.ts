@@ -493,7 +493,7 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
         .filter(Boolean)
     : undefined
 
-  // 5. 이메일 발송 (skipLogging: true로 systemEmailLog에 중복 기록 방지)
+  // 5. 이메일 발송
   const fileName = generateOrderFileName(mfr.name, date)
   const emailResult = await sendEmail({
     to: mfr.email,
@@ -507,7 +507,6 @@ export async function sendOrders(params: SendOrdersParams): Promise<SendOrdersRe
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
     ],
-    skipLogging: true, // orderEmailLog에만 기록
   })
 
   // 6. DB 트랜잭션으로 로그 저장 및 주문 상태 업데이트

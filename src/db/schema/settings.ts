@@ -1,11 +1,6 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
-// ============================================
-// 컬럼 동의어 (Column Synonym)
-// 사방넷 표준 컬럼명에 대한 동의어 매핑
-// ============================================
-
 export const columnSynonym = pgTable(
   'column_synonym',
   {
@@ -86,26 +81,3 @@ export const emailTemplate = pgTable('email_template', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
-
-export const systemEmailLog = pgTable(
-  'system_email_log',
-  {
-    id: text('id').primaryKey(),
-    smtpAccountId: text('smtp_account_id').references(() => smtpAccount.id),
-    templateId: text('template_id').references(() => emailTemplate.id),
-    recipient: varchar('recipient', { length: 255 }).notNull(),
-    cc: text('cc').array(),
-    subject: varchar('subject', { length: 500 }).notNull(),
-    status: varchar('status', { length: 20 }).notNull(), // "sent" | "failed" | "pending"
-    errorMessage: text('error_message'),
-    messageId: varchar('message_id', { length: 255 }), // SMTP 응답의 messageId
-    metadata: jsonb('metadata'), // 관련 정보 (order_id, manufacturer_id 등)
-    sentAt: timestamp('sent_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('idx_system_email_log_recipient').on(table.recipient),
-    index('idx_system_email_log_status').on(table.status),
-    index('idx_system_email_log_sent_at').on(table.sentAt),
-  ],
-).enableRLS()
