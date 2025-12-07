@@ -261,8 +261,8 @@ function CourierItem({
   return (
     <div
       aria-busy={skeleton}
-      aria-disabled={!skeleton && !courier.enabled}
-      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      data-disabled={!skeleton && !courier.enabled ? '' : undefined}
     >
       <Switch checked={courier.enabled} id={`courier-${courier.id}`} onCheckedChange={onToggle} />
       <div className="flex-1 min-w-0">

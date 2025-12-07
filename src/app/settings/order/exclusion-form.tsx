@@ -271,8 +271,8 @@ function PatternItem({
   return (
     <div
       aria-busy={skeleton}
-      aria-disabled={!skeleton && !pattern.enabled}
-      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition aria-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      data-disabled={!skeleton && !pattern.enabled ? '' : undefined}
     >
       <label className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer">
         <Switch checked={pattern.enabled} disabled={disabled} onCheckedChange={onToggle} />

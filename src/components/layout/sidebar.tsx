@@ -82,6 +82,7 @@ const managementNavItems = [
     description: '사용자 가입 승인 및 관리 (관리자 전용)',
     href: '/user',
     icon: Users,
+    isAdminOnly: true,
   },
 ]
 
@@ -96,6 +97,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const user = session?.user
   const userName = user?.name || '사용자'
   const userEmail = user?.email || ''
+  const isAdmin = user?.isAdmin || false
   const userInitial = userName.charAt(0)
 
   return (
@@ -153,6 +155,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="flex flex-col gap-1">
               <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-slate-400">관리</p>
               {managementNavItems.map((item) => {
+                if (item.isAdminOnly && !isAdmin) {
+                  return null
+                }
                 const isActive = pathname === item.href
                 return (
                   <Tooltip key={item.href}>

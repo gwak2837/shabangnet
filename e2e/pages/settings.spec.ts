@@ -394,14 +394,15 @@ test.describe('주문 설정 페이지', () => {
       const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("쇼핑몰 템플릿")') })
       const firstItem = section.locator('.glass-panel').first()
       const toggle = firstItem.locator('button[role="switch"]')
+      const initialState = await toggle.getAttribute('data-state')
 
       // 토글 클릭 (비활성화)
       await toggle.click()
-      const firstToast = page.getByText('쇼핑몰 템플릿이 수정됐어요').first()
-      await expect(firstToast).toBeVisible()
+      await expect(page.getByText('쇼핑몰 템플릿이 수정됐어요').first()).toBeVisible()
 
-      // 토스트가 사라질 때까지 대기 (mutation 완료 및 UI 안정화)
-      await expect(firstToast).not.toBeVisible({ timeout: 10000 })
+      // 네트워크 요청 완료 및 데이터 상태 변경 대기
+      await page.waitForLoadState('networkidle')
+      await expect(toggle).toHaveAttribute('data-state', initialState === 'checked' ? 'unchecked' : 'checked')
 
       // 다시 토글해서 원래 상태로 복원
       await toggle.click()

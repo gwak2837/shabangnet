@@ -8,7 +8,6 @@ import type { Product } from '@/services/products'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
-import { BulkUploadModal } from '@/components/product/bulk-upload-modal'
 import { CostUploadModal } from '@/components/product/cost-upload-modal'
 import { ProductFilters } from '@/components/product/product-filters'
 import { ProductTable } from '@/components/product/product-table'
@@ -24,7 +23,6 @@ export default function ProductsPage() {
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
   const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
   const [isCostUploadOpen, setIsCostUploadOpen] = useState(false)
-  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false)
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
@@ -74,55 +72,48 @@ export default function ProductsPage() {
     })
   }
 
-  const handleBulkCostUpload = (
-    data: { productCode: string; productName: string; cost: number; shippingFee: number }[],
-  ) => {
-    // Find product IDs by product codes and update costs
-    data.forEach(({ productCode, cost }) => {
-      const product = products.find((p) => p.productCode === productCode)
-      if (product) {
-        updateProduct({
-          id: product.id,
-          data: { cost },
-        })
-      }
-    })
-  }
-
-  const handleBulkMappingUpload = (
+  const handleBulkUpload = (
     data: {
       productCode: string
       productName: string
       optionName: string
       manufacturerId: number | null
       manufacturerName: string
+      cost: number
+      shippingFee: number
     }[],
   ) => {
-    data.forEach(({ productCode, productName, optionName, manufacturerId }) => {
+    data.forEach(({ productCode, productName, optionName, manufacturerId, cost }) => {
       const existingProduct = products.find((p) => p.productCode === productCode)
       const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
 
       if (existingProduct) {
-        // 기존 상품 업데이트
-        updateProduct({
-          id: existingProduct.id,
-          data: {
-            productName,
-            optionName,
-            manufacturerId,
-            manufacturerName: manufacturer?.name ?? null,
-          },
-        })
+        // 기존 상품 업데이트 - 값이 있는 필드만 업데이트
+        const updateData: Partial<Product> = {}
+        if (productName) updateData.productName = productName
+        if (optionName) updateData.optionName = optionName
+        if (manufacturerId !== null) {
+          updateData.manufacturerId = manufacturerId
+          updateData.manufacturerName = manufacturer?.name ?? null
+        }
+        if (cost > 0) updateData.cost = cost
+
+        if (Object.keys(updateData).length > 0) {
+          updateProduct({
+            id: existingProduct.id,
+            data: updateData,
+          })
+        }
       } else {
         // 새 상품 생성
         createProduct({
           productCode,
-          productName,
-          optionName,
+          productName: productName || '',
+          optionName: optionName || '',
           manufacturerId,
           manufacturerName: manufacturer?.name ?? null,
           price: 0,
-          cost: 0,
+          cost: cost || 0,
         })
       }
     })
@@ -215,16 +206,10 @@ export default function ProductsPage() {
           searchQuery={searchQuery}
           showUnmappedOnly={showUnmappedOnly}
         />
-        <div className="flex items-center gap-2">
-          <Button className="gap-2" onClick={() => setIsBulkUploadOpen(true)} variant="outline">
-            <Upload className="h-4 w-4" />
-            매핑 일괄 업로드
-          </Button>
-          <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
-            <Upload className="h-4 w-4" />
-            원가 일괄 업로드
-          </Button>
-        </div>
+        <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
+          <Upload className="h-4 w-4" />
+          원가 일괄 업로드
+        </Button>
       </div>
 
       {/* Product Table */}
@@ -236,14 +221,11 @@ export default function ProductsPage() {
       />
 
       {/* Cost Upload Modal */}
-      <CostUploadModal onOpenChange={setIsCostUploadOpen} onUpload={handleBulkCostUpload} open={isCostUploadOpen} />
-
-      {/* Bulk Mapping Upload Modal */}
-      <BulkUploadModal
+      <CostUploadModal
         manufacturers={manufacturers}
-        onOpenChange={setIsBulkUploadOpen}
-        onUpload={handleBulkMappingUpload}
-        open={isBulkUploadOpen}
+        onOpenChange={setIsCostUploadOpen}
+        onUpload={handleBulkUpload}
+        open={isCostUploadOpen}
       />
     </AppShell>
   )

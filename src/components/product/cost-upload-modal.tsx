@@ -4,6 +4,8 @@ import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
+import type { Manufacturer } from '@/services/manufacturers.types'
+
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,81 +14,126 @@ import { formatCurrency } from '@/utils/format'
 
 interface CostUploadData {
   cost: number
+  manufacturerId: number | null
+  manufacturerName: string
   message?: string
+  optionName: string
   productCode: string
   productName: string
   shippingFee: number
-  status: 'error' | 'not_found' | 'success'
+  status: 'error' | 'manufacturer_not_found' | 'success'
 }
 
 interface CostUploadModalProps {
+  manufacturers: Manufacturer[]
   onOpenChange: (open: boolean) => void
   onUpload: (data: CostUploadData[]) => void
   open: boolean
 }
 
-export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModalProps) {
+export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }: CostUploadModalProps) {
   const [uploadedData, setUploadedData] = useState<CostUploadData[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]
-    if (!file) return
+  // 제조사명으로 제조사 ID 찾기
+  const findManufacturerId = useCallback(
+    (manufacturerName: string): { id: number | null; status: CostUploadData['status'] } => {
+      if (!manufacturerName || manufacturerName.trim() === '') {
+        return { id: null, status: 'success' } // 제조사명이 비어있으면 미지정으로 처리
+      }
 
-    setFileName(file.name)
-    setIsProcessing(true)
+      const manufacturer = manufacturers.find(
+        (m) => m.name.toLowerCase().trim() === manufacturerName.toLowerCase().trim(),
+      )
 
-    try {
-      // Parse Excel file
-      const jsonData = await parseExcelToJson<{
-        상품코드?: string
-        productCode?: string
-        상품명?: string
-        productName?: string
-        원가?: number
-        cost?: number
-        택배비?: number
-        shippingFee?: number
-      }>(file)
+      if (manufacturer) {
+        return { id: manufacturer.id, status: 'success' }
+      }
 
-      // Transform data
-      const parsedData: CostUploadData[] = jsonData
-        .map((row) => {
-          const productCode = row['상품코드'] || row['productCode'] || ''
-          const productName = row['상품명'] || row['productName'] || ''
-          const cost = row['원가'] || row['cost'] || 0
-          const shippingFee = row['택배비'] || row['shippingFee'] || 0
+      return { id: null, status: 'manufacturer_not_found' }
+    },
+    [manufacturers],
+  )
 
-          if (!productCode) {
-            return {
-              productCode: '',
-              productName: '',
-              cost: 0,
-              shippingFee: 0,
-              status: 'error' as const,
-              message: '상품코드가 없습니다',
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0]
+      if (!file) return
+
+      setFileName(file.name)
+      setIsProcessing(true)
+
+      try {
+        // Parse Excel file
+        const jsonData = await parseExcelToJson<{
+          상품코드?: string
+          productCode?: string
+          상품명?: string
+          productName?: string
+          옵션명?: string
+          optionName?: string
+          제조사명?: string
+          manufacturerName?: string
+          원가?: number
+          cost?: number
+          택배비?: number
+          shippingFee?: number
+        }>(file)
+
+        // Transform data
+        const parsedData: CostUploadData[] = jsonData
+          .map((row) => {
+            const productCode = row['상품코드'] || row['productCode'] || ''
+            const productName = row['상품명'] || row['productName'] || ''
+            const optionName = row['옵션명'] || row['optionName'] || ''
+            const manufacturerName = row['제조사명'] || row['manufacturerName'] || ''
+            const cost = row['원가'] || row['cost'] || 0
+            const shippingFee = row['택배비'] || row['shippingFee'] || 0
+
+            if (!productCode) {
+              return {
+                productCode: '',
+                productName: '',
+                optionName: '',
+                manufacturerId: null,
+                manufacturerName: '',
+                cost: 0,
+                shippingFee: 0,
+                status: 'error' as const,
+                message: '상품코드가 없습니다',
+              }
             }
-          }
 
-          return {
-            productCode: String(productCode),
-            productName: String(productName),
-            cost: Number(cost) || 0,
-            shippingFee: Number(shippingFee) || 0,
-            status: 'success' as const,
-          }
-        })
-        .filter((item) => item.productCode)
+            const { id, status } = findManufacturerId(String(manufacturerName))
 
-      setUploadedData(parsedData)
-    } catch (error) {
-      console.error('Error parsing Excel:', error)
-      setUploadedData([])
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [])
+            return {
+              productCode: String(productCode),
+              productName: String(productName),
+              optionName: String(optionName),
+              manufacturerId: id,
+              manufacturerName: String(manufacturerName),
+              cost: Number(cost) || 0,
+              shippingFee: Number(shippingFee) || 0,
+              status,
+              message:
+                status === 'manufacturer_not_found'
+                  ? `제조사 "${manufacturerName}"을(를) 찾을 수 없습니다`
+                  : undefined,
+            }
+          })
+          .filter((item) => item.productCode)
+
+        setUploadedData(parsedData)
+      } catch (error) {
+        console.error('Error parsing Excel:', error)
+        setUploadedData([])
+      } finally {
+        setIsProcessing(false)
+      }
+    },
+    [findManufacturerId],
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -99,13 +146,14 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
   const handleDownloadTemplate = async () => {
     const templateData = [
-      { 상품코드: 'NS-001', 상품명: '', 원가: 5500, 택배비: '' },
-      { 상품코드: 'CJ-101', 상품명: '', 원가: 11000, 택배비: '' },
-      { 상품코드: 'OT-201', 상품명: '', 원가: 3100, 택배비: '' },
+      { 상품코드: 'NS-001', 상품명: '신라면 멀티팩', 옵션명: '5개입', 제조사명: '농심식품', 원가: 5500, 택배비: '' },
+      { 상품코드: 'CJ-101', 상품명: '햇반 210g', 옵션명: '12개입', 제조사명: 'CJ제일제당', 원가: 11000, 택배비: '' },
+      { 상품코드: 'OT-201', 상품명: '진라면 순한맛', 옵션명: '5개입', 제조사명: '오뚜기', 원가: 3100, 택배비: '' },
     ]
     await downloadExcel(templateData, {
-      fileName: '원가_일괄등록_템플릿.xlsx',
-      sheetName: '원가등록',
+      fileName: '상품_일괄등록_템플릿.xlsx',
+      sheetName: '상품등록',
+      columnWidths: [15, 30, 20, 15, 12, 12],
     })
   }
 
@@ -123,16 +171,19 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
 
   const successCount = uploadedData.filter((d) => d.status === 'success').length
   const errorCount = uploadedData.filter((d) => d.status === 'error').length
+  const notFoundCount = uploadedData.filter((d) => d.status === 'manufacturer_not_found').length
 
   return (
     <Dialog onOpenChange={handleClose} open={open}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
             원가 일괄 업로드
           </DialogTitle>
-          <DialogDescription>엑셀 파일(.xlsx)을 업로드하여 상품 원가를 일괄 등록합니다.</DialogDescription>
+          <DialogDescription>
+            엑셀 파일(.xlsx)을 업로드하여 상품 정보(매핑, 원가)를 일괄 등록합니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto flex flex-col gap-4">
@@ -158,6 +209,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                 <div>
                   <p className="text-slate-600 font-medium mb-1">엑셀 파일을 드래그하거나 클릭하여 선택</p>
                   <p className="text-sm text-slate-400">파일 형식: .xlsx, .xls</p>
+                  <p className="text-sm text-slate-400 mt-2">
+                    필수 컬럼: 상품코드 / 선택 컬럼: 상품명, 옵션명, 제조사명, 원가, 택배비
+                  </p>
                 </div>
               )}
             </div>
@@ -198,6 +252,12 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                   <CheckCircle2 className="h-4 w-4" />
                   성공: {successCount}건
                 </span>
+                {notFoundCount > 0 && (
+                  <span className="flex items-center gap-1 text-amber-600">
+                    <AlertCircle className="h-4 w-4" />
+                    제조사 미등록: {notFoundCount}건
+                  </span>
+                )}
                 {errorCount > 0 && (
                   <span className="flex items-center gap-1 text-red-600">
                     <AlertCircle className="h-4 w-4" />
@@ -206,12 +266,24 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                 )}
               </div>
 
+              {notFoundCount > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                  <p className="font-medium mb-1">제조사 미등록 안내</p>
+                  <p>
+                    엑셀에 입력된 제조사명이 시스템에 등록되어 있지 않습니다. 먼저 제조사 관리 페이지에서 제조사를
+                    등록해주세요.
+                  </p>
+                </div>
+              )}
+
               <div className="border rounded-lg max-h-64 overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">상품코드</TableHead>
                       <TableHead className="text-xs">상품명</TableHead>
+                      <TableHead className="text-xs">옵션명</TableHead>
+                      <TableHead className="text-xs">제조사명</TableHead>
                       <TableHead className="text-xs text-right">원가</TableHead>
                       <TableHead className="text-xs text-right">택배비</TableHead>
                       <TableHead className="text-xs">상태</TableHead>
@@ -219,16 +291,23 @@ export function CostUploadModal({ open, onOpenChange, onUpload }: CostUploadModa
                   </TableHeader>
                   <TableBody>
                     {uploadedData.slice(0, 50).map((item, index) => (
-                      <TableRow key={index}>
+                      <TableRow className={item.status !== 'success' ? 'bg-amber-50/50' : ''} key={index}>
                         <TableCell className="font-mono text-sm">{item.productCode}</TableCell>
-                        <TableCell className="text-sm">{item.productName}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                        <TableCell className="text-sm">{item.productName || '-'}</TableCell>
+                        <TableCell className="text-sm">{item.optionName || '-'}</TableCell>
+                        <TableCell className="text-sm">{item.manufacturerName || '-'}</TableCell>
+                        <TableCell className="text-right">{item.cost ? formatCurrency(item.cost) : '-'}</TableCell>
                         <TableCell className="text-right">
                           {item.shippingFee ? formatCurrency(item.shippingFee) : '-'}
                         </TableCell>
                         <TableCell>
                           {item.status === 'success' ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : item.status === 'manufacturer_not_found' ? (
+                            <div className="flex items-center gap-1 text-amber-600">
+                              <AlertCircle className="h-4 w-4" />
+                              <span className="text-xs">미등록</span>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-1 text-red-500">
                               <AlertCircle className="h-4 w-4" />
