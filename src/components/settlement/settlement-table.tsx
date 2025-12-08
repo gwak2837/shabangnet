@@ -82,7 +82,9 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                     <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
                     <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>
                     <TableCell className="text-right text-slate-900 tabular-nums">{order.quantity}</TableCell>
-                    <TableCell className="text-right text-slate-700 tabular-nums">{formatCurrency(order.cost)}</TableCell>
+                    <TableCell className="text-right text-slate-700 tabular-nums">
+                      {formatCurrency(order.cost)}
+                    </TableCell>
                     <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                       {formatCurrency(order.totalCost)}
                     </TableCell>

@@ -2,7 +2,6 @@ import ExcelJS from 'exceljs'
 
 import type { InvoiceTemplate } from '../services/manufacturers.types'
 
-import { SABANGNET_COLUMNS } from '../common/constants'
 import { findStandardKeyByLabel } from '../services/column-synonyms'
 import { getCellValue } from './excel/util'
 
@@ -100,15 +99,6 @@ export interface ParseResult {
   headers: string[]
   orders: ParsedOrder[]
   totalRows: number
-}
-
-// 쇼핑몰 템플릿 설정 타입
-export interface ShoppingMallConfig {
-  columnMappings: Record<string, string>
-  dataStartRow: number
-  displayName: string
-  headerRow: number
-  mallName: string
 }
 
 // 템플릿 분석 결과
@@ -219,35 +209,6 @@ export function columnLetterToIndex(letter: string): number {
     index = index * 26 + (letter.charCodeAt(i) - 64)
   }
   return index - 1
-}
-
-/**
- * 사방넷 양식으로 변환 (쇼핑몰 주문 -> 사방넷 업로드용)
- */
-export async function convertToSabangnetFormat(orders: ParsedOrder[]): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook()
-  workbook.creator = '(주)다온에프앤씨'
-  workbook.created = new Date()
-
-  const worksheet = workbook.addWorksheet('사방넷주문')
-
-  // 헤더 설정
-  const headers = SABANGNET_COLUMNS.map((col) => col.label)
-  worksheet.addRow(headers)
-
-  // 데이터 추가
-  for (const order of orders) {
-    const rowData = SABANGNET_COLUMNS.map((col) => getOrderValue(order, col.key))
-    worksheet.addRow(rowData)
-  }
-
-  // 컬럼 너비 자동 조정
-  worksheet.columns.forEach((column) => {
-    column.width = 15
-  })
-
-  const buffer = await workbook.xlsx.writeBuffer()
-  return Buffer.from(buffer)
 }
 
 /**
@@ -700,69 +661,6 @@ export async function parseInvoiceFile(
 }
 
 /**
- * 쇼핑몰 파일 파싱
- */
-export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig): Promise<ParseResult> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(buffer)
-
-  const worksheet = workbook.worksheets[0]
-  if (!worksheet) {
-    return { orders: [], errors: [{ row: 0, message: '워크시트를 찾을 수 없습니다' }], headers: [], totalRows: 0 }
-  }
-
-  const orders: ParsedOrder[] = []
-  const errors: ParseError[] = []
-  const headers: string[] = []
-  const headerColumnMap = new Map()
-
-  let rowIndex = 0
-  worksheet.eachRow((row, rowNumber) => {
-    rowIndex = rowNumber
-
-    // 헤더 행
-    if (rowNumber === config.headerRow) {
-      row.eachCell((cell, colNumber) => {
-        const value = getCellValue(cell)
-        headers[colNumber - 1] = value
-        headerColumnMap.set(value, colNumber - 1)
-      })
-      return
-    }
-
-    // 헤더 행 이전은 스킵
-    if (rowNumber < config.dataStartRow) {
-      return
-    }
-
-    // 데이터 행 파싱
-    try {
-      const rowData: string[] = []
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        rowData[colNumber - 1] = getCellValue(cell)
-      })
-
-      // 빈 행 스킵
-      if (rowData.every((v) => !v || v.trim() === '')) {
-        return
-      }
-
-      const order = mapShoppingMallRowToOrder(rowData, headers, headerColumnMap, config, rowNumber)
-      if (order) {
-        orders.push(order)
-      }
-    } catch (error) {
-      errors.push({
-        row: rowNumber,
-        message: error instanceof Error ? error.message : '알 수 없는 오류',
-      })
-    }
-  })
-
-  return { orders, errors, headers, totalRows: rowIndex }
-}
-
-/**
  * 날짜 포맷 (YYYY년 MM월 DD일)
  */
 function formatDateForExcel(date: Date): string {
@@ -818,57 +716,4 @@ function isEmptyOption(optionName: string | null | undefined): boolean {
   const normalized = optionName.trim().toLowerCase()
   const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
   return emptyPatterns.some((pattern) => pattern.test(normalized))
-}
-
-/**
- * 쇼핑몰 행 데이터를 ParsedOrder로 변환
- */
-function mapShoppingMallRowToOrder(
-  rowData: string[],
-  headers: string[],
-  headerColumnMap: Map<string, number>,
-  config: ShoppingMallConfig,
-  rowNumber: number,
-): ParsedOrder | null {
-  const getValue = (sabangnetKey: string): string => {
-    // config.columnMappings에서 쇼핑몰 컬럼명 찾기
-    const mallColumn = Object.entries(config.columnMappings).find(([, sKey]) => sKey === sabangnetKey)?.[0]
-    if (!mallColumn) return ''
-
-    const colIndex = headerColumnMap.get(mallColumn)
-    if (colIndex === undefined) return ''
-
-    return rowData[colIndex]?.trim() || ''
-  }
-
-  const orderNumber = getValue('orderNumber')
-  if (!orderNumber) {
-    return null
-  }
-
-  return {
-    orderNumber,
-    productName: getValue('productName'),
-    quantity: parseInt(getValue('quantity'), 10) || 1,
-    orderName: getValue('orderName'),
-    recipientName: getValue('recipientName'),
-    orderPhone: getValue('orderPhone'),
-    orderMobile: getValue('orderMobile'),
-    recipientPhone: getValue('recipientPhone'),
-    recipientMobile: getValue('recipientMobile'),
-    postalCode: getValue('postalCode'),
-    address: getValue('address'),
-    memo: getValue('memo'),
-    shoppingMall: config.displayName,
-    manufacturer: getValue('manufacturer') || '', // 쇼핑몰은 제조사 컬럼이 없을 수 있음
-    courier: getValue('courier'),
-    trackingNumber: getValue('trackingNumber'),
-    optionName: getValue('optionName'),
-    paymentAmount: parseFloat(getValue('paymentAmount')?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    productAbbr: getValue('productAbbr'),
-    productCode: getValue('productCode'),
-    cost: parseFloat(getValue('cost')?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    shippingCost: parseFloat(getValue('shippingCost')?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    rowIndex: rowNumber,
-  }
 }

@@ -1,4 +1,4 @@
-import ExcelJS from 'exceljs'
+import ExcelJS, { CellValue } from 'exceljs'
 
 import type { ParsedOrder, ParseError, ParseResult } from '@/lib/excel'
 
@@ -33,10 +33,10 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
     const row = worksheet.getRow(rowNumber)
 
     try {
-      const rowData = row.values as string[]
+      const rowData = row.values
 
       // 빈 행 스킵
-      if (!rowData || rowData.every((v) => !v || String(v).trim() === '')) {
+      if (!rowData || !Array.isArray(rowData) || rowData.every((v) => !v || String(v).trim() === '')) {
         continue
       }
 
@@ -90,7 +90,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
  * [28] \열: 자체상품코드
  * [30] ^열: 원가(상품)*수량
  */
-function mapRowToOrder(rowData: string[], rowNumber: number): ParsedOrder | null {
+function mapRowToOrder(rowData: CellValue[], rowNumber: number): ParsedOrder | null {
   const str = (val: unknown) => (val != null ? String(val).trim() : '')
   const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, '')) || 0
 

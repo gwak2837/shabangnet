@@ -5,7 +5,9 @@ import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order, upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
-import { groupOrdersByManufacturer, type ParsedOrder, parseShoppingMallFile } from '@/lib/excel'
+import { groupOrdersByManufacturer, type ParsedOrder } from '@/lib/excel'
+
+import { parseShoppingMallFile } from './excel'
 
 interface ManufacturerBreakdown {
   amount: number
@@ -64,6 +66,14 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       return NextResponse.json({ error: '쇼핑몰을 선택해주세요' }, { status: 400 })
     }
 
+    const validExtensions = ['.xlsx', '.xls']
+    const fileName = file.name
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+
+    if (!validExtensions.includes(ext)) {
+      return NextResponse.json({ error: '엑셀 파일(.xlsx, .xls)만 업로드 가능합니다' }, { status: 400 })
+    }
+
     // DB에서 쇼핑몰 템플릿 조회
     const mallIdNum = parseInt(mallId, 10)
     const dbTemplate = await db.query.shoppingMallTemplate.findFirst({
@@ -85,31 +95,34 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
           : ((dbTemplate.columnMappings as Record<string, string> | null) ?? {}),
     }
 
-    // 파일 유효성 검사
-    const validExtensions = ['.xlsx', '.xls']
-    const fileName = file.name
-    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-
-    if (!validExtensions.includes(ext)) {
-      return NextResponse.json({ error: '엑셀 파일(.xlsx, .xls)만 업로드 가능합니다' }, { status: 400 })
-    }
-
-    // 파일 읽기
     const buffer = await file.arrayBuffer()
-
-    // 파싱
     const parseResult = await parseShoppingMallFile(buffer, mallConfig)
 
-    // 제조사 목록 조회
-    const allManufacturers = await db.select().from(manufacturer)
+    // 제조사, 상품, 옵션 매핑 데이터를 병렬로 조회 (필요한 컬럼만 선택)
+    const [allManufacturers, allProducts, allOptionMappings] = await Promise.all([
+      db
+        .select({
+          id: manufacturer.id,
+          name: manufacturer.name,
+        })
+        .from(manufacturer),
+      db
+        .select({
+          productCode: product.productCode,
+          manufacturerId: product.manufacturerId,
+        })
+        .from(product),
+      db
+        .select({
+          productCode: optionMapping.productCode,
+          optionName: optionMapping.optionName,
+          manufacturerId: optionMapping.manufacturerId,
+        })
+        .from(optionMapping),
+    ])
+
     const manufacturerMap = new Map(allManufacturers.map((m) => [m.name.toLowerCase(), m]))
-
-    // 상품-제조사 매핑 조회
-    const allProducts = await db.select().from(product)
     const productMap = new Map(allProducts.map((p) => [p.productCode.toLowerCase(), p]))
-
-    // 옵션-제조사 매핑 조회
-    const allOptionMappings = await db.select().from(optionMapping)
     const optionMap = new Map(
       allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
     )
