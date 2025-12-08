@@ -15,7 +15,7 @@ export function AppShell({ children, title, description }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen app-mesh-gradient">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="pl-0 md:pl-64">
         <Header description={description} onMenuToggle={() => setIsSidebarOpen(true)} title={title} />

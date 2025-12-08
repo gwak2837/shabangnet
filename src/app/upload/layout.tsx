@@ -19,7 +19,7 @@ const uploadTabs = [
     href: '/upload/shopping-mall',
     label: '쇼핑몰 주문',
     icon: Store,
-    description: '쇼핑몰에서 다운로드한 주문 파일을 사방넷 양식으로 변환합니다',
+    description: '쇼핑몰에서 다운로드한 주문 파일을 사방넷 양식으로 변환해요',
     variant: 'violet',
   },
 ] as const

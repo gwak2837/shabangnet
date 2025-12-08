@@ -21,7 +21,6 @@ import { LogoutDialog } from '@/components/layout/logout-dialog'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { authClient } from '@/lib/auth-client'
-import { cn } from '@/utils/cn'
 
 const mainNavItems = [
   {
@@ -104,12 +103,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <TooltipProvider>
       {isOpen && <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
       <aside
-        className={cn(
-          'fixed left-0 top-0 z-50 h-screen w-64 border-r bg-sidebar',
-          'transition-transform duration-300 ease-in-out motion-reduce:transition-none',
-          'md:z-40 md:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
-        )}
+        className="fixed left-0 top-0 z-50 h-screen w-64 border-r bg-sidebar transition duration-300 ease-in-out motion-reduce:transition-none md:z-40 md:translate-x-0 -translate-x-full data-open:translate-x-0"
+        data-open={isOpen || undefined}
       >
         <div className="flex h-full flex-col">
           <div className="flex h-16 items-center justify-between px-6">
@@ -131,25 +126,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
           <nav className="flex-1 flex flex-col gap-1 overflow-y-auto p-4">
             <div className="flex flex-col gap-1">
-              {mainNavItems.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-slate-100 text-slate-900'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                    )}
-                    href={item.href}
-                    key={item.href}
-                    onClick={onClose}
-                  >
-                    <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
-                    {item.title}
-                  </Link>
-                )
-              })}
+              {mainNavItems.map((item) => (
+                <Link
+                  aria-selected={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                  className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground aria-selected:before:absolute aria-selected:before:left-0 aria-selected:before:top-1/2 aria-selected:before:h-5 aria-selected:before:-translate-y-1/2 aria-selected:before:w-[3px] aria-selected:before:rounded-full aria-selected:before:bg-foreground"
+                  href={item.href}
+                  key={item.href}
+                  onClick={onClose}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.title}
+                </Link>
+              ))}
             </div>
             <Separator className="my-4" />
             <div className="flex flex-col gap-1">
@@ -158,21 +146,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 if (item.isAdminOnly && !isAdmin) {
                   return null
                 }
-                const isActive = pathname === item.href
+
                 return (
                   <Tooltip key={item.href}>
                     <TooltipTrigger asChild>
                       <Link
-                        className={cn(
-                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                          isActive
-                            ? 'bg-slate-100 text-slate-900'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                        )}
+                        aria-selected={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                        className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground aria-selected:before:absolute aria-selected:before:left-0 aria-selected:before:top-1/2 aria-selected:before:h-5 aria-selected:before:-translate-y-1/2 aria-selected:before:w-[3px] aria-selected:before:rounded-full aria-selected:before:bg-foreground"
                         href={item.href}
                         onClick={onClose}
                       >
-                        <item.icon className={cn('h-5 w-5', isActive ? 'text-slate-900' : 'text-slate-500')} />
+                        <item.icon className="h-5 w-5" />
                         {item.title}
                       </Link>
                     </TooltipTrigger>
@@ -196,12 +180,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <div className="mt-2 flex gap-1">
               <Link
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  pathname.startsWith('/settings')
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                )}
+                aria-selected={pathname.startsWith('/settings')}
+                className="relative flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground"
                 href="/settings"
                 onClick={onClose}
               >

@@ -334,7 +334,7 @@ export function ShoppingMallTemplate() {
 
       <Dialog onOpenChange={(open) => !open && closeModal()} open={Boolean(modalState)}>
         <DialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-          <form className="flex h-full flex-col gap-0" onSubmit={handleSubmit}>
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <DialogHeader className="shrink-0 px-6 pb-4 pt-6">
               <DialogTitle className="text-lg font-semibold tracking-tight">
                 {isNewTemplate ? '새 쇼핑몰 템플릿' : '템플릿 편집'}
