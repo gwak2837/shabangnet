@@ -4,6 +4,7 @@ import type { InvoiceTemplate } from '../services/manufacturers.types'
 
 import { SABANGNET_COLUMNS } from '../common/constants'
 import { findStandardKeyByLabel } from '../services/column-synonyms'
+import { getCellValue } from './excel/util'
 
 // ============================================
 // 타입 정의
@@ -699,63 +700,6 @@ export async function parseInvoiceFile(
 }
 
 /**
- * 사방넷 원본 파일 파싱 (다온발주양식.xlsx 기준)
- * 첫 번째 행이 헤더, 두 번째 행부터 데이터
- * 13번째 열(index 12)이 제조사
- */
-export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResult> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(buffer)
-
-  const worksheet = workbook.worksheets[0]
-  if (!worksheet) {
-    return { orders: [], errors: [{ row: 0, message: '워크시트를 찾을 수 없습니다' }], headers: [], totalRows: 0 }
-  }
-
-  const orders: ParsedOrder[] = []
-  const errors: ParseError[] = []
-  const headers: string[] = []
-
-  let rowIndex = 0
-  worksheet.eachRow((row, rowNumber) => {
-    rowIndex = rowNumber
-
-    // 첫 번째 행 = 헤더
-    if (rowNumber === 1) {
-      row.eachCell((cell, colNumber) => {
-        headers[colNumber - 1] = getCellValue(cell)
-      })
-      return
-    }
-
-    // 데이터 행 파싱
-    try {
-      const rowData: string[] = []
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        rowData[colNumber - 1] = getCellValue(cell)
-      })
-
-      // 빈 행 스킵
-      if (rowData.every((v) => !v || v.trim() === '')) {
-        return
-      }
-
-      const order = mapRowToOrder(rowData, rowNumber)
-      if (order) {
-        orders.push(order)
-      }
-    } catch (error) {
-      errors.push({
-        row: rowNumber,
-        message: error instanceof Error ? error.message : '알 수 없는 오류',
-      })
-    }
-  })
-
-  return { orders, errors, headers, totalRows: rowIndex }
-}
-
-/**
  * 쇼핑몰 파일 파싱
  */
 export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig): Promise<ParseResult> {
@@ -843,39 +787,6 @@ function formatProductNameWithOption(productName: string, optionName?: string): 
 // ============================================
 
 /**
- * 셀 값을 문자열로 변환
- */
-function getCellValue(cell: ExcelJS.Cell): string {
-  const value = cell.value
-
-  if (value === null || value === undefined) {
-    return ''
-  }
-
-  if (typeof value === 'object') {
-    // RichText
-    if ('richText' in value) {
-      return value.richText.map((rt) => rt.text).join('')
-    }
-    // Hyperlink
-    if ('hyperlink' in value && 'text' in value) {
-      return String(value.text)
-    }
-    // Formula
-    if ('formula' in value && 'result' in value) {
-      return String(value.result ?? '')
-    }
-    // Date
-    if (value instanceof Date) {
-      return value.toISOString().split('T')[0]
-    }
-    return String(value)
-  }
-
-  return String(value)
-}
-
-/**
  * ParsedOrder에서 특정 키의 값 가져오기
  */
 function getOrderValue(order: ParsedOrder, key: string): number | string {
@@ -907,48 +818,6 @@ function isEmptyOption(optionName: string | null | undefined): boolean {
   const normalized = optionName.trim().toLowerCase()
   const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
   return emptyPatterns.some((pattern) => pattern.test(normalized))
-}
-
-/**
- * 사방넷 행 데이터를 ParsedOrder로 변환
- */
-function mapRowToOrder(rowData: string[], rowNumber: number): ParsedOrder | null {
-  // 주문번호가 없으면 스킵 (필수 필드)
-  const orderNumber = rowData[15]?.trim() || ''
-  if (!orderNumber) {
-    return null
-  }
-
-  return {
-    orderNumber,
-    productName: rowData[0]?.trim() || '',
-    quantity: parseInt(rowData[1], 10) || 1,
-    orderName: rowData[2]?.trim() || '',
-    recipientName: rowData[3]?.trim() || '',
-    orderPhone: rowData[4]?.trim() || '',
-    orderMobile: rowData[5]?.trim() || '',
-    recipientPhone: rowData[6]?.trim() || '',
-    recipientMobile: rowData[7]?.trim() || '',
-    postalCode: rowData[8]?.trim() || '',
-    address: rowData[9]?.trim() || '',
-    memo: rowData[10]?.trim() || '',
-    shoppingMall: rowData[11]?.trim() || '',
-    manufacturer: rowData[12]?.trim() || '', // 제조사 (13번째 열, index 12)
-    courier: rowData[13]?.trim() || '',
-    trackingNumber: rowData[14]?.trim() || '',
-    optionName: rowData[18]?.trim() || '',
-    // [20] = 결제금액 (U열)
-    paymentAmount: parseFloat(rowData[20]?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    // [21] = 상품약어 (V열)
-    productAbbr: rowData[21]?.trim() || '',
-    // [26] = 품번코드 ([열), [27] = 자체상품코드 (\열)
-    productCode: rowData[26]?.trim() || rowData[27]?.trim() || '',
-    // [29] = 원가(상품)*수량 (^열)
-    cost: parseFloat(rowData[29]?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    // 택배비 컬럼은 파일에 없음
-    shippingCost: 0,
-    rowIndex: rowNumber,
-  }
 }
 
 /**

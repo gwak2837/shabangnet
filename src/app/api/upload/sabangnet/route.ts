@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server'
 import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order, upload } from '@/db/schema/orders'
-import { groupOrdersByManufacturer, type ParsedOrder, parseSabangnetFile } from '@/lib/excel'
+import { groupOrdersByManufacturer, type ParsedOrder } from '@/lib/excel'
+
+import { parseSabangnetFile } from './excel'
 
 interface ManufacturerBreakdown {
   amount: number

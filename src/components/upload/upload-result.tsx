@@ -152,7 +152,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
                     금액
                   </TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                    비율
+                    금액 비율
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -160,9 +160,11 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
                 {data.manufacturerBreakdown.map((m) => (
                   <TableRow className="hover:bg-slate-50 transition-colors" key={m.name}>
                     <TableCell className="font-medium text-slate-900">{m.name || '미지정'}</TableCell>
-                    <TableCell className="text-right text-slate-700">{m.orders}건</TableCell>
-                    <TableCell className="text-right text-slate-700">{m.amount.toLocaleString()}원</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-slate-700 tabular-nums">{m.orders}건</TableCell>
+                    <TableCell className="text-right text-slate-700 tabular-nums">
+                      {m.amount.toLocaleString()}원
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
                       <div className="flex items-center justify-end gap-2">
                         <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div

@@ -115,7 +115,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge className="bg-slate-100 text-slate-700" variant="secondary">
+                    <Badge className="bg-slate-100 text-slate-700 tabular-nums" variant="secondary">
                       {manufacturer.orderCount.toLocaleString()}건
                     </Badge>
                   </TableCell>
