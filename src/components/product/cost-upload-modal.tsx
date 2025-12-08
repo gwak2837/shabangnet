@@ -117,9 +117,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
               shippingFee: Number(shippingFee) || 0,
               status,
               message:
-                status === 'manufacturer_not_found'
-                  ? `제조사 "${manufacturerName}"을(를) 찾을 수 없습니다`
-                  : undefined,
+                status === 'manufacturer_not_found' ? `제조사 "${manufacturerName}"을(를) 찾을 수 없습니다` : undefined,
             }
           })
           .filter((item) => item.productCode)
@@ -181,9 +179,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
             <Upload className="h-5 w-5" />
             원가 일괄 업로드
           </DialogTitle>
-          <DialogDescription>
-            엑셀 파일(.xlsx)을 업로드하여 상품 정보(매핑, 원가)를 일괄 등록합니다.
-          </DialogDescription>
+          <DialogDescription>엑셀 파일(.xlsx)을 업로드하여 상품 정보(매핑, 원가)를 일괄 등록합니다.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto flex flex-col gap-4">

@@ -335,4 +335,3 @@ test.describe('택배사 코드 매핑', () => {
     expect(Object.keys(expectedMappings).length).toBe(5)
   })
 })
-

@@ -27,8 +27,8 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
       productName: data.productName,
       optionName: data.optionName,
       manufacturerId: data.manufacturerId,
-      price: data.price.toString(),
-      cost: data.cost.toString(),
+      price: data.price,
+      cost: data.cost,
     })
     .returning()
 
@@ -76,8 +76,8 @@ export async function update(id: number, data: Partial<Product>): Promise<Produc
       productName: data.productName,
       optionName: data.optionName,
       manufacturerId: data.manufacturerId,
-      price: data.price?.toString(),
-      cost: data.cost?.toString(),
+      price: data.price,
+      cost: data.cost,
       updatedAt: new Date(),
     })
     .where(eq(product.id, id))
@@ -106,8 +106,8 @@ function mapToProduct(
     optionName: p.optionName || '',
     manufacturerId: p.manufacturerId,
     manufacturerName: p.manufacturer?.name || null,
-    price: Number(p.price),
-    cost: Number(p.cost),
+    price: p.price ?? 0,
+    cost: p.cost ?? 0,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   }

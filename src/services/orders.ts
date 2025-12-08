@@ -107,7 +107,7 @@ export async function checkDuplicate(
         manufacturerName: log.manufacturerName,
         orderCount: log.orderCount || 0,
         recipientAddresses: logAddresses,
-        totalAmount: Number(log.totalAmount || 0),
+        totalAmount: log.totalAmount ?? 0,
         sentAt: log.sentAt?.toISOString() || '',
       })
     }
@@ -196,11 +196,11 @@ export async function generateOrderExcel(params: {
       courier: o.courier || '',
       trackingNumber: o.trackingNumber || '',
       optionName: o.optionName || '',
-      paymentAmount: Number(o.paymentAmount || 0),
+      paymentAmount: o.paymentAmount ?? 0,
       productAbbr: o.productAbbr || '',
       productCode: o.productCode || '',
-      cost: Number(o.cost || 0),
-      shippingCost: Number(o.shippingCost || 0),
+      cost: o.cost ?? 0,
+      shippingCost: o.shippingCost ?? 0,
       rowIndex: idx + 1,
     }))
 
@@ -217,7 +217,7 @@ export async function generateOrderExcel(params: {
       productName: o.productName || '',
       optionName: o.optionName || '',
       quantity: o.quantity || 1,
-      price: Number(o.paymentAmount || 0),
+      price: o.paymentAmount ?? 0,
       memo: o.memo || undefined,
     }))
 
@@ -280,7 +280,7 @@ export async function getBatches(): Promise<OrderBatch[]> {
         productName: o.productName || '',
         optionName: o.optionName || '',
         quantity: o.quantity || 0,
-        price: Number(o.paymentAmount || 0),
+        price: o.paymentAmount ?? 0,
         manufacturerId: o.manufacturerId,
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],
@@ -353,7 +353,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
         productName: o.productName || '',
         optionName: o.optionName || '',
         quantity: o.quantity || 0,
-        price: Number(o.paymentAmount || 0),
+        price: o.paymentAmount ?? 0,
         manufacturerId: o.manufacturerId,
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],

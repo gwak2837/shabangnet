@@ -165,11 +165,11 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
           courier: o.courier || null,
           trackingNumber: o.trackingNumber || null,
           optionName: o.optionName || null,
-          paymentAmount: o.paymentAmount?.toString() || '0',
+          paymentAmount: o.paymentAmount || 0,
           productAbbr: o.productAbbr || null,
           productCode: o.productCode || null,
-          cost: o.cost?.toString() || '0',
-          shippingCost: o.shippingCost?.toString() || '0',
+          cost: o.cost || 0,
+          shippingCost: o.shippingCost || 0,
           status: 'pending' as const,
         }
       })

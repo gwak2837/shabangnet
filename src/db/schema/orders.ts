@@ -1,4 +1,4 @@
-import { bigint, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
@@ -46,11 +46,11 @@ export const order = pgTable('order', {
   courier: varchar('courier', { length: 100 }), // 택배사
   trackingNumber: varchar('tracking_number', { length: 100 }), // 송장번호
   optionName: varchar('option_name', { length: 255 }), // 옵션
-  paymentAmount: decimal('payment_amount', { precision: 12, scale: 2 }), // 결제금액
+  paymentAmount: integer('payment_amount').default(0), // 결제금액
   productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
   productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
-  cost: decimal('cost', { precision: 12, scale: 2 }), // 원가
-  shippingCost: decimal('shipping_cost', { precision: 12, scale: 2 }).default('0'), // 택배비
+  cost: integer('cost').default(0), // 원가
+  shippingCost: integer('shipping_cost').default(0), // 택배비
   // 시스템 필드
   manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
   status: orderStatusEnum('status').default('pending'),
@@ -70,7 +70,7 @@ export const orderEmailLog = pgTable('order_email_log', {
   subject: text('subject').notNull(),
   fileName: varchar('file_name', { length: 500 }),
   orderCount: integer('order_count').default(0),
-  totalAmount: decimal('total_amount', { precision: 15, scale: 2 }).default('0'),
+  totalAmount: bigint('total_amount', { mode: 'number' }).default(0),
   status: emailStatusEnum('status').default('pending').notNull(),
   errorMessage: text('error_message'),
   // 중복 발송 관련
@@ -96,9 +96,9 @@ export const orderEmailLogItem = pgTable('order_email_log_item', {
   productName: varchar('product_name', { length: 500 }).notNull(),
   optionName: varchar('option_name', { length: 255 }),
   quantity: integer('quantity').default(1),
-  price: decimal('price', { precision: 12, scale: 2 }).default('0'),
-  cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 원가
-  shippingCost: decimal('shipping_cost', { precision: 12, scale: 2 }).default('0'), // 발주 시점 택배비
+  price: integer('price').default(0),
+  cost: integer('cost').default(0), // 발주 시점 원가
+  shippingCost: integer('shipping_cost').default(0), // 발주 시점 택배비
   customerName: varchar('customer_name', { length: 255 }),
   address: text('address'),
 }).enableRLS()

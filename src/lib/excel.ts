@@ -937,11 +937,16 @@ function mapRowToOrder(rowData: string[], rowNumber: number): ParsedOrder | null
     courier: rowData[13]?.trim() || '',
     trackingNumber: rowData[14]?.trim() || '',
     optionName: rowData[18]?.trim() || '',
-    paymentAmount: parseFloat(rowData[19]?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    productAbbr: rowData[20]?.trim() || '',
-    productCode: rowData[25]?.trim() || rowData[26]?.trim() || '',
-    cost: parseFloat(rowData[28]?.replace(/[^0-9.-]/g, '') || '0') || 0,
-    shippingCost: parseFloat(rowData[29]?.replace(/[^0-9.-]/g, '') || '0') || 0,
+    // [20] = 결제금액 (U열)
+    paymentAmount: parseFloat(rowData[20]?.replace(/[^0-9.-]/g, '') || '0') || 0,
+    // [21] = 상품약어 (V열)
+    productAbbr: rowData[21]?.trim() || '',
+    // [26] = 품번코드 ([열), [27] = 자체상품코드 (\열)
+    productCode: rowData[26]?.trim() || rowData[27]?.trim() || '',
+    // [29] = 원가(상품)*수량 (^열)
+    cost: parseFloat(rowData[29]?.replace(/[^0-9.-]/g, '') || '0') || 0,
+    // 택배비 컬럼은 파일에 없음
+    shippingCost: 0,
     rowIndex: rowNumber,
   }
 }

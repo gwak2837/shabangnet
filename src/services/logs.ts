@@ -60,11 +60,11 @@ export async function getById(id: number): Promise<SendLog | undefined> {
   const mapped = mapToSendLog(result)
   mapped.orders = result.items.map((o) => ({
     address: o.address || '',
-    cost: Number(o.cost || 0),
+    cost: o.cost ?? 0,
     customerName: o.customerName || '',
     optionName: o.optionName || '',
     orderNumber: o.orderNumber,
-    price: Number(o.price || 0),
+    price: o.price ?? 0,
     productName: o.productName,
     quantity: o.quantity || 0,
   }))
@@ -111,7 +111,7 @@ function mapToSendLog(log: typeof orderEmailLog.$inferSelect): SendLog {
     subject: log.subject,
     fileName: log.fileName || '',
     orderCount: log.orderCount || 0,
-    totalAmount: Number(log.totalAmount || 0),
+    totalAmount: log.totalAmount ?? 0,
     status: log.status as SendLog['status'],
     errorMessage: log.errorMessage || undefined,
     recipientAddresses: (log.recipientAddresses as string[]) || [],

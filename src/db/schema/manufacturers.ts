@@ -1,4 +1,4 @@
-import { bigint, boolean, decimal, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 // ============================================
@@ -37,8 +37,8 @@ export const product = pgTable('product', {
   manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id, {
     onDelete: 'set null',
   }),
-  price: decimal('price', { precision: 12, scale: 2 }).default('0'),
-  cost: decimal('cost', { precision: 12, scale: 2 }).default('0'), // 원가
+  price: integer('price').default(0),
+  cost: integer('cost').default(0), // 원가
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()

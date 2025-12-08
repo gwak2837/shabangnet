@@ -75,8 +75,8 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
 
   // Map to SettlementOrder
   const settlementOrders: SettlementOrder[] = result.map((o) => {
-    const cost = Number(o.cost || 0)
-    const shippingCost = Number(o.shippingCost || 0)
+    const cost = o.cost ?? 0
+    const shippingCost = o.shippingCost ?? 0
     const quantity = o.quantity || 1
     const totalCost = cost * quantity + shippingCost
 
