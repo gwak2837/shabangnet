@@ -44,9 +44,7 @@ export function UploadResult({ data }: UploadResultProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        {/* 처리된 주문 - Blue: 정보성, 주요 지표 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -58,31 +56,6 @@ export function UploadResult({ data }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-        {/* 제조사 수 - Indigo: 구조/조직 정보 */}
-        <Card className="border-slate-200 bg-card shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-              <Building2 className="h-5 w-5 text-indigo-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">제조사 수</p>
-              <p className="text-xl font-semibold text-slate-900">{data.manufacturerBreakdown.length}곳</p>
-            </div>
-          </CardContent>
-        </Card>
-        {/* 중복 건너뜀 - Slate: 중립적, 보조 정보 */}
-        <Card className="border-slate-200 bg-card shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-              <Copy className="h-5 w-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">중복 건너뜀</p>
-              <p className="text-xl font-semibold text-slate-900">{data.duplicateOrders ?? 0}건</p>
-            </div>
-          </CardContent>
-        </Card>
-        {/* 오류 건수 - Rose: 오류, 주의 필요 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
@@ -94,7 +67,6 @@ export function UploadResult({ data }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-        {/* 총 금액 - Emerald: 금액, 재정 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
@@ -106,7 +78,6 @@ export function UploadResult({ data }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-        {/* 예상 마진 - Teal: 수익, 긍정적 결과 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50">
@@ -117,6 +88,28 @@ export function UploadResult({ data }: UploadResultProps) {
               <p className="text-xl font-semibold text-slate-900">
                 {estimatedMargin != null ? `${formatCompactNumber(estimatedMargin)}원` : '-'}
               </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="hidden sm:block border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+              <Building2 className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">제조사 수</p>
+              <p className="text-xl font-semibold text-slate-900">{data.manufacturerBreakdown.length}곳</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="hidden sm:block border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+              <Copy className="h-5 w-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">중복 건너뜀</p>
+              <p className="text-xl font-semibold text-slate-900">{data.duplicateOrders ?? 0}건</p>
             </div>
           </CardContent>
         </Card>
@@ -132,6 +125,7 @@ export function UploadResult({ data }: UploadResultProps) {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider w-10">#</TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                     주문
@@ -154,8 +148,9 @@ export function UploadResult({ data }: UploadResultProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.manufacturerBreakdown.map((m) => (
+                {data.manufacturerBreakdown.map((m, index) => (
                   <TableRow className="hover:bg-slate-50 transition-colors" key={m.name}>
+                    <TableCell className="text-slate-400 tabular-nums">{index + 1}</TableCell>
                     <TableCell className="font-medium text-slate-900">{m.name || '미지정'}</TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">{m.orders}건</TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">
@@ -253,7 +248,7 @@ export function UploadResult({ data }: UploadResultProps) {
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4">
+      <div className="flex items-center justify-end gap-3">
         <SabangnetDownloadButton mallName={data.mallName ?? '사방넷'} orderNumbers={data.orderNumbers ?? []} />
         <Button asChild>
           <Link href="/order">
