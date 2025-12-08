@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell description="오늘의 주문 현황과 발주 상태를 확인하세요" title="대시보드">
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           change={stats?.todayOrdersChange ?? 0}
           icon={ShoppingCart}

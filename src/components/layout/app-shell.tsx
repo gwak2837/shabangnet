@@ -19,7 +19,7 @@ export function AppShell({ children, title, description }: AppShellProps) {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="pl-0 md:pl-64">
         <Header description={description} onMenuToggle={() => setIsSidebarOpen(true)} title={title} />
-        <main className="p-4 md:p-8">{children}</main>
+        <main className="p-4 md:p-6">{children}</main>
       </div>
     </div>
   )
