@@ -48,13 +48,8 @@ export function SabangnetDownloadButton({ orderNumbers, mallName }: SabangnetDow
   }
 
   return (
-    <Button
-      className="gap-2"
-      disabled={isDownloading || orderNumbers.length === 0}
-      onClick={handleDownload}
-      variant="outline"
-    >
-      {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+    <Button disabled={isDownloading || orderNumbers.length === 0} onClick={handleDownload} variant="outline">
+      {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
       사방넷 양식 다운로드
     </Button>
   )

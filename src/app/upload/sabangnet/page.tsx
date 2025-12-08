@@ -75,7 +75,7 @@ export default function SabangnetUploadPage() {
         <div className="mt-8">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">업로드 결과</h2>
-            <Button className="text-slate-600" onClick={handleClear} size="sm" variant="outline">
+            <Button onClick={handleClear} variant="ghost">
               새 파일 업로드
             </Button>
           </div>

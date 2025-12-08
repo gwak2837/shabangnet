@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Banknote, Building2, CheckCircle2, Copy, Package, TrendingUp } from 'lucide-react'
+import { AlertCircle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
@@ -122,40 +122,6 @@ export function UploadResult({ data }: UploadResultProps) {
         </Card>
       </div>
 
-      {/* Success Message */}
-      {data.processedOrders > 0 && (
-        <Card className="border-emerald-200 bg-emerald-50/50 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              <div>
-                <p className="font-medium text-emerald-900">파일 처리 완료</p>
-                <p className="text-sm text-emerald-700">
-                  총 {data.processedOrders}건의 주문이 성공적으로 처리되었습니다.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Duplicate Notice */}
-      {(data.duplicateOrders ?? 0) > 0 && (
-        <Card className="border-slate-200 bg-slate-50/50 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Copy className="h-5 w-5 text-slate-600" />
-              <div>
-                <p className="font-medium text-slate-900">중복 주문 건너뜀</p>
-                <p className="text-sm text-slate-700">
-                  이미 등록된 주문번호 {data.duplicateOrders}건은 중복으로 건너뛰었습니다.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Manufacturer Breakdown */}
       {data.manufacturerBreakdown.length > 0 && (
         <Card className="border-slate-200 bg-card shadow-sm">
@@ -274,27 +240,27 @@ export function UploadResult({ data }: UploadResultProps) {
               <p className="mt-3 text-sm text-rose-600">외 {data.errors.length - 10}건의 오류가 더 있습니다.</p>
             )}
 
-            <div className="mt-4 flex items-center gap-4">
-              <Link href="/product">
-                <Button className="border-rose-300 text-rose-700 hover:bg-rose-100" size="sm" variant="outline">
-                  상품 매핑 관리로 이동
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+            <div className="mt-4">
+              <Button asChild variant="outline">
+                <Link href="/product">
+                  상품 매핑 관리
+                  <ArrowRight />
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex items-center justify-end gap-3 pt-4">
         <SabangnetDownloadButton mallName={data.mallName ?? '사방넷'} orderNumbers={data.orderNumbers ?? []} />
-        <Link href="/order">
-          <Button className="bg-slate-900 hover:bg-slate-800">
-            발주 생성으로 이동
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
+        <Button asChild>
+          <Link href="/order">
+            발주 생성
+            <ArrowRight />
+          </Link>
+        </Button>
       </div>
     </div>
   )

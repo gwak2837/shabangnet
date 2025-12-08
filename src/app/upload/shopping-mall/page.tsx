@@ -137,7 +137,7 @@ export default function ShoppingMallUploadPage() {
                 </Badge>
               )}
             </div>
-            <Button className="text-slate-600" onClick={handleClear} size="sm" variant="outline">
+            <Button onClick={handleClear} variant="ghost">
               새 파일 업로드
             </Button>
           </div>
