@@ -5,7 +5,6 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/utils/cn'
 import { formatFileSize } from '@/utils/format'
 
 interface DropzoneProps {
@@ -16,7 +15,7 @@ interface DropzoneProps {
   selectedFile: File | null
 }
 
-export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, disabled = false }: DropzoneProps) {
+export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect, selectedFile }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   function handleDragOver(e: React.DragEvent) {
@@ -44,11 +43,17 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
   }
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
-    if (disabled) return
-    const file = e.target.files?.[0]
-    if (file) {
-      onFileSelect(file)
+    if (disabled) {
+      return
     }
+
+    const file = e.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    onFileSelect(file)
   }
 
   if (selectedFile) {
@@ -71,7 +76,6 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
               </Button>
             )}
           </div>
-
           {isProcessing && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
@@ -89,41 +93,35 @@ export function Dropzone({ onFileSelect, selectedFile, onClear, isProcessing, di
   }
 
   return (
-    <Card className={cn('border-slate-200 bg-card shadow-sm', disabled && 'opacity-60')}>
+    <Card aria-disabled={disabled} className="border-slate-200 bg-card shadow-sm aria-disabled:opacity-60">
       <CardContent className="p-4">
         <div
-          className={cn(
-            'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 transition-all',
-            disabled
-              ? 'border-slate-200 bg-slate-50 cursor-not-allowed'
-              : isDragging
-                ? 'border-blue-400 bg-blue-50'
-                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
-          )}
+          aria-disabled={disabled}
+          className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 transition-all border-slate-200 hover:border-slate-300 hover:bg-slate-50 aria-disabled:bg-slate-50 aria-disabled:cursor-not-allowed aria-disabled:hover:border-slate-200 aria-disabled:hover:bg-slate-50 data-dragging:border-blue-400 data-dragging:bg-blue-50"
+          data-dragging={isDragging || undefined}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           <input
             accept=".xlsx,.xls"
-            className={cn('absolute inset-0 opacity-0', disabled ? 'cursor-not-allowed' : 'cursor-pointer')}
+            aria-disabled={disabled}
+            className="absolute inset-0 opacity-0 cursor-pointer aria-disabled:cursor-not-allowed"
             disabled={disabled}
             onChange={handleFileInput}
             type="file"
           />
-
           <div
-            className={cn(
-              'flex h-16 w-16 items-center justify-center rounded-2xl transition-colors',
-              isDragging ? 'bg-blue-100' : 'bg-slate-100',
-            )}
+            className="flex h-16 w-16 items-center justify-center rounded-2xl transition-colors bg-slate-100 data-dragging:bg-blue-100"
+            data-dragging={isDragging || undefined}
           >
-            <Upload className={cn('h-8 w-8 transition-colors', isDragging ? 'text-blue-600' : 'text-slate-400')} />
+            <Upload
+              className="h-8 w-8 transition-colors text-slate-400 data-dragging:text-blue-600"
+              data-dragging={isDragging || undefined}
+            />
           </div>
-
           <p className="mt-4 text-lg font-semibold text-slate-900">파일을 드래그하거나 클릭하여 업로드</p>
           <p className="mt-1 text-sm text-slate-500">사방넷에서 다운로드한 주문 엑셀 파일을 업로드하세요</p>
-
           <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
               <FileSpreadsheet className="h-4 w-4 text-emerald-600" />

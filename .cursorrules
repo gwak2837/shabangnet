@@ -316,19 +316,21 @@ function AddItemForm() {
 <div data-state={status} className="item data-[state=active]:bg-blue-500 data-[state=pending]:bg-yellow-500">
 ```
 
-### HTML id Naming
+### HTML id/name Naming
 
-- **Use kebab-case for HTML `id` attributes** instead of camelCase.
-- This follows HTML conventions and improves consistency.
+- **Use kebab-case for HTML `id` and `name` attributes** instead of camelCase.
+- This includes FormData keys since they derive from `name` attributes.
 
 ```tsx
-// ❌ Bad - camelCase ids
+// ❌ Bad - camelCase
 <Label htmlFor="userName">이름</Label>
-<Input id="userName" />
+<Input id="userName" name="userName" />
+formData.append('mallId', value)
 
-// ✅ Good - kebab-case ids
+// ✅ Good - kebab-case
 <Label htmlFor="user-name">이름</Label>
-<Input id="user-name" />
+<Input id="user-name" name="user-name" />
+formData.append('mall-id', value)
 ```
 
 ### Avoid Wrapper Functions

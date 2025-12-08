@@ -1,56 +1,54 @@
-'use client'
+import type { ReactNode } from 'react'
 
-import { AlertCircle, ArrowRight, Building2, CheckCircle2, Copy, Download, Package } from 'lucide-react'
+import { AlertCircle, ArrowRight, Banknote, Building2, CheckCircle2, Copy, Package, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatCompactNumber } from '@/utils/format'
 
-interface ManufacturerBreakdown {
-  amount: number
-  name: string
-  orders: number
-}
-
-interface UploadError {
-  message: string
-  productCode?: string
-  productName?: string
-  row: number
-}
-
-interface UploadResultData {
+export interface UploadResultData {
   duplicateOrders?: number
   errorOrders: number
-  errors: UploadError[]
+  errors: { row: number; message: string; productCode?: string; productName?: string }[]
   fileName: string
   mallName?: string
-  manufacturerBreakdown: ManufacturerBreakdown[]
+  manufacturerBreakdown: {
+    name: string
+    orders: number
+    amount: number
+    totalQuantity?: number
+    totalCost?: number
+    productCount?: number
+    marginRate?: number | null
+  }[]
+  orderNumbers?: string[]
   processedOrders: number
   success: boolean
+  summary?: {
+    totalAmount: number
+    totalCost: number
+    estimatedMargin: number | null
+  }
   totalOrders: number
-  uploadId: string
+  uploadId: number
 }
 
 interface UploadResultProps {
+  actions?: ReactNode
   data: UploadResultData
-  uploadType: 'sabangnet' | 'shopping_mall'
 }
 
-export function UploadResult({ data, uploadType }: UploadResultProps) {
-  const totalAmount = data.manufacturerBreakdown.reduce((sum, m) => sum + m.amount, 0)
-
-  const handleDownloadSabangnetFormat = () => {
-    // TODO: 실제 다운로드 구현
-    alert('사방넷 양식으로 변환된 파일을 다운로드합니다')
-  }
+export function UploadResult({ data, actions }: UploadResultProps) {
+  const { totalAmount, estimatedMargin } = data.summary ?? { totalAmount: 0, estimatedMargin: null }
 
   return (
     <div className="flex flex-col gap-5">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        {/* 처리된 주문 - Blue: 정보성, 주요 지표 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -62,11 +60,11 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-
+        {/* 제조사 수 - Indigo: 구조/조직 정보 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-              <Building2 className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+              <Building2 className="h-5 w-5 text-indigo-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사 수</p>
@@ -74,7 +72,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-
+        {/* 중복 건너뜀 - Slate: 중립적, 보조 정보 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
@@ -86,15 +84,41 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
             </div>
           </CardContent>
         </Card>
-
+        {/* 오류 건수 - Rose: 오류, 주의 필요 */}
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-              <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
+              <AlertCircle className="h-5 w-5 text-rose-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">오류 건수</p>
               <p className="text-xl font-semibold text-slate-900">{data.errorOrders}건</p>
+            </div>
+          </CardContent>
+        </Card>
+        {/* 총 금액 - Emerald: 금액, 재정 */}
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+              <Banknote className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">총 금액</p>
+              <p className="text-xl font-semibold text-slate-900">{formatCompactNumber(totalAmount)}원</p>
+            </div>
+          </CardContent>
+        </Card>
+        {/* 예상 마진 - Teal: 수익, 긍정적 결과 */}
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50">
+              <TrendingUp className="h-5 w-5 text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">예상 마진</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {estimatedMargin != null ? `${formatCompactNumber(estimatedMargin)}원` : '-'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -137,22 +161,31 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
       {/* Manufacturer Breakdown */}
       {data.manufacturerBreakdown.length > 0 && (
         <Card className="border-slate-200 bg-card shadow-sm">
-          <CardHeader className="pb-3 pt-4 px-4">
+          <CardHeader className="p-6 pb-0">
             <CardTitle className="text-base font-semibold text-slate-900">제조사별 분류 결과</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
+          <CardContent className="p-4 pt-0">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                    주문 수
+                    주문
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                    수량
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                    상품
                   </TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                     금액
                   </TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                    금액 비율
+                    원가
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                    마진율
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -162,22 +195,36 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
                     <TableCell className="font-medium text-slate-900">{m.name || '미지정'}</TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">{m.orders}건</TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">
+                      {m.totalQuantity ?? m.orders}개
+                    </TableCell>
+                    <TableCell className="text-right text-slate-700 tabular-nums">
+                      {m.productCount != null && m.productCount > 0 ? `${m.productCount}종` : '-'}
+                    </TableCell>
+                    <TableCell className="text-right text-slate-700 tabular-nums">
                       {m.amount.toLocaleString()}원
                     </TableCell>
+                    <TableCell className="text-right text-slate-700 tabular-nums">
+                      {m.totalCost ? `${m.totalCost.toLocaleString()}원` : '-'}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500 rounded-full"
-                            style={{
-                              width: `${totalAmount > 0 ? (m.amount / totalAmount) * 100 : 0}%`,
-                            }}
-                          />
+                      {m.marginRate != null ? (
+                        <div
+                          className="group flex items-center justify-end gap-2"
+                          data-negative={m.marginRate < 0 || undefined}
+                        >
+                          <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-teal-500 group-data-negative:bg-rose-500"
+                              style={{ width: `${Math.min(100, Math.abs(m.marginRate))}%` }}
+                            />
+                          </div>
+                          <span className="text-sm w-14 text-right font-medium text-slate-700 group-data-negative:text-rose-600">
+                            {m.marginRate}%
+                          </span>
                         </div>
-                        <span className="text-sm text-slate-500 w-12 text-right">
-                          {totalAmount > 0 ? ((m.amount / totalAmount) * 100).toFixed(1) : '0.0'}%
-                        </span>
-                      </div>
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -243,12 +290,7 @@ export function UploadResult({ data, uploadType }: UploadResultProps) {
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-3 pt-2">
-        {uploadType === 'shopping_mall' && (
-          <Button className="gap-2" onClick={handleDownloadSabangnetFormat} variant="outline">
-            <Download className="h-4 w-4" />
-            사방넷 양식 다운로드
-          </Button>
-        )}
+        {actions}
         <Link href="/order">
           <Button className="bg-slate-900 hover:bg-slate-800">
             발주 생성으로 이동

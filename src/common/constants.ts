@@ -61,7 +61,7 @@ export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 27, key: 'modelNumber', label: '모델번호' },
   { index: 28, key: 'cost', label: '원가(상품)' },
   { index: 29, key: 'shippingCost', label: '택배비' },
-]
+] as const
 
 // 컬럼 키로 빠르게 찾기 위한 맵
 export const SABANGNET_COLUMN_MAP = new Map(SABANGNET_COLUMNS.map((col) => [col.key, col]))

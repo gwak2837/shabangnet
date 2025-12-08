@@ -1,0 +1,153 @@
+'use client'
+
+import { Loader2, Store } from 'lucide-react'
+import { useState } from 'react'
+
+import { Dropzone } from '@/app/upload/dropzone'
+import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
+import { UploadResult } from '@/app/upload/upload-result'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useShoppingMallTemplates } from '@/hooks/use-settings'
+
+import { UploadState } from '../common'
+
+export default function ShoppingMallUploadPage() {
+  const [selectedMall, setSelectedMall] = useState('')
+  const [{ status, message, file, result }, setUploadState] = useState<UploadState>({ status: 'idle' })
+  const { data: shoppingMallTemplates, isLoading: isLoadingTemplates } = useShoppingMallTemplates()
+  const enabledTemplates = shoppingMallTemplates?.filter((t) => t.enabled) ?? []
+  const isProcessing = status === 'processing'
+  const selectedFile = status === 'processing' || status === 'success' ? file : null
+
+  async function handleFileSelect(file: File) {
+    if (!selectedMall) {
+      setUploadState({ status: 'error', message: '쇼핑몰을 선택해주세요' })
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('mall-id', selectedMall)
+    setUploadState({ status: 'processing', file })
+
+    try {
+      const response = await fetch('/api/upload/shopping-mall', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '업로드 중 오류가 발생했어요')
+      }
+
+      setUploadState({ status: 'success', file, result: data })
+    } catch (err) {
+      setUploadState({
+        status: 'error',
+        message: err instanceof Error ? err.message : '파일을 업로드하지 못했어요',
+      })
+    }
+  }
+
+  function handleClear() {
+    setUploadState({ status: 'idle' })
+  }
+
+  return (
+    <>
+      {status !== 'success' && (
+        <div className="max-w-2xl mx-auto mb-6">
+          <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Store className="h-5 w-5 text-violet-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-violet-900">쇼핑몰 선택</p>
+                <p className="text-sm text-violet-700 mt-1 mb-3">
+                  업로드할 파일의 출처 쇼핑몰을 선택하세요. 선택한 쇼핑몰의 양식에 맞게 파일을 파싱합니다.
+                </p>
+                <Select
+                  disabled={isLoadingTemplates || enabledTemplates.length === 0}
+                  onValueChange={setSelectedMall}
+                  value={selectedMall}
+                >
+                  <SelectTrigger className="w-full bg-background">
+                    {isLoadingTemplates ? (
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        로딩 중...
+                      </span>
+                    ) : enabledTemplates.length === 0 ? (
+                      <span className="text-muted-foreground">등록된 쇼핑몰이 없습니다</span>
+                    ) : (
+                      <SelectValue placeholder="쇼핑몰을 선택하세요" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enabledTemplates.map((mall) => (
+                      <SelectItem key={mall.id} value={mall.id.toString()}>
+                        {mall.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto">
+        {status !== 'success' && (
+          <Dropzone
+            disabled={!selectedMall || enabledTemplates.length === 0}
+            isProcessing={isProcessing}
+            onClear={handleClear}
+            onFileSelect={handleFileSelect}
+            selectedFile={selectedFile}
+          />
+        )}
+
+        {isProcessing && (
+          <div className="mt-4 flex items-center justify-center">
+            <div className="flex items-center gap-3 rounded-lg bg-violet-50 px-4 py-3">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-violet-600 border-t-transparent" />
+              <span className="text-sm font-medium text-violet-700">파일을 분석하고 있어요</span>
+            </div>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="mt-4 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+            <p className="text-sm font-medium text-rose-700">{message}</p>
+          </div>
+        )}
+      </div>
+
+      {status === 'success' && (
+        <div className="mt-8">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-slate-900">업로드 결과</h2>
+              {result.mallName && (
+                <Badge className="bg-violet-100 text-violet-700" variant="secondary">
+                  {result.mallName}
+                </Badge>
+              )}
+            </div>
+            <Button className="text-slate-600" onClick={handleClear} size="sm" variant="outline">
+              새 파일 업로드
+            </Button>
+          </div>
+          <UploadResult
+            actions={<SabangnetDownloadButton mallName={result.mallName} orderNumbers={result.orderNumbers ?? []} />}
+            data={result}
+          />
+        </div>
+      )}
+    </>
+  )
+}

@@ -1,5 +1,41 @@
 export type OrderStatus = 'completed' | 'error' | 'pending' | 'processing' | 'ready' | 'sent'
 
+/**
+ * 한국어 숫자 단위로 축약 표시 (만, 억, 조)
+ * 3~4자리 유효숫자로 가독성 있게 표시
+ *
+ * @example
+ * formatCompactNumber(1234) // "1,234"
+ * formatCompactNumber(12345) // "1.23만"
+ * formatCompactNumber(123456789) // "1.23억"
+ * formatCompactNumber(1234567890123) // "1.23조"
+ */
+export function formatCompactNumber(value: number): string {
+  const absValue = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+
+  // 1조 이상
+  if (absValue >= 1_000_000_000_000) {
+    const num = absValue / 1_000_000_000_000
+    return sign + formatWithPrecision(num) + '조'
+  }
+
+  // 1억 이상
+  if (absValue >= 100_000_000) {
+    const num = absValue / 100_000_000
+    return sign + formatWithPrecision(num) + '억'
+  }
+
+  // 1만 이상
+  if (absValue >= 10_000) {
+    const num = absValue / 10_000
+    return sign + formatWithPrecision(num) + '만'
+  }
+
+  // 1만 미만
+  return sign + absValue.toLocaleString('ko-KR')
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
@@ -76,6 +112,22 @@ export function getStatusLabel(status: OrderStatus): string {
     error: '오류',
   }
   return labels[status] || status
+}
+
+/**
+ * 3~4자리 유효숫자로 포맷
+ * - 100 이상: 정수 (1,234)
+ * - 10 이상: 소수점 1자리 (12.3)
+ * - 10 미만: 소수점 2자리 (1.23)
+ */
+function formatWithPrecision(num: number): string {
+  if (num >= 100) {
+    return Math.round(num).toLocaleString('ko-KR')
+  }
+  if (num >= 10) {
+    return num.toFixed(1).replace(/\.0$/, '')
+  }
+  return num.toFixed(2).replace(/\.?0+$/, '')
 }
 
 // Exclusion label map - should be synced with backend exclusion patterns

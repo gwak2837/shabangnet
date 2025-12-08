@@ -5,14 +5,18 @@ import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order, upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
-import { groupOrdersByManufacturer, type ParsedOrder } from '@/lib/excel'
+import { groupOrdersByManufacturer } from '@/lib/excel'
 
 import { parseShoppingMallFile } from './excel'
 
 interface ManufacturerBreakdown {
   amount: number
+  marginRate: number | null
   name: string
   orders: number
+  productCount: number
+  totalCost: number
+  totalQuantity: number
 }
 
 interface UploadError {
@@ -30,9 +34,14 @@ interface UploadResult {
   fileName: string
   mallName: string
   manufacturerBreakdown: ManufacturerBreakdown[]
-  orders: ParsedOrder[]
+  orderNumbers: string[]
   processedOrders: number
   success: boolean
+  summary: {
+    estimatedMargin: number | null
+    totalAmount: number
+    totalCost: number
+  }
   totalOrders: number
   uploadId: number
 }
@@ -56,7 +65,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
-    const mallId = formData.get('mallId') as string | null
+    const mallId = formData.get('mall-id') as string | null
 
     if (!file) {
       return NextResponse.json({ error: '파일이 없습니다' }, { status: 400 })
@@ -229,12 +238,23 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     // 제조사별 통계
     const manufacturerBreakdown: ManufacturerBreakdown[] = []
+
     groupedOrders.forEach((ordersGroup, mfr) => {
       const totalAmount = ordersGroup.reduce((sum, o) => sum + o.paymentAmount * o.quantity, 0)
+      const totalQuantity = ordersGroup.reduce((sum, o) => sum + o.quantity, 0)
+      const totalCost = ordersGroup.reduce((sum, o) => sum + o.cost, 0)
+      const uniqueProducts = new Set(ordersGroup.map((o) => o.productCode || o.productName).filter(Boolean))
+      const marginRate =
+        totalCost > 0 && totalAmount > 0 ? Math.round(((totalAmount - totalCost) / totalAmount) * 100) : null
+
       manufacturerBreakdown.push({
         name: mfr,
         orders: ordersGroup.length,
         amount: totalAmount,
+        totalQuantity,
+        totalCost,
+        productCount: uniqueProducts.size,
+        marginRate,
       })
     })
 
@@ -249,6 +269,11 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       productName: err.data?.productName as string | undefined,
     }))
 
+    const orderNumbers = parseResult.orders.map((o) => o.orderNumber)
+    const totalAmount = manufacturerBreakdown.reduce((sum, m) => sum + m.amount, 0)
+    const totalCost = manufacturerBreakdown.reduce((sum, m) => sum + m.totalCost, 0)
+    const estimatedMargin = totalCost > 0 ? totalAmount - totalCost : null
+
     const result: UploadResult = {
       success: true,
       uploadId,
@@ -260,7 +285,12 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       errorOrders: parseResult.errors.length,
       manufacturerBreakdown,
       errors,
-      orders: parseResult.orders,
+      orderNumbers,
+      summary: {
+        totalAmount,
+        totalCost,
+        estimatedMargin,
+      },
     }
 
     return NextResponse.json(result)
