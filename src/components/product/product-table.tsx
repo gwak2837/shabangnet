@@ -96,7 +96,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">{product.productName}</TableCell>
                     <TableCell className="text-slate-600">{product.optionName}</TableCell>
-                    <TableCell className="text-right font-medium text-slate-900">
+                    <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                       {formatCurrency(product.price)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -129,7 +129,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                             </Tooltip>
                           )}
                           <span
-                            className={`font-medium ${hasPriceError ? 'text-rose-600' : product.cost > 0 ? 'text-slate-900' : 'text-slate-400'}`}
+                            className={`font-medium tabular-nums ${hasPriceError ? 'text-rose-600' : product.cost > 0 ? 'text-slate-900' : 'text-slate-400'}`}
                           >
                             {product.cost > 0 ? formatCurrency(product.cost) : '미등록'}
                           </span>

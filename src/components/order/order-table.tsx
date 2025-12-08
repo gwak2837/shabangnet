@@ -111,8 +111,8 @@ export function OrderTable({ batches, onSendEmail, onPreview, onBatchSend, onDow
                     <span className="font-medium text-slate-900">{batch.manufacturerName}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-medium text-slate-900">{batch.totalOrders}건</TableCell>
-                <TableCell className="text-right font-medium text-slate-900">
+                <TableCell className="text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</TableCell>
+                <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                   {formatCurrency(batch.totalAmount)}
                 </TableCell>
                 <TableCell className="text-slate-600">{batch.email}</TableCell>

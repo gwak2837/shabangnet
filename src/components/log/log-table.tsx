@@ -54,8 +54,8 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
                     {log.email}
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-medium text-slate-900">{log.orderCount}건</TableCell>
-                <TableCell className="text-right font-medium text-slate-900">
+                <TableCell className="text-right font-medium text-slate-900 tabular-nums">{log.orderCount}건</TableCell>
+                <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                   {formatCurrency(log.totalAmount)}
                 </TableCell>
                 <TableCell>
