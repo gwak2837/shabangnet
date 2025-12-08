@@ -3,7 +3,6 @@
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
-import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
 import { UploadResult } from '@/app/upload/upload-result'
 import { Button } from '@/components/ui/button'
 
@@ -80,10 +79,7 @@ export default function SabangnetUploadPage() {
               새 파일 업로드
             </Button>
           </div>
-          <UploadResult
-            actions={<SabangnetDownloadButton mallName="사방넷" orderNumbers={result.orderNumbers ?? []} />}
-            data={result}
-          />
+          <UploadResult data={result} />
         </div>
       )}
     </>

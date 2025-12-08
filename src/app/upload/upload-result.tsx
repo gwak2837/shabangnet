@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react'
-
 import { AlertCircle, ArrowRight, Banknote, Building2, CheckCircle2, Copy, Package, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
+import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,11 +36,10 @@ export interface UploadResultData {
 }
 
 interface UploadResultProps {
-  actions?: ReactNode
   data: UploadResultData
 }
 
-export function UploadResult({ data, actions }: UploadResultProps) {
+export function UploadResult({ data }: UploadResultProps) {
   const { totalAmount, estimatedMargin } = data.summary ?? { totalAmount: 0, estimatedMargin: null }
 
   return (
@@ -290,7 +288,7 @@ export function UploadResult({ data, actions }: UploadResultProps) {
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-3 pt-2">
-        {actions}
+        <SabangnetDownloadButton mallName={data.mallName ?? '사방넷'} orderNumbers={data.orderNumbers ?? []} />
         <Link href="/order">
           <Button className="bg-slate-900 hover:bg-slate-800">
             발주 생성으로 이동

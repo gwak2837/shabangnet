@@ -4,7 +4,6 @@ import { Loader2, Store } from 'lucide-react'
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
-import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
 import { UploadResult } from '@/app/upload/upload-result'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -142,10 +141,7 @@ export default function ShoppingMallUploadPage() {
               새 파일 업로드
             </Button>
           </div>
-          <UploadResult
-            actions={<SabangnetDownloadButton mallName={result.mallName} orderNumbers={result.orderNumbers ?? []} />}
-            data={result}
-          />
+          <UploadResult data={result} />
         </div>
       )}
     </>
