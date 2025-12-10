@@ -1,10 +1,12 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, Store } from 'lucide-react'
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
 import { UploadResult } from '@/app/upload/upload-result'
+import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -13,6 +15,7 @@ import { useShoppingMallTemplates } from '@/hooks/use-settings'
 import { UploadState } from '../common'
 
 export default function ShoppingMallUploadPage() {
+  const queryClient = useQueryClient()
   const [selectedMall, setSelectedMall] = useState('')
   const [{ status, message, file, result }, setUploadState] = useState<UploadState>({ status: 'idle' })
   const { data: shoppingMallTemplates, isLoading: isLoadingTemplates } = useShoppingMallTemplates()
@@ -44,6 +47,7 @@ export default function ShoppingMallUploadPage() {
       }
 
       setUploadState({ status: 'success', file, result: data })
+      queryClient.invalidateQueries({ queryKey: queryKeys.uploads.all })
     } catch (err) {
       setUploadState({
         status: 'error',

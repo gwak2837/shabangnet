@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSpreadsheet, Store } from 'lucide-react'
+import { FileSpreadsheet, History, Store } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
@@ -22,6 +22,13 @@ const uploadTabs = [
     description: '쇼핑몰에서 다운로드한 주문 파일을 사방넷 양식으로 변환해요',
     variant: 'violet',
   },
+  {
+    href: '/upload/history',
+    label: '업로드 기록',
+    icon: History,
+    description: '업로드한 파일 기록을 확인하고 관리해요',
+    variant: 'slate',
+  },
 ] as const
 
 interface UploadLayoutProps {
@@ -40,7 +47,7 @@ export default function UploadLayout({ children }: UploadLayoutProps) {
           return (
             <Link
               aria-selected={isActive}
-              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=violet]:text-violet-600"
+              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=violet]:text-violet-600 aria-selected:data-[variant=slate]:text-slate-700"
               data-variant={tab.variant}
               href={tab.href}
               key={tab.href}
@@ -53,7 +60,7 @@ export default function UploadLayout({ children }: UploadLayoutProps) {
               <div
                 aria-hidden="true"
                 aria-selected={isActive}
-                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=violet]:bg-violet-600"
+                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=violet]:bg-violet-600 data-[variant=slate]:bg-slate-600"
                 data-variant={tab.variant}
               />
             </Link>

@@ -11,6 +11,16 @@ export const queryKeys = {
     batches: ['orders', 'batches'] as const,
     excluded: ['orders', 'excluded'] as const,
   },
+  uploads: {
+    all: ['uploads', 'history'] as const,
+    history: (filters: {
+      fileType?: string
+      startDate?: string
+      endDate?: string
+      sortBy?: string
+      sortOrder?: string
+    }) => ['uploads', 'history', filters] as const,
+  },
   logs: {
     all: ['logs'] as const,
     detail: (id: number) => ['logs', id] as const,

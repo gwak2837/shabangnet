@@ -1,14 +1,17 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
 import { UploadResult } from '@/app/upload/upload-result'
+import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 
 import { UploadState } from '../common'
 
 export default function SabangnetUploadPage() {
+  const queryClient = useQueryClient()
   const [{ status, message, file, result }, setUploadState] = useState<UploadState>({ status: 'idle' })
   const isProcessing = status === 'processing'
   const selectedFile = status === 'processing' || status === 'success' ? file : null
@@ -31,6 +34,7 @@ export default function SabangnetUploadPage() {
       }
 
       setUploadState({ status: 'success', file, result: data })
+      queryClient.invalidateQueries({ queryKey: queryKeys.uploads.all })
     } catch (err) {
       setUploadState({
         status: 'error',
