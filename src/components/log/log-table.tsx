@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface LogTableProps {
@@ -39,7 +40,9 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
           <TableBody>
             {logs.map((log) => (
               <TableRow className="hover:bg-muted/50 transition-colors" key={log.id}>
-                <TableCell className="text-sm text-slate-600">{formatDateTime(log.sentAt)}</TableCell>
+                <TableCell className="text-sm text-slate-600" title={formatDateTime(log.sentAt)}>
+                  {formatRelativeTime(log.sentAt)}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-600">

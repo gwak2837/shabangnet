@@ -7,6 +7,7 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/utils/cn'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface OrderSelectProps {
@@ -60,7 +61,9 @@ export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
                         발송완료
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">{formatDateTime(log.sentAt)}</p>
+                    <p className="text-sm text-slate-500 mt-1" title={formatDateTime(log.sentAt)}>
+                      {formatRelativeTime(log.sentAt)}
+                    </p>
                   </div>
                   <div className="text-right ml-4">
                     <div className="flex items-center gap-1 text-sm text-slate-600">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
 import type { OrderBatch } from './hook'
@@ -219,8 +220,11 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Last Sent At */}
-      <div className="w-40 shrink-0 px-4 text-sm text-slate-500">
-        {batch.lastSentAt ? formatDateTime(batch.lastSentAt) : '-'}
+      <div
+        className="w-40 shrink-0 px-4 text-sm text-slate-500"
+        title={batch.lastSentAt ? formatDateTime(batch.lastSentAt) : undefined}
+      >
+        {batch.lastSentAt ? formatRelativeTime(batch.lastSentAt) : '-'}
       </div>
 
       {/* Actions */}

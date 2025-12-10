@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { authClient } from '@/lib/auth-client'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime, formatFileSize } from '@/utils/format/number'
 
 import { DeleteUploadsDialog } from './delete-uploads-dialog'
@@ -33,7 +34,7 @@ interface UploadHistoryTableProps {
 // Constants
 // ============================================
 
-const ROW_HEIGHT = 56
+const ROW_HEIGHT = 48
 const CONTAINER_HEIGHT = 600
 
 interface SortableHeaderProps {
@@ -205,90 +206,99 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
       {/* Table */}
       <Card className="border-slate-200 bg-card shadow-sm overflow-hidden">
-        <CardContent className="p-0 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center border-b border-slate-200 bg-slate-50 h-10">
-            {isAdmin && (
-              <div className="w-12 shrink-0 px-4">
-                <Checkbox
-                  aria-label="전체 선택"
-                  checked={isAllSelected}
-                  className={isSomeSelected ? 'opacity-50' : ''}
-                  onCheckedChange={handleSelectAll}
-                />
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="w-max min-w-full">
+            {/* Header */}
+            <div className="flex items-center border-b border-slate-200 bg-slate-50 h-10">
+              {isAdmin && (
+                <div className="w-10 shrink-0 px-3">
+                  <Checkbox
+                    aria-label="전체 선택"
+                    checked={isAllSelected}
+                    className={isSomeSelected ? 'opacity-50' : ''}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </div>
+              )}
+              <div className="w-14 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">유형</div>
+              <SortableHeader
+                field="fileName"
+                label="파일명"
+                onSort={handleSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+              />
+              <SortableHeader
+                className="w-20 text-right"
+                field="totalOrders"
+                label="전체"
+                onSort={handleSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+              />
+              <SortableHeader
+                className="w-20 text-right"
+                field="processedOrders"
+                label="처리됨"
+                onSort={handleSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+              />
+              <SortableHeader
+                className="w-20 text-right"
+                field="errorOrders"
+                label="오류"
+                onSort={handleSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+              />
+              <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                현재 주문
+              </div>
+              <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                크기
+              </div>
+              <SortableHeader
+                className="w-36 text-right"
+                field="uploadedAt"
+                label="업로드 시간"
+                onSort={handleSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+              />
+            </div>
+
+            {/* Virtual List */}
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32 text-slate-500">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                불러오는 중...
+              </div>
+            ) : items.length > 0 ? (
+              <FixedSizeList
+                height={Math.min(CONTAINER_HEIGHT, items.length * ROW_HEIGHT)}
+                itemCount={items.length}
+                itemData={itemData}
+                itemSize={ROW_HEIGHT}
+                onItemsRendered={handleItemsRendered}
+                ref={listRef}
+                style={{ overflowX: 'hidden' }}
+                width="100%"
+              >
+                {Row}
+              </FixedSizeList>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-slate-500">업로드 기록이 없어요.</div>
+            )}
+
+            {/* Loading indicator for next page */}
+            {isFetchingNextPage && (
+              <div className="flex items-center justify-center py-4 border-t border-slate-100">
+                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
               </div>
             )}
-            <div className="w-16 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">유형</div>
-            <SortableHeader field="fileName" label="파일명" onSort={handleSort} sortBy={sortBy} sortOrder={sortOrder} />
-            <SortableHeader
-              className="w-24 text-right"
-              field="totalOrders"
-              label="전체"
-              onSort={handleSort}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-            />
-            <SortableHeader
-              className="w-24 text-right"
-              field="processedOrders"
-              label="처리됨"
-              onSort={handleSort}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-            />
-            <SortableHeader
-              className="w-24 text-right"
-              field="errorOrders"
-              label="오류"
-              onSort={handleSort}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-            />
-            <div className="w-24 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-              현재 주문
-            </div>
-            <div className="w-20 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-              크기
-            </div>
-            <SortableHeader
-              className="w-40"
-              field="uploadedAt"
-              label="업로드 시간"
-              onSort={handleSort}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-            />
           </div>
-
-          {/* Virtual List */}
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32 text-slate-500">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              불러오는 중...
-            </div>
-          ) : items.length > 0 ? (
-            <FixedSizeList
-              height={Math.min(CONTAINER_HEIGHT, items.length * ROW_HEIGHT)}
-              itemCount={items.length}
-              itemData={itemData}
-              itemSize={ROW_HEIGHT}
-              onItemsRendered={handleItemsRendered}
-              ref={listRef}
-              width="100%"
-            >
-              {Row}
-            </FixedSizeList>
-          ) : (
-            <div className="flex items-center justify-center h-32 text-slate-500">업로드 기록이 없어요.</div>
-          )}
-
-          {/* Loading indicator for next page */}
-          {isFetchingNextPage && (
-            <div className="flex items-center justify-center py-4 border-t border-slate-100">
-              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-              <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
@@ -317,7 +327,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
     >
       {/* Checkbox (Admin only) */}
       {isAdmin && (
-        <div className="w-12 shrink-0 px-4">
+        <div className="w-10 shrink-0 px-3">
           <Checkbox
             aria-label={`${item.fileName} 선택`}
             checked={isSelected}
@@ -327,7 +337,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       )}
 
       {/* File Type */}
-      <div className="w-16 shrink-0 px-4">
+      <div className="w-14 shrink-0 px-3">
         {item.fileType === 'sabangnet' ? (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100" title="사방넷">
             <FileSpreadsheet className="h-4 w-4 text-blue-600" />
@@ -340,7 +350,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* File Name */}
-      <div className="flex-1 min-w-[200px] px-4">
+      <div className="flex-1 min-w-[200px] px-3">
         <div className="truncate font-medium text-slate-900" title={item.fileName}>
           {item.fileName}
         </div>
@@ -348,13 +358,13 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Total Orders */}
-      <div className="w-24 shrink-0 px-4 text-right font-medium text-slate-900 tabular-nums">{item.totalOrders}건</div>
+      <div className="w-20 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">{item.totalOrders}건</div>
 
       {/* Processed Orders */}
-      <div className="w-24 shrink-0 px-4 text-right text-emerald-600 tabular-nums">{item.processedOrders}건</div>
+      <div className="w-20 shrink-0 px-3 text-right text-emerald-600 tabular-nums">{item.processedOrders}건</div>
 
       {/* Error Orders */}
-      <div className="w-24 shrink-0 px-4 text-right tabular-nums">
+      <div className="w-20 shrink-0 px-3 text-right tabular-nums">
         {item.errorOrders > 0 ? (
           <Badge className="bg-rose-100 text-rose-700" variant="secondary">
             {item.errorOrders}건
@@ -365,13 +375,15 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Current Order Count */}
-      <div className="w-24 shrink-0 px-4 text-right text-slate-600 tabular-nums">{item.currentOrderCount}건</div>
+      <div className="w-20 shrink-0 px-3 text-right text-slate-600 tabular-nums">{item.currentOrderCount}건</div>
 
       {/* File Size */}
-      <div className="w-20 shrink-0 px-4 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>
+      <div className="w-20 shrink-0 px-3 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>
 
       {/* Uploaded At */}
-      <div className="w-40 shrink-0 px-4 text-sm text-slate-500">{formatDateTime(item.uploadedAt)}</div>
+      <div className="w-36 shrink-0 px-3 text-right text-sm text-slate-500" title={formatDateTime(item.uploadedAt)}>
+        {formatRelativeTime(item.uploadedAt)}
+      </div>
     </label>
   )
 }
@@ -387,7 +399,7 @@ function SortableHeader({
   const isActive = sortBy === field
 
   return (
-    <div className={`${className} shrink-0 px-4`}>
+    <div className={`${className} shrink-0 px-3`}>
       <Button
         className="h-auto p-0 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
         onClick={() => onSort(field)}

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 export interface SettlementOrder {
@@ -80,7 +81,9 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                     key={order.id}
                   >
                     <TableCell className="font-mono text-sm text-slate-700">{order.sabangnetOrderNumber}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{formatDateTime(order.sentAt)}</TableCell>
+                    <TableCell className="text-sm text-slate-600" title={formatDateTime(order.sentAt)}>
+                      {formatRelativeTime(order.sentAt)}
+                    </TableCell>
                     <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
                     <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>
                     <TableCell className="text-right text-slate-900 tabular-nums">{order.quantity}</TableCell>

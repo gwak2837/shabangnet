@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/dialog'
 import { useServerAction } from '@/hooks/use-server-action'
 import { type UserListItem, type UserStatus } from '@/services/users'
+import { formatRelativeTime } from '@/utils/format/date'
+import { formatDateTime } from '@/utils/format/number'
 
 import { approveUser, reinstateUser, rejectUser } from './actions'
 
@@ -99,14 +101,6 @@ export function UserTable({ users, isLoading }: UserTableProps) {
     }
   }
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
   const isPending = isApproving || isRejecting || isReinstating
 
   if (isLoading) {
@@ -154,7 +148,9 @@ export function UserTable({ users, isLoading }: UserTableProps) {
                       {config.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{formatDate(user.createdAt)}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600" title={formatDateTime(user.createdAt.toISOString())}>
+                    {formatRelativeTime(user.createdAt)}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {user.status === 'pending' && (

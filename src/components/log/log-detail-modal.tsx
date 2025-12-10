@@ -7,6 +7,7 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface LogDetailModalProps {
@@ -128,9 +129,9 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
 
           {/* Meta Info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center gap-2 text-slate-500" title={formatDateTime(log.sentAt)}>
               <Clock className="h-4 w-4" />
-              {formatDateTime(log.sentAt)}
+              {formatRelativeTime(log.sentAt)}
             </div>
             <div className="flex items-center gap-2 text-slate-500">
               <User className="h-4 w-4" />

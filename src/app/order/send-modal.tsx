@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { checkDuplicate, type DuplicateCheckResult } from '@/services/orders'
 import { getDuplicateCheckSettings } from '@/services/settings'
+import { formatRelativeTime } from '@/utils/format/date'
 import {
   formatCurrency,
   formatDateTime,
@@ -279,7 +280,9 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                   <div className="rounded-md bg-background/70 border border-amber-200 p-3 text-sm" key={log.id}>
                     <div className="flex items-center gap-2 text-amber-900">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">{formatDateTime(log.sentAt)}</span>
+                      <span className="font-medium" title={formatDateTime(log.sentAt)}>
+                        {formatRelativeTime(log.sentAt)}
+                      </span>
                       <Badge className="bg-amber-100 text-amber-700 text-xs" variant="secondary">
                         {getDaysDifference(log.sentAt)}일 전
                       </Badge>

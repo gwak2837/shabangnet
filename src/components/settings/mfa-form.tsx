@@ -27,6 +27,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
+import { formatRelativeTime } from '@/utils/format/date'
+import { formatDateTime } from '@/utils/format/number'
 import { getFirstPasswordError, validatePassword } from '@/utils/password'
 
 import { setPasswordAction } from './actions/mfa'
@@ -325,15 +327,6 @@ export function MFAForm({ settings }: MFAFormProps) {
     }
   }
 
-  function formatDate(dateString: string | null) {
-    if (!dateString) return '사용 안 함'
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
   const handleCopySecret = useCallback(async (secret: string) => {
     try {
       await navigator.clipboard.writeText(secret)
@@ -470,7 +463,11 @@ export function MFAForm({ settings }: MFAFormProps) {
                     <div>
                       <p className="font-medium text-sm text-foreground">{pk.name || '이름 없음'}</p>
                       <p className="text-xs text-muted-foreground">
-                        등록: {formatDate(pk.createdAt)} · 마지막 사용: {formatDate(pk.lastUsedAt)}
+                        등록: <span title={formatDateTime(pk.createdAt)}>{formatRelativeTime(pk.createdAt)}</span> ·
+                        마지막 사용:{' '}
+                        <span title={pk.lastUsedAt ? formatDateTime(pk.lastUsedAt) : undefined}>
+                          {pk.lastUsedAt ? formatRelativeTime(pk.lastUsedAt) : '사용 안 함'}
+                        </span>
                       </p>
                     </div>
                     <button

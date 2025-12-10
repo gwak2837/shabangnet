@@ -21,7 +21,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate } from '@/utils/format/number'
+import { formatRelativeTime } from '@/utils/format/date'
+import { formatDateTime } from '@/utils/format/number'
 
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]
@@ -119,7 +120,9 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                       {manufacturer.orderCount.toLocaleString()}건
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">{formatDate(manufacturer.lastOrderDate)}</TableCell>
+                  <TableCell className="text-sm text-slate-500" title={formatDateTime(manufacturer.lastOrderDate)}>
+                    {formatRelativeTime(manufacturer.lastOrderDate)}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

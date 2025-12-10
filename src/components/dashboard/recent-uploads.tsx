@@ -7,6 +7,7 @@ import type { Upload } from '@/services/dashboard'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
 interface RecentUploadsProps {
@@ -69,8 +70,8 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
                       {getStatusLabel(upload.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right text-sm text-slate-500">
-                    {formatDateTime(upload.uploadedAt)}
+                  <TableCell className="text-right text-sm text-slate-500" title={formatDateTime(upload.uploadedAt)}>
+                    {formatRelativeTime(upload.uploadedAt)}
                   </TableCell>
                 </TableRow>
               ))}

@@ -19,7 +19,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate } from '@/utils/format/number'
+import { formatRelativeTime } from '@/utils/format/date'
+import { formatDateTime } from '@/utils/format/number'
 
 interface OptionMappingTableProps {
   mappings: OptionManufacturerMapping[]
@@ -64,7 +65,9 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                     {mapping.manufacturerName}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-slate-500">{formatDate(mapping.updatedAt)}</TableCell>
+                <TableCell className="text-sm text-slate-500" title={formatDateTime(mapping.updatedAt)}>
+                  {formatRelativeTime(mapping.updatedAt)}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <Button className="h-8 w-8 p-0" onClick={() => onEdit(mapping)} size="sm" variant="ghost">
