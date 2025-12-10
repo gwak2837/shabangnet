@@ -82,7 +82,7 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
 
   return (
     <AlertDialog onOpenChange={handleOpenChange} open={open}>
-      <Button disabled={isDisabled} onClick={handleOpenDialog} size="sm" variant="destructive">
+      <Button className="tabular-nums" disabled={isDisabled} onClick={handleOpenDialog} size="sm" variant="destructive">
         <Trash2 className="mr-2 h-4 w-4" />
         선택 삭제 ({selectedIds.length})
       </Button>
