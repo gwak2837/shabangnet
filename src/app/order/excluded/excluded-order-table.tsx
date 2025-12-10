@@ -1,8 +1,6 @@
 'use client'
 
-import { Ban } from 'lucide-react'
-
-import type { OrderBatch } from '@/services/orders'
+import { Ban, Loader2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,11 +8,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatCurrency, getExclusionLabelSync } from '@/utils/format'
 
-interface ExcludedOrderTableProps {
-  batches: OrderBatch[]
-}
+import { useExcludedOrderBatches } from '../hook'
 
-export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
+export function ExcludedOrderTable() {
+  const { data: batches = [], isLoading } = useExcludedOrderBatches()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+
   if (batches.length === 0) {
     return (
       <Card className="border-slate-200 bg-card shadow-sm">
@@ -67,7 +73,9 @@ export function ExcludedOrderTable({ batches }: ExcludedOrderTableProps) {
                       <span className="font-medium text-slate-900">{batch.manufacturerName}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</TableCell>
+                  <TableCell className="text-right font-medium text-slate-900 tabular-nums">
+                    {batch.totalOrders}건
+                  </TableCell>
                   <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                     {formatCurrency(batch.totalAmount)}
                   </TableCell>

@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { checkDuplicate, type DuplicateCheckResult, type OrderBatch } from '@/services/orders'
+import { checkDuplicate, type DuplicateCheckResult } from '@/services/orders'
 import { getDuplicateCheckSettings } from '@/services/settings'
 import {
   formatCurrency,
@@ -38,7 +38,9 @@ import {
   getDaysDifference,
 } from '@/utils/format'
 
-import { sendOrder } from './actions'
+import type { OrderBatch } from './hook'
+
+import { sendOrder } from './action'
 
 interface SendModalProps {
   batch: OrderBatch | null
@@ -144,12 +146,10 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     }
   }
 
+  // TODO: 데이터베이스에서 이메일 템플릿 가져오기
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const emailSubject = `[다온에프앤씨 발주서] ${batch.manufacturerName} ${today}`
   const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
-
-  const emailSubject = `[다온에프앤씨 발주서]_${batch.manufacturerName}_${new Date()
-    .toISOString()
-    .slice(0, 10)
-    .replace(/-/g, '')}`
 
   if (isSent) {
     return (
