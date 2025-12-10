@@ -23,7 +23,7 @@ export const upload = pgTable('upload', {
   processedOrders: integer('processed_orders').default(0),
   errorOrders: integer('error_orders').default(0),
   status: varchar('status', { length: 50 }).default('processing'),
-  uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow().notNull(),
+  uploadedAt: timestamp('uploaded_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // 사방넷 주문 파일, 쇼핑몰 주문 파일 데이터
@@ -31,7 +31,7 @@ export const order = pgTable(
   'order',
   {
     id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-    uploadId: bigint('upload_id', { mode: 'number' }).references(() => upload.id),
+    uploadId: bigint('upload_id', { mode: 'number' }).references(() => upload.id, { onDelete: 'cascade' }),
 
     // ============================================
     // 주문 식별자 (Order Identifiers)
@@ -90,14 +90,14 @@ export const order = pgTable(
     // ============================================
     fulfillmentType: varchar('fulfillment_type', { length: 50 }), // T열: F (주문유형)
     cjDate: date('cj_date', { mode: 'date' }), // W열: 씨제이날짜
-    collectedAt: timestamp('collected_at', { withTimezone: true }), // Y열: 수집일시
+    collectedAt: timestamp('collected_at', { precision: 3, withTimezone: true }), // Y열: 수집일시
 
     // ============================================
     // 시스템 필드 (System)
     // ============================================
     status: orderStatusEnum('status').default('pending'),
     excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 
     // Full-text Search용 generated column
     // 'simple' 설정: 형태소 분석 없이 공백 기준 토큰화 (한글에 적합)
@@ -132,9 +132,9 @@ export const orderEmailLog = pgTable('order_email_log', {
   recipientAddresses: text('recipient_addresses').array(), // 수취인 주소 배열
   duplicateReason: text('duplicate_reason'), // 중복 발송 시 입력한 사유
   // 발송 정보
-  sentAt: timestamp('sent_at', { withTimezone: true }),
+  sentAt: timestamp('sent_at', { precision: 3, withTimezone: true }),
   sentBy: varchar('sent_by', { length: 255 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================

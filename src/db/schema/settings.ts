@@ -8,8 +8,8 @@ export const columnSynonym = pgTable(
     standardKey: varchar('standard_key', { length: 50 }).notNull(), // 사방넷 표준 키 (productName, quantity 등)
     synonym: varchar('synonym', { length: 100 }).notNull(), // 동의어 (상품명, 품명 등)
     enabled: boolean('enabled').default(true),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
+    createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
@@ -25,7 +25,7 @@ export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),
   value: text('value'),
   description: text('description'),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -37,7 +37,7 @@ export const courierMapping = pgTable('courier_mapping', {
   code: varchar('code', { length: 10 }).notNull().unique(),
   aliases: text('aliases').array(), // 별칭 배열
   enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 export const exclusionPattern = pgTable('exclusion_pattern', {
@@ -45,8 +45,8 @@ export const exclusionPattern = pgTable('exclusion_pattern', {
   pattern: varchar('pattern', { length: 255 }).notNull().unique(),
   description: text('description'),
   enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -60,8 +60,8 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
   headerRow: integer('header_row').default(1),
   dataStartRow: integer('data_start_row').default(2),
   enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -77,8 +77,8 @@ export const smtpAccount = pgTable('smtp_account', {
   fromName: varchar('from_name', { length: 100 }),
   isDefault: boolean('is_default').default(false),
   enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -92,8 +92,8 @@ export const emailTemplate = pgTable('email_template', {
   body: text('body').notNull(), // HTML 템플릿
   variables: jsonb('variables'), // 사용 가능한 변수 목록 { key: description }
   enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),

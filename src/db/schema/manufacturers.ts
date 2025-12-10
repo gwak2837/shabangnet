@@ -19,10 +19,10 @@ export const manufacturer = pgTable('manufacturer', {
   ),
   // 통계
   orderCount: integer('order_count').default(0),
-  lastOrderDate: timestamp('last_order_date', { withTimezone: true }),
+  lastOrderDate: timestamp('last_order_date', { precision: 3, withTimezone: true }),
   // 타임스탬프
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================
@@ -39,8 +39,8 @@ export const product = pgTable('product', {
   }),
   price: integer('price').default(0),
   cost: integer('cost').default(0), // 원가
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================
@@ -55,8 +55,8 @@ export const optionMapping = pgTable('option_mapping', {
   manufacturerId: bigint('manufacturer_id', { mode: 'number' })
     .references(() => manufacturer.id, { onDelete: 'cascade' })
     .notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================
@@ -74,8 +74,8 @@ export const orderTemplate = pgTable('order_template', {
   dataStartRow: integer('data_start_row').default(2),
   columnMappings: text('column_mappings'), // JSON: { "recipientName": "D", "address": "F" }
   fixedValues: text('fixed_values'), // JSON: 고정값 설정 { "A": "다온에프앤씨", "B": "032-237-6933" }
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 // ============================================
@@ -94,6 +94,6 @@ export const invoiceTemplate = pgTable('invoice_template', {
   headerRow: integer('header_row').default(1),
   dataStartRow: integer('data_start_row').default(2),
   useColumnIndex: boolean('use_column_index').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
