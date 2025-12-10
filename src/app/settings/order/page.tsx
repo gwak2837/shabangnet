@@ -1,6 +1,6 @@
 import { CourierForm } from './courier/courier-form'
 import { DuplicateCheckForm } from './duplicate-check-form'
-import { ExclusionForm } from './exclusion-form'
+import { ExclusionForm } from './exclusion/exclusion-form'
 import { ShoppingMallTemplate } from './shopping-mall-template/shopping-mall-template'
 import { SynonymForm } from './synonym-form'
 

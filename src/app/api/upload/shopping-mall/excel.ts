@@ -108,6 +108,7 @@ function mapRowToOrder(
     quantity: parseInt(str('quantity'), 10) || 1,
     orderName: str('orderName'),
     recipientName: str('recipientName'),
+    fulfillmentType: str('fulfillmentType'),
     orderPhone: str('orderPhone'),
     orderMobile: str('orderMobile'),
     recipientPhone: str('recipientPhone'),

@@ -15,7 +15,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   if (!worksheet) {
     return {
       orders: [],
-      errors: [{ row: 0, message: '워크시트를 찾을 수 없습니다' }],
+      errors: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
       headers: [],
       totalRows: 0,
     }
@@ -70,7 +70,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
  * [1] A열: 상품명
  * [2] B열: 수량
  * [3] C열: 주문인
- * [4] D열: 보내는분
+ * [4] D열: 받는인
  * [5] E열: 주문인연락처
  * [6] F열: 주문인핸드폰
  * [7] G열: 받는인연락처
@@ -84,6 +84,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
  * [15] O열: 송장번호
  * [16] P열: 쇼핑몰주문번호
  * [19] S열: 옵션
+ * [20] T열: F (주문유형) - 제외 패턴 체크용
  * [21] U열: 결제금액
  * [22] V열: 상품약어
  * [27] [열: 품번코드
@@ -118,6 +119,7 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number): ParsedOrder | n
     courier: str(rowData[14]),
     trackingNumber: str(rowData[15]),
     optionName: str(rowData[19]),
+    fulfillmentType: str(rowData[20]),
     paymentAmount: num(rowData[21]),
     productAbbr: str(rowData[22]),
     productCode: str(rowData[27]) || str(rowData[28]),

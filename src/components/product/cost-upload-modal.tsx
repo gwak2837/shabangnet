@@ -292,7 +292,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                         <TableCell className="text-sm">{item.productName || '-'}</TableCell>
                         <TableCell className="text-sm">{item.optionName || '-'}</TableCell>
                         <TableCell className="text-sm">{item.manufacturerName || '-'}</TableCell>
-                        <TableCell className="text-right tabular-nums">{item.cost ? formatCurrency(item.cost) : '-'}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {item.cost ? formatCurrency(item.cost) : '-'}
+                        </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {item.shippingFee ? formatCurrency(item.shippingFee) : '-'}
                         </TableCell>

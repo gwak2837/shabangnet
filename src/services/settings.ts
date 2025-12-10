@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { courierMapping, exclusionPattern, settings } from '@/db/schema/settings'
+import { courierMapping, settings } from '@/db/schema/settings'
 
 // Settings types
 export interface CourierMapping {
@@ -69,33 +69,6 @@ export async function getCourierMappings(): Promise<CourierMapping[]> {
 // Duplicate Check Settings
 export async function getDuplicateCheckSettings(): Promise<DuplicateCheckSettings> {
   return getSetting<DuplicateCheckSettings>('duplicate_check', defaultDuplicateCheckSettings)
-}
-
-// Helper function to get exclusion label
-export async function getExclusionLabel(fulfillmentType?: string): Promise<string | null> {
-  if (!fulfillmentType) return null
-
-  const exclusionSettings = await getExclusionSettings()
-  const matchedPattern = exclusionSettings.patterns.find((p) => p.enabled && fulfillmentType.includes(p.pattern))
-
-  if (!matchedPattern) return null
-
-  return matchedPattern.displayLabel || matchedPattern.description || fulfillmentType
-}
-
-export async function getExclusionSettings(): Promise<ExclusionSettings> {
-  const enabled = await getSetting<boolean>('exclusion_enabled', true)
-  const patterns = await db.select().from(exclusionPattern).orderBy(exclusionPattern.createdAt)
-
-  return {
-    enabled,
-    patterns: patterns.map((p) => ({
-      id: p.id,
-      pattern: p.pattern,
-      description: p.description || undefined,
-      enabled: p.enabled || false,
-    })),
-  }
 }
 
 // Helper to get generic setting

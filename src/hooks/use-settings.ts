@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { getAllSynonyms } from '@/services/column-synonyms'
-import { getDuplicateCheckSettings, getExclusionSettings } from '@/services/settings'
+import { getDuplicateCheckSettings } from '@/services/settings'
 import { getShoppingMallTemplate, getShoppingMallTemplates } from '@/services/shopping-mall-templates'
 
 import { getMFASettings } from './queries/mfa'
@@ -22,14 +22,6 @@ export function useDuplicateCheckSettings() {
   return useQuery({
     queryKey: queryKeys.settings.duplicateCheck,
     queryFn: getDuplicateCheckSettings,
-  })
-}
-
-// Exclusion Settings
-export function useExclusionSettings() {
-  return useQuery({
-    queryKey: queryKeys.settings.exclusion,
-    queryFn: getExclusionSettings,
   })
 }
 

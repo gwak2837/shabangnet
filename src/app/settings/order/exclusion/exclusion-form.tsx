@@ -21,9 +21,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
-import { useExclusionSettings } from '@/hooks/use-settings'
 
 import { addExclusionPattern, removeExclusionPattern, updateExclusionPattern, updateExclusionSettings } from './action'
+import { useExclusionSettings } from './hook'
 
 const defaultSettings: ExclusionSettings = {
   enabled: true,
@@ -102,10 +102,6 @@ export function ExclusionForm() {
     setEditingPattern(null)
   }
 
-  function onUpdatePattern(id: number, data: Partial<Omit<ExclusionPattern, 'id'>>) {
-    updatePattern({ id, data })
-  }
-
   return (
     <>
       <section className="glass-card p-0 overflow-hidden">
@@ -157,7 +153,7 @@ export function ExclusionForm() {
                     key={pattern.id}
                     onEdit={() => setEditingPattern({ ...pattern })}
                     onRemove={() => removePattern(pattern.id)}
-                    onToggle={(checked) => onUpdatePattern(pattern.id, { enabled: checked })}
+                    onToggle={(checked) => updatePattern({ id: pattern.id, data: { enabled: checked } })}
                     pattern={pattern}
                   />
                 ))

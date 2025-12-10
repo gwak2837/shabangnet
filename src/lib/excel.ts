@@ -62,6 +62,7 @@ export interface ParsedOrder {
   address: string
   cost: number
   courier: string
+  fulfillmentType: string
   manufacturer: string
   memo: string
   optionName: string
@@ -78,8 +79,7 @@ export interface ParsedOrder {
   recipientMobile: string
   recipientName: string
   recipientPhone: string
-  // 원본 행 번호 (에러 추적용)
-  rowIndex: number
+  rowIndex: number // 원본 행 번호 (에러 추적용)
   shippingCost: number
   shoppingMall: string
   trackingNumber: string

@@ -14,8 +14,6 @@ import {
   type ParsedOrder,
 } from '@/lib/excel'
 
-import { getExclusionSettings } from './settings'
-
 export type DuplicateCheckPeriod = 10 | 15 | 20 | 30
 
 export interface DuplicateCheckResult {
@@ -191,6 +189,7 @@ export async function generateOrderExcel(params: {
       postalCode: o.postalCode || '',
       address: o.address || '',
       memo: o.memo || '',
+      fulfillmentType: o.excludedReason || '',
       shoppingMall: o.shoppingMall || '',
       manufacturer: mfr.name,
       courier: o.courier || '',
@@ -234,11 +233,12 @@ export async function generateOrderExcel(params: {
 }
 
 export async function getExcludedBatches(): Promise<OrderBatch[]> {
+  // excludedReason이 설정된 주문만 조회
   const allOrders = await db.query.order.findMany({
     with: {
       manufacturer: true,
     },
-    where: (order, { isNotNull }) => isNotNull(order.manufacturerId),
+    where: (order, { and, isNotNull }) => and(isNotNull(order.manufacturerId), isNotNull(order.excludedReason)),
   })
 
   const batchesMap = new Map<number, OrderBatch>()
@@ -265,9 +265,6 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
   for (const o of allOrders) {
     if (!o.manufacturerId) continue
 
-    const isExcluded = await shouldExcludeFromEmail(o.shoppingMall ?? o.courier ?? undefined)
-    if (!isExcluded) continue
-
     const batch = batchesMap.get(o.manufacturerId)
     if (batch) {
       batch.orders.push({
@@ -285,7 +282,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],
         createdAt: o.createdAt.toISOString(),
-        fulfillmentType: o.shoppingMall || '',
+        fulfillmentType: o.courier || o.shoppingMall || '', // courier에 fulfillmentType이 저장됨
       })
     }
   }
@@ -316,14 +313,4 @@ function hasValidColumnMappings(columnMappings: string | null | undefined): bool
 // Helper function to normalize address for comparison
 function normalizeAddress(address: string): string {
   return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase()
-}
-
-// Helper function to check if fulfillment type should be excluded
-async function shouldExcludeFromEmail(fulfillmentType?: string): Promise<boolean> {
-  if (!fulfillmentType) return false
-
-  const exclusionSettings = await getExclusionSettings()
-  if (!exclusionSettings.enabled) return false
-
-  return exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
 }

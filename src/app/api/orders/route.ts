@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { auth } from '@/lib/auth'
-import { getExclusionSettings } from '@/services/settings'
 import { createCacheControl } from '@/utils/cache-control'
 
 // ============================================
@@ -180,11 +179,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
       ),
   })
 
-  // 3. Exclusion 설정 확인
-  // FIXME: 위의 SQL 요청이랑 같이 하기
-  const exclusionSettings = await getExclusionSettings()
-
-  // 4. 제조사별로 그룹핑
+  // 3. 제조사별로 그룹핑
   const batchesMap = new Map<number, OrderBatch>()
 
   for (const m of manufacturersToProcess) {
@@ -204,13 +199,9 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
       continue
     }
 
-    const fulfillmentType = o.shoppingMall ?? o.courier
-
-    if (fulfillmentType && exclusionSettings.enabled) {
-      const isExcluded = exclusionSettings.patterns.some((p) => p.enabled && fulfillmentType.includes(p.pattern))
-      if (isExcluded) {
-        continue
-      }
+    // excludedReason이 설정된 주문은 발송 대상에서 제외
+    if (o.excludedReason) {
+      continue
     }
 
     const batch = batchesMap.get(o.manufacturerId)
