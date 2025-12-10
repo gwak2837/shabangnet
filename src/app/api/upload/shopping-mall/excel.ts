@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 
-import type { ParsedOrder, ParseError } from '@/lib/excel'
+import type { ParseError } from '@/lib/excel'
 
 import { getCellValue } from '@/lib/excel/util'
 
@@ -29,7 +29,7 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
     }
   }
 
-  const orders: ParsedOrder[] = []
+  const orders = []
   const errors: ParseError[] = []
   const totalRows = worksheet.rowCount
   const columnCount = worksheet.columnCount

@@ -1,6 +1,8 @@
 import ExcelJS, { CellValue } from 'exceljs'
 
-import type { ParsedOrder, ParseError } from '@/lib/excel'
+import type { ParseError } from '@/lib/excel'
+
+import { SABANGNET_COLUMNS } from '@/common/constants'
 
 /**
  * 사방넷 원본 파일 파싱 (다온발주양식.xlsx 기준)
@@ -20,11 +22,29 @@ export async function parseSabangnetFile(buffer: ArrayBuffer) {
     }
   }
 
-  const orders: ParsedOrder[] = []
+  const orders = []
   const errors: ParseError[] = []
   const totalRows = worksheet.rowCount
+  const headerRow = worksheet.getRow(1)
+  const fileHeaders: string[] = []
 
-  // 첫 번째 행: 헤더
+  for (let col = 1; col <= worksheet.columnCount; col++) {
+    const cell = headerRow.getCell(col)
+    fileHeaders.push(cell.value?.toString().trim() ?? '')
+  }
+
+  const requiredColumns = SABANGNET_COLUMNS.filter((col) => col.required)
+  const missingColumns = requiredColumns.filter((col) => !fileHeaders.includes(col.label))
+
+  if (missingColumns.length > 0) {
+    const missingLabels = missingColumns.map((col) => col.label).join(', ')
+    return {
+      orders: [],
+      errors: [{ row: 0, message: `파일 양식이 일치하지 않아요. 누락된 열: ${missingLabels}` }],
+      totalRows,
+    }
+  }
+
   // 두 번째 행부터: 데이터
   for (let rowNumber = 2; rowNumber <= totalRows; rowNumber++) {
     const row = worksheet.getRow(rowNumber)

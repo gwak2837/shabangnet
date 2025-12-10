@@ -29,8 +29,6 @@ export interface SabangnetColumn {
   required?: boolean
 }
 
-// 다온발주양식.xlsx 기준 사방넷 컬럼 정의 (0-based index)
-// 엑셀 row.values는 1-based이므로 index + 1 = row.values index
 export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 0, key: 'productName', label: '상품명', required: true }, // A열
   { index: 1, key: 'quantity', label: '수량', required: true }, // B열
@@ -48,7 +46,7 @@ export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 13, key: 'courier', label: '택배사' }, // N열
   { index: 14, key: 'trackingNumber', label: '송장번호' }, // O열
   { index: 15, key: 'mallOrderNumber', label: '쇼핑몰주문번호' }, // P열
-  { index: 16, key: 'sabangnetOrderNumber', label: '사방넷주문번호', required: true }, // Q열 (UNIQUE KEY)
+  { index: 16, key: 'sabangnetOrderNumber', label: '사방넷주문번호', required: true }, // Q열
   { index: 17, key: 'mallProductNumber', label: '쇼핑몰상품번호' }, // R열
   { index: 18, key: 'optionName', label: '옵션' }, // S열
   { index: 19, key: 'fulfillmentType', label: 'F' }, // T열 (주문유형)

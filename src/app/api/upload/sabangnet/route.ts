@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
@@ -16,26 +17,34 @@ import {
   prepareOrderValues,
   type UploadError,
   type UploadResult,
-  validateExcelFile,
 } from './util'
+
+const VALID_EXTENSIONS = ['.xlsx', '.xls']
+
+const uploadFormSchema = z.object({
+  file: z
+    .instanceof(File, { message: '파일이 없거나 유효하지 않아요' })
+    .refine((file) => VALID_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext)), {
+      message: '.xlsx, .xls 엑셀 파일만 업로드 가능해요',
+    }),
+})
 
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
   try {
     const formData = await request.formData()
-    const file = formData.get('file')
+    const validation = uploadFormSchema.safeParse({ file: formData.get('file') })
 
-    if (!file || !(file instanceof File)) {
-      return NextResponse.json({ error: '파일이 없거나 유효하지 않아요' }, { status: 400 })
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.message }, { status: 400 })
     }
 
-    const validation = validateExcelFile(file)
-
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error! }, { status: 400 })
-    }
-
+    const { file } = validation.data
     const buffer = await file.arrayBuffer()
     const parseResult = await parseSabangnetFile(buffer)
+
+    if (parseResult.orders.length === 0 && parseResult.errors.length > 0) {
+      return NextResponse.json({ error: parseResult.errors[0].message }, { status: 400 })
+    }
 
     const [allManufacturers, allProducts, allOptionMappings, [exclusionEnabledSetting], allPatterns] =
       await Promise.all([

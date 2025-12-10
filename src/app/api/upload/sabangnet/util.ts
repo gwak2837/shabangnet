@@ -54,18 +54,16 @@ interface OptionMappingInfo {
   productCode: string
 }
 
-interface ProductInfo {
-  manufacturerId: number | null
-  productCode: string
-}
-
-const VALID_EXTENSIONS = ['.xlsx', '.xls']
-
 interface PrepareOrderParams {
   checkExclusionPattern: (fulfillmentType: string) => string | null
   lookupMaps: LookupMaps
   orders: ParsedOrder[]
   uploadId: number
+}
+
+interface ProductInfo {
+  manufacturerId: number | null
+  productCode: string
 }
 
 export function buildLookupMaps(
@@ -207,16 +205,6 @@ export function prepareOrderValues({ orders, uploadId, lookupMaps, checkExclusio
       excludedReason,
     }
   })
-}
-
-export function validateExcelFile(file: File) {
-  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-
-  if (!VALID_EXTENSIONS.includes(ext)) {
-    return { valid: false, error: '.xlsx, .xls 엑셀 파일만 업로드 가능해요' }
-  }
-
-  return { valid: true }
 }
 
 /**
