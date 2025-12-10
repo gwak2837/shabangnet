@@ -27,8 +27,8 @@ function generatePlaceholderEmail(name: string): string {
 }
 
 async function seed() {
-  const databaseUrl = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
-  if (!databaseUrl) {
+  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+  if (!databaseURL) {
     console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
   }
@@ -43,7 +43,7 @@ async function seed() {
 
   console.log('🌱 실제 제조사 데이터 시드 시작...\n')
 
-  const client = postgres(databaseUrl, {
+  const client = postgres(databaseURL, {
     prepare: false,
     max: 1,
     ssl: process.env.SUPABASE_CERTIFICATE

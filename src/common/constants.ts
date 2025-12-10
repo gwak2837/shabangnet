@@ -17,7 +17,7 @@ export function getBaseURL(): string {
 export const SITE_CONFIG = {
   name: '다온 발주 자동화',
   shortName: '다온',
-  description: '주문 취합 및 제조사별 발주 자동화 시스템',
+  description: '사방넷 주문 취합 및 제조사별 발주 자동화 시스템',
   locale: 'ko_KR',
   themeColor: '#141414',
 } as const
@@ -63,8 +63,5 @@ export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 29, key: 'shippingCost', label: '택배비' },
 ] as const
 
-// 컬럼 키로 빠르게 찾기 위한 맵
 export const SABANGNET_COLUMN_MAP = new Map(SABANGNET_COLUMNS.map((col) => [col.key, col]))
-
-// 컬럼 라벨로 찾기 위한 맵
 export const SABANGNET_LABEL_MAP = new Map(SABANGNET_COLUMNS.map((col) => [col.label, col]))

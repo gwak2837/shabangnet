@@ -21,7 +21,6 @@ const geistMono = Geist_Mono({
 
 const notoSansKr = Noto_Sans_KR({
   variable: '--font-noto-sans-kr',
-  subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
 })
 
@@ -78,7 +77,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ko">
+    <html className="overscroll-none" lang="ko">
       <head>
         <meta content={SITE_CONFIG.shortName} name="apple-mobile-web-app-title" />
       </head>

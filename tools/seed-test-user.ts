@@ -32,16 +32,16 @@ function hashPassword(password: string): string {
 }
 
 async function seed() {
-  const databaseUrl = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
 
-  if (!databaseUrl) {
+  if (!databaseURL) {
     console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
   }
 
   console.log('🌱 E2E 테스트 계정 시드 시작...')
 
-  const client = postgres(databaseUrl, {
+  const client = postgres(databaseURL, {
     prepare: false,
     max: 1,
     ssl: process.env.SUPABASE_CERTIFICATE

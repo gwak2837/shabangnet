@@ -1,9 +1,21 @@
-import { bigint, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { bigint, customType, index, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
 import { manufacturer } from './manufacturers'
 import { shoppingMallTemplate } from './settings'
+
+// ============================================
+// Custom Types
+// ============================================
+
+// tsvector 타입 정의 (Full-text Search용)
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector'
+  },
+})
 
 // ============================================
 // 업로드 기록 (Upload)
@@ -26,37 +38,51 @@ export const upload = pgTable('upload', {
 // 주문 데이터 (Order) - 실제 주문 저장
 // ============================================
 
-export const order = pgTable('order', {
-  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  uploadId: bigint('upload_id', { mode: 'number' }).references(() => upload.id),
-  orderNumber: varchar('order_number', { length: 100 }).notNull().unique(),
-  productName: varchar('product_name', { length: 500 }),
-  quantity: integer('quantity').default(1),
-  orderName: varchar('order_name', { length: 255 }), // 주문인
-  recipientName: varchar('recipient_name', { length: 255 }), // 받는인
-  orderPhone: varchar('order_phone', { length: 50 }), // 주문인 연락처
-  orderMobile: varchar('order_mobile', { length: 50 }), // 주문인 핸드폰
-  recipientPhone: varchar('recipient_phone', { length: 50 }), // 받는인 연락처
-  recipientMobile: varchar('recipient_mobile', { length: 50 }), // 받는인 핸드폰
-  postalCode: varchar('postal_code', { length: 20 }), // 우편번호
-  address: text('address'), // 배송지
-  memo: text('memo'), // 전언/배송메시지
-  shoppingMall: varchar('shopping_mall', { length: 100 }), // 쇼핑몰/사이트
-  manufacturerName: varchar('manufacturer_name', { length: 255 }), // 제조사 (원본)
-  courier: varchar('courier', { length: 100 }), // 택배사
-  trackingNumber: varchar('tracking_number', { length: 100 }), // 송장번호
-  optionName: varchar('option_name', { length: 255 }), // 옵션
-  paymentAmount: integer('payment_amount').default(0), // 결제금액
-  productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
-  productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
-  cost: integer('cost').default(0), // 원가
-  shippingCost: integer('shipping_cost').default(0), // 택배비
-  // 시스템 필드
-  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
-  status: orderStatusEnum('status').default('pending'),
-  excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
+export const order = pgTable(
+  'order',
+  {
+    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+    uploadId: bigint('upload_id', { mode: 'number' }).references(() => upload.id),
+    orderNumber: varchar('order_number', { length: 100 }).notNull().unique(),
+    productName: varchar('product_name', { length: 500 }),
+    quantity: integer('quantity').default(1),
+    orderName: varchar('order_name', { length: 255 }), // 주문인
+    recipientName: varchar('recipient_name', { length: 255 }), // 받는인
+    orderPhone: varchar('order_phone', { length: 50 }), // 주문인 연락처
+    orderMobile: varchar('order_mobile', { length: 50 }), // 주문인 핸드폰
+    recipientPhone: varchar('recipient_phone', { length: 50 }), // 받는인 연락처
+    recipientMobile: varchar('recipient_mobile', { length: 50 }), // 받는인 핸드폰
+    postalCode: varchar('postal_code', { length: 20 }), // 우편번호
+    address: text('address'), // 배송지
+    memo: text('memo'), // 전언/배송메시지
+    shoppingMall: varchar('shopping_mall', { length: 100 }), // 쇼핑몰/사이트
+    manufacturerName: varchar('manufacturer_name', { length: 255 }), // 제조사 (원본)
+    courier: varchar('courier', { length: 100 }), // 택배사
+    trackingNumber: varchar('tracking_number', { length: 100 }), // 송장번호
+    optionName: varchar('option_name', { length: 255 }), // 옵션
+    paymentAmount: integer('payment_amount').default(0), // 결제금액
+    productAbbr: varchar('product_abbr', { length: 255 }), // 상품약어
+    productCode: varchar('product_code', { length: 100 }), // 품번코드/자체상품코드
+    cost: integer('cost').default(0), // 원가
+    shippingCost: integer('shipping_cost').default(0), // 택배비
+    // 시스템 필드
+    manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
+    status: orderStatusEnum('status').default('pending'),
+    excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    // Full-text Search용 generated column
+    // 'simple' 설정: 형태소 분석 없이 공백 기준 토큰화 (한글에 적합)
+    searchVector: tsvector('search_vector').generatedAlwaysAs(
+      sql`to_tsvector('simple', coalesce(order_number, '') || ' ' || coalesce(product_name, '') || ' ' || coalesce(recipient_name, '') || ' ' || coalesce(manufacturer_name, ''))`,
+    ),
+  },
+  (table) => [
+    // Full-text Search용 GIN 인덱스
+    index('order_search_idx').using('gin', table.searchVector),
+    // Cursor pagination용 인덱스
+    index('order_manufacturer_id_idx').on(table.manufacturerId),
+  ],
+).enableRLS()
 
 // ============================================
 // 발주서 이메일 발송 로그 (Order Email Log)

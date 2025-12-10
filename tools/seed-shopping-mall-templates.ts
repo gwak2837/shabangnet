@@ -80,15 +80,15 @@ const SHOPPING_MALL_SEED_DATA = [
 ]
 
 async function seed() {
-  const databaseUrl = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
-  if (!databaseUrl) {
+  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+  if (!databaseURL) {
     console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
   }
 
   console.log('🌱 Seeding shopping mall templates...')
 
-  const client = postgres(databaseUrl, {
+  const client = postgres(databaseURL, {
     prepare: false,
     max: 1,
     ssl: process.env.SUPABASE_CERTIFICATE

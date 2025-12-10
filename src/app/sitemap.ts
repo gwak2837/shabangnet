@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 import { getBaseURL } from '@/common/constants'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = getBaseURL()
+  const baseURL = getBaseURL()
 
   const routes = [
     '',
@@ -20,7 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   return routes.map((route) => ({
-    url: `${baseUrl}${route}`,
+    url: `${baseURL}${route}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: route === '' || route === '/dashboard' ? 1 : 0.8,
