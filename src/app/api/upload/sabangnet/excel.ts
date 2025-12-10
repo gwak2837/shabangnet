@@ -1,13 +1,13 @@
 import ExcelJS, { CellValue } from 'exceljs'
 
-import type { ParsedOrder, ParseError, ParseResult } from '@/lib/excel'
+import type { ParsedOrder, ParseError } from '@/lib/excel'
 
 /**
  * 사방넷 원본 파일 파싱 (다온발주양식.xlsx 기준)
  * 첫 번째 행이 헤더, 두 번째 행부터 데이터
  * 13번째 열(index 12)이 제조사
  */
-export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResult> {
+export async function parseSabangnetFile(buffer: ArrayBuffer) {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(buffer)
   const worksheet = workbook.worksheets[0]
@@ -16,7 +16,6 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
     return {
       orders: [],
       errors: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
-      headers: [],
       totalRows: 0,
     }
   }
@@ -24,8 +23,6 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   const orders: ParsedOrder[] = []
   const errors: ParseError[] = []
   const totalRows = worksheet.rowCount
-  const headerRow = worksheet.getRow(1)
-  const headers = headerRow.values as string[]
 
   // 첫 번째 행: 헤더
   // 두 번째 행부터: 데이터
@@ -35,7 +32,6 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
     try {
       const rowData = row.values
 
-      // 빈 행 스킵
       if (!rowData || !Array.isArray(rowData) || rowData.every((v) => !v || String(v).trim() === '')) {
         continue
       }
@@ -56,7 +52,6 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   return {
     orders,
     errors,
-    headers,
     totalRows,
   }
 }
@@ -101,7 +96,7 @@ const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, 
  * [29] ]열: 모델번호
  * [30] ^열: 원가(상품)*수량
  */
-function mapRowToOrder(rowData: CellValue[], rowNumber: number): ParsedOrder | null {
+function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
   const sabangnetOrderNumber = str(rowData[17])
 
   if (!sabangnetOrderNumber) {

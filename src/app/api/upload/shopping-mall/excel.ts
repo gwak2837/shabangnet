@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 
-import type { ParsedOrder, ParseError, ParseResult } from '@/lib/excel'
+import type { ParsedOrder, ParseError } from '@/lib/excel'
 
 import { getCellValue } from '@/lib/excel/util'
 
@@ -16,7 +16,7 @@ export interface ShoppingMallConfig {
  * 쇼핑몰 주문 파일 파싱
  * columnMappings를 기반으로 동적으로 컬럼을 매핑
  */
-export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig): Promise<ParseResult> {
+export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig) {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(buffer)
   const worksheet = workbook.worksheets[0]
@@ -25,7 +25,6 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
     return {
       orders: [],
       errors: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
-      headers: [],
       totalRows: 0,
     }
   }
@@ -37,14 +36,24 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
 
   // 헤더 파싱
   const headerRow = worksheet.getRow(config.headerRow)
-  const headers: string[] = []
   const headerColumnMap = new Map<string, number>()
 
   for (let col = 1; col <= columnCount; col++) {
     const value = getCellValue(headerRow.getCell(col))
-    headers[col - 1] = value
     if (value) {
       headerColumnMap.set(value, col)
+    }
+  }
+
+  // 헤더 검증: columnMappings의 엑셀 컬럼명이 파일에 있는지 확인
+  const expectedColumns = Object.keys(config.columnMappings)
+  const missingColumns = expectedColumns.filter((col) => !headerColumnMap.has(col))
+
+  if (missingColumns.length > 0) {
+    return {
+      orders: [],
+      errors: [{ row: 0, message: `파일 양식이 일치하지 않아요. 누락된 열: ${missingColumns.join(', ')}` }],
+      totalRows,
     }
   }
 
@@ -79,7 +88,6 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   return {
     orders,
     errors,
-    headers,
     totalRows,
   }
 }
@@ -93,7 +101,7 @@ function mapRowToOrder(
   rowNumber: number,
   headerColumnMap: Map<string, number>,
   config: ShoppingMallConfig,
-): ParsedOrder | null {
+) {
   // DB 필드명으로 엑셀 셀 값을 가져오는 함수
   const str = (dbField: string): string => {
     // columnMappings에서 해당 DB 필드에 매핑된 엑셀 컬럼명 찾기

@@ -87,6 +87,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const buffer = await file.arrayBuffer()
     const parseResult = await parseShoppingMallFile(buffer, mallConfig)
 
+    if (parseResult.orders.length === 0 && parseResult.errors.length > 0) {
+      return NextResponse.json({ error: parseResult.errors[0].message }, { status: 400 })
+    }
+
     const [allManufacturers, allProducts, allOptionMappings] = await Promise.all([
       db.select({ id: manufacturer.id, name: manufacturer.name }).from(manufacturer),
       db.select({ productCode: product.productCode, manufacturerId: product.manufacturerId }).from(product),

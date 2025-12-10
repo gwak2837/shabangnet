@@ -16,12 +16,6 @@ import { shoppingMallTemplate } from '../src/db/schema/settings'
  * columnMappings: { 엑셀컬럼헤더: order테이블필드키 }
  */
 const SHOPPING_MALL_SEED_DATA = [
-  // ============================================
-  // SK스토아
-  // ============================================
-  // Row 1-2: 제목/메타정보
-  // Row 3: 실제 헤더 (No, 확인, 주문구분, 통관번호, 통합주문번호, 주문번호, ...)
-  // Row 4+: 데이터
   {
     mallName: 'sk_stoa',
     displayName: 'SK스토아',
@@ -29,6 +23,7 @@ const SHOPPING_MALL_SEED_DATA = [
     dataStartRow: 4,
     columnMappings: {
       통합주문번호: 'sabangnetOrderNumber',
+      주문번호: 'mallOrderNumber',
       상품코드: 'productCode',
       단품코드: 'mallProductNumber',
       상품명: 'productName',
@@ -41,19 +36,12 @@ const SHOPPING_MALL_SEED_DATA = [
       우편번호: 'postalCode',
       주소: 'address',
       배송메시지: 'memo',
-      배송방법: 'courier',
       하위업체명: 'manufacturerName',
+      '판매가(부가세포함)': 'cost',
       '결제금액(부가세포함)': 'paymentAmount',
     },
     enabled: true,
   },
-
-  // ============================================
-  // 삼성카드몰
-  // ============================================
-  // Row 1: 헤더 (주문일자, 배송지시일, ..., 주문번호, ..., 상품코드, 상품명, ...)
-  // Row 2+: 데이터
-  // 주의: "전화번호" 컬럼이 주문자/수취인 각각 존재하나 동일 헤더명으로 첫 번째만 매핑됨
   {
     mallName: 'samsung_card',
     displayName: '삼성카드몰',
@@ -61,6 +49,7 @@ const SHOPPING_MALL_SEED_DATA = [
     dataStartRow: 2,
     columnMappings: {
       주문번호: 'sabangnetOrderNumber',
+      배송번호: 'mallOrderNumber',
       상품코드: 'productCode',
       상품명: 'productName',
       단품명: 'optionName',
@@ -72,6 +61,7 @@ const SHOPPING_MALL_SEED_DATA = [
       휴대폰번호: 'recipientMobile',
       우편번호: 'postalCode',
       주소: 'address',
+      주문요청메시지: 'logisticsNote',
       고객배송요청사항: 'memo',
       배송방법: 'courier',
       브랜드: 'shoppingMall',
@@ -81,13 +71,6 @@ const SHOPPING_MALL_SEED_DATA = [
     },
     enabled: true,
   },
-
-  // ============================================
-  // 삼성복지몰
-  // ============================================
-  // Row 1: 헤더 (고객사, 사번, 주문일자, ..., 주문번호, ..., 상품코드, 상품명, ...)
-  // Row 2+: 데이터
-  // 주의: "전화번호" 컬럼이 주문자/수취인 각각 존재하나 동일 헤더명으로 첫 번째만 매핑됨
   {
     mallName: 'samsung_welfare',
     displayName: '삼성복지몰',
@@ -95,6 +78,7 @@ const SHOPPING_MALL_SEED_DATA = [
     dataStartRow: 2,
     columnMappings: {
       주문번호: 'sabangnetOrderNumber',
+      배송번호: 'mallOrderNumber',
       상품코드: 'productCode',
       상품명: 'productName',
       단품명: 'optionName',
@@ -106,6 +90,7 @@ const SHOPPING_MALL_SEED_DATA = [
       휴대폰번호: 'recipientMobile',
       우편번호: 'postalCode',
       주소: 'address',
+      주문요청메시지: 'logisticsNote',
       고객배송요청사항: 'memo',
       배송방법: 'courier',
       브랜드: 'shoppingMall',

@@ -118,7 +118,6 @@ export interface ParseError {
 // 파싱 결과
 export interface ParseResult {
   errors: ParseError[]
-  headers: string[]
   orders: ParsedOrder[]
   totalRows: number
 }
