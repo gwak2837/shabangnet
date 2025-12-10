@@ -26,7 +26,7 @@ const uploadFormSchema = z.object({
     .refine((file) => VALID_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext)), {
       message: '.xlsx, .xls 엑셀 파일만 업로드 가능해요',
     }),
-  'mall-id': z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
+  mallId: z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
 })
 
 export async function GET(): Promise<NextResponse> {
@@ -46,13 +46,17 @@ export async function GET(): Promise<NextResponse> {
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
   try {
     const formData = await request.formData()
-    const validation = uploadFormSchema.safeParse(formData)
+
+    const validation = uploadFormSchema.safeParse({
+      file: formData.get('file'),
+      mallId: formData.get('mall-id'),
+    })
 
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.message }, { status: 400 })
     }
 
-    const { file, 'mall-id': mallId } = validation.data
+    const { file, mallId } = validation.data
 
     const [dbTemplate] = await db
       .select({
