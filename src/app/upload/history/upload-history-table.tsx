@@ -399,21 +399,22 @@ function SortableHeader({
   const isActive = sortBy === field
 
   return (
-    <div className={`${className} shrink-0 px-3`}>
+    <div className={`${className} shrink-0 px-2`}>
       <Button
-        className="h-auto p-0 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
+        className="h-auto p-2 py-1 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
         onClick={() => onSort(field)}
+        size="none"
         variant="ghost"
       >
         {label}
         {isActive ? (
           sortOrder === 'desc' ? (
-            <ArrowDown className="ml-1 h-3 w-3" />
+            <ArrowDown className="h-3 w-3" />
           ) : (
-            <ArrowUp className="ml-1 h-3 w-3" />
+            <ArrowUp className="h-3 w-3" />
           )
         ) : (
-          <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+          <ArrowUpDown className="h-3 w-3 opacity-50" />
         )}
       </Button>
     </div>
