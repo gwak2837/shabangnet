@@ -11,10 +11,10 @@ import { cn } from '@/utils/cn'
 
 const settingsNavItems = [
   {
-    title: '계정',
-    description: '이메일 인증 및 보안',
-    href: '/settings/account',
-    icon: Shield,
+    title: '주문 처리',
+    description: '택배사, 쇼핑몰, 중복 체크, 제외',
+    href: '/settings/order',
+    icon: Package,
   },
   {
     title: '이메일',
@@ -23,10 +23,10 @@ const settingsNavItems = [
     icon: Mail,
   },
   {
-    title: '주문 처리',
-    description: '택배사, 쇼핑몰, 중복 체크, 제외',
-    href: '/settings/order',
-    icon: Package,
+    title: '계정',
+    description: '이메일 인증 및 보안',
+    href: '/settings/account',
+    icon: Shield,
   },
 ]
 

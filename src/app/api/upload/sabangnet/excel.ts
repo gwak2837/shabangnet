@@ -61,6 +61,9 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
   }
 }
 
+const str = (val: unknown) => (val != null ? String(val).trim() : '')
+const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, '')) || 0
+
 /**
  * 사방넷 행 데이터를 ParsedOrder로 변환
  *
@@ -71,10 +74,10 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
  * [2] B열: 수량
  * [3] C열: 주문인
  * [4] D열: 받는인
- * [5] E열: 주문인연락처
- * [6] F열: 주문인핸드폰
- * [7] G열: 받는인연락처
- * [8] H열: 받는인핸드폰
+ * [5] E열: 주문인 연락처
+ * [6] F열: 주문인 핸드폰
+ * [7] G열: 받는인 연락처
+ * [8] H열: 받는인 핸드폰
  * [9] I열: 우편번호
  * [10] J열: 배송지
  * [11] K열: 전언
@@ -83,48 +86,74 @@ export async function parseSabangnetFile(buffer: ArrayBuffer): Promise<ParseResu
  * [14] N열: 택배사
  * [15] O열: 송장번호
  * [16] P열: 쇼핑몰주문번호
+ * [17] Q열: 사방넷주문번호
+ * [18] R열: 쇼핑몰상품번호
  * [19] S열: 옵션
- * [20] T열: F (주문유형) - 제외 패턴 체크용
+ * [20] T열: F (주문유형)
  * [21] U열: 결제금액
  * [22] V열: 상품약어
+ * [23] W열: 씨제이날짜
+ * [24] X열: 물류전달사항
+ * [25] Y열: 수집일시
+ * [26] Z열: 부주문번호
  * [27] [열: 품번코드
  * [28] \열: 자체상품코드
+ * [29] ]열: 모델번호
  * [30] ^열: 원가(상품)*수량
  */
 function mapRowToOrder(rowData: CellValue[], rowNumber: number): ParsedOrder | null {
-  const str = (val: unknown) => (val != null ? String(val).trim() : '')
-  const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, '')) || 0
+  const sabangnetOrderNumber = str(rowData[17])
 
-  const orderNumber = str(rowData[16])
-
-  if (!orderNumber) {
+  if (!sabangnetOrderNumber) {
     return null
   }
 
   return {
-    orderNumber,
-    productName: str(rowData[1]),
-    quantity: parseInt(str(rowData[2]), 10) || 1,
-    orderName: str(rowData[3]),
-    recipientName: str(rowData[4]),
-    orderPhone: str(rowData[5]),
-    orderMobile: str(rowData[6]),
-    recipientPhone: str(rowData[7]),
-    recipientMobile: str(rowData[8]),
-    postalCode: str(rowData[9]),
-    address: str(rowData[10]),
-    memo: str(rowData[11]),
-    shoppingMall: str(rowData[12]),
-    manufacturer: str(rowData[13]),
-    courier: str(rowData[14]),
-    trackingNumber: str(rowData[15]),
-    optionName: str(rowData[19]),
-    fulfillmentType: str(rowData[20]),
-    paymentAmount: num(rowData[21]),
-    productAbbr: str(rowData[22]),
-    productCode: str(rowData[27]) || str(rowData[28]),
-    cost: num(rowData[30]),
+    // 주문 식별자
+    sabangnetOrderNumber, // Q열: 사방넷주문번호
+    mallOrderNumber: str(rowData[16]), // P열: 쇼핑몰주문번호
+    subOrderNumber: str(rowData[26]), // Z열: 부주문번호
+
+    // 상품 정보
+    productName: str(rowData[1]), // A열: 상품명
+    quantity: parseInt(str(rowData[2]), 10) || 1, // B열: 수량
+    optionName: str(rowData[19]), // S열: 옵션
+    productAbbr: str(rowData[22]), // V열: 상품약어
+    productCode: str(rowData[27]) || str(rowData[28]), // [열/\열: 품번코드/자체상품코드
+    mallProductNumber: str(rowData[18]), // R열: 쇼핑몰상품번호
+    modelNumber: str(rowData[29]), // ]열: 모델번호
+
+    // 주문자/수취인
+    orderName: str(rowData[3]), // C열: 주문인
+    recipientName: str(rowData[4]), // D열: 받는인
+    orderPhone: str(rowData[5]), // E열: 주문인 연락처
+    orderMobile: str(rowData[6]), // F열: 주문인 핸드폰
+    recipientPhone: str(rowData[7]), // G열: 받는인 연락처
+    recipientMobile: str(rowData[8]), // H열: 받는인 핸드폰
+
+    // 배송 정보
+    postalCode: str(rowData[9]), // I열: 우편번호
+    address: str(rowData[10]), // J열: 배송지
+    memo: str(rowData[11]), // K열: 전언
+    courier: str(rowData[14]), // N열: 택배사
+    trackingNumber: str(rowData[15]), // O열: 송장번호
+    logisticsNote: str(rowData[24]), // X열: 물류전달사항
+
+    // 소스/제조사
+    shoppingMall: str(rowData[12]), // L열: 사이트
+    manufacturer: str(rowData[13]), // M열: 제조사
+
+    // 금액
+    paymentAmount: num(rowData[21]), // U열: 결제금액
+    cost: num(rowData[30]), // ^열: 원가(상품)*수량
     shippingCost: 0,
+
+    // 주문 메타
+    fulfillmentType: str(rowData[20]), // T열: F (주문유형)
+    cjDate: str(rowData[23]), // W열: 씨제이날짜
+    collectedAt: str(rowData[25]), // Y열: 수집일시
+
+    // 시스템
     rowIndex: rowNumber,
   }
 }

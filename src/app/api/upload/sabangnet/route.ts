@@ -79,7 +79,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const enabledPatterns = exclusionEnabled ? allPatterns.filter((p) => p.enabled) : []
     const checkExclusionPattern = createExclusionChecker(enabledPatterns)
 
-    const { insertedCount, uploadId } = await db.transaction(async (tx) => {
+    const { insertedCount } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
@@ -101,22 +101,16 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
-        return {
-          insertedCount: 0,
-          uploadId: uploadRecord.id,
-        }
+        return { insertedCount: 0 }
       }
 
       const insertResult = await tx
         .insert(order)
         .values(orderValues)
-        .onConflictDoNothing({ target: order.orderNumber })
+        .onConflictDoNothing({ target: order.sabangnetOrderNumber })
         .returning({ id: order.id })
 
-      return {
-        insertedCount: insertResult.length,
-        uploadId: uploadRecord.id,
-      }
+      return { insertedCount: insertResult.length }
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount
@@ -132,16 +126,12 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     }))
 
     const result: UploadResult = {
-      success: true,
-      uploadId,
-      fileName: file.name,
-      totalOrders: parseResult.totalRows - 1,
       processedOrders: insertedCount,
       duplicateOrders: duplicateCount,
       errorOrders: parseResult.errors.length,
       manufacturerBreakdown,
       errors,
-      orderNumbers: parseResult.orders.map((o) => o.orderNumber),
+      orderNumbers: parseResult.orders.map((o) => o.sabangnetOrderNumber),
       summary,
     }
 

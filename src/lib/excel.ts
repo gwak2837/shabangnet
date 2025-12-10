@@ -13,8 +13,8 @@ import { getCellValue } from './excel/util'
 export interface InvoiceConvertResultItem {
   courierCode: string // 변환된 택배사 코드
   errorMessage?: string // 에러 메시지
-  orderNumber: string // 사방넷 주문번호
   originalCourier?: string // 원본 택배사명 (에러 시)
+  sabangnetOrderNumber: string // 사방넷 주문번호
   status: 'courier_error' | 'order_not_found' | 'success'
   trackingNumber: string // 송장번호
 }
@@ -22,8 +22,8 @@ export interface InvoiceConvertResultItem {
 // 송장 파싱 결과 (개별 건)
 export interface InvoiceRow {
   courierName: string // 원본 택배사명
-  orderNumber: string // 주문번호
   rowIndex: number // 원본 행 번호
+  sabangnetOrderNumber: string // 사방넷 주문번호
   trackingNumber: string // 송장번호
 }
 
@@ -34,12 +34,12 @@ export interface OrderData {
   memo?: string
   optionName: string
   orderName?: string // 주문자명
-  orderNumber: string
   phone: string
   price: number
   productCode: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string // 사방넷 주문번호
 }
 
 // 제조사별 발주서 생성 옵션
@@ -59,30 +59,52 @@ export interface OrderTemplateConfig {
 
 // 사방넷 원본 파일에서 파싱된 주문 데이터
 export interface ParsedOrder {
-  address: string
-  cost: number
-  courier: string
-  fulfillmentType: string
-  manufacturer: string
-  memo: string
-  optionName: string
-  orderMobile: string
-  orderName: string
-  orderNumber: string
-  orderPhone: string
-  paymentAmount: number
-  postalCode: string
-  productAbbr: string
-  productCode: string
-  productName: string
-  quantity: number
-  recipientMobile: string
-  recipientName: string
-  recipientPhone: string
+  address: string // J열: 배송지
+  cjDate: string // W열: 씨제이날짜
+  collectedAt: string // Y열: 수집일시
+
+  cost: number // ^열: 원가(상품)*수량
+  courier: string // N열: 택배사
+  // 주문 메타
+  fulfillmentType: string // T열: F (주문유형)
+  logisticsNote: string // X열: 물류전달사항
+  mallOrderNumber: string // P열: 쇼핑몰주문번호
+  mallProductNumber: string // R열: 쇼핑몰상품번호
+  manufacturer: string // M열: 제조사
+
+  memo: string // K열: 전언
+  modelNumber: string // ]열: 모델번호
+  optionName: string // S열: 옵션
+  orderMobile: string // F열: 주문인 핸드폰
+  // 주문자/수취인
+  orderName: string // C열: 주문인
+  orderPhone: string // E열: 주문인 연락처
+
+  // 금액
+  paymentAmount: number // U열: 결제금액
+  // 배송 정보
+  postalCode: string // I열: 우편번호
+  productAbbr: string // V열: 상품약어
+  productCode: string // [열/\열: 품번코드/자체상품코드
+  // 상품 정보
+  productName: string // A열: 상품명
+  quantity: number // B열: 수량
+
+  recipientMobile: string // H열: 받는인 핸드폰
+  recipientName: string // D열: 받는인
+
+  recipientPhone: string // G열: 받는인 연락처
+  // 시스템
   rowIndex: number // 원본 행 번호 (에러 추적용)
-  shippingCost: number
-  shoppingMall: string
-  trackingNumber: string
+  // 주문 식별자
+  sabangnetOrderNumber: string // Q열: 사방넷주문번호 (UNIQUE KEY)
+
+  shippingCost: number // 택배비
+  // 소스/제조사
+  shoppingMall: string // L열: 사이트
+  subOrderNumber: string // Z열: 부주문번호
+
+  trackingNumber: string // O열: 송장번호
 }
 
 // 파싱 에러
@@ -112,7 +134,7 @@ export interface TemplateAnalysis {
 
 // 발주서 기본 헤더
 const DEFAULT_HEADERS = [
-  { key: 'orderNumber', header: '주문번호', width: 20 },
+  { key: 'sabangnetOrderNumber', header: '사방넷주문번호', width: 20 },
   { key: 'customerName', header: '수취인명', width: 15 },
   { key: 'phone', header: '연락처', width: 18 },
   { key: 'address', header: '배송지', width: 50 },
@@ -330,7 +352,7 @@ export async function generateOrderSheet(options: OrderSheetOptions): Promise<Bu
     const displayCustomerName = formatRecipientName(order.customerName, order.orderName)
 
     const row = worksheet.addRow([
-      order.orderNumber,
+      order.sabangnetOrderNumber,
       displayCustomerName,
       order.phone,
       order.address,
@@ -413,7 +435,7 @@ export async function generateSabangnetInvoiceFile(results: InvoiceConvertResult
   // 성공한 데이터만 추가
   const successResults = results.filter((r) => r.status === 'success')
   for (const result of successResults) {
-    worksheet.addRow([result.orderNumber, result.courierCode, result.trackingNumber])
+    worksheet.addRow([result.sabangnetOrderNumber, result.courierCode, result.trackingNumber])
   }
 
   // 컬럼 너비 설정
@@ -460,27 +482,36 @@ export async function generateTemplateBasedOrderSheet(
 
     // columnMappings를 기반으로 헤더 생성 (sabangnetKey를 한글 라벨로 변환)
     const keyToLabel: Record<string, string> = {
+      sabangnetOrderNumber: '사방넷주문번호',
+      mallOrderNumber: '쇼핑몰주문번호',
+      subOrderNumber: '부주문번호',
       productName: '상품명',
       quantity: '수량',
+      optionName: '옵션',
+      productAbbr: '상품약어',
+      productCode: '품번코드',
+      mallProductNumber: '쇼핑몰상품번호',
+      modelNumber: '모델번호',
       orderName: '주문인',
       recipientName: '받는인',
       orderPhone: '주문인연락처',
       orderMobile: '주문인핸드폰',
       recipientPhone: '받는인연락처',
-      recipientMobile: '핸드폰',
-      postalCode: '우편',
+      recipientMobile: '받는인핸드폰',
+      postalCode: '우편번호',
       address: '배송지',
       memo: '전언',
-      shoppingMall: '쇼핑몰',
-      manufacturer: '제조사',
-      courier: '택배',
+      courier: '택배사',
       trackingNumber: '송장번호',
-      orderNumber: '주문번호',
-      optionName: '옵션',
+      logisticsNote: '물류전달사항',
+      shoppingMall: '사이트',
+      manufacturer: '제조사',
       paymentAmount: '결제금액',
-      productCode: '상품코드',
       cost: '원가',
-      shippingCost: '배송비',
+      shippingCost: '택배비',
+      fulfillmentType: '주문유형',
+      cjDate: '씨제이날짜',
+      collectedAt: '수집일시',
     }
 
     for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
@@ -638,13 +669,13 @@ export async function parseInvoiceFile(
         errors.push({
           row: rowNumber,
           message: '송장번호가 없습니다',
-          data: { orderNumber },
+          data: { sabangnetOrderNumber: orderNumber },
         })
         return
       }
 
       invoices.push({
-        orderNumber,
+        sabangnetOrderNumber: orderNumber,
         courierName,
         trackingNumber,
         rowIndex: rowNumber,

@@ -33,18 +33,14 @@ export interface UploadResult {
   duplicateOrders: number
   errorOrders: number
   errors: UploadError[]
-  fileName: string
   manufacturerBreakdown: ManufacturerBreakdown[]
   orderNumbers: string[]
   processedOrders: number
-  success: boolean
   summary: {
     estimatedMargin: number | null
     totalAmount: number
     totalCost: number
   }
-  totalOrders: number
-  uploadId: number
 }
 
 interface ManufacturerInfo {
@@ -127,10 +123,6 @@ export function createExclusionChecker(patterns: ExclusionPattern[]) {
     }
 
     const matched = patterns.find((p) => fulfillmentType.includes(p.pattern))
-
-    if (matched) {
-      console.log('👀 - checkExclusionPattern - matched:', fulfillmentType, patterns)
-    }
     return matched ? matched.description || matched.pattern : null
   }
 }
@@ -170,35 +162,47 @@ export function prepareOrderValues({ orders, uploadId, lookupMaps, checkExclusio
     // 4) 제외 패턴 체크 (T열 주문유형 기준)
     const excludedReason = checkExclusionPattern(o.fulfillmentType)
 
-    if (excludedReason) {
-      console.log('👀 - prepareOrderValues - excludedReason:', o.orderNumber, excludedReason)
-    }
-
     return {
       uploadId,
-      orderNumber: o.orderNumber,
+      // 주문 식별자
+      sabangnetOrderNumber: o.sabangnetOrderNumber,
+      mallOrderNumber: o.mallOrderNumber || null,
+      subOrderNumber: o.subOrderNumber || null,
+      // 상품 정보
       productName: o.productName || null,
       quantity: o.quantity || 1,
+      optionName: o.optionName || null,
+      productAbbr: o.productAbbr || null,
+      productCode: o.productCode || null,
+      mallProductNumber: o.mallProductNumber || null,
+      modelNumber: o.modelNumber || null,
+      // 주문자/수취인
       orderName: o.orderName || null,
       recipientName: o.recipientName || null,
       orderPhone: o.orderPhone || null,
       orderMobile: o.orderMobile || null,
       recipientPhone: o.recipientPhone || null,
       recipientMobile: o.recipientMobile || null,
+      // 배송 정보
       postalCode: o.postalCode || null,
       address: o.address || null,
       memo: o.memo || null,
+      courier: o.courier || null,
+      trackingNumber: o.trackingNumber || null,
+      logisticsNote: o.logisticsNote || null,
+      // 소스/제조사
       shoppingMall: o.shoppingMall || null,
       manufacturerName: o.manufacturer || null,
       manufacturerId: matchedManufacturerId,
-      courier: o.fulfillmentType || o.courier || null,
-      trackingNumber: o.trackingNumber || null,
-      optionName: o.optionName || null,
+      // 금액
       paymentAmount: o.paymentAmount || 0,
-      productAbbr: o.productAbbr || null,
-      productCode: o.productCode || null,
       cost: o.cost || 0,
       shippingCost: o.shippingCost || 0,
+      // 주문 메타
+      fulfillmentType: o.fulfillmentType || null,
+      cjDate: o.cjDate ? parseDate(o.cjDate) : null,
+      collectedAt: o.collectedAt ? parseDateTime(o.collectedAt) : null,
+      // 시스템
       status: 'pending' as const,
       excludedReason,
     }
@@ -213,4 +217,59 @@ export function validateExcelFile(file: File) {
   }
 
   return { valid: true }
+}
+
+/**
+ * 날짜 문자열을 Date 객체로 변환 (씨제이날짜용)
+ * 예: "2024-12-10", "20241210", "2024.12.10" 등
+ */
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null
+
+  // 숫자만 추출
+  const digits = dateStr.replace(/\D/g, '')
+
+  // YYYYMMDD 형식
+  if (digits.length === 8) {
+    const year = parseInt(digits.slice(0, 4), 10)
+    const month = parseInt(digits.slice(4, 6), 10) - 1
+    const day = parseInt(digits.slice(6, 8), 10)
+    const date = new Date(year, month, day)
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  // 일반 Date 파싱 시도
+  const parsed = new Date(dateStr)
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
+/**
+ * 날짜+시간 문자열을 Date 객체로 변환 (수집일시용)
+ * 예: "2024-12-10 14:30:00", "2024.12.10 14:30" 등
+ */
+function parseDateTime(dateTimeStr: string): Date | null {
+  if (!dateTimeStr) return null
+
+  // 일반 Date 파싱 시도
+  const parsed = new Date(dateTimeStr)
+  if (!isNaN(parsed.getTime())) {
+    return parsed
+  }
+
+  // 한국 날짜 형식 시도 (YYYY.MM.DD HH:mm:ss 또는 YYYY-MM-DD HH:mm:ss)
+  const match = dateTimeStr.match(/(\d{4})[\.\-\/](\d{1,2})[\.\-\/](\d{1,2})\s*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?/)
+  if (match) {
+    const [, year, month, day, hour = '0', minute = '0', second = '0'] = match
+    const date = new Date(
+      parseInt(year, 10),
+      parseInt(month, 10) - 1,
+      parseInt(day, 10),
+      parseInt(hour, 10),
+      parseInt(minute, 10),
+      parseInt(second, 10),
+    )
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  return null
 }

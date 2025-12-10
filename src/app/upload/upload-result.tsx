@@ -12,7 +12,6 @@ export interface UploadResultData {
   duplicateOrders?: number
   errorOrders: number
   errors: { row: number; message: string; productCode?: string; productName?: string }[]
-  fileName: string
   mallName?: string
   manufacturerBreakdown: {
     name: string
@@ -25,14 +24,11 @@ export interface UploadResultData {
   }[]
   orderNumbers?: string[]
   processedOrders: number
-  success: boolean
   summary?: {
     totalAmount: number
     totalCost: number
     estimatedMargin: number | null
   }
-  totalOrders: number
-  uploadId: number
 }
 
 interface UploadResultProps {
