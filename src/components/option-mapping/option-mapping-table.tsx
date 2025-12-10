@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate } from '@/utils/format'
+import { formatDate } from '@/utils/format/number'
 
 interface OptionMappingTableProps {
   mappings: OptionManufacturerMapping[]

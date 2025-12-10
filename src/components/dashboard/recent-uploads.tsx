@@ -7,7 +7,7 @@ import type { Upload } from '@/services/dashboard'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel } from '@/utils/format'
+import { formatDateTime, formatFileSize, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
 interface RecentUploadsProps {
   isLoading?: boolean

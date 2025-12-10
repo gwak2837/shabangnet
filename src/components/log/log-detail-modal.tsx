@@ -7,7 +7,7 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { formatCurrency, formatDateTime } from '@/utils/format'
+import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface LogDetailModalProps {
   log: SendLog | null

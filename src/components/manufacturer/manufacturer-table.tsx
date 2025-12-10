@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate } from '@/utils/format'
+import { formatDate } from '@/utils/format/number'
 
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]

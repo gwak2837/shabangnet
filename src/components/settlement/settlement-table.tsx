@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { formatCurrency, formatDateTime } from '@/utils/format'
+import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 export interface SettlementOrder {
   address: string
@@ -47,7 +47,9 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">사방넷주문번호</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  사방넷주문번호
+                </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발주일</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>

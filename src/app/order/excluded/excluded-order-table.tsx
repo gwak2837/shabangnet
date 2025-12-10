@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { formatCurrency, getExclusionLabelSync } from '@/utils/format'
+import { formatCurrency, getExclusionLabelSync } from '@/utils/format/number'
 
 import { useExcludedOrderBatches } from '../hook'
 

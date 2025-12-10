@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency, formatDate } from '@/utils/format/number'
 
 interface ProductTableProps {
   manufacturers: Manufacturer[]

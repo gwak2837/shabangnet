@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format'
+import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
 import type { OrderBatch } from './hook'
 

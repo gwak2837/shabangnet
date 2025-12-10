@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { formatFileSize } from '@/utils/format'
+import { formatFileSize } from '@/utils/format/number'
 
 interface DropzoneProps {
   disabled?: boolean

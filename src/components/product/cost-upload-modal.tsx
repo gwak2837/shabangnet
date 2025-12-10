@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { downloadExcel, parseExcelToJson } from '@/lib/excel-client'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency } from '@/utils/format/number'
 
 interface CostUploadData {
   cost: number

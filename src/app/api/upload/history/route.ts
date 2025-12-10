@@ -9,10 +9,6 @@ import { shoppingMallTemplate } from '@/db/schema/settings'
 import { auth } from '@/lib/auth'
 import { createCacheControl } from '@/utils/cache-control'
 
-// ============================================
-// Types
-// ============================================
-
 interface UploadHistoryItem {
   currentOrderCount: number // 현재 연관된 주문 수
   errorOrders: number
@@ -34,10 +30,6 @@ interface UploadHistoryResponse {
   nextCursor: string | null
 }
 
-// ============================================
-// Query Params Schema
-// ============================================
-
 const queryParamsSchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
@@ -49,10 +41,6 @@ const queryParamsSchema = z.object({
 })
 
 type QueryParams = z.infer<typeof queryParamsSchema>
-
-// ============================================
-// GET /api/upload/history
-// ============================================
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -89,14 +77,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ============================================
-// Data Fetching Logic
-// ============================================
-
 async function getUploadHistory(params: QueryParams): Promise<UploadHistoryResponse> {
   const { cursor, limit, fileType, startDate, endDate, sortBy, sortOrder } = params
 
-  // Build conditions
   const conditions = []
 
   if (fileType) {
@@ -108,13 +91,11 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
   }
 
   if (endDate) {
-    // Include the entire end date
     const endOfDay = new Date(endDate)
     endOfDay.setHours(23, 59, 59, 999)
     conditions.push(lte(upload.uploadedAt, endOfDay))
   }
 
-  // Cursor condition for pagination
   if (cursor) {
     const { uploadedAt: cursorDate, id: cursorId } = JSON.parse(cursor) as { id: number; uploadedAt: string }
     const cursorTimestamp = new Date(cursorDate)
@@ -136,7 +117,6 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
     }
   }
 
-  // Build order by
   const sortColumn = {
     uploadedAt: upload.uploadedAt,
     fileName: upload.fileName,
@@ -148,7 +128,6 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
   const orderByFn = sortOrder === 'desc' ? desc : asc
   const secondaryOrderByFn = sortOrder === 'desc' ? desc : asc
 
-  // Fetch uploads with shopping mall name
   const uploads = await db
     .select({
       id: upload.id,
@@ -171,11 +150,9 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
 
   const hasMore = uploads.length > limit
   const items = hasMore ? uploads.slice(0, -1) : uploads
-
-  // Get current order counts for each upload
   const uploadIds = items.map((u) => u.id)
-
   const orderCountMap = new Map<number, number>()
+
   if (uploadIds.length > 0) {
     const orderCounts = await db
       .select({

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { authClient } from '@/lib/auth-client'
-import { formatDateTime, formatFileSize } from '@/utils/format'
+import { formatDateTime, formatFileSize } from '@/utils/format/number'
 
 import { DeleteUploadsDialog } from './delete-uploads-dialog'
 import { type UploadHistoryFilters, type UploadHistoryItem, useUploadHistory } from './use-upload-history'

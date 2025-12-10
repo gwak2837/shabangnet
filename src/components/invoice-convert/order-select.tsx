@@ -7,7 +7,7 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/utils/cn'
-import { formatCurrency, formatDateTime } from '@/utils/format'
+import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface OrderSelectProps {
   logs: SendLog[]

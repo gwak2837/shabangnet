@@ -36,7 +36,7 @@ import {
   formatProductNameWithOption,
   formatRecipientName,
   getDaysDifference,
-} from '@/utils/format'
+} from '@/utils/format/number'
 
 import type { OrderBatch } from './hook'
 

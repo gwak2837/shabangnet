@@ -6,7 +6,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import type { ChartDataItem } from '@/services/dashboard'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency } from '@/utils/format/number'
 
 const COLORS = [
   'oklch(0.65 0.15 250)',
