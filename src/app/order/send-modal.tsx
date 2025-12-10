@@ -114,7 +114,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
         manufacturerName: batch.manufacturerName,
         email: batch.email,
         orders: batch.orders.map((order) => ({
-          orderNumber: order.orderNumber,
+          sabangnetOrderNumber: order.sabangnetOrderNumber,
           customerName: order.customerName,
           phone: order.phone,
           address: order.address,

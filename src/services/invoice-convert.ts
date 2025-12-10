@@ -67,14 +67,14 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
     const courierMappingList = await db.select().from(courierMapping)
     const courierLookup = buildCourierLookup(courierMappingList)
 
-    // 3. 해당 제조사의 주문 데이터 조회 (주문번호로 매칭)
-    const orderNumbers = parseResult.invoices.map((inv) => inv.orderNumber)
+    // 3. 해당 제조사의 주문 데이터 조회 (사방넷주문번호로 매칭)
+    const sabangnetOrderNumbers = parseResult.invoices.map((inv) => inv.sabangnetOrderNumber)
     const existingOrders = await db
-      .select({ id: order.id, orderNumber: order.orderNumber })
+      .select({ id: order.id, sabangnetOrderNumber: order.sabangnetOrderNumber })
       .from(order)
-      .where(inArray(order.orderNumber, orderNumbers))
+      .where(inArray(order.sabangnetOrderNumber, sabangnetOrderNumbers))
 
-    const orderMap = new Map(existingOrders.map((o) => [o.orderNumber, o.id]))
+    const orderMap = new Map(existingOrders.map((o) => [o.sabangnetOrderNumber, o.id]))
 
     // 4. 변환 수행
     const results: InvoiceConvertResultItem[] = []
@@ -86,7 +86,7 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
 
       // 성공한 건만 업데이트 대상에 추가
       if (result.status === 'success') {
-        const orderId = orderMap.get(invoice.orderNumber)
+        const orderId = orderMap.get(invoice.sabangnetOrderNumber)
         if (orderId) {
           ordersToUpdate.push({
             id: orderId,
@@ -187,9 +187,9 @@ function convertSingleInvoice(
   orderMap: Map<string, number>,
 ): InvoiceConvertResultItem {
   // 주문번호 존재 여부 확인
-  if (!orderMap.has(invoice.orderNumber)) {
+  if (!orderMap.has(invoice.sabangnetOrderNumber)) {
     return {
-      orderNumber: invoice.orderNumber,
+      sabangnetOrderNumber: invoice.sabangnetOrderNumber,
       courierCode: '',
       trackingNumber: invoice.trackingNumber,
       status: 'order_not_found',
@@ -203,7 +203,7 @@ function convertSingleInvoice(
 
   if (!courierCode) {
     return {
-      orderNumber: invoice.orderNumber,
+      sabangnetOrderNumber: invoice.sabangnetOrderNumber,
       courierCode: '',
       trackingNumber: invoice.trackingNumber,
       status: 'courier_error',
@@ -212,7 +212,7 @@ function convertSingleInvoice(
   }
 
   return {
-    orderNumber: invoice.orderNumber,
+    sabangnetOrderNumber: invoice.sabangnetOrderNumber,
     courierCode,
     trackingNumber: invoice.trackingNumber,
     status: 'success',

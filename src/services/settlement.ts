@@ -28,9 +28,9 @@ export interface SettlementOrder {
   excludedReason?: string
   id: number
   optionName: string
-  orderNumber: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
   sentAt: string
   shippingCost: number
   totalCost: number
@@ -82,7 +82,7 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
 
     return {
       id: o.id,
-      orderNumber: o.orderNumber,
+      sabangnetOrderNumber: o.sabangnetOrderNumber,
       productName: o.productName || '',
       optionName: o.optionName || '',
       quantity,
@@ -127,7 +127,7 @@ export async function getSettlementExcelData(filters: SettlementFilters): Promis
   const settlement = await getSettlementData(filters)
 
   const data = settlement.orders.map((o) => ({
-    주문번호: o.orderNumber,
+    사방넷주문번호: o.sabangnetOrderNumber,
     발주일: new Date(o.sentAt).toLocaleDateString('ko-KR'),
     상품명: o.productName,
     옵션: o.optionName || '',

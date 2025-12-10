@@ -43,12 +43,12 @@ interface Order {
   manufacturerName: string
   optionName: string
   orderName?: string
-  orderNumber: string
   phone: string
   price: number
   productCode: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
   status: 'completed' | 'error' | 'pending' | 'processing'
 }
 

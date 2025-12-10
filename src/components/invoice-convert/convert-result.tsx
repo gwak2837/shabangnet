@@ -114,7 +114,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                 <TableBody>
                   {successResults.slice(0, 5).map((result, idx) => (
                     <TableRow className="hover:bg-slate-50" key={idx}>
-                      <TableCell className="font-mono text-sm">{result.orderNumber}</TableCell>
+                      <TableCell className="font-mono text-sm">{result.sabangnetOrderNumber}</TableCell>
                       <TableCell>
                         <Badge className="font-mono" variant="secondary">
                           {result.courierCode}
@@ -156,7 +156,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                 <TableBody>
                   {[...courierErrors, ...orderErrors].map((result, idx) => (
                     <TableRow className="hover:bg-amber-100/50 border-amber-200" key={idx}>
-                      <TableCell className="font-mono text-sm text-amber-900">{result.orderNumber}</TableCell>
+                      <TableCell className="font-mono text-sm text-amber-900">{result.sabangnetOrderNumber}</TableCell>
                       <TableCell className="font-mono text-sm text-amber-800">{result.trackingNumber}</TableCell>
                       <TableCell>
                         <Badge

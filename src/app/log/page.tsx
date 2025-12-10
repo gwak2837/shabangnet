@@ -55,9 +55,9 @@ export default function LogsPage() {
 
   const handleDownloadExcel = (log: SendLog) => {
     // CSV 형식으로 데이터 생성
-    const headers = ['주문번호', '상품명', '옵션', '수량', '금액', '고객명', '배송주소']
+    const headers = ['사방넷주문번호', '상품명', '옵션', '수량', '금액', '고객명', '배송주소']
     const rows = log.orders.map((order) => [
-      order.orderNumber,
+      order.sabangnetOrderNumber,
       order.productName,
       order.optionName,
       order.quantity.toString(),

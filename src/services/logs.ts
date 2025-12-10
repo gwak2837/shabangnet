@@ -36,10 +36,10 @@ export interface SendLogOrder {
   cost: number
   customerName: string
   optionName: string
-  orderNumber: string
   price: number
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
 }
 
 export async function getAll(): Promise<SendLog[]> {
@@ -63,7 +63,7 @@ export async function getById(id: number): Promise<SendLog | undefined> {
     cost: o.cost ?? 0,
     customerName: o.customerName || '',
     optionName: o.optionName || '',
-    orderNumber: o.orderNumber,
+    sabangnetOrderNumber: o.sabangnetOrderNumber,
     price: o.price ?? 0,
     productName: o.productName,
     quantity: o.quantity || 0,

@@ -16,9 +16,9 @@ export interface SettlementOrder {
   excludedReason?: string
   id: number
   optionName: string
-  orderNumber: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
   sentAt: string
   shippingCost: number
   totalCost: number
@@ -47,7 +47,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">주문번호</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">사방넷주문번호</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발주일</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
@@ -77,7 +77,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                     className={`hover:bg-slate-50 ${order.excludedFromEmail ? 'bg-amber-50/50' : ''}`}
                     key={order.id}
                   >
-                    <TableCell className="font-mono text-sm text-slate-700">{order.orderNumber}</TableCell>
+                    <TableCell className="font-mono text-sm text-slate-700">{order.sabangnetOrderNumber}</TableCell>
                     <TableCell className="text-sm text-slate-600">{formatDateTime(order.sentAt)}</TableCell>
                     <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
                     <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>

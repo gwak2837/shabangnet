@@ -22,12 +22,12 @@ interface Order {
   manufacturerName: string
   optionName: string
   orderName?: string
-  orderNumber: string
   phone: string
   price: number
   productCode: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
   status: 'completed' | 'error' | 'pending' | 'processing'
 }
 
@@ -156,7 +156,8 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
   // FIXME: 필요하나?
   const searchCondition = search
     ? sql`(
-        order_number ILIKE ${`%${search}%`} OR
+        sabangnet_order_number ILIKE ${`%${search}%`} OR
+        mall_order_number ILIKE ${`%${search}%`} OR
         product_name ILIKE ${`%${search}%`} OR
         recipient_name ILIKE ${`%${search}%`} OR
         manufacturer_name ILIKE ${`%${search}%`}
@@ -209,7 +210,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
     if (batch) {
       batch.orders.push({
         id: o.id,
-        orderNumber: o.orderNumber,
+        sabangnetOrderNumber: o.sabangnetOrderNumber,
         customerName: o.recipientName || '',
         phone: o.recipientMobile || o.recipientPhone || '',
         address: o.address || '',
@@ -222,7 +223,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],
         createdAt: o.createdAt.toISOString(),
-        fulfillmentType: o.shoppingMall || '',
+        fulfillmentType: o.fulfillmentType || o.shoppingMall || '',
         orderName: o.orderName || undefined,
       })
     }

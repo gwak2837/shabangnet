@@ -59,7 +59,7 @@ const DEFAULT_ORDER_TEMPLATE = {
   headerRow: 1,
   dataStartRow: 2,
   columnMappings: {
-    orderNumber: 'A',
+    sabangnetOrderNumber: 'A',
     recipientName: 'B',
     recipientMobile: 'C',
     address: 'D',

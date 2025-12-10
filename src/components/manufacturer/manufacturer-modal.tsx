@@ -177,11 +177,11 @@ export function ManufacturerModal({
       'memo',
       'optionName',
       'orderName',
-      'orderNumber',
       'productName',
       'quantity',
       'recipientMobile',
       'recipientName',
+      'sabangnetOrderNumber',
     ].includes(col.key),
   )
 

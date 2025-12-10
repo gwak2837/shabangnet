@@ -33,12 +33,12 @@ export interface Order {
   manufacturerName: string
   optionName: string
   orderName?: string
-  orderNumber: string
   phone: string
   price: number
   productCode: string
   productName: string
   quantity: number
+  sabangnetOrderNumber: string
   status: 'completed' | 'error' | 'pending' | 'processing'
 }
 
@@ -177,29 +177,44 @@ export async function generateOrderExcel(params: {
     }
 
     const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
-      orderNumber: o.orderNumber,
+      // 주문 식별자
+      sabangnetOrderNumber: o.sabangnetOrderNumber,
+      mallOrderNumber: o.mallOrderNumber || '',
+      subOrderNumber: o.subOrderNumber || '',
+      // 상품 정보
       productName: o.productName || '',
       quantity: o.quantity || 1,
+      optionName: o.optionName || '',
+      productAbbr: o.productAbbr || '',
+      productCode: o.productCode || '',
+      mallProductNumber: o.mallProductNumber || '',
+      modelNumber: o.modelNumber || '',
+      // 주문자/수취인
       orderName: o.orderName || '',
       recipientName: o.recipientName || '',
       orderPhone: o.orderPhone || '',
       orderMobile: o.orderMobile || '',
       recipientPhone: o.recipientPhone || '',
       recipientMobile: o.recipientMobile || '',
+      // 배송 정보
       postalCode: o.postalCode || '',
       address: o.address || '',
       memo: o.memo || '',
-      fulfillmentType: o.excludedReason || '',
-      shoppingMall: o.shoppingMall || '',
-      manufacturer: mfr.name,
       courier: o.courier || '',
       trackingNumber: o.trackingNumber || '',
-      optionName: o.optionName || '',
+      logisticsNote: o.logisticsNote || '',
+      // 소스/제조사
+      shoppingMall: o.shoppingMall || '',
+      manufacturer: mfr.name,
+      // 금액
       paymentAmount: o.paymentAmount ?? 0,
-      productAbbr: o.productAbbr || '',
-      productCode: o.productCode || '',
       cost: o.cost ?? 0,
       shippingCost: o.shippingCost ?? 0,
+      // 주문 메타
+      fulfillmentType: o.fulfillmentType || o.excludedReason || '',
+      cjDate: o.cjDate?.toISOString().split('T')[0] || '',
+      collectedAt: o.collectedAt?.toISOString() || '',
+      // 시스템
       rowIndex: idx + 1,
     }))
 
@@ -207,7 +222,7 @@ export async function generateOrderExcel(params: {
   } else {
     // 기본 다온발주양식으로 생성 (템플릿이 없거나 유효하지 않은 경우)
     const orderData: OrderData[] = ordersToExport.map((o) => ({
-      orderNumber: o.orderNumber,
+      sabangnetOrderNumber: o.sabangnetOrderNumber,
       customerName: o.recipientName || '',
       orderName: o.orderName || undefined,
       phone: o.recipientMobile || o.recipientPhone || '',
@@ -269,7 +284,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
     if (batch) {
       batch.orders.push({
         id: o.id,
-        orderNumber: o.orderNumber,
+        sabangnetOrderNumber: o.sabangnetOrderNumber,
         customerName: o.recipientName || '',
         phone: o.recipientMobile || o.recipientPhone || '',
         address: o.address || '',
@@ -282,7 +297,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],
         createdAt: o.createdAt.toISOString(),
-        fulfillmentType: o.courier || o.shoppingMall || '', // courier에 fulfillmentType이 저장됨
+        fulfillmentType: o.fulfillmentType || o.shoppingMall || '',
       })
     }
   }
