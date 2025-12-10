@@ -13,7 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { type ShoppingMallTemplate } from '@/services/shopping-mall-templates'
 
@@ -43,9 +42,6 @@ export function TemplateItem({ template, skeleton, isDeleting, onToggle, onEdit,
           <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 font-mono text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
             {template.mallName}
           </span>
-          <Badge className="text-xs" variant="secondary">
-            {template.headerRow}행
-          </Badge>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {columnKeys.slice(0, 4).map((col, i) => (

@@ -239,7 +239,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
               <SortableHeader
                 className="w-20 text-right"
                 field="processedOrders"
-                label="처리됨"
+                label="유효"
                 onSort={handleSort}
                 sortBy={sortBy}
                 sortOrder={sortOrder}
@@ -253,7 +253,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
                 sortOrder={sortOrder}
               />
               <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                현재 주문
+                처리
               </div>
               <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 크기
@@ -361,7 +361,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       <div className="w-20 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">{item.totalOrders}건</div>
 
       {/* Processed Orders */}
-      <div className="w-20 shrink-0 px-3 text-right text-emerald-600 tabular-nums">{item.processedOrders}건</div>
+      <div className="w-20 shrink-0 px-3 text-right text-slate-600 tabular-nums">{item.processedOrders}건</div>
 
       {/* Error Orders */}
       <div className="w-20 shrink-0 px-3 text-right tabular-nums">
@@ -375,7 +375,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Current Order Count */}
-      <div className="w-20 shrink-0 px-3 text-right text-slate-600 tabular-nums">{item.currentOrderCount}건</div>
+      <div className="w-20 shrink-0 px-3 text-right text-emerald-600 tabular-nums">{item.currentOrderCount}건</div>
 
       {/* File Size */}
       <div className="w-20 shrink-0 px-3 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>

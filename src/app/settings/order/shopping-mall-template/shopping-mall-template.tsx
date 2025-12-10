@@ -461,7 +461,7 @@ export function ShoppingMallTemplate() {
                         <span className="text-xs text-amber-500">필수 필드 미매핑: {missingLabels}</span>
                       )}
                     </div>
-                    <div className="max-h-52 overflow-hidden overflow-y-auto rounded-lg ring-1 ring-border/50">
+                    <div className="rounded-md ring-1 ring-border/50">
                       {isAnalyzing ? (
                         <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -469,6 +469,10 @@ export function ShoppingMallTemplate() {
                         </div>
                       ) : modalState.analyzeResult && modalState.analyzeResult.headers.length > 0 ? (
                         <div className="divide-y divide-border/50">
+                          <div className="flex items-center gap-4 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground">
+                            <span className="flex-1">쇼핑몰 양식 컬럼</span>
+                            <span className="w-48">사방넷 양식 컬럼</span>
+                          </div>
                           {modalState.analyzeResult.headers.map((header) => (
                             <MappingRow
                               header={header}
