@@ -47,7 +47,11 @@ const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
   displayName: '쇼핑몰 이름',
   headerRow: 1,
   dataStartRow: 2,
-  columnMappings: { 주문번호: 'orderNumber', 수취인명: 'receiverName', 연락처: 'receiverPhone' },
+  columnMappings: {
+    주문번호: 'sabangnetOrderNumber',
+    수취인명: 'receiverName',
+    연락처: 'receiverPhone',
+  },
   enabled: true,
   createdAt: '',
   updatedAt: '',

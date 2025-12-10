@@ -31,8 +31,7 @@ export async function POST(request: Request) {
 
     const { orderNumbers, mallName } = parsed.data
 
-    // 주문 데이터 조회 (주문번호 기준)
-    const orders = await db.select().from(order).where(inArray(order.orderNumber, orderNumbers))
+    const orders = await db.select().from(order).where(inArray(order.sabangnetOrderNumber, orderNumbers))
 
     if (orders.length === 0) {
       return NextResponse.json({ error: '주문 데이터가 없습니다' }, { status: 404 })

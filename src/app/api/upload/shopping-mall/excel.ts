@@ -14,6 +14,7 @@ export interface ShoppingMallConfig {
 
 /**
  * 쇼핑몰 주문 파일 파싱
+ * columnMappings를 기반으로 동적으로 컬럼을 매핑
  */
 export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig): Promise<ParseResult> {
   const workbook = new ExcelJS.Workbook()
@@ -23,7 +24,7 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   if (!worksheet) {
     return {
       orders: [],
-      errors: [{ row: 0, message: '워크시트를 찾을 수 없습니다' }],
+      errors: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
       headers: [],
       totalRows: 0,
     }
@@ -33,6 +34,8 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   const errors: ParseError[] = []
   const totalRows = worksheet.rowCount
   const columnCount = worksheet.columnCount
+
+  // 헤더 파싱
   const headerRow = worksheet.getRow(config.headerRow)
   const headers: string[] = []
   const headerColumnMap = new Map<string, number>()
@@ -45,6 +48,7 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
     }
   }
 
+  // 데이터 파싱
   for (let rowNumber = config.dataStartRow; rowNumber <= totalRows; rowNumber++) {
     const row = worksheet.getRow(rowNumber)
     const rowData: string[] = []
@@ -54,6 +58,7 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
         rowData[col] = getCellValue(row.getCell(col))
       }
 
+      // 빈 행 스킵
       if (rowData.every((v) => !v || v.trim() === '')) {
         continue
       }
@@ -79,36 +84,50 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   }
 }
 
+/**
+ * 쇼핑몰 행 데이터를 ParsedOrder로 변환
+ * columnMappings: { 엑셀컬럼명: DB필드명 }
+ */
 function mapRowToOrder(
   rowData: string[],
   rowNumber: number,
   headerColumnMap: Map<string, number>,
   config: ShoppingMallConfig,
 ): ParsedOrder | null {
-  const str = (key: string): string => {
-    const mallColumn = Object.entries(config.columnMappings).find(([, sKey]) => sKey === key)?.[0]
-    if (!mallColumn) return ''
+  // DB 필드명으로 엑셀 셀 값을 가져오는 함수
+  const str = (dbField: string): string => {
+    // columnMappings에서 해당 DB 필드에 매핑된 엑셀 컬럼명 찾기
+    const excelColumn = Object.entries(config.columnMappings).find(([, field]) => field === dbField)?.[0]
+    if (!excelColumn) return ''
 
-    const colIndex = headerColumnMap.get(mallColumn)
+    // 엑셀 컬럼명으로 컬럼 인덱스 찾기
+    const colIndex = headerColumnMap.get(excelColumn)
     if (colIndex === undefined) return ''
 
     return rowData[colIndex]?.trim() || ''
   }
 
-  const num = (key: string): number => parseFloat(str(key).replace(/[^0-9.-]/g, '')) || 0
-  const orderNumber = str('orderNumber')
+  const num = (dbField: string): number => parseFloat(str(dbField).replace(/[^0-9.-]/g, '')) || 0
 
-  if (!orderNumber) {
+  // sabangnetOrderNumber는 필수 (UNIQUE KEY)
+  const sabangnetOrderNumber = str('sabangnetOrderNumber')
+  if (!sabangnetOrderNumber) {
     return null
   }
 
   return {
-    orderNumber,
+    sabangnetOrderNumber,
+    mallOrderNumber: str('mallOrderNumber'),
+    subOrderNumber: str('subOrderNumber'),
     productName: str('productName'),
     quantity: parseInt(str('quantity'), 10) || 1,
+    optionName: str('optionName'),
+    productAbbr: str('productAbbr'),
+    productCode: str('productCode'),
+    mallProductNumber: str('mallProductNumber'),
+    modelNumber: str('modelNumber'),
     orderName: str('orderName'),
     recipientName: str('recipientName'),
-    fulfillmentType: str('fulfillmentType'),
     orderPhone: str('orderPhone'),
     orderMobile: str('orderMobile'),
     recipientPhone: str('recipientPhone'),
@@ -116,16 +135,17 @@ function mapRowToOrder(
     postalCode: str('postalCode'),
     address: str('address'),
     memo: str('memo'),
-    shoppingMall: config.displayName,
-    manufacturer: str('manufacturer'),
     courier: str('courier'),
     trackingNumber: str('trackingNumber'),
-    optionName: str('optionName'),
+    logisticsNote: str('logisticsNote'),
+    shoppingMall: config.displayName,
+    manufacturer: str('manufacturerName'),
     paymentAmount: num('paymentAmount'),
-    productAbbr: str('productAbbr'),
-    productCode: str('productCode'),
     cost: num('cost'),
     shippingCost: num('shippingCost'),
+    fulfillmentType: str('fulfillmentType'),
+    cjDate: str('cjDate'),
+    collectedAt: str('collectedAt'),
     rowIndex: rowNumber,
   }
 }

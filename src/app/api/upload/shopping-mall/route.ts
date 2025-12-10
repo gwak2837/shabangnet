@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
@@ -8,45 +9,26 @@ import { shoppingMallTemplate } from '@/db/schema/settings'
 import { groupOrdersByManufacturer } from '@/lib/excel'
 
 import { parseShoppingMallFile } from './excel'
+import {
+  buildLookupMaps,
+  calculateManufacturerBreakdown,
+  calculateSummary,
+  prepareOrderValues,
+  type UploadError,
+  type UploadResult,
+} from './util'
 
-interface ManufacturerBreakdown {
-  amount: number
-  marginRate: number | null
-  name: string
-  orders: number
-  productCount: number
-  totalCost: number
-  totalQuantity: number
-}
+const VALID_EXTENSIONS = ['.xlsx', '.xls']
 
-interface UploadError {
-  message: string
-  productCode?: string
-  productName?: string
-  row: number
-}
+const uploadFormSchema = z.object({
+  file: z
+    .instanceof(File, { message: '파일이 없거나 유효하지 않아요' })
+    .refine((file) => VALID_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext)), {
+      message: '.xlsx, .xls 엑셀 파일만 업로드 가능해요',
+    }),
+  'mall-id': z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
+})
 
-// 업로드 결과 타입
-interface UploadResult {
-  duplicateOrders: number
-  errorOrders: number
-  errors: UploadError[]
-  fileName: string
-  mallName: string
-  manufacturerBreakdown: ManufacturerBreakdown[]
-  orderNumbers: string[]
-  processedOrders: number
-  success: boolean
-  summary: {
-    estimatedMargin: number | null
-    totalAmount: number
-    totalCost: number
-  }
-  totalOrders: number
-  uploadId: number
-}
-
-// 쇼핑몰 목록 조회
 export async function GET(): Promise<NextResponse> {
   const templates = await db
     .select({
@@ -64,33 +46,27 @@ export async function GET(): Promise<NextResponse> {
 export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
   try {
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    const mallId = formData.get('mall-id') as string | null
+    const validation = uploadFormSchema.safeParse(formData)
 
-    if (!file) {
-      return NextResponse.json({ error: '파일이 없습니다' }, { status: 400 })
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.message }, { status: 400 })
     }
 
-    if (!mallId) {
-      return NextResponse.json({ error: '쇼핑몰을 선택해주세요' }, { status: 400 })
-    }
+    const { file, 'mall-id': mallId } = validation.data
 
-    const validExtensions = ['.xlsx', '.xls']
-    const fileName = file.name
-    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-
-    if (!validExtensions.includes(ext)) {
-      return NextResponse.json({ error: '엑셀 파일(.xlsx, .xls)만 업로드 가능합니다' }, { status: 400 })
-    }
-
-    // DB에서 쇼핑몰 템플릿 조회
-    const mallIdNum = parseInt(mallId, 10)
-    const dbTemplate = await db.query.shoppingMallTemplate.findFirst({
-      where: eq(shoppingMallTemplate.id, mallIdNum),
-    })
+    const [dbTemplate] = await db
+      .select({
+        mallName: shoppingMallTemplate.mallName,
+        displayName: shoppingMallTemplate.displayName,
+        headerRow: shoppingMallTemplate.headerRow,
+        dataStartRow: shoppingMallTemplate.dataStartRow,
+        columnMappings: shoppingMallTemplate.columnMappings,
+      })
+      .from(shoppingMallTemplate)
+      .where(eq(shoppingMallTemplate.id, mallId))
 
     if (!dbTemplate) {
-      return NextResponse.json({ error: '알 수 없는 쇼핑몰입니다' }, { status: 400 })
+      return NextResponse.json({ error: '알 수 없는 쇼핑몰이에요' }, { status: 400 })
     }
 
     const mallConfig = {
@@ -107,20 +83,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const buffer = await file.arrayBuffer()
     const parseResult = await parseShoppingMallFile(buffer, mallConfig)
 
-    // 제조사, 상품, 옵션 매핑 데이터를 병렬로 조회 (필요한 컬럼만 선택)
     const [allManufacturers, allProducts, allOptionMappings] = await Promise.all([
-      db
-        .select({
-          id: manufacturer.id,
-          name: manufacturer.name,
-        })
-        .from(manufacturer),
-      db
-        .select({
-          productCode: product.productCode,
-          manufacturerId: product.manufacturerId,
-        })
-        .from(product),
+      db.select({ id: manufacturer.id, name: manufacturer.name }).from(manufacturer),
+      db.select({ productCode: product.productCode, manufacturerId: product.manufacturerId }).from(product),
       db
         .select({
           productCode: optionMapping.productCode,
@@ -130,84 +95,16 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .from(optionMapping),
     ])
 
-    const manufacturerMap = new Map(allManufacturers.map((m) => [m.name.toLowerCase(), m]))
-    const productMap = new Map(allProducts.map((p) => [p.productCode.toLowerCase(), p]))
-    const optionMap = new Map(
-      allOptionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o]),
-    )
+    const lookupMaps = buildLookupMaps(allManufacturers, allProducts, allOptionMappings)
 
-    // 주문 데이터 준비 함수 (uploadId를 나중에 받아서 사용)
-    const prepareOrderValues = (uploadId: number) =>
-      parseResult.orders.map((o) => {
-        // 제조사 매칭 로직 (우선순위: 옵션 매핑 > 상품 매핑 > 파일 내 제조사명)
-        let matchedManufacturerId: number | null = null
-
-        // 1) 옵션 매핑 확인
-        if (o.productCode && o.optionName) {
-          const optionKey = `${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`
-          const om = optionMap.get(optionKey)
-          if (om) {
-            matchedManufacturerId = om.manufacturerId
-          }
-        }
-
-        // 2) 상품 매핑 확인 (옵션 매핑이 없는 경우)
-        if (!matchedManufacturerId && o.productCode) {
-          const p = productMap.get(o.productCode.toLowerCase())
-          if (p?.manufacturerId) {
-            matchedManufacturerId = p.manufacturerId
-          }
-        }
-
-        // 3) 파일 내 제조사명으로 매칭
-        if (!matchedManufacturerId && o.manufacturer) {
-          const mfr = manufacturerMap.get(o.manufacturer.toLowerCase())
-          if (mfr) {
-            matchedManufacturerId = mfr.id
-          }
-        }
-
-        return {
-          uploadId,
-          orderNumber: o.orderNumber,
-          productName: o.productName || null,
-          quantity: o.quantity || 1,
-          orderName: o.orderName || null,
-          recipientName: o.recipientName || null,
-          orderPhone: o.orderPhone || null,
-          orderMobile: o.orderMobile || null,
-          recipientPhone: o.recipientPhone || null,
-          recipientMobile: o.recipientMobile || null,
-          postalCode: o.postalCode || null,
-          address: o.address || null,
-          memo: o.memo || null,
-          shoppingMall: mallConfig.displayName,
-          manufacturerName: o.manufacturer || null,
-          manufacturerId: matchedManufacturerId,
-          courier: o.courier || null,
-          trackingNumber: o.trackingNumber || null,
-          optionName: o.optionName || null,
-          paymentAmount: o.paymentAmount || 0,
-          productAbbr: o.productAbbr || null,
-          productCode: o.productCode || null,
-          cost: o.cost || 0,
-          shippingCost: o.shippingCost || 0,
-          status: 'pending' as const,
-        }
-      })
-
-    // DB 트랜잭션으로 저장 (중복 주문번호는 건너뜀)
-    let insertedCount = 0
-    let uploadId = 0
-    await db.transaction(async (tx) => {
-      // 1. 업로드 레코드 생성
+    const { insertedCount } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
           fileName: file.name,
           fileSize: file.size,
           fileType: 'shopping_mall',
-          shoppingMallId: mallIdNum,
+          shoppingMallId: mallId,
           totalOrders: parseResult.totalRows - mallConfig.headerRow,
           processedOrders: parseResult.orders.length,
           errorOrders: parseResult.errors.length,
@@ -215,53 +112,31 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         })
         .returning()
 
-      uploadId = uploadRecord.id
-
-      // 2. 주문 레코드 일괄 생성 (중복 주문번호는 건너뜀)
-      const orderValues = prepareOrderValues(uploadId)
-      if (orderValues.length > 0) {
-        const insertResult = await tx
-          .insert(order)
-          .values(orderValues)
-          .onConflictDoNothing({ target: order.orderNumber })
-          .returning({ id: order.id })
-
-        insertedCount = insertResult.length
-      }
-    })
-
-    // 중복으로 건너뛴 주문 수 계산
-    const duplicateCount = parseResult.orders.length - insertedCount
-
-    // 제조사별 그룹화 (쇼핑몰 파일은 제조사가 없을 수 있음)
-    const groupedOrders = groupOrdersByManufacturer(parseResult.orders)
-
-    // 제조사별 통계
-    const manufacturerBreakdown: ManufacturerBreakdown[] = []
-
-    groupedOrders.forEach((ordersGroup, mfr) => {
-      const totalAmount = ordersGroup.reduce((sum, o) => sum + o.paymentAmount * o.quantity, 0)
-      const totalQuantity = ordersGroup.reduce((sum, o) => sum + o.quantity, 0)
-      const totalCost = ordersGroup.reduce((sum, o) => sum + o.cost, 0)
-      const uniqueProducts = new Set(ordersGroup.map((o) => o.productCode || o.productName).filter(Boolean))
-      const marginRate =
-        totalCost > 0 && totalAmount > 0 ? Math.round(((totalAmount - totalCost) / totalAmount) * 100) : null
-
-      manufacturerBreakdown.push({
-        name: mfr,
-        orders: ordersGroup.length,
-        amount: totalAmount,
-        totalQuantity,
-        totalCost,
-        productCount: uniqueProducts.size,
-        marginRate,
+      const orderValues = prepareOrderValues({
+        orders: parseResult.orders,
+        uploadId: uploadRecord.id,
+        lookupMaps,
+        displayName: mallConfig.displayName,
       })
+
+      if (orderValues.length === 0) {
+        return { insertedCount: 0 }
+      }
+
+      const insertResult = await tx
+        .insert(order)
+        .values(orderValues)
+        .onConflictDoNothing({ target: order.sabangnetOrderNumber })
+        .returning({ id: order.id })
+
+      return { insertedCount: insertResult.length }
     })
 
-    // 정렬 (주문 수 기준 내림차순)
-    manufacturerBreakdown.sort((a, b) => b.orders - a.orders)
+    const duplicateCount = parseResult.orders.length - insertedCount
+    const groupedOrders = groupOrdersByManufacturer(parseResult.orders)
+    const manufacturerBreakdown = calculateManufacturerBreakdown(groupedOrders)
+    const summary = calculateSummary(manufacturerBreakdown)
 
-    // 에러 변환
     const errors: UploadError[] = parseResult.errors.map((err) => ({
       row: err.row,
       message: err.message,
@@ -269,34 +144,21 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       productName: err.data?.productName as string | undefined,
     }))
 
-    const orderNumbers = parseResult.orders.map((o) => o.orderNumber)
-    const totalAmount = manufacturerBreakdown.reduce((sum, m) => sum + m.amount, 0)
-    const totalCost = manufacturerBreakdown.reduce((sum, m) => sum + m.totalCost, 0)
-    const estimatedMargin = totalCost > 0 ? totalAmount - totalCost : null
-
     const result: UploadResult = {
-      success: true,
-      uploadId,
-      fileName: file.name,
       mallName: mallConfig.displayName,
-      totalOrders: parseResult.totalRows - mallConfig.headerRow,
       processedOrders: insertedCount,
       duplicateOrders: duplicateCount,
       errorOrders: parseResult.errors.length,
       manufacturerBreakdown,
       errors,
-      orderNumbers,
-      summary: {
-        totalAmount,
-        totalCost,
-        estimatedMargin,
-      },
+      orderNumbers: parseResult.orders.map((o) => o.sabangnetOrderNumber),
+      summary,
     }
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Upload error:', error)
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
+    console.error(error)
+    const errorMessage = error instanceof Error ? error.message : '쇼핑몰 파일을 업로드하지 못했어요'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
