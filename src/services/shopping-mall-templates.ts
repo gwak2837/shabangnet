@@ -13,6 +13,7 @@ export interface AnalyzeInput {
 
 // Types
 export interface AnalyzeResult {
+  columns: { columnIndex: number; columnLetter: string; header: string }[]
   detectedHeaderRow: number
   headers: string[]
   previewRows: string[][]
@@ -23,8 +24,23 @@ export interface CreateTemplateData {
   columnMappings: Record<string, string>
   dataStartRow: number
   displayName: string
+  exportConfig?: ShoppingMallExportConfigV1 | null
   headerRow: number
   mallName: string
+}
+
+export interface ShoppingMallExportColumn {
+  header?: string
+  id?: string
+  source: ShoppingMallExportColumnSource
+}
+
+export type ShoppingMallExportColumnSource = { columnIndex: number; type: 'input' } | { type: 'const'; value: string }
+
+export interface ShoppingMallExportConfigV1 {
+  columns: ShoppingMallExportColumn[]
+  copyPrefixRows?: boolean
+  version: 1
 }
 
 export interface ShoppingMallTemplate {
@@ -33,6 +49,7 @@ export interface ShoppingMallTemplate {
   dataStartRow: number
   displayName: string
   enabled: boolean
+  exportConfig: ShoppingMallExportConfigV1 | null
   headerRow: number
   id: number
   mallName: string
@@ -44,6 +61,7 @@ export interface UpdateTemplateData {
   dataStartRow?: number
   displayName?: string
   enabled?: boolean
+  exportConfig?: ShoppingMallExportConfigV1 | null
   headerRow?: number
   mallName?: string
 }
@@ -95,6 +113,13 @@ export async function analyzeShoppingMallFile({ file, headerRow }: AnalyzeInput)
     return true
   })
 
+  const headerCells = data[headerRowIndex] || []
+  const columns = headerCells.map((cell, index) => ({
+    columnIndex: index + 1,
+    columnLetter: indexToColumnLetter(index),
+    header: String(cell ?? '').trim(),
+  }))
+
   const previewStartIndex = headerRowIndex + 1
   const previewRows = data
     .slice(previewStartIndex, previewStartIndex + 5)
@@ -102,6 +127,7 @@ export async function analyzeShoppingMallFile({ file, headerRow }: AnalyzeInput)
 
   return {
     detectedHeaderRow: headerRowIndex + 1,
+    columns,
     headers,
     previewRows,
     totalRows: rowCount,
@@ -171,13 +197,31 @@ function getCellValue(cell: ExcelJS.Cell): string {
   return String(value)
 }
 
+function indexToColumnLetter(index: number): string {
+  let letter = ''
+  let i = index
+  while (i >= 0) {
+    letter = String.fromCharCode((i % 26) + 65) + letter
+    i = Math.floor(i / 26) - 1
+  }
+  return letter
+}
+
 // Helper function to map DB record to ShoppingMallTemplate
 function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect): ShoppingMallTemplate {
   let columnMappings: Record<string, string> = {}
+  let exportConfig: ShoppingMallExportConfigV1 | null = null
+
   try {
     columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
   } catch {
     columnMappings = {}
+  }
+
+  try {
+    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfigV1) : null
+  } catch {
+    exportConfig = null
   }
 
   return {
@@ -188,6 +232,7 @@ function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSel
     headerRow: record.headerRow || 1,
     dataStartRow: record.dataStartRow || 2,
     enabled: record.enabled ?? true,
+    exportConfig,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
   }

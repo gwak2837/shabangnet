@@ -1,7 +1,6 @@
 import { AlertCircle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
-import { SabangnetDownloadButton } from '@/app/upload/sabangnet-download-button'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,6 +28,7 @@ export interface UploadResultData {
     totalCost: number
     estimatedMargin: number | null
   }
+  uploadId?: number
 }
 
 interface UploadResultProps {
@@ -242,17 +242,6 @@ export function UploadResult({ data }: UploadResultProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3">
-        <SabangnetDownloadButton mallName={data.mallName ?? '사방넷'} orderNumbers={data.orderNumbers ?? []} />
-        <Button asChild>
-          <Link href="/order">
-            발주 생성
-            <ArrowRight />
-          </Link>
-        </Button>
-      </div>
     </div>
   )
 }

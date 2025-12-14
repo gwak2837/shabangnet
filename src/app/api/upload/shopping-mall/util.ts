@@ -36,6 +36,7 @@ export interface UploadResult {
     totalAmount: number
     totalCost: number
   }
+  uploadId: number
 }
 
 interface ManufacturerInfo {

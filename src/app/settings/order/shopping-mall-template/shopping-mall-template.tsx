@@ -32,10 +32,12 @@ import { useShoppingMallTemplates } from '@/hooks/use-settings'
 import {
   type AnalyzeResult,
   analyzeShoppingMallFile,
+  type ShoppingMallExportConfigV1,
   type ShoppingMallTemplate as ShoppingMallTemplateType,
 } from '@/services/shopping-mall-templates'
 
 import { addShoppingMallTemplate, removeShoppingMallTemplate, updateShoppingMallTemplate } from './action'
+import { ExportMappingEditor } from './export-mapping-editor'
 import { MappingRow } from './mapping-row'
 import { TemplateItem } from './template-item'
 
@@ -52,6 +54,7 @@ const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
     수취인명: 'receiverName',
     연락처: 'receiverPhone',
   },
+  exportConfig: null,
   enabled: true,
   createdAt: '',
   updatedAt: '',
@@ -60,6 +63,7 @@ const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
 interface ModalState {
   analyzeResult: AnalyzeResult | null
   columnMappings: Record<string, string>
+  exportConfig: ShoppingMallExportConfigV1 | null
   file: File | null
   fileName: string | null
   pendingSave: PendingSave | null
@@ -119,6 +123,7 @@ export function ShoppingMallTemplate() {
     setModalState({
       templateId: 0,
       columnMappings: {},
+      exportConfig: null,
       analyzeResult: null,
       file: null,
       fileName: null,
@@ -130,9 +135,11 @@ export function ShoppingMallTemplate() {
     setModalState({
       templateId: template.id,
       columnMappings: { ...template.columnMappings },
+      exportConfig: template.exportConfig ?? null,
       analyzeResult: {
         detectedHeaderRow: template.headerRow,
         headers: Object.keys(template.columnMappings),
+        columns: [],
         previewRows: [],
         totalRows: 0,
       },
@@ -231,6 +238,7 @@ export function ShoppingMallTemplate() {
       headerRow,
       dataStartRow,
       columnMappings: modalState.columnMappings,
+      exportConfig: modalState.exportConfig ?? null,
     }
 
     if (isNewTemplate) {
@@ -253,6 +261,7 @@ export function ShoppingMallTemplate() {
       headerRow,
       dataStartRow,
       columnMappings: modalState.columnMappings,
+      exportConfig: modalState.exportConfig ?? null,
     }
 
     if (isNewTemplate) {
@@ -490,6 +499,12 @@ export function ShoppingMallTemplate() {
                     </div>
                   </div>
                 )}
+
+                <ExportMappingEditor
+                  availableColumns={modalState.analyzeResult?.columns ?? []}
+                  onChange={(next) => setModalState((prev) => (prev ? { ...prev, exportConfig: next } : null))}
+                  value={modalState.exportConfig}
+                />
               </div>
             )}
 

@@ -1,8 +1,9 @@
 'use client'
 
-import { ArrowDown, ArrowUp, ArrowUpDown, FileSpreadsheet, Loader2, Store } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, FileSpreadsheet, Loader2, Store } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
+import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -258,6 +259,9 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
               <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 크기
               </div>
+              <div className="w-12 shrink-0 px-2 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                다운로드
+              </div>
               <SortableHeader
                 className="w-36 text-right"
                 field="uploadedAt"
@@ -312,12 +316,59 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 function Row({ index, style, data }: ListChildComponentProps<RowData>) {
   const { items, selectedIds, onSelectItem, isAdmin } = data
   const item = items[index]
+  const isSelected = selectedIds.includes(item.id)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   if (!item) {
     return null
   }
 
-  const isSelected = selectedIds.includes(item.id)
+  function getFileNameFromDisposition(disposition: string | null): string | null {
+    if (!disposition) return null
+    const match = disposition.match(/filename=\"(?<name>.+?)\"/i)
+    const name = match?.groups?.name
+    return name ? decodeURIComponent(name) : null
+  }
+
+  async function handleDownload(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (item.fileType !== 'shopping_mall') {
+      return
+    }
+
+    setIsDownloading(true)
+
+    try {
+      const response = await fetch('/api/upload/shopping-mall-export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId: item.id }),
+      })
+
+      if (!response.ok) {
+        const { error } = (await response.json()) as { error?: string }
+        throw new Error(error || '다운로드에 실패했어요')
+      }
+
+      const blob = await response.blob()
+      const disposition = response.headers.get('content-disposition')
+      const fileName =
+        getFileNameFromDisposition(disposition) ??
+        `${item.shoppingMallName || '쇼핑몰'}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
+
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = fileName
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '다운로드 중 오류가 발생했어요')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <label
@@ -379,6 +430,24 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 
       {/* File Size */}
       <div className="w-20 shrink-0 px-3 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>
+
+      {/* Download (Shopping Mall only) */}
+      <div className="w-12 shrink-0 px-2 text-center">
+        {item.fileType === 'shopping_mall' ? (
+          <Button
+            aria-label="엑셀 다운로드"
+            disabled={isDownloading}
+            onClick={handleDownload}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          >
+            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+          </Button>
+        ) : (
+          <span className="text-slate-300">-</span>
+        )}
+      </div>
 
       {/* Uploaded At */}
       <div className="w-36 shrink-0 px-3 text-right text-sm text-slate-500" title={formatDateTime(item.uploadedAt)}>

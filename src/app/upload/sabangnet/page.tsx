@@ -1,6 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
@@ -84,6 +85,11 @@ export default function SabangnetUploadPage() {
             </Button>
           </div>
           <UploadResult data={result} />
+          <div className="mt-5 flex items-center justify-end">
+            <Button asChild>
+              <Link href="/order">발주 생성</Link>
+            </Button>
+          </div>
         </div>
       )}
     </>

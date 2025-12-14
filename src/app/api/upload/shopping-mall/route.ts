@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import ExcelJS from 'exceljs'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -7,6 +8,7 @@ import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order, upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
 import { groupOrdersByManufacturer } from '@/lib/excel'
+import { getCellValue } from '@/lib/excel/util'
 
 import { parseShoppingMallFile } from './excel'
 import {
@@ -28,6 +30,18 @@ const uploadFormSchema = z.object({
     }),
   mallId: z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
 })
+
+interface ShoppingMallUploadSourceSnapshotV1 {
+  columnCount: number
+  dataRows: Array<{ cells: string[]; rowNumber: number }>
+  dataStartRow: number
+  headerCells: string[]
+  headerRow: number
+  prefixRows: string[][]
+  sheetName: string
+  totalRows: number
+  version: 1
+}
 
 export async function GET(): Promise<NextResponse> {
   const templates = await db
@@ -91,6 +105,16 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       return NextResponse.json({ error: parseResult.errors[0].message }, { status: 400 })
     }
 
+    const sourceSnapshot =
+      parseResult.orders.length > 0
+        ? await createSourceSnapshot({
+            buffer,
+            headerRow: mallConfig.headerRow,
+            dataStartRow: mallConfig.dataStartRow,
+            validRowNumbers: parseResult.orders.map((o) => o.rowIndex),
+          })
+        : null
+
     const [allManufacturers, allProducts, allOptionMappings] = await Promise.all([
       db.select({ id: manufacturer.id, name: manufacturer.name }).from(manufacturer),
       db.select({ productCode: product.productCode, manufacturerId: product.manufacturerId }).from(product),
@@ -105,7 +129,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     const lookupMaps = buildLookupMaps(allManufacturers, allProducts, allOptionMappings)
 
-    const { insertedCount } = await db.transaction(async (tx) => {
+    const { insertedCount, uploadId } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
@@ -113,6 +137,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
           fileSize: file.size,
           fileType: 'shopping_mall',
           shoppingMallId: mallId,
+          sourceSnapshot: sourceSnapshot ? JSON.stringify(sourceSnapshot) : null,
           totalOrders: parseResult.totalRows - mallConfig.headerRow,
           processedOrders: parseResult.orders.length,
           errorOrders: parseResult.errors.length,
@@ -128,7 +153,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
-        return { insertedCount: 0 }
+        return { insertedCount: 0, uploadId: uploadRecord.id }
       }
 
       const insertResult = await tx
@@ -137,7 +162,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .onConflictDoNothing({ target: order.sabangnetOrderNumber })
         .returning({ id: order.id })
 
-      return { insertedCount: insertResult.length }
+      return { insertedCount: insertResult.length, uploadId: uploadRecord.id }
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount
@@ -154,6 +179,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     const result: UploadResult = {
       mallName: mallConfig.displayName,
+      uploadId,
       processedOrders: insertedCount,
       duplicateOrders: duplicateCount,
       errorOrders: parseResult.errors.length,
@@ -169,4 +195,58 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const errorMessage = error instanceof Error ? error.message : '쇼핑몰 파일을 업로드하지 못했어요'
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
+}
+
+async function createSourceSnapshot(params: {
+  buffer: ArrayBuffer
+  dataStartRow: number
+  headerRow: number
+  validRowNumbers: number[]
+}): Promise<ShoppingMallUploadSourceSnapshotV1> {
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(params.buffer)
+  const worksheet = workbook.worksheets[0]
+
+  if (!worksheet) {
+    throw new Error('워크시트를 찾을 수 없어요')
+  }
+
+  const columnCount = worksheet.columnCount
+  const totalRows = worksheet.rowCount
+  const headerRow = Math.max(1, params.headerRow)
+  const dataStartRow = Math.max(1, params.dataStartRow)
+
+  const prefixRows: string[][] = []
+  for (let rowNumber = 1; rowNumber < headerRow; rowNumber++) {
+    prefixRows.push(readRowCells(worksheet.getRow(rowNumber), columnCount))
+  }
+
+  const headerCells = readRowCells(worksheet.getRow(headerRow), columnCount)
+
+  const dataRows = params.validRowNumbers
+    .filter((rowNumber) => rowNumber >= dataStartRow && rowNumber <= totalRows)
+    .map((rowNumber) => ({
+      rowNumber,
+      cells: readRowCells(worksheet.getRow(rowNumber), columnCount),
+    }))
+
+  return {
+    version: 1,
+    sheetName: worksheet.name,
+    totalRows,
+    columnCount,
+    headerRow,
+    dataStartRow,
+    prefixRows,
+    headerCells,
+    dataRows,
+  }
+}
+
+function readRowCells(row: ExcelJS.Row, columnCount: number): string[] {
+  const cells: string[] = []
+  for (let col = 1; col <= columnCount; col++) {
+    cells.push(getCellValue(row.getCell(col)))
+  }
+  return cells
 }

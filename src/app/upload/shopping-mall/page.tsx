@@ -2,9 +2,11 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, Store } from 'lucide-react'
+import Link from 'next/link'
 import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
+import { ShoppingMallDownloadButton } from '@/app/upload/shopping-mall-download-button'
 import { UploadResult } from '@/app/upload/upload-result'
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
@@ -146,6 +148,12 @@ export default function ShoppingMallUploadPage() {
             </Button>
           </div>
           <UploadResult data={result} />
+          <div className="mt-5 flex items-center justify-end gap-3">
+            <ShoppingMallDownloadButton mallName={result.mallName} uploadId={result.uploadId} />
+            <Button asChild>
+              <Link href="/order">발주 생성</Link>
+            </Button>
+          </div>
         </div>
       )}
     </>

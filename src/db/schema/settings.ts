@@ -57,6 +57,7 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
   mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
   displayName: varchar('display_name', { length: 100 }).notNull(),
   columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 매핑
+  exportConfig: text('export_config'), // JSON: 쇼핑몰 원본 -> 다운로드 엑셀 컬럼 매핑(순서 포함)
   headerRow: integer('header_row').default(1),
   dataStartRow: integer('data_start_row').default(2),
   enabled: boolean('enabled').default(true),

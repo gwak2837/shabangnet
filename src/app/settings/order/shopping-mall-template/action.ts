@@ -2,6 +2,8 @@
 
 import { eq } from 'drizzle-orm'
 
+import type { ShoppingMallExportConfigV1 } from '@/services/shopping-mall-templates'
+
 import { db } from '@/db/client'
 import { shoppingMallTemplate } from '@/db/schema/settings'
 
@@ -9,6 +11,7 @@ export interface CreateTemplateData {
   columnMappings: Record<string, string>
   dataStartRow: number
   displayName: string
+  exportConfig?: ShoppingMallExportConfigV1 | null
   headerRow: number
   mallName: string
 }
@@ -19,6 +22,7 @@ export interface ShoppingMallTemplate {
   dataStartRow: number
   displayName: string
   enabled: boolean
+  exportConfig: ShoppingMallExportConfigV1 | null
   headerRow: number
   id: number
   mallName: string
@@ -30,6 +34,7 @@ export interface UpdateTemplateData {
   dataStartRow?: number
   displayName?: string
   enabled?: boolean
+  exportConfig?: ShoppingMallExportConfigV1 | null
   headerRow?: number
   id: number
   mallName?: string
@@ -42,6 +47,7 @@ export async function addShoppingMallTemplate(data: CreateTemplateData) {
       mallName: data.mallName,
       displayName: data.displayName,
       columnMappings: JSON.stringify(data.columnMappings),
+      exportConfig: data.exportConfig ? JSON.stringify(data.exportConfig) : null,
       headerRow: data.headerRow,
       dataStartRow: data.dataStartRow,
       enabled: true,
@@ -51,6 +57,7 @@ export async function addShoppingMallTemplate(data: CreateTemplateData) {
       mallName: shoppingMallTemplate.mallName,
       displayName: shoppingMallTemplate.displayName,
       columnMappings: shoppingMallTemplate.columnMappings,
+      exportConfig: shoppingMallTemplate.exportConfig,
       headerRow: shoppingMallTemplate.headerRow,
       dataStartRow: shoppingMallTemplate.dataStartRow,
       enabled: shoppingMallTemplate.enabled,
@@ -72,6 +79,8 @@ export async function updateShoppingMallTemplate(data: UpdateTemplateData) {
       mallName: data.mallName,
       displayName: data.displayName,
       columnMappings: data.columnMappings ? JSON.stringify(data.columnMappings) : undefined,
+      exportConfig:
+        data.exportConfig !== undefined ? (data.exportConfig ? JSON.stringify(data.exportConfig) : null) : undefined,
       headerRow: data.headerRow,
       dataStartRow: data.dataStartRow,
       enabled: data.enabled,
@@ -83,6 +92,7 @@ export async function updateShoppingMallTemplate(data: UpdateTemplateData) {
       mallName: shoppingMallTemplate.mallName,
       displayName: shoppingMallTemplate.displayName,
       columnMappings: shoppingMallTemplate.columnMappings,
+      exportConfig: shoppingMallTemplate.exportConfig,
       headerRow: shoppingMallTemplate.headerRow,
       dataStartRow: shoppingMallTemplate.dataStartRow,
       enabled: shoppingMallTemplate.enabled,
@@ -99,11 +109,18 @@ export async function updateShoppingMallTemplate(data: UpdateTemplateData) {
 
 function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect) {
   let columnMappings: Record<string, string> = {}
+  let exportConfig: ShoppingMallExportConfigV1 | null = null
 
   try {
     columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
   } catch {
     columnMappings = {}
+  }
+
+  try {
+    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfigV1) : null
+  } catch {
+    exportConfig = null
   }
 
   return {
@@ -114,6 +131,7 @@ function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSel
     headerRow: record.headerRow ?? 1,
     dataStartRow: record.dataStartRow ?? 2,
     enabled: record.enabled ?? true,
+    exportConfig,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
   }
