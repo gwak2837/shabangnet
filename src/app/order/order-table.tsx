@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
+import { Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 
@@ -95,7 +95,18 @@ export function OrderTable({
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3">
             <span className="text-sm font-medium text-slate-700">{selectedBatches.length}개 선택됨</span>
             <div className="flex items-center gap-2">
-              <Button className="gap-2" size="sm" variant="outline">
+              <Button
+                className="gap-2"
+                disabled={!onDownload}
+                onClick={() => {
+                  const selectedBatchData = batches.filter((b) => selectedBatches.includes(b.manufacturerId))
+                  for (const batch of selectedBatchData) {
+                    onDownload?.(batch)
+                  }
+                }}
+                size="sm"
+                variant="outline"
+              >
                 <Download className="h-4 w-4" />
                 일괄 다운로드
               </Button>
@@ -249,16 +260,10 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
               <Download className="mr-2 h-4 w-4" />
               다운로드
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={batch.status === 'sent'} onClick={() => onSendEmail(batch)}>
+            <DropdownMenuItem onClick={() => onSendEmail(batch)}>
               <Mail className="mr-2 h-4 w-4" />
-              이메일 발송
+              {batch.status === 'sent' ? '재발송' : batch.status === 'error' ? '재시도' : '이메일 발송'}
             </DropdownMenuItem>
-            {batch.status === 'sent' && (
-              <DropdownMenuItem className="text-emerald-600">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                발송 완료됨
-              </DropdownMenuItem>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

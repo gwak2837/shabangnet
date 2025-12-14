@@ -1,9 +1,10 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { invoiceTemplate, manufacturer, orderTemplate } from '@/db/schema/manufacturers'
+import { order } from '@/db/schema/orders'
 
 // Types moved to avoid 'use server' export restrictions
 // These are re-exported for convenience but defined inline
@@ -83,6 +84,20 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
       orderCount: 0,
     })
     .returning()
+
+  // 제조사명이 파일 데이터와 동일하면 기존 주문에도 자동 반영
+  await db
+    .update(order)
+    .set({
+      manufacturerId: newManufacturer.id,
+    })
+    .where(
+      and(
+        isNull(order.manufacturerId),
+        isNull(order.excludedReason),
+        sql`lower(${order.manufacturerName}) = lower(${newManufacturer.name})`,
+      ),
+    )
 
   return mapToManufacturer(newManufacturer)
 }
@@ -169,6 +184,23 @@ export async function update(id: number, data: Partial<Manufacturer>): Promise<M
     .returning()
 
   if (!updated) throw new Error('Manufacturer not found')
+
+  // 제조사명이 파일 데이터와 동일하면 기존 주문에도 자동 반영
+  if (updated.name) {
+    await db
+      .update(order)
+      .set({
+        manufacturerId: updated.id,
+      })
+      .where(
+        and(
+          isNull(order.manufacturerId),
+          isNull(order.excludedReason),
+          sql`lower(${order.manufacturerName}) = lower(${updated.name})`,
+        ),
+      )
+  }
+
   return mapToManufacturer(updated)
 }
 

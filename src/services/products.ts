@@ -1,9 +1,10 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
+import { order } from '@/db/schema/orders'
 
 // Product types
 export interface Product {
@@ -37,6 +38,24 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
         where: eq(manufacturer.id, data.manufacturerId),
       })
     : null
+
+  // 기존 주문 중 제조사 미매칭 건에 자동 반영
+  if (data.manufacturerId) {
+    await db
+      .update(order)
+      .set({
+        manufacturerId: data.manufacturerId,
+        manufacturerName: mfr?.name ?? null,
+      })
+      .where(
+        and(
+          isNull(order.manufacturerId),
+          isNull(order.excludedReason),
+          sql`lower(${order.productCode}) = lower(${data.productCode})`,
+          sql`${order.status} <> 'completed'`,
+        ),
+      )
+  }
 
   return mapToProduct({ ...newProduct, manufacturer: mfr })
 }
@@ -90,6 +109,24 @@ export async function update(id: number, data: Partial<Product>): Promise<Produc
         where: eq(manufacturer.id, updated.manufacturerId),
       })
     : null
+
+  // 기존 주문 중 제조사 미매칭 건에 자동 반영
+  if (updated.manufacturerId) {
+    await db
+      .update(order)
+      .set({
+        manufacturerId: updated.manufacturerId,
+        manufacturerName: mfr?.name ?? null,
+      })
+      .where(
+        and(
+          isNull(order.manufacturerId),
+          isNull(order.excludedReason),
+          sql`lower(${order.productCode}) = lower(${updated.productCode})`,
+          sql`${order.status} <> 'completed'`,
+        ),
+      )
+  }
 
   return mapToProduct({ ...updated, manufacturer: mfr })
 }

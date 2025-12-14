@@ -62,14 +62,16 @@ async function analyzeSabangnetFile(filePath: string): Promise<{
 
     rowCount++
 
-    // 컬럼 인덱스 (0-based in constants, but ExcelJS is 1-based)
-    // index 12 = M열 = 제조사
-    // index 25 = Z열 = 품번코드
-    // index 0 = A열 = 상품명
-    // index 18 = S열 = 옵션
+    // ExcelJS는 1-based column index를 사용합니다.
+    // - M열(13): 제조사
+    // - [열(27) / \열(28): 품번코드/자체상품코드 (실제 업로드 파서와 동일)
+    // - A열(1): 상품명
+    // - S열(19): 옵션
 
     const manufacturer = getCellValue(row.getCell(13)).trim() // 제조사 (M열, index 12 -> cell 13)
-    const productCode = getCellValue(row.getCell(26)).trim() // 품번코드 (Z열, index 25 -> cell 26)
+    const productCode =
+      getCellValue(row.getCell(27)).trim() || // [열: 품번코드
+      getCellValue(row.getCell(28)).trim() // \열: 자체상품코드
     const productName = getCellValue(row.getCell(1)).trim() // 상품명 (A열)
     const optionName = getCellValue(row.getCell(19)).trim() // 옵션 (S열, index 18 -> cell 19)
 

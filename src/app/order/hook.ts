@@ -10,6 +10,7 @@ import { getExcludedBatches } from '@/services/orders'
 // ============================================
 
 export interface OrderBatch {
+  ccEmail?: string
   email: string
   lastSentAt?: string
   manufacturerId: number
@@ -115,7 +116,7 @@ export function useOrderBatches(params: UseOrderBatchesParams = {}) {
         searchParams.set('date-to', dateTo)
       }
 
-      const response = await fetch(`/api/orders?${searchParams.toString()}`)
+      const response = await fetch(`/api/orders?${searchParams.toString()}`, { cache: 'no-store' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch order batches')

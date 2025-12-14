@@ -1,9 +1,10 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
+import { order } from '@/db/schema/orders'
 
 // Option mapping types
 export interface OptionManufacturerMapping {
@@ -31,6 +32,22 @@ export async function create(
   const mfr = await db.query.manufacturer.findFirst({
     where: eq(manufacturer.id, data.manufacturerId),
   })
+
+  // 옵션 매핑은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
+  await db
+    .update(order)
+    .set({
+      manufacturerId: data.manufacturerId,
+      manufacturerName: mfr?.name ?? null,
+    })
+    .where(
+      and(
+        isNull(order.excludedReason),
+        sql`lower(${order.productCode}) = lower(${data.productCode})`,
+        sql`lower(${order.optionName}) = lower(${data.optionName})`,
+        sql`${order.status} <> 'completed'`,
+      ),
+    )
 
   return mapToOptionMapping({ ...newMapping, manufacturer: mfr })
 }
@@ -84,6 +101,22 @@ export async function update(
         where: eq(manufacturer.id, updated.manufacturerId),
       })
     : null
+
+  // 옵션 매핑은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
+  await db
+    .update(order)
+    .set({
+      manufacturerId: updated.manufacturerId,
+      manufacturerName: mfr?.name ?? null,
+    })
+    .where(
+      and(
+        isNull(order.excludedReason),
+        sql`lower(${order.productCode}) = lower(${updated.productCode})`,
+        sql`lower(${order.optionName}) = lower(${updated.optionName})`,
+        sql`${order.status} <> 'completed'`,
+      ),
+    )
 
   return mapToOptionMapping({ ...updated, manufacturer: mfr })
 }

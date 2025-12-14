@@ -41,15 +41,16 @@ import {
 
 import type { OrderBatch } from './hook'
 
-import { sendOrder } from './action'
+import { sendOrderBatch } from './action'
 
 interface SendModalProps {
   batch: OrderBatch | null
   onOpenChange: (open: boolean) => void
+  onSent?: () => void
   open: boolean
 }
 
-export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
+export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps) {
   const [isSending, setIsSending] = useState(false)
   const [isSent, setIsSent] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -75,7 +76,9 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           return
         }
         setPeriodDays(settings.periodDays)
-        const recipientAddresses = batch!.orders.map((order) => order.address)
+        const ordersToCheck =
+          batch!.status === 'sent' ? batch!.orders : batch!.orders.filter((o) => o.status !== 'completed')
+        const recipientAddresses = ordersToCheck.map((order) => order.address)
         const result = await checkDuplicate(batch!.manufacturerId, recipientAddresses, settings.periodDays)
         setDuplicateCheck(result)
       } catch {
@@ -92,7 +95,15 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     return null
   }
 
-  const canSend = !duplicateCheck?.hasDuplicate || duplicateReason.trim().length > 0
+  const isResend = batch.status === 'sent'
+  const duplicate = duplicateCheck
+  const hasDuplicate = duplicate?.hasDuplicate ?? false
+  const needsReason = isResend || hasDuplicate
+  const canSend = !needsReason || duplicateReason.trim().length > 0
+
+  const ordersToSend = isResend ? batch.orders : batch.orders.filter((o) => o.status !== 'completed')
+  const ordersToSendCount = ordersToSend.length
+  const totalAmountToSend = ordersToSend.reduce((sum, o) => sum + o.price * o.quantity, 0)
 
   // 모달 닫힐 때 상태 초기화를 위한 핸들러
   function handleOpenChange(newOpen: boolean) {
@@ -110,26 +121,16 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
     setSendError(null)
 
     try {
-      const result = await sendOrder({
-        manufacturerId: batch.manufacturerId.toString(),
-        manufacturerName: batch.manufacturerName,
-        email: batch.email,
-        orders: batch.orders.map((order) => ({
-          sabangnetOrderNumber: order.sabangnetOrderNumber,
-          customerName: order.customerName,
-          phone: order.phone,
-          address: order.address,
-          productCode: order.productCode,
-          productName: order.productName,
-          optionName: order.optionName,
-          quantity: order.quantity,
-          price: order.price,
-        })),
-        duplicateReason: duplicateCheck?.hasDuplicate ? duplicateReason : undefined,
+      const result = await sendOrderBatch({
+        manufacturerId: batch.manufacturerId,
+        orderIds: batch.orders.map((o) => o.id),
+        mode: isResend ? 'resend' : 'send',
+        reason: needsReason ? duplicateReason : undefined,
       })
 
       if (result.success) {
         setIsSent(true)
+        onSent?.()
         // Auto close after success
         setTimeout(() => {
           setIsSent(false)
@@ -138,19 +139,14 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           handleOpenChange(false)
         }, 2000)
       } else {
-        setSendError(result.error || '이메일 발송에 실패했습니다.')
+        setSendError(result.error || '이메일 발송에 실패했어요.')
       }
     } catch {
-      setSendError('서버와 통신 중 오류가 발생했습니다.')
+      setSendError('서버와 통신 중 오류가 발생했어요.')
     } finally {
       setIsSending(false)
     }
   }
-
-  // TODO: 데이터베이스에서 이메일 템플릿 가져오기
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  const emailSubject = `[다온에프앤씨 발주서] ${batch.manufacturerName} ${today}`
-  const emailBody = `안녕하세요. (주)다온에프앤씨 발주 첨부파일 드립니다.\n\n감사합니다.`
 
   if (isSent) {
     return (
@@ -180,7 +176,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
             <Mail className="h-5 w-5 text-slate-600" />
             이메일 발송
           </DialogTitle>
-          <DialogDescription>아래 내용으로 발주서 이메일을 발송합니다.</DialogDescription>
+          <DialogDescription>아래 내용으로 발주서 이메일을 발송해요.</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 overflow-y-auto flex-1 pr-2">
@@ -193,6 +189,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">{batch.manufacturerName}</p>
                 <p className="text-sm text-slate-500">{batch.email}</p>
+                {batch.ccEmail && <p className="text-xs text-slate-400">CC: {batch.ccEmail}</p>}
               </div>
               <Badge className="bg-blue-100 text-blue-700" variant="secondary">
                 수신
@@ -216,11 +213,11 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-slate-500">주문 건수</p>
-                <p className="font-semibold text-slate-900">{batch.totalOrders}건</p>
+                <p className="font-semibold text-slate-900">{ordersToSendCount}건</p>
               </div>
               <div>
                 <p className="text-slate-500">총 금액</p>
-                <p className="font-semibold text-slate-900">{formatCurrency(batch.totalAmount)}</p>
+                <p className="font-semibold text-slate-900">{formatCurrency(totalAmountToSend)}</p>
               </div>
             </div>
 
@@ -263,7 +260,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
           </div>
 
           {/* Duplicate Warning */}
-          {duplicateCheck?.hasDuplicate && (
+          {duplicate && duplicate.hasDuplicate && (
             <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 flex flex-col gap-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
@@ -276,7 +273,7 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               {/* Previous Send History */}
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">이전 발송 이력</p>
-                {duplicateCheck.duplicateLogs.slice(0, 3).map((log) => (
+                {duplicate.duplicateLogs.slice(0, 3).map((log) => (
                   <div className="rounded-md bg-background/70 border border-amber-200 p-3 text-sm" key={log.id}>
                     <div className="flex items-center gap-2 text-amber-900">
                       <Calendar className="h-4 w-4" />
@@ -307,17 +304,17 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
               {/* Matched Addresses */}
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-medium text-amber-800 uppercase tracking-wide">
-                  중복 주소 ({duplicateCheck.matchedAddresses.length}건)
+                  중복 주소 ({duplicate.matchedAddresses.length}건)
                 </p>
                 <div className="rounded-md bg-background/70 border border-amber-200 p-3">
                   <div className="text-xs text-amber-700 flex flex-col gap-1">
-                    {duplicateCheck.matchedAddresses.slice(0, 3).map((addr, idx) => (
+                    {duplicate.matchedAddresses.slice(0, 3).map((addr, idx) => (
                       <p className="truncate" key={idx}>
                         {addr}
                       </p>
                     ))}
-                    {duplicateCheck.matchedAddresses.length > 3 && (
-                      <p className="text-amber-600">외 {duplicateCheck.matchedAddresses.length - 3}건</p>
+                    {duplicate.matchedAddresses.length > 3 && (
+                      <p className="text-amber-600">외 {duplicate.matchedAddresses.length - 3}건</p>
                     )}
                   </div>
                 </div>
@@ -337,22 +334,19 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
             </div>
           )}
 
-          {/* Email Content */}
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="text-sm font-medium text-slate-700">메일 제목</label>
-              <Input className="mt-1 bg-slate-50" readOnly value={emailSubject} />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">메일 본문</label>
-              <textarea
-                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
-                readOnly
-                rows={4}
-                value={emailBody}
+          {/* Resend Reason (when not duplicate) */}
+          {!hasDuplicate && isResend && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium text-slate-900">재발송 사유 (필수)</p>
+              <Input
+                className="bg-background"
+                onChange={(e) => setDuplicateReason(e.target.value)}
+                placeholder="예: 제조사 요청으로 재발송, 수신 실패로 재발송 등"
+                value={duplicateReason}
               />
+              <p className="text-xs text-slate-500">입력한 사유는 발송 로그에 기록돼요</p>
             </div>
-          </div>
+          )}
 
           {/* Error Message */}
           {sendError && (
@@ -382,10 +376,10 @@ export function SendModal({ open, onOpenChange, batch }: SendModalProps) {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 발송 중...
               </>
-            ) : duplicateCheck?.hasDuplicate ? (
+            ) : needsReason ? (
               <>
                 <AlertTriangle className="h-4 w-4" />
-                {canSend ? '확인 후 발송' : '사유 입력 필요'}
+                {canSend ? (isResend ? '재발송하기' : '확인 후 발송') : '사유 입력 필요'}
               </>
             ) : (
               <>
