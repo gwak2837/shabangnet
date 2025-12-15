@@ -1,10 +1,11 @@
 'use client'
 
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, FileSpreadsheet, Loader2, Store } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { toast } from 'sonner'
 
+import { downloadShoppingMallExcel } from '@/app/upload/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -60,22 +61,11 @@ type SortField = 'errorOrders' | 'fileName' | 'processedOrders' | 'totalOrders' 
 export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) {
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
-
-  // Filters state
   const [filters, setFilters] = useState<UploadHistoryFilters>(initialFilters ?? {})
-
-  // Selection state
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-
-  // Fetch data
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useUploadHistory({ filters })
-
-  // Flatten pages
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
-
   const listRef = useRef<FixedSizeList<RowData>>(null)
-
-  // Selection handlers
   const isAllSelected = items.length > 0 && selectedIds.length === items.length
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected
 
@@ -87,25 +77,20 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
     }
   }
 
-  const handleSelectItem = useCallback((id: number, checked: boolean) => {
+  function handleSelectItem(id: number, checked: boolean) {
     if (checked) {
       setSelectedIds((prev) => [...prev, id])
     } else {
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
     }
-  }, [])
+  }
 
-  // Infinite scroll
-  const handleItemsRendered = useCallback(
-    ({ visibleStopIndex }: { visibleStopIndex: number }) => {
-      if (visibleStopIndex >= items.length - 5 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage()
-      }
-    },
-    [items.length, hasNextPage, isFetchingNextPage, fetchNextPage],
-  )
+  function handleItemsRendered({ visibleStopIndex }: { visibleStopIndex: number }) {
+    if (visibleStopIndex >= items.length - 5 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }
 
-  // Sort handler
   function handleSort(field: SortField) {
     setFilters((prev) => ({
       ...prev,
@@ -114,7 +99,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
     }))
   }
 
-  // Filter handlers
   function handleFileTypeChange(value: string) {
     setFilters((prev) => ({
       ...prev,
@@ -136,7 +120,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
     }))
   }
 
-  // Clear selection after delete
   function handleDeleteSuccess() {
     setSelectedIds([])
   }
@@ -153,7 +136,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-slate-700" htmlFor="file-type">
@@ -309,10 +291,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
   )
 }
 
-// ============================================
-// Sortable Header Component
-// ============================================
-
 function Row({ index, style, data }: ListChildComponentProps<RowData>) {
   const { items, selectedIds, onSelectItem, isAdmin } = data
   const item = items[index]
@@ -321,13 +299,6 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 
   if (!item) {
     return null
-  }
-
-  function getFileNameFromDisposition(disposition: string | null): string | null {
-    if (!disposition) return null
-    const match = disposition.match(/filename=\"(?<name>.+?)\"/i)
-    const name = match?.groups?.name
-    return name ? decodeURIComponent(name) : null
   }
 
   async function handleDownload(e: React.MouseEvent<HTMLButtonElement>) {
@@ -341,28 +312,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
     setIsDownloading(true)
 
     try {
-      const response = await fetch('/api/upload/shopping-mall-export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploadId: item.id }),
-      })
-
-      if (!response.ok) {
-        const { error } = (await response.json()) as { error?: string }
-        throw new Error(error || '다운로드에 실패했어요')
-      }
-
-      const blob = await response.blob()
-      const disposition = response.headers.get('content-disposition')
-      const fileName =
-        getFileNameFromDisposition(disposition) ??
-        `${item.shoppingMallName || '쇼핑몰'}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
-
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = fileName
-      link.click()
-      URL.revokeObjectURL(link.href)
+      await downloadShoppingMallExcel(item.id, item.shoppingMallName ?? undefined)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '다운로드 중 오류가 발생했어요')
     } finally {

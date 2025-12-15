@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp } from 'lucide-react'
+import { AlertCircle, AlertTriangle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCompactNumber } from '@/utils/format/number'
 
 export interface UploadResultData {
+  autoCreatedManufacturers?: string[]
   duplicateOrders?: number
   errorOrders: number
   errors: { row: number; message: string; productCode?: string; productName?: string }[]
@@ -110,8 +111,44 @@ export function UploadResult({ data }: UploadResultProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Manufacturer Breakdown */}
+      {data.autoCreatedManufacturers && data.autoCreatedManufacturers.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 shrink-0">
+                <AlertTriangle className="h-5 w-5 text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-900">신규 제조사가 자동으로 등록됐어요</p>
+                <p className="mt-1 text-sm text-amber-800">
+                  {data.autoCreatedManufacturers.length}곳의 제조사가 새로 추가됐어요. 이메일이 없으면 발주서 발송이
+                  막히니 제조사 관리에서 이메일을 설정해 주세요.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {data.autoCreatedManufacturers.slice(0, 6).map((name) => (
+                    <Badge className="bg-amber-100 text-amber-800" key={name} variant="secondary">
+                      {name}
+                    </Badge>
+                  ))}
+                  {data.autoCreatedManufacturers.length > 6 && (
+                    <Badge className="bg-amber-100 text-amber-800" variant="secondary">
+                      외 {data.autoCreatedManufacturers.length - 6}곳
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <Button asChild variant="outline">
+                    <Link href="/manufacturer">
+                      제조사 관리로 이동
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {data.manufacturerBreakdown.length > 0 && (
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardHeader className="p-6 pb-0">
@@ -188,8 +225,6 @@ export function UploadResult({ data }: UploadResultProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Errors */}
       {data.errors.length > 0 && (
         <Card className="border-rose-200 bg-rose-50/50 shadow-sm">
           <CardHeader className="pb-3 pt-4 px-4">
@@ -230,7 +265,6 @@ export function UploadResult({ data }: UploadResultProps) {
             {data.errors.length > 10 && (
               <p className="mt-3 text-sm text-rose-600">외 {data.errors.length - 10}건의 오류가 더 있습니다.</p>
             )}
-
             <div className="mt-4">
               <Button asChild variant="outline">
                 <Link href="/product">

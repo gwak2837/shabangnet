@@ -26,14 +26,16 @@ interface DeleteUploadsDialogProps {
 
 export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDialogProps) {
   const [open, setOpen] = useState(false)
-  const [preview, setPreview] = useState<{ orderCount: number; uploadCount: number } | null>(null)
+  const [orderCount, setOrderCount] = useState<number | null>(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const [isPending, startTransition] = useTransition()
   const queryClient = useQueryClient()
+  const isDisabled = selectedIds.length === 0
 
-  // 버튼 클릭 시 미리보기 데이터 가져오고 모달 열기
   async function handleOpenDialog() {
-    if (selectedIds.length === 0) return
+    if (selectedIds.length === 0) {
+      return
+    }
 
     setIsLoadingPreview(true)
     setOpen(true)
@@ -44,10 +46,7 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
       toast.error(result.error)
       setOpen(false)
     } else {
-      setPreview({
-        uploadCount: result.uploadCount ?? 0,
-        orderCount: result.orderCount ?? 0,
-      })
+      setOrderCount(result.orderCount ?? 0)
     }
 
     setIsLoadingPreview(false)
@@ -57,7 +56,7 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
     if (!isPending) {
       setOpen(newOpen)
       if (!newOpen) {
-        setPreview(null)
+        setOrderCount(null)
       }
     }
   }
@@ -70,15 +69,12 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
         toast.error(result.error)
       } else {
         toast.success(result.success)
-        // 쿼리 무효화
         await queryClient.invalidateQueries({ queryKey: queryKeys.uploads.all })
         setOpen(false)
         onSuccess?.()
       }
     })
   }
-
-  const isDisabled = selectedIds.length === 0
 
   return (
     <AlertDialog onOpenChange={handleOpenChange} open={open}>
@@ -99,15 +95,15 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
                   <Loader2 className="h-4 w-4 animate-spin" />
                   삭제 영향 범위를 확인하고 있어요...
                 </div>
-              ) : preview ? (
+              ) : orderCount != null ? (
                 <>
                   <p>다음 항목이 영구적으로 삭제돼요:</p>
                   <ul className="list-disc list-inside space-y-1 text-slate-700">
                     <li>
-                      업로드 기록 <strong className="text-red-600">{preview.uploadCount}건</strong>
+                      업로드 기록 <strong className="text-red-600">{selectedIds.length}건</strong>
                     </li>
                     <li>
-                      연관된 주문 데이터 <strong className="text-red-600">{preview.orderCount}건</strong>
+                      연관된 주문 데이터 <strong className="text-red-600">{orderCount}건</strong>
                     </li>
                   </ul>
                   <p className="font-medium text-red-600">이 작업은 되돌릴 수 없어요.</p>
@@ -122,20 +118,11 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
           <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            disabled={isPending || isLoadingPreview}
+            disabled={isPending || orderCount == null}
             onClick={handleDelete}
           >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                삭제 중...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                삭제
-              </>
-            )}
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+            삭제
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

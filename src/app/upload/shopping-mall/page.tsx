@@ -104,7 +104,6 @@ export default function ShoppingMallUploadPage() {
           </div>
         </div>
       )}
-
       <div className="max-w-2xl mx-auto">
         {status !== 'success' && (
           <Dropzone
@@ -115,7 +114,6 @@ export default function ShoppingMallUploadPage() {
             selectedFile={selectedFile}
           />
         )}
-
         {isProcessing && (
           <div className="mt-4 flex items-center justify-center">
             <div className="flex items-center gap-3 rounded-lg bg-violet-50 px-4 py-3">
@@ -124,14 +122,12 @@ export default function ShoppingMallUploadPage() {
             </div>
           </div>
         )}
-
         {status === 'error' && (
           <div className="mt-4 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
             <p className="text-sm font-medium text-rose-700">{message}</p>
           </div>
         )}
       </div>
-
       {status === 'success' && (
         <div className="mt-8">
           <div className="mb-4 flex items-center justify-between">

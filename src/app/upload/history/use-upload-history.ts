@@ -4,10 +4,6 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
 
-// ============================================
-// Types
-// ============================================
-
 export interface UploadHistoryFilters {
   endDate?: string
   fileType?: 'sabangnet' | 'shopping_mall'
@@ -42,10 +38,6 @@ interface UseUploadHistoryParams {
   initialData?: UploadHistoryResponse
   limit?: number
 }
-
-// ============================================
-// Hook
-// ============================================
 
 export function useUploadHistory(params: UseUploadHistoryParams = {}) {
   const { limit = 20, filters, initialData } = params
@@ -86,11 +78,6 @@ export function useUploadHistory(params: UseUploadHistoryParams = {}) {
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: null as string | null,
-    initialData: initialData
-      ? {
-          pages: [initialData],
-          pageParams: [null],
-        }
-      : undefined,
+    initialData: initialData ? { pages: [initialData], pageParams: [null] } : undefined,
   })
 }
