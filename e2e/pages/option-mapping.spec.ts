@@ -9,27 +9,27 @@ const UPDATED_OPTION_MAPPING = {
   optionName: 'E2E 테스트 옵션 1L x 1병 (수정됨)',
 }
 
-test.describe('옵션 매핑', () => {
+test.describe('옵션 연결', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/option-mapping')
-    await expect(page.getByRole('heading', { name: '옵션 매핑' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '옵션 연결' })).toBeVisible()
     // 페이지 로드 대기
-    await expect(page.getByText('옵션 매핑이란?')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('옵션 연결이란?')).toBeVisible({ timeout: 10000 })
   })
 
   test.describe('조회', () => {
-    test('옵션 매핑 페이지가 표시되어야 함', async ({ page }) => {
+    test('옵션 연결 페이지가 표시되어야 함', async ({ page }) => {
       // 통계 카드들이 표시되어야 함
-      await expect(page.getByText('전체 매핑')).toBeVisible()
+      await expect(page.getByText('전체 연결')).toBeVisible()
       await expect(page.getByText('상품 수')).toBeVisible()
       await expect(page.getByText('제조사 수', { exact: true })).toBeVisible()
 
       // 설명 배너가 표시되어야 함
-      await expect(page.getByText('옵션 매핑이란?')).toBeVisible()
+      await expect(page.getByText('옵션 연결이란?')).toBeVisible()
     })
 
-    test('매핑 추가 버튼이 표시되어야 함', async ({ page }) => {
-      await expect(page.getByRole('button', { name: '매핑 추가' })).toBeVisible()
+    test('연결 추가 버튼이 표시되어야 함', async ({ page }) => {
+      await expect(page.getByRole('button', { name: '연결 추가' })).toBeVisible()
     })
 
     test('제조사 필터가 동작해야 함', async ({ page }) => {
@@ -55,18 +55,18 @@ test.describe('옵션 매핑', () => {
   })
 
   test.describe('등록', () => {
-    test('옵션 매핑 추가 모달 열기', async ({ page }) => {
-      // 매핑 추가 버튼 클릭
-      await page.getByRole('button', { name: '매핑 추가' }).click()
+    test('옵션 연결 추가 모달 열기', async ({ page }) => {
+      // 연결 추가 버튼 클릭
+      await page.getByRole('button', { name: '연결 추가' }).click()
 
       // 모달이 열려야 함
       await expect(page.getByRole('dialog')).toBeVisible()
-      await expect(page.getByText('새로운 옵션-제조사 매핑을 등록합니다.')).toBeVisible()
+      await expect(page.getByText('새로운 옵션-제조사 연결을 등록합니다.')).toBeVisible()
     })
 
     test('필수 필드 유효성 검사', async ({ page }) => {
       // 모달 열기
-      await page.getByRole('button', { name: '매핑 추가' }).click()
+      await page.getByRole('button', { name: '연결 추가' }).click()
       await expect(page.getByRole('dialog')).toBeVisible()
 
       // 빈 폼으로 제출 시도
@@ -78,9 +78,9 @@ test.describe('옵션 매핑', () => {
       await expect(page.getByText('제조사를 선택하세요')).toBeVisible()
     })
 
-    test('새 옵션 매핑 등록', async ({ page }) => {
+    test('새 옵션 연결 등록', async ({ page }) => {
       // 모달 열기
-      await page.getByRole('button', { name: '매핑 추가' }).click()
+      await page.getByRole('button', { name: '연결 추가' }).click()
       await expect(page.getByRole('dialog')).toBeVisible()
 
       // 폼 입력
@@ -99,12 +99,12 @@ test.describe('옵션 매핑', () => {
       await expect(page.getByRole('dialog')).not.toBeVisible()
 
       // 성공 토스트 메시지 확인
-      await expect(page.getByText('매핑이 추가되었습니다')).toBeVisible()
+      await expect(page.getByText('연결이 추가되었습니다')).toBeVisible()
     })
   })
 
   test.describe('수정', () => {
-    test('옵션 매핑 수정 모달 열기', async ({ page }) => {
+    test('옵션 연결 수정 모달 열기', async ({ page }) => {
       // 테이블이 로드될 때까지 대기
       const table = page.locator('table')
 
@@ -117,7 +117,7 @@ test.describe('옵션 매핑', () => {
           if (await editButton.isVisible()) {
             await editButton.click()
             await expect(page.getByRole('dialog')).toBeVisible()
-            await expect(page.getByText('옵션-제조사 매핑 정보를 수정합니다.')).toBeVisible()
+            await expect(page.getByText('옵션-제조사 연결 정보를 수정합니다.')).toBeVisible()
 
             // 취소
             await page.getByRole('dialog').getByRole('button', { name: '취소' }).click()
@@ -126,7 +126,7 @@ test.describe('옵션 매핑', () => {
       }
     })
 
-    test('옵션 매핑 정보 수정', async ({ page }) => {
+    test('옵션 연결 정보 수정', async ({ page }) => {
       // 메인 콘텐츠 영역의 검색 입력란 찾기
       const searchInput = page.getByRole('searchbox', { name: '상품코드, 옵션명 검색' })
       if (await searchInput.isVisible()) {
@@ -134,7 +134,7 @@ test.describe('옵션 매핑', () => {
         await page.waitForTimeout(500)
       }
 
-      // 테스트 매핑이 있으면 수정
+      // 테스트 연결이 있으면 수정
       const testRow = page.locator(`table tbody tr:has-text("${TEST_OPTION_MAPPING.productCode}")`)
 
       if (await testRow.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -151,14 +151,14 @@ test.describe('옵션 매핑', () => {
           await page.getByRole('dialog').getByRole('button', { name: '수정' }).click()
 
           // 성공 토스트 메시지 확인
-          await expect(page.getByText('매핑이 수정되었습니다')).toBeVisible()
+          await expect(page.getByText('연결이 수정되었습니다')).toBeVisible()
         }
       }
     })
   })
 
   test.describe('삭제', () => {
-    test('옵션 매핑 삭제', async ({ page }) => {
+    test('옵션 연결 삭제', async ({ page }) => {
       // 메인 콘텐츠 영역의 검색 입력란 찾기
       const searchInput = page.getByRole('searchbox', { name: '상품코드, 옵션명 검색' })
       if (await searchInput.isVisible()) {
@@ -166,7 +166,7 @@ test.describe('옵션 매핑', () => {
         await page.waitForTimeout(500)
       }
 
-      // 테스트 매핑이 있으면 삭제
+      // 테스트 연결이 있으면 삭제
       const testRow = page.locator(`table tbody tr:has-text("${TEST_OPTION_MAPPING.productCode}")`)
 
       if (await testRow.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -182,22 +182,22 @@ test.describe('옵션 매핑', () => {
           }
 
           // 성공 토스트 메시지 확인
-          await expect(page.getByText('매핑이 삭제되었습니다')).toBeVisible()
+          await expect(page.getByText('연결이 삭제되었습니다')).toBeVisible()
         }
       }
     })
   })
 
-  test.describe('매핑 우선순위', () => {
-    test('모달에 매핑 우선순위 안내가 표시되어야 함', async ({ page }) => {
+  test.describe('연결 우선순위', () => {
+    test('모달에 연결 우선순위 안내가 표시되어야 함', async ({ page }) => {
       // 모달 열기
-      await page.getByRole('button', { name: '매핑 추가' }).click()
+      await page.getByRole('button', { name: '연결 추가' }).click()
       await expect(page.getByRole('dialog')).toBeVisible()
 
       // 우선순위 안내 확인
-      await expect(page.getByText('매핑 우선순위')).toBeVisible()
-      await expect(page.getByText('옵션 매핑 (상품코드 + 옵션 조합)')).toBeVisible()
-      await expect(page.getByText('상품 매핑 (상품코드 기준)')).toBeVisible()
+      await expect(page.getByText('연결 우선순위')).toBeVisible()
+      await expect(page.getByText('옵션 연결 (상품코드 + 옵션 조합)')).toBeVisible()
+      await expect(page.getByText('상품 연결 (상품코드 기준)')).toBeVisible()
 
       // 취소
       await page.getByRole('dialog').getByRole('button', { name: '취소' }).click()

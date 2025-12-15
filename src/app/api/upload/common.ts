@@ -181,7 +181,7 @@ export function calculateSummary(breakdown: ManufacturerBreakdown[]): UploadSumm
 export function matchManufacturerId(order: ParsedOrder, lookupMaps: LookupMaps): number | null {
   const { manufacturerMap, productMap, optionMap } = lookupMaps
 
-  // 1) 옵션 매핑 확인
+  // 1) 옵션 연결 확인
   if (order.productCode && order.optionName) {
     const optionKey = `${order.productCode.toLowerCase()}_${order.optionName.toLowerCase()}`
     const om = optionMap.get(optionKey)
@@ -190,7 +190,7 @@ export function matchManufacturerId(order: ParsedOrder, lookupMaps: LookupMaps):
     }
   }
 
-  // 2) 상품 매핑 확인 (옵션 매핑이 없는 경우)
+  // 2) 상품 연결 확인 (옵션 연결이 없는 경우)
   if (order.productCode) {
     const p = productMap.get(order.productCode.toLowerCase())
     if (p?.manufacturerId) {

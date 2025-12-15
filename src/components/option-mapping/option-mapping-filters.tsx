@@ -73,7 +73,7 @@ export function OptionMappingFilters({
       <div className="ml-auto">
         <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAddNew}>
           <Plus className="h-4 w-4" />
-          매핑 추가
+          연결 추가
         </Button>
       </div>
     </div>

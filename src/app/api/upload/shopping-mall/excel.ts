@@ -14,7 +14,7 @@ export interface ShoppingMallConfig {
 
 /**
  * 쇼핑몰 주문 파일 파싱
- * columnMappings를 기반으로 동적으로 컬럼을 매핑
+ * columnMappings를 기반으로 동적으로 컬럼을 연결
  */
 export async function parseShoppingMallFile(buffer: ArrayBuffer, config: ShoppingMallConfig) {
   const workbook = new ExcelJS.Workbook()
@@ -42,7 +42,7 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
     const value = getCellValue(headerRow.getCell(col))
     if (value) {
       // 동일한 헤더명이 여러 번 나오는 쇼핑몰 파일이 있어요.
-      // 이 경우 마지막 값으로 덮어쓰면 매핑이 뒤틀릴 수 있어서, "첫 번째 등장"을 기준으로 고정합니다.
+      // 이 경우 마지막 값으로 덮어쓰면 연결이 뒤틀릴 수 있어서, "첫 번째 등장"을 기준으로 고정합니다.
       if (!headerColumnMap.has(value)) {
         headerColumnMap.set(value, col)
       }
@@ -108,7 +108,7 @@ function mapRowToOrder(
 ) {
   // DB 필드명으로 엑셀 셀 값을 가져오는 함수
   const str = (dbField: string): string => {
-    // columnMappings에서 해당 DB 필드에 매핑된 엑셀 컬럼명 찾기
+    // columnMappings에서 해당 DB 필드에 연결된 엑셀 컬럼명 찾기
     const excelColumn = Object.entries(config.columnMappings).find(([, field]) => field === dbField)?.[0]
     if (!excelColumn) return ''
 

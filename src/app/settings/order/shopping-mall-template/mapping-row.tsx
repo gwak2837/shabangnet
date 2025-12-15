@@ -25,7 +25,7 @@ export function MappingRow({ header, value, onChange }: MappingRowProps) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="_none">
-            <span className="text-muted-foreground">매핑 안함</span>
+            <span className="text-muted-foreground">연결 안함</span>
           </SelectItem>
           {SABANGNET_FIELD_OPTIONS.map((field) => (
             <SelectItem key={field.key} value={field.key}>

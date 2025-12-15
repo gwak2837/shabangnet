@@ -24,7 +24,7 @@ interface InvoiceTemplate {
 interface Manufacturer {
   ccEmail?: string
   contactName: string
-  email: string
+  email: string | null
   id: number
   lastOrderDate: string
   name: string
@@ -244,18 +244,23 @@ export async function updateInvoiceTemplate(
 
 export async function updateOrderTemplate(
   manufacturerId: number,
-  template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>,
+  template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'> & { templateFileBuffer?: ArrayBuffer },
 ): Promise<OrderTemplate> {
   const existing = await getOrderTemplate(manufacturerId)
   const mfr = await getById(manufacturerId)
 
   if (!mfr) throw new Error('Manufacturer not found')
 
+  const templateFileSet = template.templateFileBuffer
+    ? { templateFile: Buffer.from(new Uint8Array(template.templateFileBuffer)) }
+    : {}
+
   if (existing) {
     const [updated] = await db
       .update(orderTemplate)
       .set({
         templateFileName: template.templateFileName || null,
+        ...templateFileSet,
         headerRow: template.headerRow,
         dataStartRow: template.dataStartRow,
         columnMappings: JSON.stringify(template.columnMappings),
@@ -271,6 +276,7 @@ export async function updateOrderTemplate(
       .values({
         manufacturerId,
         templateFileName: template.templateFileName || null,
+        ...templateFileSet,
         headerRow: template.headerRow,
         dataStartRow: template.dataStartRow,
         columnMappings: JSON.stringify(template.columnMappings),
@@ -306,7 +312,7 @@ function mapToManufacturer(
     id: m.id,
     name: m.name,
     contactName: m.contactName || '',
-    email: m.email,
+    email: m.email ?? null,
     ccEmail: m.ccEmail || undefined,
     phone: m.phone || '',
     orderCount: m.orderCount || 0,

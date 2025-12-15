@@ -225,7 +225,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
       batchesMap.set(m.id, {
         manufacturerId: m.id,
         manufacturerName: m.name,
-        email: m.email,
+        email: m.email ?? '',
         ccEmail: m.ccEmail || undefined,
         orders: [],
         status: 'pending',

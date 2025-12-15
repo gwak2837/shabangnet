@@ -48,7 +48,7 @@ export const order = pgTable(
     quantity: integer('quantity').default(1), // B열: 수량
     optionName: varchar('option_name', { length: 255 }), // S열: 옵션
     productAbbr: varchar('product_abbr', { length: 255 }), // V열: 상품약어
-    productCode: varchar('product_code', { length: 100 }), // [열/\열: 품번코드/자체상품코드
+    productCode: varchar('product_code', { length: 255 }), // "상품코드" (사이트+쇼핑몰상품번호 기반)
     mallProductNumber: varchar('mall_product_number', { length: 100 }), // R열: 쇼핑몰상품번호
     modelNumber: varchar('model_number', { length: 100 }), // ]열: 모델번호
 

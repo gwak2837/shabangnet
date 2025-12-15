@@ -1,26 +1,6 @@
 import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
-export const columnSynonym = pgTable(
-  'column_synonym',
-  {
-    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-    standardKey: varchar('standard_key', { length: 50 }).notNull(), // 사방넷 표준 키 (productName, quantity 등)
-    synonym: varchar('synonym', { length: 100 }).notNull(), // 동의어 (상품명, 품명 등)
-    enabled: boolean('enabled').default(true),
-    createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index('idx_column_synonym_standard_key').on(table.standardKey),
-    index('idx_column_synonym_synonym').on(table.synonym),
-    unique('unique_standard_key_synonym').on(table.standardKey, table.synonym),
-  ],
-).enableRLS()
-
 export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),
   value: text('value'),
@@ -56,8 +36,8 @@ export const shoppingMallTemplate = pgTable('shopping_mall_template', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
   displayName: varchar('display_name', { length: 100 }).notNull(),
-  columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 매핑
-  exportConfig: text('export_config'), // JSON: 쇼핑몰 원본 -> 다운로드 엑셀 컬럼 매핑(순서 포함)
+  columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 연결
+  exportConfig: text('export_config'), // JSON: 쇼핑몰 원본 -> 다운로드 엑셀 컬럼 연결(순서 포함)
   headerRow: integer('header_row').default(1),
   dataStartRow: integer('data_start_row').default(2),
   enabled: boolean('enabled').default(true),

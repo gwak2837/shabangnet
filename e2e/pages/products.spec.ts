@@ -1,20 +1,20 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('상품 매핑', () => {
+test.describe('상품 연결', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/product')
-    await expect(page.getByRole('heading', { name: '상품 매핑' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '상품 연결' })).toBeVisible()
     // 페이지 로드 대기
     await expect(page.getByText('전체 상품')).toBeVisible({ timeout: 10000 })
   })
 
   test.describe('조회', () => {
-    test('상품 매핑 페이지가 표시되어야 함', async ({ page }) => {
+    test('상품 연결 페이지가 표시되어야 함', async ({ page }) => {
       // 통계 카드들이 표시되어야 함
       await expect(page.getByText('전체 상품')).toBeVisible()
-      await expect(page.getByText('매핑 완료')).toBeVisible()
-      // 미매핑 카드 (exact match 사용)
-      await expect(page.locator('[data-slot="card-content"]').filter({ hasText: '미매핑' }).first()).toBeVisible()
+      await expect(page.getByText('연결 완료')).toBeVisible()
+      // 미연결 카드 (exact match 사용)
+      await expect(page.locator('[data-slot="card-content"]').filter({ hasText: '미연결' }).first()).toBeVisible()
       await expect(page.getByText('원가 이상')).toBeVisible()
     })
 
@@ -35,9 +35,9 @@ test.describe('상품 매핑', () => {
       }
     })
 
-    test('미매핑만 보기 필터가 동작해야 함', async ({ page }) => {
-      // 미매핑만 보기 체크박스 찾기
-      const unmappedCheckbox = page.getByLabel('미매핑 상품만 보기')
+    test('미연결만 보기 필터가 동작해야 함', async ({ page }) => {
+      // 미연결만 보기 체크박스 찾기
+      const unmappedCheckbox = page.getByLabel('미연결 상품만 보기')
 
       if (await unmappedCheckbox.isVisible({ timeout: 3000 }).catch(() => false)) {
         await unmappedCheckbox.click()
@@ -61,7 +61,7 @@ test.describe('상품 매핑', () => {
   })
 
   test.describe('인라인 편집', () => {
-    test('제조사 매핑 수정 (클릭하여 드롭다운 열기)', async ({ page }) => {
+    test('제조사 연결 수정 (클릭하여 드롭다운 열기)', async ({ page }) => {
       // 테이블이 로드될 때까지 대기
       const table = page.locator('table')
       await expect(table).toBeVisible({ timeout: 10000 })
@@ -70,8 +70,8 @@ test.describe('상품 매핑', () => {
       const firstRow = table.locator('tbody tr').first()
 
       if (await firstRow.isVisible({ timeout: 5000 }).catch(() => false)) {
-        // 제조사 셀 클릭 (매핑 필요 버튼이나 기존 제조사 배지)
-        const mappingButton = firstRow.getByRole('button', { name: '매핑 필요' })
+        // 제조사 셀 클릭 (연결 필요 버튼이나 기존 제조사 배지)
+        const mappingButton = firstRow.getByRole('button', { name: '연결 필요' })
         const manufacturerBadge = firstRow.locator('.cursor-pointer').filter({ hasText: /\S/ })
 
         if (await mappingButton.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -167,9 +167,9 @@ test.describe('상품 매핑', () => {
       }
     })
 
-    test('매핑 일괄 업로드 모달 열기', async ({ page }) => {
-      // 매핑 일괄 업로드 버튼 클릭
-      const mappingUploadButton = page.getByRole('button', { name: '매핑 일괄 업로드' })
+    test('연결 일괄 업로드 모달 열기', async ({ page }) => {
+      // 연결 일괄 업로드 버튼 클릭
+      const mappingUploadButton = page.getByRole('button', { name: '연결 일괄 업로드' })
 
       if (await mappingUploadButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await mappingUploadButton.click()
@@ -190,14 +190,14 @@ test.describe('상품 매핑', () => {
       await expect(totalCard).toBeVisible()
     })
 
-    test('매핑 완료 수가 표시되어야 함', async ({ page }) => {
-      const mappedCard = page.locator('[data-slot="card-content"]').filter({ hasText: '매핑 완료' })
+    test('연결 완료 수가 표시되어야 함', async ({ page }) => {
+      const mappedCard = page.locator('[data-slot="card-content"]').filter({ hasText: '연결 완료' })
       await expect(mappedCard).toBeVisible()
     })
 
-    test('미매핑 수가 표시되어야 함', async ({ page }) => {
-      // 미매핑 카드 (카드 내 텍스트로 구분)
-      const unmappedCard = page.locator('[data-slot="card-content"]').filter({ hasText: '미매핑' }).first()
+    test('미연결 수가 표시되어야 함', async ({ page }) => {
+      // 미연결 카드 (카드 내 텍스트로 구분)
+      const unmappedCard = page.locator('[data-slot="card-content"]').filter({ hasText: '미연결' }).first()
       await expect(unmappedCard).toBeVisible()
     })
   })

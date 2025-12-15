@@ -41,13 +41,13 @@ export const SABANGNET_COLUMNS: SabangnetColumn[] = [
   { index: 8, key: 'postalCode', label: '우편번호' }, // I열
   { index: 9, key: 'address', label: '배송지', required: true }, // J열
   { index: 10, key: 'memo', label: '전언' }, // K열
-  { index: 11, key: 'shoppingMall', label: '사이트' }, // L열
+  { index: 11, key: 'shoppingMall', label: '사이트', required: true }, // L열
   { index: 12, key: 'manufacturerName', label: '제조사', required: true }, // M열
   { index: 13, key: 'courier', label: '택배사' }, // N열
   { index: 14, key: 'trackingNumber', label: '송장번호' }, // O열
   { index: 15, key: 'mallOrderNumber', label: '쇼핑몰주문번호' }, // P열
   { index: 16, key: 'sabangnetOrderNumber', label: '사방넷주문번호', required: true }, // Q열
-  { index: 17, key: 'mallProductNumber', label: '쇼핑몰상품번호' }, // R열
+  { index: 17, key: 'mallProductNumber', label: '쇼핑몰상품번호', required: true }, // R열
   { index: 18, key: 'optionName', label: '옵션' }, // S열
   { index: 19, key: 'fulfillmentType', label: 'F' }, // T열 (주문유형)
   { index: 20, key: 'paymentAmount', label: '결제금액' }, // U열

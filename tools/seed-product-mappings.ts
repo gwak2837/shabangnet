@@ -8,7 +8,7 @@ import postgres from 'postgres'
 
 import { manufacturer, optionMapping, product } from '../src/db/schema/manufacturers'
 
-// 추출된 매핑 데이터 타입
+// 추출된 연결 데이터 타입
 interface ExtractedMapping {
   manufacturer: string
   optionName: string
@@ -32,12 +32,12 @@ async function seed() {
   // 추출된 데이터 파일 확인
   const extractedDataPath = path.join(__dirname, '../public/data/extracted/product-mappings.json')
   if (!fs.existsSync(extractedDataPath)) {
-    console.error('❌ 추출된 상품 매핑 데이터 파일이 없습니다.')
+    console.error('❌ 추출된 상품 연결 데이터 파일이 없습니다.')
     console.error('   먼저 pnpm tsx tools/analyze-real-data.ts 를 실행하세요.')
     process.exit(1)
   }
 
-  console.log('🌱 상품-제조사 매핑 시드 시작...\n')
+  console.log('🌱 상품-제조사 연결 시드 시작...\n')
 
   const client = postgres(databaseURL, {
     prepare: false,
@@ -52,7 +52,7 @@ async function seed() {
   try {
     // 추출된 데이터 로드
     const extractedData: ExtractedMapping[] = JSON.parse(fs.readFileSync(extractedDataPath, 'utf-8'))
-    console.log(`📄 ${extractedData.length}개 매핑 데이터 로드\n`)
+    console.log(`📄 ${extractedData.length}개 연결 데이터 로드\n`)
 
     // 제조사 ID 캐시 (성능 최적화)
     const manufacturerCache = new Map<string, number | null>()
@@ -65,11 +65,11 @@ async function seed() {
     let noManufacturer = 0
     let errors = 0
 
-    // 상품코드가 있는 매핑 처리 (product 테이블)
+    // 상품코드가 있는 연결 처리 (product 테이블)
     const productCodeMappings = extractedData.filter(
       (m) => m.productCode && m.productCode !== '' && m.productCode !== '1',
     )
-    console.log(`📦 상품코드가 있는 매핑: ${productCodeMappings.length}개\n`)
+    console.log(`📦 상품코드가 있는 연결: ${productCodeMappings.length}개\n`)
 
     // 상품코드별로 그룹화 (같은 상품코드는 하나의 product로)
     const productCodeGroups = new Map<string, ExtractedMapping[]>()
@@ -82,7 +82,7 @@ async function seed() {
     console.log(`🔄 ${productCodeGroups.size}개 고유 상품코드 처리 중...\n`)
 
     for (const [productCode, mappings] of productCodeGroups) {
-      // 첫 번째 매핑 사용 (상품명, 제조사)
+      // 첫 번째 연결 사용 (상품명, 제조사)
       const firstMapping = mappings[0]
 
       try {
@@ -126,8 +126,8 @@ async function seed() {
       await new Promise((resolve) => setTimeout(resolve, 5))
     }
 
-    // 옵션 매핑 처리 (상품코드가 없거나 '1'인 경우)
-    console.log('\n🏷️ 옵션 매핑 처리 중...\n')
+    // 옵션 연결 처리 (상품코드가 없거나 '1'인 경우)
+    console.log('\n🏷️ 옵션 연결 처리 중...\n')
 
     const optionMappingsData = extractedData.filter(
       (m) => !m.productCode || m.productCode === '' || m.productCode === '1',
@@ -142,7 +142,7 @@ async function seed() {
       }
     }
 
-    console.log(`📝 ${optionGroups.size}개 옵션 매핑 처리 중...\n`)
+    console.log(`📝 ${optionGroups.size}개 옵션 연결 처리 중...\n`)
 
     for (const [, mapping] of optionGroups) {
       try {
@@ -174,7 +174,7 @@ async function seed() {
           continue
         }
 
-        // 새 옵션 매핑 등록
+        // 새 옵션 연결 등록
         await db.insert(optionMapping).values({
           productCode: productCodeFromName,
           optionName: mapping.optionName || '기본',
@@ -201,12 +201,12 @@ async function seed() {
     console.log('='.repeat(50))
     console.log(`   상품 등록: ${productsCreated}개`)
     console.log(`   상품 건너뜀: ${productsSkipped}개`)
-    console.log(`   옵션 매핑 등록: ${optionMappingsCreated}개`)
-    console.log(`   옵션 매핑 건너뜀: ${optionMappingsSkipped}개`)
+    console.log(`   옵션 연결 등록: ${optionMappingsCreated}개`)
+    console.log(`   옵션 연결 건너뜀: ${optionMappingsSkipped}개`)
     console.log(`   제조사 없음: ${noManufacturer}개`)
     console.log(`   오류: ${errors}개`)
 
-    console.log('\n🎉 상품-제조사 매핑 시드 완료!')
+    console.log('\n🎉 상품-제조사 연결 시드 완료!')
   } catch (error) {
     console.error('❌ 시드 실패:', error)
     process.exit(1)

@@ -84,7 +84,7 @@ const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, 
  *
  * row.values는 1-based 배열 (index 0 = undefined, A열 = index 1)
  *
- * 컬럼 매핑:
+ * 컬럼 연결:
  * [1] A열: 상품명
  * [2] B열: 수량
  * [3] C열: 주문인

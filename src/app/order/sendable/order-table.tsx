@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
-import type { OrderBatch } from './hook'
+import type { OrderBatch } from '../hook'
 
 interface OrderTableProps {
   batches: OrderBatch[]
@@ -191,6 +191,8 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
     return null
   }
 
+  const hasEmail = batch.email.trim().length > 0
+
   return (
     <label className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition" style={style}>
       {/* Checkbox */}
@@ -221,7 +223,13 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Email */}
-      <div className="flex-1 min-w-[200px] px-4 text-slate-600 truncate">{batch.email}</div>
+      <div className="flex-1 min-w-[200px] px-4 truncate">
+        {hasEmail ? (
+          <span className="text-slate-600">{batch.email}</span>
+        ) : (
+          <span className="text-amber-700">이메일 미설정</span>
+        )}
+      </div>
 
       {/* Status */}
       <div className="w-24 shrink-0 px-4">
@@ -260,9 +268,15 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
               <Download className="mr-2 h-4 w-4" />
               다운로드
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSendEmail(batch)}>
+            <DropdownMenuItem disabled={!hasEmail} onClick={() => onSendEmail(batch)}>
               <Mail className="mr-2 h-4 w-4" />
-              {batch.status === 'sent' ? '재발송' : batch.status === 'error' ? '재시도' : '이메일 발송'}
+              {hasEmail
+                ? batch.status === 'sent'
+                  ? '재발송'
+                  : batch.status === 'error'
+                    ? '재시도'
+                    : '이메일 발송'
+                : '이메일 설정 필요'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,7 +1,10 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { Product } from '@/services/products'
@@ -16,9 +19,16 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useProducts } from '@/hooks/use-products'
 import { useServerAction } from '@/hooks/use-server-action'
+import { saveProductManufacturerLink } from '@/services/product-manufacturer-links'
 import { create, update } from '@/services/products'
 
+interface MatchingSummaryResponse {
+  missingEmailManufacturers: unknown[]
+  unmatchedProductCodes: unknown[]
+}
+
 export default function ProductsPage() {
+  const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
   const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
@@ -26,6 +36,56 @@ export default function ProductsPage() {
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
+
+  // Deep link 지원: /product?unlinked=1&q=...
+  useEffect(() => {
+    const unlinked = searchParams.get('unlinked')
+    const q = searchParams.get('q')
+
+    if (unlinked === '1') {
+      setShowUnmappedOnly(true)
+    }
+    if (q && q.trim().length > 0) {
+      setSearchQuery(q)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const { data: matchingSummary } = useQuery({
+    queryKey: queryKeys.orders.matching,
+    queryFn: async () => {
+      const res = await fetch('/api/orders/matching', { cache: 'no-store' })
+      const json = (await res.json()) as MatchingSummaryResponse & { error?: string }
+      if (!res.ok) {
+        throw new Error(json.error || '매칭 상태를 불러오지 못했어요')
+      }
+      return json
+    },
+  })
+
+  const hasOrderPrepIssues =
+    (matchingSummary?.missingEmailManufacturers?.length ?? 0) > 0 ||
+    (matchingSummary?.unmatchedProductCodes?.length ?? 0) > 0
+
+  const [, saveLink] = useServerAction(saveProductManufacturerLink, {
+    invalidateKeys: [queryKeys.products.all, queryKeys.orders.batches, queryKeys.orders.matching],
+    onSuccess: (result) => {
+      if (result && typeof result === 'object' && 'mode' in result && result.mode === 'unlink') {
+        toast.success('제조사 연결이 해제됐어요')
+        return
+      }
+
+      const updatedOrders =
+        result && typeof result === 'object' && 'updatedOrders' in result ? Number(result.updatedOrders ?? 0) : 0
+
+      if (Number.isFinite(updatedOrders) && updatedOrders > 0) {
+        toast.success(`기존 주문 ${updatedOrders}건에 반영됐어요`)
+      } else {
+        toast.success('제조사 연결이 저장됐어요')
+      }
+    },
+    onError: (error) => toast.error(error),
+  })
 
   const [, updateProduct] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Product> }) => update(id, data),
@@ -55,13 +115,13 @@ export default function ProductsPage() {
   }, [products, searchQuery, showUnmappedOnly, showPriceErrorsOnly])
 
   const handleUpdateManufacturer = (productId: number, manufacturerId: number | null) => {
-    const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
-    updateProduct({
-      id: productId,
-      data: {
-        manufacturerId,
-        manufacturerName: manufacturer?.name ?? null,
-      },
+    const target = products.find((p) => p.id === productId)
+    if (!target) return
+
+    saveLink({
+      manufacturerId,
+      productCode: target.productCode,
+      productName: target.productName,
     })
   }
 
@@ -130,7 +190,7 @@ export default function ProductsPage() {
 
   if (isLoadingProducts) {
     return (
-      <AppShell description="상품과 제조사 간의 매핑을 관리합니다" title="상품 매핑">
+      <AppShell description="상품코드와 제조사를 연결하고 원가를 관리해요" title="상품 연결">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -139,7 +199,23 @@ export default function ProductsPage() {
   }
 
   return (
-    <AppShell description="상품과 제조사 간의 매핑을 관리합니다" title="상품 매핑">
+    <AppShell description="상품코드와 제조사를 연결하고 원가를 관리해요" title="상품 연결">
+      {hasOrderPrepIssues && (
+        <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-6">
+          <CardContent className="p-4 flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-slate-900">발주 준비가 더 필요해요</p>
+              <p className="mt-1 text-sm text-slate-600">
+                이메일 미설정 제조사 또는 주문 기준 미연결 항목이 있어요. 발주 준비에서 한 번에 정리할 수 있어요.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/order/matching">발주 준비로 이동</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-4 mb-8">
         <Card className="border-slate-200 bg-card shadow-sm">
@@ -160,7 +236,7 @@ export default function ProductsPage() {
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">매핑 완료</p>
+              <p className="text-sm text-slate-500">연결 완료</p>
               <p className="text-xl font-semibold text-slate-900">{stats.mappedProducts}개</p>
             </div>
           </CardContent>
@@ -172,7 +248,7 @@ export default function ProductsPage() {
               <AlertCircle className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">미매핑</p>
+              <p className="text-sm text-slate-500">미연결</p>
               <p className="text-xl font-semibold text-slate-900">{stats.unmappedProducts}개</p>
             </div>
           </CardContent>

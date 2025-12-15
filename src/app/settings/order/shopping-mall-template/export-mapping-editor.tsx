@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { ShoppingMallExportConfigV1 } from '@/services/shopping-mall-templates'
 
@@ -35,33 +35,34 @@ interface ExportMappingRowProps {
 
 export function ExportMappingEditor({ availableColumns, value, onChange }: ExportMappingEditorProps) {
   const exportConfig = value
+  const exportConfigReady = exportConfig ? exportConfig.columns.every((col) => Boolean(col.id)) : true
+
   const effectiveAvailableColumns = useMemo(
     () => (availableColumns.length > 0 ? availableColumns : createFallbackColumnsFromConfig(exportConfig)),
     [availableColumns, exportConfig],
   )
+
   const columnMap = useMemo(
     () => new Map(effectiveAvailableColumns.map((c) => [c.columnIndex, c])),
     [effectiveAvailableColumns],
   )
-  const hasAnalyzedColumns = availableColumns.length > 0
 
-  const exportConfigRef = useRef(exportConfig)
-  const onChangeRef = useRef(onChange)
-
-  useEffect(() => {
-    exportConfigRef.current = exportConfig
-  }, [exportConfig])
-
-  useEffect(() => {
-    onChangeRef.current = onChange
-  }, [onChange])
+  function updateExportConfig(updater: (prev: ShoppingMallExportConfigV1) => ShoppingMallExportConfigV1) {
+    if (exportConfig) {
+      onChange(updater(exportConfig))
+    }
+  }
 
   // Ensure stable row keys (id) so row-local state doesn't jump on reorder.
   useEffect(() => {
-    if (!exportConfig) return
+    if (!exportConfig) {
+      return
+    }
 
     const missingIds = exportConfig.columns.some((col) => !col.id)
-    if (!missingIds) return
+    if (!missingIds) {
+      return
+    }
 
     const next: ShoppingMallExportConfigV1 = {
       ...exportConfig,
@@ -71,19 +72,8 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
       })),
     }
 
-    onChangeRef.current(next)
-  }, [exportConfig])
-
-  const updateExportConfig = useCallback(
-    (updater: (prev: ShoppingMallExportConfigV1) => ShoppingMallExportConfigV1) => {
-      const current = exportConfigRef.current
-      if (!current) return
-      onChangeRef.current(updater(current))
-    },
-    [],
-  )
-
-  const exportConfigReady = exportConfig ? exportConfig.columns.every((col) => Boolean(col.id)) : true
+    onChange(next)
+  }, [exportConfig, onChange])
 
   if (exportConfig && !exportConfigReady) {
     return (
@@ -105,29 +95,6 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
         </p>
       </div>
 
-      <div className="space-y-2">
-        {!hasAnalyzedColumns && (
-          <p className="text-sm text-muted-foreground">
-            샘플 파일을 업로드하면 원본 컬럼 전체 목록을 불러올 수 있어요.
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            aria-disabled={effectiveAvailableColumns.length === 0}
-            className="aria-disabled:opacity-50"
-            onClick={() => onChange(createIdentityConfig(effectiveAvailableColumns))}
-            type="button"
-            variant="outline"
-          >
-            원본 컬럼으로 자동 생성
-          </Button>
-          <Button onClick={() => onChange(null)} type="button" variant="ghost">
-            초기화
-          </Button>
-        </div>
-      </div>
-
       {exportConfig && (
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
@@ -146,22 +113,6 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
                 }
               />
             </div>
-
-            <Button
-              onClick={() =>
-                updateExportConfig((prev) => ({
-                  ...prev,
-                  columns: [
-                    ...prev.columns,
-                    { id: crypto.randomUUID(), header: '', source: { type: 'const', value: '' } },
-                  ],
-                }))
-              }
-              type="button"
-              variant="outline"
-            >
-              <Plus />빈 컬럼 추가
-            </Button>
           </div>
 
           <div className="rounded-md bg-background ring-1 ring-border/50">
@@ -179,10 +130,10 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
                 <TableHeader className="bg-muted/40">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="text-center text-xs font-medium text-muted-foreground">#</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">출력 헤더</TableHead>
                     <TableHead className="text-xs font-medium text-muted-foreground">원본 컬럼</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">고정값</TableHead>
-                    <TableHead className="text-right text-xs font-medium text-muted-foreground">관리</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">다운로드 컬럼</TableHead>
+                    <TableHead className="text-center text-xs font-medium text-muted-foreground">고정값</TableHead>
+                    <TableHead className="text-center text-xs font-medium text-muted-foreground">관리</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-border/50">
@@ -229,17 +180,6 @@ function createFallbackColumnsFromConfig(exportConfig: ShoppingMallExportConfigV
   return out
 }
 
-function createIdentityConfig(availableColumns: AvailableColumn[]): ShoppingMallExportConfigV1 {
-  return {
-    version: 1,
-    copyPrefixRows: true,
-    columns: availableColumns.map((col) => ({
-      id: crypto.randomUUID(),
-      source: { type: 'input' as const, columnIndex: col.columnIndex },
-    })),
-  }
-}
-
 function ExportMappingRow({
   column,
   columnMap,
@@ -272,54 +212,25 @@ function ExportMappingRow({
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell className="text-center text-xs text-muted-foreground tabular-nums">{index + 1}</TableCell>
-
-      <TableCell>
-        <div className="flex min-w-0 items-center gap-2">
-          <Input
-            onBlur={() => {
-              updateExportConfig((prev) => ({
-                ...prev,
-                columns: prev.columns.map((c) => (c.id === colId ? { ...c, header: headerInput } : c)),
-              }))
-            }}
-            onChange={(e) => setHeaderInput(e.target.value)}
-            placeholder={defaultHeader || '(빈 헤더)'}
-            value={headerInput}
-          />
-          <Button
-            aria-disabled={column.header === undefined}
-            className="shrink-0 aria-disabled:opacity-40"
-            onClick={() => {
-              if (column.header === undefined) return
-              setHeaderInput('')
-              updateExportConfig((prev) => ({
-                ...prev,
-                columns: prev.columns.map((c) => {
-                  if (c.id !== colId) return c
-                  const nextColumn = { ...c }
-                  delete nextColumn.header
-                  return nextColumn
-                }),
-              }))
-            }}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            기본값
-          </Button>
-        </div>
-      </TableCell>
-
       <TableCell>
         <Select
           onValueChange={(v) => {
+            if (v !== 'const') {
+              setConstValueInput('')
+            } else if (column.header === undefined && defaultHeader) {
+              setHeaderInput(defaultHeader)
+            }
+
             updateExportConfig((prev) => {
               const nextColumns = prev.columns.map((c) => {
                 if (c.id !== colId) return c
 
                 if (v === 'const') {
-                  return { ...c, source: { type: 'const' as const, value: constValueInput } }
+                  const next = { ...c, source: { type: 'const' as const, value: constValueInput } }
+                  if (c.header === undefined && defaultHeader) {
+                    return { ...next, header: defaultHeader }
+                  }
+                  return next
                 }
 
                 const [, rawColumnIndex] = v.split(':')
@@ -351,27 +262,67 @@ function ExportMappingRow({
           </SelectContent>
         </Select>
       </TableCell>
-
       <TableCell>
-        {isConst ? (
-          <Input
-            onBlur={() => {
+        <Input
+          onBlur={() => {
+            const nextHeader = headerInput.trim()
+            updateExportConfig((prev) => ({
+              ...prev,
+              columns: prev.columns.map((c) => {
+                if (c.id !== colId) return c
+                const next = { ...c }
+                if (nextHeader.length === 0) {
+                  delete next.header
+                  return next
+                }
+                return { ...next, header: nextHeader }
+              }),
+            }))
+          }}
+          onChange={(e) => setHeaderInput(e.target.value)}
+          placeholder={defaultHeader || '(빈 헤더)'}
+          value={headerInput}
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          onBlur={() => {
+            updateExportConfig((prev) => ({
+              ...prev,
+              columns: prev.columns.map((c) =>
+                c.id === colId && c.source.type === 'const'
+                  ? { ...c, source: { type: 'const' as const, value: constValueInput } }
+                  : c,
+              ),
+            }))
+          }}
+          onChange={(e) => {
+            const nextValue = e.target.value
+            setConstValueInput(nextValue)
+
+            // 입력 컬럼에서 고정값 입력을 시작하면, 자동으로 고정값 컬럼으로 전환해요.
+            if (column.source.type !== 'const' && nextValue.trim().length > 0) {
+              if (column.header === undefined && defaultHeader) {
+                setHeaderInput(defaultHeader)
+              }
+
               updateExportConfig((prev) => ({
                 ...prev,
-                columns: prev.columns.map((c) =>
-                  c.id === colId && c.source.type === 'const'
-                    ? { ...c, source: { type: 'const' as const, value: constValueInput } }
-                    : c,
-                ),
+                columns: prev.columns.map((c) => {
+                  if (c.id !== colId) return c
+
+                  const next = { ...c, source: { type: 'const' as const, value: nextValue } }
+                  if (c.header === undefined && defaultHeader) {
+                    return { ...next, header: defaultHeader }
+                  }
+                  return next
+                }),
               }))
-            }}
-            onChange={(e) => setConstValueInput(e.target.value)}
-            placeholder="(빈 값)"
-            value={constValueInput}
-          />
-        ) : (
-          <div className="text-sm text-muted-foreground">-</div>
-        )}
+            }
+          }}
+          placeholder={isConst ? '(빈 값)' : '-'}
+          value={constValueInput}
+        />
       </TableCell>
 
       <TableCell className="text-right">

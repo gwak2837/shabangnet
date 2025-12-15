@@ -4,7 +4,6 @@ import { Building2, Loader2, TrendingUp, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import type { OrderTemplate } from '@/services/manufacturers'
 import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
 
 import { queryKeys } from '@/common/constants/query-keys'
@@ -15,6 +14,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useServerAction } from '@/hooks/use-server-action'
 import { create, remove, update, updateInvoiceTemplate, updateOrderTemplate } from '@/services/manufacturers'
+
+interface OrderTemplateDraft {
+  columnMappings: Record<string, string>
+  dataStartRow: number
+  fixedValues?: Record<string, string>
+  headerRow: number
+  templateFileBuffer?: ArrayBuffer
+  templateFileName?: string
+}
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -52,13 +60,8 @@ export default function ManufacturersPage() {
   )
 
   const [isSavingOrder, saveOrderTemplate] = useServerAction(
-    ({
-      manufacturerId,
-      template,
-    }: {
-      manufacturerId: number
-      template: Omit<OrderTemplate, 'id' | 'manufacturerId' | 'manufacturerName'>
-    }) => updateOrderTemplate(manufacturerId, template),
+    ({ manufacturerId, template }: { manufacturerId: number; template: OrderTemplateDraft }) =>
+      updateOrderTemplate(manufacturerId, template),
     {
       invalidateKeys: [['orderTemplate']],
     },
@@ -81,7 +84,7 @@ export default function ManufacturersPage() {
   const handleSave = (
     data: Partial<Manufacturer>,
     invoiceTemplate?: Partial<InvoiceTemplate>,
-    orderTemplate?: Partial<OrderTemplate>,
+    orderTemplate?: Partial<OrderTemplateDraft>,
   ) => {
     if (editingManufacturer) {
       // 제조사 정보 업데이트
@@ -115,6 +118,7 @@ export default function ManufacturersPage() {
             columnMappings: orderTemplate.columnMappings || {},
             fixedValues: orderTemplate.fixedValues,
             templateFileName: orderTemplate.templateFileName,
+            templateFileBuffer: orderTemplate.templateFileBuffer,
           },
         })
       }

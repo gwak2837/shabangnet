@@ -2,7 +2,6 @@ import ExcelJS from 'exceljs'
 
 import type { InvoiceTemplate } from '../services/manufacturers.types'
 
-import { findStandardKeyByLabel } from '../services/column-synonyms'
 import { getCellValue } from './excel/util'
 
 // ============================================
@@ -53,7 +52,7 @@ export interface OrderSheetOptions {
 export interface OrderTemplateConfig {
   columnMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
   dataStartRow: number
-  fixedValues?: Record<string, string> // 고정값 (컬럼 -> 값)
+  fixedValues?: Record<string, string> // 고정값 (셀 주소(B2) 또는 컬럼(A) -> 값)
   headerRow: number
 }
 
@@ -85,7 +84,7 @@ export interface ParsedOrder {
   // 배송 정보
   postalCode: string // I열: 우편번호
   productAbbr: string // V열: 상품약어
-  productCode: string // [열/\열: 품번코드/자체상품코드
+  productCode: string // 상품코드 (사이트::쇼핑몰상품번호)
   // 상품 정보
   productName: string // A열: 상품명
   quantity: number // B열: 수량
@@ -129,6 +128,14 @@ export interface TemplateAnalysis {
   headers: string[]
   sampleData: Record<string, string>[] // 샘플 데이터 (최대 3행)
   suggestedMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
+}
+
+interface TemplateVariables {
+  date: string
+  manufacturerName: string
+  totalAmount: number
+  totalItems: number
+  totalQuantity: number
 }
 
 // 발주서 기본 헤더
@@ -181,16 +188,7 @@ export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<Tem
     }
   })
 
-  // 자동 매핑 제안 (DB에서 동의어 조회)
   const suggestedMappings: Record<string, string> = {}
-  for (let index = 0; index < headers.length; index++) {
-    const header = headers[index]
-    if (!header) continue
-    const sabangnetKey = await findStandardKeyByLabel(header)
-    if (sabangnetKey) {
-      suggestedMappings[sabangnetKey] = indexToColumnLetter(index)
-    }
-  }
 
   // 샘플 데이터 추출 (최대 3행)
   const sampleData: Record<string, string>[] = []
@@ -475,6 +473,22 @@ export async function generateTemplateBasedOrderSheet(
     worksheet = workbook.addWorksheet('다온발주서')
   }
 
+  const variables = buildTemplateVariables(orders, manufacturerName, date)
+
+  const fixedByCellAddress = new Map<string, string>()
+  const fixedByColumnLetter = new Map<string, string>()
+  if (config.fixedValues) {
+    for (const [rawKey, rawValue] of Object.entries(config.fixedValues)) {
+      const key = rawKey.trim().toUpperCase()
+      const value = String(rawValue)
+      if (/^[A-Z]+$/.test(key)) {
+        fixedByColumnLetter.set(key, value)
+      } else if (/^[A-Z]+\d+$/.test(key)) {
+        fixedByCellAddress.set(key, value)
+      }
+    }
+  }
+
   // 템플릿이 없을 경우 헤더 행 생성
   if (!templateBuffer) {
     const headerRow = worksheet.getRow(config.headerRow)
@@ -488,7 +502,7 @@ export async function generateTemplateBasedOrderSheet(
       quantity: '수량',
       optionName: '옵션',
       productAbbr: '상품약어',
-      productCode: '품번코드',
+      productCode: '상품코드',
       mallProductNumber: '쇼핑몰상품번호',
       modelNumber: '모델번호',
       orderName: '주문인',
@@ -522,29 +536,40 @@ export async function generateTemplateBasedOrderSheet(
     headerRow.commit()
   }
 
+  // 템플릿이 있으면 첫 데이터 행을 필요한 만큼 복제해서 서식/병합/수식을 유지합니다.
+  // (rowCount가 부족할 때도 동일한 스타일을 유지하기 위함)
+  if (templateBuffer && orders.length > 1) {
+    worksheet.duplicateRow(config.dataStartRow, orders.length - 1, true)
+  }
+
   // 데이터 시작 행부터 주문 데이터 입력
   let currentRow = config.dataStartRow
 
   for (const order of orders) {
     const row = worksheet.getRow(currentRow)
 
-    // 컬럼 매핑에 따라 데이터 입력
+    // 컬럼 연결에 따라 데이터 입력
     for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
       const colIndex = columnLetterToIndex(column) + 1
       const value = getOrderValue(order, sabangnetKey)
       row.getCell(colIndex).value = value
     }
 
-    // 고정값 입력
-    if (config.fixedValues) {
-      for (const [column, value] of Object.entries(config.fixedValues)) {
-        const colIndex = columnLetterToIndex(column) + 1
-        row.getCell(colIndex).value = value
-      }
+    // 고정값(컬럼 단위) 입력: 각 데이터 행에서 특정 열을 동일 값으로 채우고 싶을 때 사용
+    // 예: { "A": "다온에프앤씨" }
+    for (const [column, rawValue] of fixedByColumnLetter.entries()) {
+      const colIndex = columnLetterToIndex(column) + 1
+      row.getCell(colIndex).value = resolveTemplateValue(rawValue, variables)
     }
 
     row.commit()
     currentRow++
+  }
+
+  // 고정값(셀 주소) 입력: 상단 헤더/요약 영역 등 특정 셀을 채우고 싶을 때 사용
+  // 예: { "B2": "{{manufacturerName}}", "B3": "{{date}}", "B4": "{{totalAmount}}" }
+  for (const [cellAddress, rawValue] of fixedByCellAddress.entries()) {
+    worksheet.getCell(cellAddress).value = resolveTemplateValue(rawValue, variables)
   }
 
   const buffer = await workbook.xlsx.writeBuffer()
@@ -558,7 +583,10 @@ export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, Pa
   const grouped = new Map<string, ParsedOrder[]>()
 
   for (const order of orders) {
-    const manufacturer = order.manufacturer || '미지정'
+    const raw = order.manufacturer?.trim() ?? ''
+    const isPlaceholder =
+      !raw || /^[-–—]+$/.test(raw) || raw === '미지정' || raw === '미등록' || raw === '없음' || raw === 'N/A'
+    const manufacturer = isPlaceholder ? '미지정' : raw
     const existing = grouped.get(manufacturer) || []
     existing.push(order)
     grouped.set(manufacturer, existing)
@@ -690,6 +718,19 @@ export async function parseInvoiceFile(
   return { invoices, errors }
 }
 
+function buildTemplateVariables(orders: ParsedOrder[], manufacturerName: string, date: Date): TemplateVariables {
+  const totalQuantity = orders.reduce((sum, o) => sum + (o.quantity ?? 0), 0)
+  const totalAmount = orders.reduce((sum, o) => sum + (o.paymentAmount ?? 0) * (o.quantity ?? 0), 0)
+
+  return {
+    manufacturerName,
+    date: formatDateForExcel(date),
+    totalItems: orders.length,
+    totalQuantity,
+    totalAmount,
+  }
+}
+
 /**
  * 날짜 포맷 (YYYY년 MM월 DD일)
  */
@@ -746,4 +787,21 @@ function isEmptyOption(optionName: string | null | undefined): boolean {
   const normalized = optionName.trim().toLowerCase()
   const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
   return emptyPatterns.some((pattern) => pattern.test(normalized))
+}
+
+function resolveTemplateValue(template: string, vars: TemplateVariables): number | string {
+  const raw = template.trim()
+
+  // 값 전체가 단일 변수인 경우: number 타입도 유지
+  if (raw === '{{manufacturerName}}') return vars.manufacturerName
+  if (raw === '{{date}}') return vars.date
+  if (raw === '{{totalItems}}') return vars.totalItems
+  if (raw === '{{totalQuantity}}') return vars.totalQuantity
+  if (raw === '{{totalAmount}}') return vars.totalAmount
+
+  // 문자열 내 치환
+  return raw.replace(/\{\{\s*(manufacturerName|date|totalItems|totalQuantity|totalAmount)\s*\}\}/g, (_, key) => {
+    const k = key as keyof TemplateVariables
+    return String(vars[k] ?? '')
+  })
 }

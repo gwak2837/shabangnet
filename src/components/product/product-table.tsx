@@ -166,7 +166,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                           variant="outline"
                         >
                           <AlertCircle className="h-4 w-4" />
-                          매핑 필요
+                          연결 필요
                         </Button>
                       ) : (
                         <div

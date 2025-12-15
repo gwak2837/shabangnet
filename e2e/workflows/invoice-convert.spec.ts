@@ -20,7 +20,6 @@ import {
   FLEXIBLE_COMPARE_OPTIONS_INVOICE,
   INPUT_FILES,
   INVOICE_TEST_CASES,
-  SABANGNET_TEST_CASES,
 } from '../common/fixtures'
 import { getExcelHeaders, getExcelRowCount } from '../util/excel'
 
@@ -283,10 +282,10 @@ test.describe('송장 변환 UI 테스트', () => {
 })
 
 // ============================================================================
-// 택배사 코드 매핑 검증
+// 택배사 코드 연결 검증
 // ============================================================================
 
-test.describe('택배사 코드 매핑', () => {
+test.describe('택배사 코드 연결', () => {
   test('설정 페이지에서 택배사 코드 확인', async ({ page }) => {
     // 택배사 설정 페이지로 이동
     await page.goto('/settings')
@@ -309,8 +308,8 @@ test.describe('택배사 코드 매핑', () => {
     }
   })
 
-  test('택배사 코드 매핑 정확성', async () => {
-    // 참고: 실제 택배사 코드 매핑 검증
+  test('택배사 코드 연결 정확성', async () => {
+    // 참고: 실제 택배사 코드 연결 검증
     // PRD 기준 택배사 코드:
     // - CJ대한통운: 04
     // - 한진택배: 05
@@ -326,7 +325,7 @@ test.describe('택배사 코드 매핑', () => {
       로젠택배: '06',
     }
 
-    console.log('예상 택배사 코드 매핑:')
+    console.log('예상 택배사 코드 연결:')
     for (const [name, code] of Object.entries(expectedMappings)) {
       console.log(`  ${name}: ${code}`)
     }

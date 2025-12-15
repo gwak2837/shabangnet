@@ -3,19 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { getAllSynonyms } from '@/services/column-synonyms'
 import { getDuplicateCheckSettings } from '@/services/settings'
 import { getShoppingMallTemplate, getShoppingMallTemplates } from '@/services/shopping-mall-templates'
 
 import { getMFASettings } from './queries/mfa'
-
-// Column Synonyms
-export function useColumnSynonyms() {
-  return useQuery({
-    queryKey: queryKeys.settings.synonyms,
-    queryFn: getAllSynonyms,
-  })
-}
 
 // Duplicate Check Settings
 export function useDuplicateCheckSettings() {

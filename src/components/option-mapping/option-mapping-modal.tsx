@@ -95,9 +95,9 @@ export function OptionMappingModal({
               <Settings2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <DialogTitle>{isEdit ? '옵션 매핑 수정' : '옵션 매핑 추가'}</DialogTitle>
+              <DialogTitle>{isEdit ? '옵션 연결 수정' : '옵션 연결 추가'}</DialogTitle>
               <DialogDescription>
-                {isEdit ? '옵션-제조사 매핑 정보를 수정합니다.' : '새로운 옵션-제조사 매핑을 등록합니다.'}
+                {isEdit ? '옵션-제조사 연결 정보를 수정해요.' : '새로운 옵션-제조사 연결을 등록해요.'}
               </DialogDescription>
             </div>
           </div>
@@ -156,11 +156,11 @@ export function OptionMappingModal({
           </div>
 
           <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-            <p className="font-medium mb-1">💡 매핑 우선순위</p>
+            <p className="font-medium mb-1">💡 연결 우선순위</p>
             <ol className="list-decimal list-inside flex flex-col gap-0.5 text-xs">
-              <li>옵션 매핑 (상품코드 + 옵션 조합)</li>
-              <li>상품 매핑 (상품코드 기준)</li>
-              <li>미매핑 처리</li>
+              <li>옵션 연결 (상품코드 + 옵션 조합)</li>
+              <li>상품 연결 (상품코드 기준)</li>
+              <li>미연결 처리</li>
             </ol>
           </div>
 

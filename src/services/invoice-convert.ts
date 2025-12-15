@@ -63,7 +63,7 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
       }
     }
 
-    // 2. 택배사 매핑 조회
+    // 2. 택배사 연결 조회
     const courierMappingList = await db.select().from(courierMapping)
     const courierLookup = buildCourierLookup(courierMappingList)
 
@@ -153,7 +153,7 @@ export async function generateInvoiceDownload(
 }
 
 /**
- * 택배사 매핑 룩업 테이블 생성
+ * 택배사 연결 룩업 테이블 생성
  * 택배사명/별칭 -> 사방넷 코드
  */
 function buildCourierLookup(

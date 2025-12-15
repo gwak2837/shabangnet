@@ -4,7 +4,6 @@ import {
   Building2,
   Calculator,
   FileSpreadsheet,
-  FileText,
   LayoutDashboard,
   Package,
   Settings,
@@ -53,22 +52,16 @@ const managementNavItems = [
     icon: Building2,
   },
   {
-    title: '상품 매핑',
+    title: '상품 연결',
     description: '상품코드 → 제조사 기본 연결',
     href: '/product',
     icon: Package,
   },
   {
-    title: '옵션 매핑',
+    title: '옵션 연결',
     description: '상품코드, 옵션명 → 제조사 우선 연결',
     href: '/option-mapping',
     icon: Settings2,
-  },
-  {
-    title: '발송 로그',
-    description: '이메일 발송 성공/실패 이력 조회',
-    href: '/log',
-    icon: FileText,
   },
   {
     title: '정산 관리',

@@ -27,6 +27,7 @@ interface OrderTemplate {
   dataStartRow: number
   fixedValues: Record<string, string>
   headerRow: number
+  templateFileBuffer?: ArrayBuffer
   templateFileName?: string
 }
 
@@ -99,6 +100,7 @@ export function ManufacturerModal({
           setOrderTemplate({
             ...orderTemplate,
             templateFileName: file.name,
+            templateFileBuffer: fileBuffer,
             headerRow: result.analysis.headerRow,
             dataStartRow: result.analysis.dataStartRow,
             columnMappings: result.analysis.suggestedMappings || {},
@@ -113,7 +115,7 @@ export function ManufacturerModal({
     [orderTemplate],
   )
 
-  // 매핑 업데이트
+  // 연결 업데이트
   const updateMapping = (sabangnetKey: string, column: string) => {
     setOrderTemplate({
       ...orderTemplate,
@@ -124,7 +126,7 @@ export function ManufacturerModal({
     })
   }
 
-  // 매핑 삭제
+  // 연결 삭제
   const removeMapping = (sabangnetKey: string) => {
     const newMappings = { ...orderTemplate.columnMappings }
     delete newMappings[sabangnetKey]
@@ -140,9 +142,7 @@ export function ManufacturerModal({
     if (!formData.name.trim()) {
       newErrors.name = '제조사명을 입력하세요'
     }
-    if (!formData.email.trim()) {
-      newErrors.email = '이메일을 입력하세요'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = '올바른 이메일 형식을 입력하세요'
     }
     if (formData.ccEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ccEmail)) {
@@ -161,6 +161,7 @@ export function ManufacturerModal({
     onSave(
       {
         ...formData,
+        email: formData.email.trim() || null,
         ccEmail: formData.ccEmail || undefined,
       },
       invoiceTemplate,
@@ -170,7 +171,7 @@ export function ManufacturerModal({
     onOpenChange(false)
   }
 
-  // 주요 사방넷 컬럼 (매핑 UI에 표시)
+  // 주요 사방넷 컬럼 (연결 UI에 표시)
   const mainSabangnetColumns = SABANGNET_COLUMNS.filter((col) =>
     [
       'address',
@@ -229,9 +230,7 @@ export function ManufacturerModal({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">
-                이메일 <span className="text-rose-500">*</span>
-              </Label>
+              <Label htmlFor="email">이메일</Label>
               <Input
                 className={errors.email ? 'border-rose-500' : ''}
                 id="email"
@@ -240,6 +239,7 @@ export function ManufacturerModal({
                 type="email"
                 value={formData.email}
               />
+              {!formData.email.trim() && <p className="text-xs text-amber-700">이메일이 없으면 발주서 발송이 막혀요</p>}
               {errors.email && <p className="text-xs text-rose-500">{errors.email}</p>}
             </div>
 
@@ -340,7 +340,7 @@ export function ManufacturerModal({
 
                   {/* Column Mappings */}
                   <div className="flex flex-col gap-2">
-                    <Label className="text-xs">컬럼 매핑</Label>
+                    <Label className="text-xs">컬럼 연결</Label>
                     <p className="text-xs text-slate-400">사방넷 데이터를 제조사 양식의 어느 열에 넣을지 설정합니다.</p>
                     <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                       {mainSabangnetColumns.map((col) => (

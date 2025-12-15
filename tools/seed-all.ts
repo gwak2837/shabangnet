@@ -4,15 +4,13 @@ import path from 'path'
 const SEED_SCRIPTS = [
   // 1. 기본 설정 (택배사 코드, 발송 제외 패턴)
   'seed-settings.ts',
-  // 2. 컬럼 동의어 (자동 매핑용)
-  'seed-column-synonyms.ts',
-  // 3. 쇼핑몰 템플릿
+  // 2. 쇼핑몰 템플릿
   'seed-shopping-mall-templates.ts',
-  // 4. 제조사 데이터
+  // 3. 제조사 데이터
   'seed-real-manufacturers.ts',
-  // 5. 상품-제조사 매핑
+  // 4. 상품-제조사 연결
   'seed-product-mappings.ts',
-  // 6. E2E 테스트 계정
+  // 5. E2E 테스트 계정
   'seed-test-user.ts',
 ]
 

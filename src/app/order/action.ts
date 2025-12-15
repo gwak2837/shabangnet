@@ -8,13 +8,9 @@ import { manufacturer } from '@/db/schema/manufacturers'
 import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
 import { getSMTPAccount, sendEmail } from '@/lib/email/send'
-import { renderOrderEmailTemplate } from '@/lib/email/templates'
+import { renderManufacturerOrderEmail } from '@/services/manufacturer-email-template'
 import { checkDuplicate, generateOrderExcel } from '@/services/orders'
 import { getDuplicateCheckSettings } from '@/services/settings'
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface SendOrderBatchInput {
   manufacturerId: number
@@ -28,6 +24,7 @@ export interface SendOrderBatchResult {
   fileName?: string
   logId?: number
   orderCount?: number
+  requiresEmailSetup?: boolean
   requiresReason?: boolean
   success: boolean
   totalAmount?: number
@@ -69,11 +66,23 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
         name: true,
         email: true,
         ccEmail: true,
+        emailSubjectTemplate: true,
+        emailBodyTemplate: true,
       },
     })
 
     if (!mfr) {
       return { success: false, error: '제조사를 찾을 수 없어요.' }
+    }
+
+    const toEmail = mfr.email?.trim() ?? ''
+
+    if (!toEmail) {
+      return {
+        success: false,
+        requiresEmailSetup: true,
+        error: '제조사 이메일이 설정되지 않았어요. 제조사 관리에서 이메일을 먼저 설정해 주세요.',
+      }
     }
 
     const ordersForBatch = await db.query.order.findMany({
@@ -129,12 +138,19 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
 
     const fromName = smtpAccount.fromName || '(주)다온에프앤씨'
 
-    const { subject, body } = await renderOrderEmailTemplate({
-      manufacturerName: mfr.name,
-      senderName: fromName,
-      orderDate: formatDateKorean(now),
-      totalItems: orderCount,
-    })
+    const { subject, html, text } = renderManufacturerOrderEmail(
+      {
+        emailSubjectTemplate: mfr.emailSubjectTemplate ?? null,
+        emailBodyTemplate: mfr.emailBodyTemplate ?? null,
+      },
+      {
+        manufacturerName: mfr.name,
+        senderName: fromName,
+        orderDate: formatDateKorean(now),
+        totalItems: orderCount,
+        date: now,
+      },
+    )
 
     // 1) DB에 발송 로그(pending) + 항목 저장 + 주문 상태(processing) 반영 (트랜잭션)
     const emailLogId = await db.transaction(async (tx) => {
@@ -143,7 +159,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
         .values({
           manufacturerId: mfr.id,
           manufacturerName: mfr.name,
-          email: mfr.email,
+          email: toEmail,
           subject,
           fileName: excelResult.fileName,
           orderCount,
@@ -193,10 +209,11 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     let result: Awaited<ReturnType<typeof sendEmail>> | null = null
     try {
       result = await sendEmail({
-        to: mfr.email,
+        to: toEmail,
         cc: mfr.ccEmail || undefined,
         subject,
-        html: body,
+        text,
+        html,
         fromEmail: smtpAccount.email,
         fromName,
         attachments: [
@@ -267,10 +284,6 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     return { success: false, error: errorMessage }
   }
 }
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
 // 한국어 날짜 포맷
 function formatDateKorean(date: Date): string {

@@ -1,10 +1,12 @@
 'use client'
 
-import { Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2 } from 'lucide-react'
+import { Download, Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
 
+import { ManufacturerCsvDialog } from '@/components/manufacturer/manufacturer-csv-dialog'
+import { MANUFACTURER_CSV_HEADER } from '@/components/manufacturer/manufacturer-csv.types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { stringifyCsv } from '@/utils/csv'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
 
@@ -34,13 +37,14 @@ interface ManufacturerTableProps {
 export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: ManufacturerTableProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Manufacturer | null>(null)
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
 
   const filteredManufacturers = useMemo(() => {
     return manufacturers.filter(
       (m) =>
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.email.toLowerCase().includes(searchQuery.toLowerCase()),
+        (m.email ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
     )
   }, [manufacturers, searchQuery])
 
@@ -49,6 +53,26 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
       onDelete(deleteTarget.id)
     }
     setDeleteTarget(null)
+  }
+
+  function handleDownloadCsv() {
+    const rows = [
+      MANUFACTURER_CSV_HEADER,
+      ...manufacturers.map((m) => [m.name, m.contactName, m.email ?? '', m.ccEmail ?? '', m.phone]),
+    ] as const
+
+    const csvText = stringifyCsv(rows, { bom: true })
+    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+
+    const today = new Date().toISOString().split('T')[0]
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `제조사_${today}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -67,10 +91,20 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                 value={searchQuery}
               />
             </div>
-            <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAdd}>
-              <Plus className="h-4 w-4" />
-              제조사 추가
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button className="gap-2" onClick={handleDownloadCsv} variant="outline">
+                <Download className="h-4 w-4" />
+                CSV 다운로드
+              </Button>
+              <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)} variant="outline">
+                <Upload className="h-4 w-4" />
+                CSV 업로드
+              </Button>
+              <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAdd}>
+                <Plus className="h-4 w-4" />
+                제조사 추가
+              </Button>
+            </div>
           </div>
 
           <Table>
@@ -107,7 +141,11 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Mail className="h-3.5 w-3.5 text-slate-400" />
-                        {manufacturer.email}
+                        {manufacturer.email ? (
+                          manufacturer.email
+                        ) : (
+                          <span className="text-amber-700">이메일 미설정</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Phone className="h-3.5 w-3.5 text-slate-400" />
@@ -178,6 +216,8 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ManufacturerCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </>
   )
 }

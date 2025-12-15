@@ -3,16 +3,16 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
+import { commonOrderTemplate, manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 import {
   generateOrderFileName,
-  generateOrderSheet,
   generateTemplateBasedOrderSheet,
-  type OrderData,
   type OrderTemplateConfig,
   type ParsedOrder,
 } from '@/lib/excel'
+
+const COMMON_ORDER_TEMPLATE_KEY = 'default'
 
 export type DuplicateCheckPeriod = 10 | 15 | 20 | 30
 
@@ -164,83 +164,64 @@ export async function generateOrderExcel(params: {
     where: eq(orderTemplate.manufacturerId, params.manufacturerId),
   })
 
-  let excelBuffer: Buffer
+  const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
+    // 주문 식별자
+    sabangnetOrderNumber: o.sabangnetOrderNumber,
+    mallOrderNumber: o.mallOrderNumber || '',
+    subOrderNumber: o.subOrderNumber || '',
+    // 상품 정보
+    productName: o.productName || '',
+    quantity: o.quantity || 1,
+    optionName: o.optionName || '',
+    productAbbr: o.productAbbr || '',
+    productCode: o.productCode || '',
+    mallProductNumber: o.mallProductNumber || '',
+    modelNumber: o.modelNumber || '',
+    // 주문자/수취인
+    orderName: o.orderName || '',
+    recipientName: o.recipientName || '',
+    orderPhone: o.orderPhone || '',
+    orderMobile: o.orderMobile || '',
+    recipientPhone: o.recipientPhone || '',
+    recipientMobile: o.recipientMobile || '',
+    // 배송 정보
+    postalCode: o.postalCode || '',
+    address: o.address || '',
+    memo: o.memo || '',
+    courier: o.courier || '',
+    trackingNumber: o.trackingNumber || '',
+    logisticsNote: o.logisticsNote || '',
+    // 소스/제조사
+    shoppingMall: o.shoppingMall || '',
+    manufacturer: mfr.name,
+    // 금액
+    paymentAmount: o.paymentAmount ?? 0,
+    cost: o.cost ?? 0,
+    shippingCost: o.shippingCost ?? 0,
+    // 주문 메타
+    fulfillmentType: o.fulfillmentType || o.excludedReason || '',
+    cjDate: o.cjDate?.toISOString().split('T')[0] || '',
+    collectedAt: o.collectedAt?.toISOString() || '',
+    // 시스템
+    rowIndex: idx + 1,
+  }))
 
-  // 유효한 템플릿 설정이 있으면 템플릿 기반으로 생성, 없으면 기본 다온발주양식 사용
-  if (hasValidColumnMappings(template?.columnMappings)) {
-    // 템플릿 설정이 있으면 템플릿 기반으로 생성
-    const templateConfig: OrderTemplateConfig = {
-      headerRow: template!.headerRow || 1,
-      dataStartRow: template!.dataStartRow || 2,
-      columnMappings: JSON.parse(template!.columnMappings!) as Record<string, string>,
-      fixedValues: template!.fixedValues ? (JSON.parse(template!.fixedValues) as Record<string, string>) : undefined,
-    }
+  const resolvedTemplate = await resolveOrderTemplate({
+    manufacturerTemplate: template,
+    manufacturerId: params.manufacturerId,
+  })
 
-    const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
-      // 주문 식별자
-      sabangnetOrderNumber: o.sabangnetOrderNumber,
-      mallOrderNumber: o.mallOrderNumber || '',
-      subOrderNumber: o.subOrderNumber || '',
-      // 상품 정보
-      productName: o.productName || '',
-      quantity: o.quantity || 1,
-      optionName: o.optionName || '',
-      productAbbr: o.productAbbr || '',
-      productCode: o.productCode || '',
-      mallProductNumber: o.mallProductNumber || '',
-      modelNumber: o.modelNumber || '',
-      // 주문자/수취인
-      orderName: o.orderName || '',
-      recipientName: o.recipientName || '',
-      orderPhone: o.orderPhone || '',
-      orderMobile: o.orderMobile || '',
-      recipientPhone: o.recipientPhone || '',
-      recipientMobile: o.recipientMobile || '',
-      // 배송 정보
-      postalCode: o.postalCode || '',
-      address: o.address || '',
-      memo: o.memo || '',
-      courier: o.courier || '',
-      trackingNumber: o.trackingNumber || '',
-      logisticsNote: o.logisticsNote || '',
-      // 소스/제조사
-      shoppingMall: o.shoppingMall || '',
-      manufacturer: mfr.name,
-      // 금액
-      paymentAmount: o.paymentAmount ?? 0,
-      cost: o.cost ?? 0,
-      shippingCost: o.shippingCost ?? 0,
-      // 주문 메타
-      fulfillmentType: o.fulfillmentType || o.excludedReason || '',
-      cjDate: o.cjDate?.toISOString().split('T')[0] || '',
-      collectedAt: o.collectedAt?.toISOString() || '',
-      // 시스템
-      rowIndex: idx + 1,
-    }))
-
-    excelBuffer = await generateTemplateBasedOrderSheet(parsedOrders, null, templateConfig, mfr.name, date)
-  } else {
-    // 기본 다온발주양식으로 생성 (템플릿이 없거나 유효하지 않은 경우)
-    const orderData: OrderData[] = ordersToExport.map((o) => ({
-      sabangnetOrderNumber: o.sabangnetOrderNumber,
-      customerName: o.recipientName || '',
-      orderName: o.orderName || undefined,
-      phone: o.recipientMobile || o.recipientPhone || '',
-      address: o.address || '',
-      productCode: o.productCode || '',
-      productName: o.productName || '',
-      optionName: o.optionName || '',
-      quantity: o.quantity || 1,
-      price: o.paymentAmount ?? 0,
-      memo: o.memo || undefined,
-    }))
-
-    excelBuffer = await generateOrderSheet({
-      manufacturerName: mfr.name,
-      orders: orderData,
-      date,
-    })
+  if ('error' in resolvedTemplate) {
+    return { error: resolvedTemplate.error }
   }
+
+  const excelBuffer = await generateTemplateBasedOrderSheet(
+    parsedOrders,
+    resolvedTemplate.templateBuffer,
+    resolvedTemplate.config,
+    mfr.name,
+    date,
+  )
 
   const fileName = generateOrderFileName(mfr.name, date)
 
@@ -269,7 +250,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
     batchesMap.set(m.id, {
       manufacturerId: m.id,
       manufacturerName: m.name,
-      email: m.email,
+      email: m.email ?? '',
       orders: [],
       status: 'pending',
       totalAmount: 0,
@@ -313,7 +294,7 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
 /**
  * 템플릿의 columnMappings가 유효한지 확인
  * - null/undefined/빈 문자열/빈 객체("{}")인 경우 false 반환
- * - 유효한 매핑이 있는 경우 true 반환
+ * - 유효한 연결이 있는 경우 true 반환
  */
 function hasValidColumnMappings(columnMappings: string | null | undefined): boolean {
   if (!columnMappings) return false
@@ -328,4 +309,69 @@ function hasValidColumnMappings(columnMappings: string | null | undefined): bool
 // Helper function to normalize address for comparison
 function normalizeAddress(address: string): string {
   return address.replace(/\s+/g, '').replace(/[,.-]/g, '').toLowerCase()
+}
+
+async function resolveOrderTemplate(params: {
+  manufacturerId: number
+  manufacturerTemplate: typeof orderTemplate.$inferSelect | undefined
+}): Promise<{ config: OrderTemplateConfig; templateBuffer: ArrayBuffer } | { error: string }> {
+  // 1) 제조사 템플릿(파일 + 연결)이 유효하면 최우선
+  const mfrTemplate = params.manufacturerTemplate
+
+  if (mfrTemplate && hasValidColumnMappings(mfrTemplate.columnMappings) && mfrTemplate.templateFile) {
+    const config: OrderTemplateConfig = {
+      headerRow: mfrTemplate.headerRow || 1,
+      dataStartRow: mfrTemplate.dataStartRow || 2,
+      columnMappings: JSON.parse(mfrTemplate.columnMappings!) as Record<string, string>,
+      fixedValues: mfrTemplate.fixedValues
+        ? (JSON.parse(mfrTemplate.fixedValues) as Record<string, string>)
+        : undefined,
+    }
+
+    return { config, templateBuffer: toArrayBuffer(mfrTemplate.templateFile) }
+  }
+
+  // 2) 공통 템플릿(전사 1개) 사용
+  const common = await db.query.commonOrderTemplate.findFirst({
+    where: eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY),
+  })
+
+  if (!common) {
+    return { error: '공통 발주서 템플릿이 설정되지 않았어요. 설정 > 발주 설정에서 템플릿을 업로드해 주세요.' }
+  }
+
+  let columnMappings: Record<string, string> = {}
+  try {
+    columnMappings = JSON.parse(common.columnMappings) as Record<string, string>
+  } catch {
+    return { error: '공통 발주서 템플릿 컬럼 연결이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
+  }
+
+  if (Object.keys(columnMappings).length === 0) {
+    return { error: '공통 발주서 템플릿 컬럼 연결이 비어있어요. 설정에서 연결을 설정해 주세요.' }
+  }
+
+  let fixedValues: Record<string, string> | undefined
+  if (common.fixedValues) {
+    try {
+      fixedValues = JSON.parse(common.fixedValues) as Record<string, string>
+    } catch {
+      return { error: '공통 발주서 템플릿 고정값이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
+    }
+  }
+
+  const config: OrderTemplateConfig = {
+    headerRow: common.headerRow || 1,
+    dataStartRow: common.dataStartRow || 2,
+    columnMappings,
+    fixedValues,
+  }
+
+  return { config, templateBuffer: toArrayBuffer(common.templateFile) }
+}
+
+function toArrayBuffer(data: Buffer): ArrayBuffer {
+  const copy = new Uint8Array(data.byteLength)
+  copy.set(data)
+  return copy.buffer
 }

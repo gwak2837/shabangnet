@@ -8,45 +8,9 @@ import path from 'path'
 import postgres from 'postgres'
 
 import { manufacturer, orderTemplate } from '../src/db/schema/manufacturers'
-import { columnSynonym } from '../src/db/schema/settings'
-
-// 동의어 맵 타입
-type SynonymMap = Map<string, string> // synonym -> standardKey
-
-// 헤더 분석하여 매핑 제안 (DB에서 로드한 동의어 사용)
-function analyzeHeaders(headers: string[], synonymMap: SynonymMap): Record<string, string> {
-  const mappings: Record<string, string> = {}
-
-  headers.forEach((header, index) => {
-    if (!header) return
-
-    const normalizedHeader = header.toLowerCase().trim()
-    const columnLetter = indexToColumnLetter(index)
-
-    // 동의어 맵에서 직접 매칭
-    const standardKey = synonymMap.get(normalizedHeader)
-    if (standardKey) {
-      mappings[standardKey] = columnLetter
-      return
-    }
-
-    // 부분 매칭 시도
-    for (const [synonym, key] of synonymMap.entries()) {
-      if (normalizedHeader.includes(synonym) || synonym.includes(normalizedHeader)) {
-        mappings[key] = columnLetter
-        break
-      }
-    }
-  })
-
-  return mappings
-}
 
 // 템플릿 파일 분석
-async function analyzeTemplateFile(
-  filePath: string,
-  synonymMap: SynonymMap,
-): Promise<{
+async function analyzeTemplateFile(filePath: string): Promise<{
   columnMappings: Record<string, string>
   dataStartRow: number
   headerRow: number
@@ -82,13 +46,11 @@ async function analyzeTemplateFile(
     }
   })
 
-  const columnMappings = analyzeHeaders(headers, synonymMap)
-
   return {
     headers,
     headerRow,
     dataStartRow: headerRow + 1,
-    columnMappings,
+    columnMappings: {},
   }
 }
 
@@ -185,15 +147,6 @@ async function seed() {
   const db = drizzle(client)
 
   try {
-    // DB에서 동의어 로드
-    console.log('📚 Loading synonyms from database...')
-    const synonyms = await db.select().from(columnSynonym).where(eq(columnSynonym.enabled, true))
-    const synonymMap: SynonymMap = new Map()
-    for (const syn of synonyms) {
-      synonymMap.set(syn.synonym.toLowerCase(), syn.standardKey)
-    }
-    console.log(`   Loaded ${synonyms.length} synonyms`)
-
     // 템플릿 파일 목록
     const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.xlsx') && !f.startsWith('~'))
 
@@ -249,7 +202,7 @@ async function seed() {
         }
 
         // 파일 분석
-        const analysis = await analyzeTemplateFile(filePath, synonymMap)
+        const analysis = await analyzeTemplateFile(filePath)
 
         // 템플릿 저장
         await db.insert(orderTemplate).values({

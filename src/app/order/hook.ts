@@ -5,10 +5,6 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/common/constants/query-keys'
 import { getExcludedBatches } from '@/services/orders'
 
-// ============================================
-// Types
-// ============================================
-
 export interface OrderBatch {
   ccEmail?: string
   email: string
@@ -18,6 +14,14 @@ export interface OrderBatch {
   orders: Order[]
   status: 'error' | 'pending' | 'ready' | 'sent'
   totalAmount: number
+  totalOrders: number
+}
+
+export interface OrderBatchSummary {
+  errorBatches: number
+  pendingBatchesCount: number
+  sentBatches: number
+  totalBatches: number
   totalOrders: number
 }
 
@@ -63,9 +67,9 @@ interface UseOrderBatchesParams {
   limit?: number
 }
 
-// ============================================
-// Hooks
-// ============================================
+interface UseOrderBatchSummaryParams {
+  filters?: OrderFilters
+}
 
 export function useExcludedOrderBatches() {
   return useQuery({
@@ -126,5 +130,41 @@ export function useOrderBatches(params: UseOrderBatchesParams = {}) {
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: null as number | null,
+  })
+}
+
+export function useOrderBatchSummary(params: UseOrderBatchSummaryParams = {}) {
+  const { filters } = params
+  const { search, manufacturerId, status, dateFrom, dateTo } = filters ?? {}
+
+  return useQuery({
+    queryKey: ['orders', 'summary', { search, manufacturerId, status, dateFrom, dateTo }],
+    queryFn: async (): Promise<OrderBatchSummary> => {
+      const searchParams = new URLSearchParams()
+      if (search) {
+        searchParams.set('search', search)
+      }
+      if (manufacturerId) {
+        searchParams.set('manufacturer-id', String(manufacturerId))
+      }
+      if (status && status !== 'all') {
+        searchParams.set('status', status)
+      }
+      if (dateFrom) {
+        searchParams.set('date-from', dateFrom)
+      }
+      if (dateTo) {
+        searchParams.set('date-to', dateTo)
+      }
+
+      const response = await fetch(`/api/orders/summary?${searchParams.toString()}`, { cache: 'no-store' })
+
+      if (!response.ok) {
+        const { error } = (await response.json()) as { error?: string }
+        throw new Error(error || '통계를 불러오지 못했어요')
+      }
+
+      return response.json()
+    },
   })
 }

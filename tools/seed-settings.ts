@@ -75,7 +75,7 @@ async function seed() {
       }
     }
 
-    // 택배사 매핑 시드
+    // 택배사 연결 시드
     console.log('\n📦 Seeding courier mappings...')
     let courierCreated = 0
     let courierSkipped = 0

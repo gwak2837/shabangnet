@@ -81,11 +81,11 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>매핑 삭제</AlertDialogTitle>
+                          <AlertDialogTitle>연결 삭제</AlertDialogTitle>
                           <AlertDialogDescription>
-                            &apos;{mapping.productCode} - {mapping.optionName}&apos; 매핑을 삭제하시겠습니까?
+                            &apos;{mapping.productCode} - {mapping.optionName}&apos; 연결을 삭제할까요?
                             <br />
-                            삭제 후에는 기본 상품-제조사 매핑이 적용됩니다.
+                            삭제 후에는 기본 상품-제조사 연결이 적용돼요.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -106,7 +106,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
             {mappings.length === 0 && (
               <TableRow>
                 <TableCell className="h-32 text-center text-slate-500" colSpan={5}>
-                  옵션-제조사 매핑이 없습니다.
+                  옵션-제조사 연결이 없어요.
                 </TableCell>
               </TableRow>
             )}

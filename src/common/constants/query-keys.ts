@@ -1,4 +1,7 @@
 export const queryKeys = {
+  orderTemplates: {
+    common: ['order-templates', 'common'] as const,
+  },
   manufacturers: {
     all: ['manufacturers'] as const,
     detail: (id: number) => ['manufacturers', id] as const,
@@ -10,6 +13,7 @@ export const queryKeys = {
   orders: {
     batches: ['orders', 'batches'] as const,
     excluded: ['orders', 'excluded'] as const,
+    matching: ['orders', 'matching'] as const,
   },
   uploads: {
     all: ['uploads', 'history'] as const,
@@ -40,7 +44,6 @@ export const queryKeys = {
     duplicateCheck: ['settings', 'duplicate-check'] as const,
     courier: ['settings', 'courier'] as const,
     mfa: ['settings', 'mfa'] as const,
-    synonyms: ['settings', 'synonyms'] as const,
     emailTemplate: ['settings', 'email-template'] as const,
   },
   settlement: {

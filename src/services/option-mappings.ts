@@ -33,7 +33,7 @@ export async function create(
     where: eq(manufacturer.id, data.manufacturerId),
   })
 
-  // 옵션 매핑은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
+  // 옵션 연결은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
   await db
     .update(order)
     .set({
@@ -102,7 +102,7 @@ export async function update(
       })
     : null
 
-  // 옵션 매핑은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
+  // 옵션 연결은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
   await db
     .update(order)
     .set({

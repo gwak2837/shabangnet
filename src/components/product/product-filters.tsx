@@ -49,7 +49,7 @@ export function ProductFilters({
           onCheckedChange={(checked) => onShowUnmappedChange(checked as boolean)}
         />
         <Label className="text-sm font-medium text-slate-700 cursor-pointer" htmlFor="unmapped">
-          미매핑 상품만 보기
+          미연결 상품만 보기
         </Label>
       </div>
 

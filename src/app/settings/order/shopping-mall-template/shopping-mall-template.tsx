@@ -353,7 +353,7 @@ export function ShoppingMallTemplate() {
                 {isNewTemplate ? '새 쇼핑몰 템플릿' : '템플릿 편집'}
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                쇼핑몰 정보와 컬럼 매핑을 설정합니다
+                쇼핑몰 정보와 컬럼 연결을 설정합니다
               </DialogDescription>
             </DialogHeader>
 
@@ -465,9 +465,9 @@ export function ShoppingMallTemplate() {
                 {(modalState.analyzeResult || isAnalyzing) && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">컬럼 매핑</Label>
+                      <Label className="text-sm font-medium">컬럼 연결</Label>
                       {!isAnalyzing && missingFields.length > 0 && (
-                        <span className="text-xs text-amber-500">필수 필드 미매핑: {missingLabels}</span>
+                        <span className="text-xs text-amber-500">필수 필드 미연결: {missingLabels}</span>
                       )}
                     </div>
                     <div className="rounded-md ring-1 ring-border/50">
@@ -526,9 +526,9 @@ export function ShoppingMallTemplate() {
       <AlertDialog onOpenChange={(open) => !open && clearPendingSave()} open={Boolean(modalState?.pendingSave)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>필수 필드 미매핑</AlertDialogTitle>
+            <AlertDialogTitle>필수 필드 미연결</AlertDialogTitle>
             <AlertDialogDescription>
-              필수 필드가 매핑되지 않았습니다: {missingLabels}
+              필수 필드가 연결되지 않았습니다: {missingLabels}
               <br />
               그래도 저장하시겠습니까?
             </AlertDialogDescription>

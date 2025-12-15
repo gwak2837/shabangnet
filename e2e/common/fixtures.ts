@@ -67,7 +67,7 @@ interface ManufacturerTestCase {
 }
 
 // 사방넷 원본 파일 기반 제조사별 테스트 케이스
-// manufacturers.json과 다온발주양식_*.xlsx 파일 매핑
+// manufacturers.json과 다온발주양식_*.xlsx 파일 연결
 export const SABANGNET_TEST_CASES: ManufacturerTestCase[] = [
   // 주문 건수 상위 제조사 (Golden File 비교 대상)
   {

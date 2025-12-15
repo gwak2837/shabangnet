@@ -6,7 +6,6 @@ import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 
-// Product types
 export interface Product {
   cost: number
   createdAt: string
@@ -51,7 +50,7 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
         and(
           isNull(order.manufacturerId),
           isNull(order.excludedReason),
-          sql`lower(${order.productCode}) = lower(${data.productCode})`,
+          sql`lower(trim(${order.productCode})) = lower(trim(${data.productCode}))`,
           sql`${order.status} <> 'completed'`,
         ),
       )
@@ -122,7 +121,7 @@ export async function update(id: number, data: Partial<Product>): Promise<Produc
         and(
           isNull(order.manufacturerId),
           isNull(order.excludedReason),
-          sql`lower(${order.productCode}) = lower(${updated.productCode})`,
+          sql`lower(trim(${order.productCode})) = lower(trim(${updated.productCode}))`,
           sql`${order.status} <> 'completed'`,
         ),
       )

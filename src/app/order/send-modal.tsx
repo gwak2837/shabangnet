@@ -99,7 +99,8 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
   const duplicate = duplicateCheck
   const hasDuplicate = duplicate?.hasDuplicate ?? false
   const needsReason = isResend || hasDuplicate
-  const canSend = !needsReason || duplicateReason.trim().length > 0
+  const hasEmail = batch.email.trim().length > 0
+  const canSend = hasEmail && (!needsReason || duplicateReason.trim().length > 0)
 
   const ordersToSend = isResend ? batch.orders : batch.orders.filter((o) => o.status !== 'completed')
   const ordersToSendCount = ordersToSend.length
@@ -188,7 +189,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">{batch.manufacturerName}</p>
-                <p className="text-sm text-slate-500">{batch.email}</p>
+                <p className="text-sm text-slate-500">{hasEmail ? batch.email : '이메일 미설정'}</p>
                 {batch.ccEmail && <p className="text-xs text-slate-400">CC: {batch.ccEmail}</p>}
               </div>
               <Badge className="bg-blue-100 text-blue-700" variant="secondary">
@@ -196,6 +197,20 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
               </Badge>
             </div>
           </div>
+
+          {!hasEmail && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div>
+                  <p className="font-semibold text-amber-800">이메일 설정이 필요해요</p>
+                  <p className="mt-1 text-sm text-amber-700">
+                    제조사 이메일이 없어서 발주서를 발송할 수 없어요. 제조사 관리에서 이메일을 설정해 주세요.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Order Summary */}
           <div className="rounded-lg border border-slate-200 p-4">

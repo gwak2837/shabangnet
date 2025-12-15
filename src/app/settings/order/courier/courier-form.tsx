@@ -29,17 +29,17 @@ export function CourierForm() {
 
   const [isUpdatingCourier, updateCourier] = useServerAction(updateCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
-    onSuccess: () => toast.success('택배사 매핑이 수정됐어요'),
+    onSuccess: () => toast.success('택배사 연결이 수정됐어요'),
   })
 
   const [isAddingCourier, addCourier] = useServerAction(addCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
-    onSuccess: () => toast.success('택배사 매핑이 추가됐어요'),
+    onSuccess: () => toast.success('택배사 연결이 추가됐어요'),
   })
 
   const [, removeCourier] = useServerAction(removeCourierMapping, {
     invalidateKeys: [queryKeys.settings.courier],
-    onSuccess: () => toast.success('택배사 매핑이 삭제됐어요'),
+    onSuccess: () => toast.success('택배사 연결이 삭제됐어요'),
   })
 
   const [editingCourier, setEditingCourier] = useState<CourierMapping | null>(null)

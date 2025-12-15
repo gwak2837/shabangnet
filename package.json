@@ -16,7 +16,6 @@
     "seed:manufacturers": "pnpm tsx tools/seed-real-manufacturers.ts",
     "seed:products": "pnpm tsx tools/seed-product-mappings.ts",
     "seed:settings": "pnpm tsx tools/seed-settings.ts",
-    "seed:synonyms": "pnpm tsx tools/seed-column-synonyms.ts",
     "seed:shopping-mall": "pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:shopping-mall:prod": "DB_ENV=production pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:shopping-mall-export": "pnpm tsx tools/seed-shopping-mall-export-config.ts",

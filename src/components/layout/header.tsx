@@ -59,9 +59,9 @@ export function Header({ title, description, onMenuToggle }: HeaderProps) {
             <DropdownMenuLabel>알림</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="font-medium text-slate-900">매핑 오류 발생</span>
+              <span className="font-medium text-slate-900">연결 오류 발생</span>
               <span className="text-xs text-slate-500">
-                상품코드 &apos;UNKNOWN-123&apos;의 제조사 매핑이 필요합니다.
+                상품코드 &apos;UNKNOWN-123&apos;의 제조사 연결이 필요합니다.
               </span>
               <span className="text-xs text-slate-400">10분 전</span>
             </DropdownMenuItem>

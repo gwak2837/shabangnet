@@ -1,6 +1,6 @@
 'use client'
 
-import { Ban, Mail } from 'lucide-react'
+import { Ban, FileText, Link2, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
@@ -16,11 +16,25 @@ const orderTabs = [
     variant: 'blue',
   },
   {
+    href: '/order/matching',
+    label: '발주 준비',
+    icon: Link2,
+    description: '발주 전에 필요한 연결/설정을 점검해요',
+    variant: 'amber',
+  },
+  {
     href: '/order/excluded',
     label: '발송 제외',
     icon: Ban,
     description: 'F열 값이 제외 패턴과 일치하는 주문 목록입니다',
     variant: 'violet',
+  },
+  {
+    href: '/order/log',
+    label: '발송 기록',
+    icon: FileText,
+    description: '이메일 발송 이력을 확인해요',
+    variant: 'slate',
   },
 ] as const
 
@@ -40,7 +54,7 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
           return (
             <Link
               aria-selected={isActive}
-              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=violet]:text-violet-600"
+              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=amber]:text-amber-700 aria-selected:data-[variant=violet]:text-violet-600 aria-selected:data-[variant=slate]:text-slate-700"
               data-variant={tab.variant}
               href={tab.href}
               key={tab.href}
@@ -53,7 +67,7 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
               <div
                 aria-hidden="true"
                 aria-selected={isActive}
-                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=violet]:bg-violet-600"
+                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=amber]:bg-amber-600 data-[variant=violet]:bg-violet-600 data-[variant=slate]:bg-slate-600"
                 data-variant={tab.variant}
               />
             </Link>

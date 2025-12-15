@@ -29,7 +29,7 @@ export default function OptionMappingsPage() {
   const [isCreating, createMapping] = useServerAction(create, {
     invalidateKeys: [queryKeys.optionMappings.all],
     onSuccess: () => {
-      toast.success('매핑이 추가되었습니다')
+      toast.success('연결이 추가됐어요')
       setIsModalOpen(false)
     },
     onError: (error) => toast.error(error),
@@ -41,7 +41,7 @@ export default function OptionMappingsPage() {
     {
       invalidateKeys: [queryKeys.optionMappings.all],
       onSuccess: () => {
-        toast.success('매핑이 수정되었습니다')
+        toast.success('연결이 수정됐어요')
         setIsModalOpen(false)
       },
       onError: (error) => toast.error(error),
@@ -50,7 +50,7 @@ export default function OptionMappingsPage() {
 
   const [, deleteMapping] = useServerAction(remove, {
     invalidateKeys: [queryKeys.optionMappings.all],
-    onSuccess: () => toast.success('매핑이 삭제되었습니다'),
+    onSuccess: () => toast.success('연결이 삭제됐어요'),
     onError: (error) => toast.error(error),
   })
 
@@ -100,7 +100,7 @@ export default function OptionMappingsPage() {
 
   if (isLoadingMappings) {
     return (
-      <AppShell description="상품코드 + 옵션 조합별로 제조사를 매핑합니다" title="옵션 매핑">
+      <AppShell description="상품코드 + 옵션 조합으로 제조사를 연결해요" title="옵션 연결">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -109,7 +109,7 @@ export default function OptionMappingsPage() {
   }
 
   return (
-    <AppShell description="상품코드 + 옵션 조합별로 제조사를 매핑합니다" title="옵션 매핑">
+    <AppShell description="상품코드 + 옵션 조합으로 제조사를 연결해요" title="옵션 연결">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card className="border-slate-200 bg-card shadow-sm">
@@ -118,7 +118,7 @@ export default function OptionMappingsPage() {
               <Settings2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">전체 매핑</p>
+              <p className="text-sm text-slate-500">전체 연결</p>
               <p className="text-xl font-semibold text-slate-900">{stats.totalMappings}개</p>
             </div>
           </CardContent>
@@ -154,11 +154,11 @@ export default function OptionMappingsPage() {
         <div className="flex gap-3">
           <Settings2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">옵션 매핑이란?</p>
+            <p className="font-medium mb-1">옵션 연결이란?</p>
             <p className="text-blue-700">
-              같은 상품코드라도 옵션에 따라 다른 제조사에서 공급되는 경우, 옵션별로 제조사를 지정할 수 있습니다.
+              같은 상품코드라도 옵션에 따라 다른 제조사에서 공급되는 경우가 있어요. 옵션별로 제조사를 연결할 수 있어요.
               <br />
-              발주 생성 시 옵션 매핑이 우선 적용되며, 매핑이 없으면 기본 상품-제조사 매핑이 적용됩니다.
+              발주 생성 시 옵션 연결이 우선 적용되고, 연결이 없으면 기본 상품-제조사 연결이 적용돼요.
             </p>
           </div>
         </div>

@@ -268,7 +268,7 @@ export function UploadResult({ data }: UploadResultProps) {
             <div className="mt-4">
               <Button asChild variant="outline">
                 <Link href="/product">
-                  상품 매핑 관리
+                  상품 연결 관리
                   <ArrowRight />
                 </Link>
               </Button>

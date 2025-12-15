@@ -15,16 +15,7 @@ interface ExtractedManufacturer {
   productCodeCount: number
 }
 
-// 이메일 placeholder 생성 (실제 이메일은 UI에서 설정)
-function generatePlaceholderEmail(name: string): string {
-  const normalized = name
-    .replace(/[()]/g, '')
-    .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_가-힣]/g, '')
-    .toLowerCase()
-  // 한글 이름은 영문으로 변환하지 않고 placeholder 사용
-  return `${normalized}@placeholder.local`
-}
+// 이메일은 업로드/관리 화면에서 설정 (미설정이면 발송이 막힘)
 
 async function seed() {
   const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
@@ -76,7 +67,7 @@ async function seed() {
         // 새 제조사 등록
         await db.insert(manufacturer).values({
           name: mfr.name,
-          email: generatePlaceholderEmail(mfr.name),
+          email: null,
           orderCount: mfr.orderCount,
         })
 
@@ -97,8 +88,8 @@ async function seed() {
     console.log(`   오류: ${errors}개`)
 
     console.log('\n🎉 제조사 시드 완료!')
-    console.log('\n💡 참고: 이메일 주소는 placeholder로 설정되었습니다.')
-    console.log('   실제 이메일은 관리 화면에서 설정해주세요.')
+    console.log('\n💡 참고: 이메일 주소는 미설정(null)으로 저장되었습니다.')
+    console.log('   발주서 발송 전에 제조사 관리에서 이메일을 설정해 주세요.')
   } catch (error) {
     console.error('❌ 시드 실패:', error)
     process.exit(1)

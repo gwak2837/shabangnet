@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 import { sendOrderBatch } from '../action'
-import { type OrderBatch, type OrderFilters as OrderFiltersType, useOrderBatches } from '../hook'
+import { type OrderBatch, type OrderFilters as OrderFiltersType, useOrderBatches, useOrderBatchSummary } from '../hook'
 import { OrderFilters } from '../order-filters'
-import { OrderTable } from '../order-table'
 import { PreviewModal } from '../preview-modal'
 import { SendModal } from '../send-modal'
+import { OrderTable } from './order-table'
 
 interface BulkSendState {
   currentManufacturerName?: string
@@ -47,6 +47,7 @@ export default function SendableOrdersPage() {
   const bulkCancelRef = useRef(false)
   const [filters, setFilters] = useState<OrderFiltersType>({})
   const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useOrderBatches({ filters })
+  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useOrderBatchSummary({ filters })
 
   const orderBatches = useMemo(() => {
     if (!data?.pages) return []
@@ -114,7 +115,7 @@ export default function SendableOrdersPage() {
 
         if (result.success) {
           success += 1
-        } else if (result.requiresReason) {
+        } else if (result.requiresEmailSetup || result.requiresReason) {
           skipped += 1
         } else {
           failed += 1
@@ -135,7 +136,7 @@ export default function SendableOrdersPage() {
         toast.success(`발송 ${success}건 완료됐어요`)
       }
       if (skipped > 0) {
-        toast(`사유 입력이 필요한 ${skipped}건은 건너뛰었어요`)
+        toast(`사유 입력/이메일 설정이 필요한 ${skipped}건은 건너뛰었어요`)
       }
       if (failed > 0) {
         toast.error(`${failed}건은 발송에 실패했어요`)
@@ -143,6 +144,7 @@ export default function SendableOrdersPage() {
     }
 
     await refetch()
+    await refetchSummary()
   }
 
   async function fetchAllPendingBatches(): Promise<OrderBatch[]> {
@@ -257,15 +259,18 @@ export default function SendableOrdersPage() {
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const totalBatches = orderBatches.length
-    const pendingBatchesCount = orderBatches.filter((b) => b.status === 'pending').length
-    const sentBatches = orderBatches.filter((b) => b.status === 'sent').length
-    const errorBatches = orderBatches.filter((b) => b.status === 'error').length
-    const totalOrders = orderBatches.reduce((sum, b) => sum + b.totalOrders, 0)
-    return { totalBatches, pendingBatchesCount, sentBatches, errorBatches, totalOrders }
-  }, [orderBatches])
+    return (
+      summary ?? {
+        totalBatches: 0,
+        pendingBatchesCount: 0,
+        sentBatches: 0,
+        errorBatches: 0,
+        totalOrders: 0,
+      }
+    )
+  }, [summary])
 
-  if (isLoading) {
+  if (isLoading || isLoadingSummary) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -330,7 +335,15 @@ export default function SendableOrdersPage() {
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <OrderFilters filters={filters} onFiltersChange={setFilters} />
         <div className="flex items-center gap-2">
-          <Button className="gap-2" onClick={() => refetch()} size="sm" variant="outline">
+          <Button
+            className="gap-2"
+            onClick={() => {
+              void refetch()
+              void refetchSummary()
+            }}
+            size="sm"
+            variant="outline"
+          >
             <RefreshCw className="h-4 w-4" />
             새로고침
           </Button>
@@ -358,14 +371,14 @@ export default function SendableOrdersPage() {
                 <p className="mt-1 text-sm text-slate-600">
                   업로드된 주문이 제조사와 매칭되지 않으면 여기에 표시되지 않아요.
                   <br />
-                  상품/옵션 매핑을 추가하면 기존 주문에도 자동으로 반영돼요.
+                  상품/옵션 연결을 추가하면 기존 주문에도 자동으로 반영돼요.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/product">상품 매핑</Link>
+                    <Link href="/product">상품 연결</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/option-mapping">옵션 매핑</Link>
+                    <Link href="/option-mapping">옵션 연결</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href="/manufacturer">제조사 관리</Link>
@@ -408,7 +421,10 @@ export default function SendableOrdersPage() {
       <SendModal
         batch={selectedBatch}
         onOpenChange={handleModalClose}
-        onSent={() => void refetch()}
+        onSent={() => {
+          void refetch()
+          void refetchSummary()
+        }}
         open={isModalOpen}
       />
       <PreviewModal batch={previewBatch} onOpenChange={setIsPreviewOpen} open={isPreviewOpen} />

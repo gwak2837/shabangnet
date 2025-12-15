@@ -29,7 +29,7 @@ test.describe('주문 설정 페이지', () => {
     })
   })
 
-  test.describe('택배사 매핑', () => {
+  test.describe('택배사 연결', () => {
     test('택배사 목록이 표시되어야 함', async ({ page }) => {
       // 시드된 택배사 중 하나가 보여야 함 (카드 아이템에서 찾기)
       await expect(page.locator('.glass-panel').filter({ hasText: 'CJ대한통운' }).first()).toBeVisible()
@@ -103,7 +103,7 @@ test.describe('주문 설정 페이지', () => {
 
       // 토글 클릭
       await toggle.click()
-      await expect(page.getByText('택배사 매핑이 수정됐어요').first()).toBeVisible()
+      await expect(page.getByText('택배사 연결이 수정됐어요').first()).toBeVisible()
 
       // 네트워크 요청 완료 및 데이터 상태 변경 대기
       await page.waitForLoadState('networkidle')
@@ -111,7 +111,7 @@ test.describe('주문 설정 페이지', () => {
 
       // 다시 토글해서 원래 상태로 복원
       await toggle.click()
-      await expect(page.getByText('택배사 매핑이 수정됐어요').first()).toBeVisible()
+      await expect(page.getByText('택배사 연결이 수정됐어요').first()).toBeVisible()
     })
 
     test('택배사 삭제', async ({ page }) => {
@@ -358,7 +358,7 @@ test.describe('주문 설정 페이지', () => {
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
-      await expect(page.getByText('쇼핑몰 정보와 컬럼 매핑을 설정합니다')).toBeVisible()
+      await expect(page.getByText('쇼핑몰 정보와 컬럼 연결을 설정합니다')).toBeVisible()
 
       // 쇼핑몰 ID 입력
       await page.getByRole('dialog').locator('#mall-name').fill('e2e_test_mall')

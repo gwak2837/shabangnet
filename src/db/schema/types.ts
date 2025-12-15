@@ -1,5 +1,12 @@
 import { account, passkey, session, twoFactor, user, verification } from './auth'
-import { invoiceTemplate, manufacturer, optionMapping, orderTemplate, product } from './manufacturers'
+import {
+  commonOrderTemplate,
+  invoiceTemplate,
+  manufacturer,
+  optionMapping,
+  orderTemplate,
+  product,
+} from './manufacturers'
 import { order, orderEmailLog, orderEmailLogItem, upload } from './orders'
 import {
   courierMapping,
@@ -11,12 +18,14 @@ import {
 } from './settings'
 
 export type Account = typeof account.$inferSelect
+export type CommonOrderTemplate = typeof commonOrderTemplate.$inferSelect
 export type CourierMapping = typeof courierMapping.$inferSelect
 export type EmailTemplate = typeof emailTemplate.$inferSelect
 export type ExclusionPattern = typeof exclusionPattern.$inferSelect
 export type InvoiceTemplate = typeof invoiceTemplate.$inferSelect
 export type Manufacturer = typeof manufacturer.$inferSelect
 export type NewAccount = typeof account.$inferInsert
+export type NewCommonOrderTemplate = typeof commonOrderTemplate.$inferInsert
 export type NewCourierMapping = typeof courierMapping.$inferInsert
 export type NewEmailTemplate = typeof emailTemplate.$inferInsert
 export type NewExclusionPattern = typeof exclusionPattern.$inferInsert

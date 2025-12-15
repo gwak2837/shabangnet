@@ -64,14 +64,15 @@ async function analyzeSabangnetFile(filePath: string): Promise<{
 
     // ExcelJS는 1-based column index를 사용합니다.
     // - M열(13): 제조사
-    // - [열(27) / \열(28): 품번코드/자체상품코드 (실제 업로드 파서와 동일)
+    // - L열(12): 사이트
+    // - R열(18): 쇼핑몰상품번호 (실제 업로드 파서와 동일)
     // - A열(1): 상품명
     // - S열(19): 옵션
 
-    const manufacturer = getCellValue(row.getCell(13)).trim() // 제조사 (M열, index 12 -> cell 13)
-    const productCode =
-      getCellValue(row.getCell(27)).trim() || // [열: 품번코드
-      getCellValue(row.getCell(28)).trim() // \열: 자체상품코드
+    const manufacturer = getCellValue(row.getCell(13)).trim() // 제조사 (M열)
+    const shoppingMall = getCellValue(row.getCell(12)).trim() // 사이트 (L열)
+    const mallProductNumber = getCellValue(row.getCell(18)).trim() // 쇼핑몰상품번호 (R열)
+    const productCode = shoppingMall && mallProductNumber ? `${shoppingMall}::${mallProductNumber}` : ''
     const productName = getCellValue(row.getCell(1)).trim() // 상품명 (A열)
     const optionName = getCellValue(row.getCell(19)).trim() // 옵션 (S열, index 18 -> cell 19)
 
@@ -94,7 +95,7 @@ async function analyzeSabangnetFile(filePath: string): Promise<{
       mfrInfo.productCodes.add(productCode)
     }
 
-    // 상품-제조사 매핑 (중복 제거)
+    // 상품-제조사 연결 (중복 제거)
     if (productCode || productName) {
       const mappingKey = `${productCode}|${productName}|${optionName}|${manufacturer}`
       if (!seenMappings.has(mappingKey)) {
@@ -111,7 +112,7 @@ async function analyzeSabangnetFile(filePath: string): Promise<{
 
   console.log(`   총 ${rowCount}개 데이터 행 처리`)
   console.log(`   ${manufacturers.size}개 제조사 발견`)
-  console.log(`   ${productMappings.length}개 상품-제조사 매핑 추출`)
+  console.log(`   ${productMappings.length}개 상품-제조사 연결 추출`)
 
   return { manufacturers, productMappings }
 }
@@ -294,9 +295,9 @@ function saveResults(
   fs.writeFileSync(path.join(outputDir, 'manufacturers.json'), JSON.stringify(manufacturerList, null, 2), 'utf-8')
   console.log(`\n✅ 제조사 목록 저장: ${outputDir}/manufacturers.json`)
 
-  // 상품-제조사 매핑 저장
+  // 상품-제조사 연결 저장
   fs.writeFileSync(path.join(outputDir, 'product-mappings.json'), JSON.stringify(productMappings, null, 2), 'utf-8')
-  console.log(`✅ 상품-제조사 매핑 저장: ${outputDir}/product-mappings.json`)
+  console.log(`✅ 상품-제조사 연결 저장: ${outputDir}/product-mappings.json`)
 
   // 쇼핑몰 분석 결과 저장
   const mallAnalysis = shoppingMallAnalyses.map((a) => ({

@@ -7,7 +7,14 @@ import { cn } from '@/utils/cn'
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
     <div className="relative w-full overflow-x-auto" data-slot="table-container">
-      <table className={cn('w-full caption-bottom text-sm', className)} data-slot="table" {...props} />
+      <table
+        className={cn(
+          'w-full caption-bottom text-sm [&_th:first-child]:pl-4 [&_th:last-child]:pr-4 [&_td:first-child]:pl-4 [&_td:last-child]:pr-4',
+          className,
+        )}
+        data-slot="table"
+        {...props}
+      />
     </div>
   )
 }
@@ -26,7 +33,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
       className={cn(
-        'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-[2px]',
         className,
       )}
       data-slot="table-cell"
@@ -49,7 +56,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   return (
     <th
       className={cn(
-        'text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        'text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-[2px]',
         className,
       )}
       data-slot="table-head"
