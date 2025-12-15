@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -28,7 +27,6 @@ interface MatchingSummaryResponse {
 }
 
 export default function ProductsPage() {
-  const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
   const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
@@ -39,6 +37,7 @@ export default function ProductsPage() {
 
   // Deep link 지원: /product?unlinked=1&q=...
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
     const unlinked = searchParams.get('unlinked')
     const q = searchParams.get('q')
 
@@ -48,7 +47,6 @@ export default function ProductsPage() {
     if (q && q.trim().length > 0) {
       setSearchQuery(q)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const { data: matchingSummary } = useQuery({
