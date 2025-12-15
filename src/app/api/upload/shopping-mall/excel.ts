@@ -41,7 +41,11 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
   for (let col = 1; col <= columnCount; col++) {
     const value = getCellValue(headerRow.getCell(col))
     if (value) {
-      headerColumnMap.set(value, col)
+      // 동일한 헤더명이 여러 번 나오는 쇼핑몰 파일이 있어요.
+      // 이 경우 마지막 값으로 덮어쓰면 매핑이 뒤틀릴 수 있어서, "첫 번째 등장"을 기준으로 고정합니다.
+      if (!headerColumnMap.has(value)) {
+        headerColumnMap.set(value, col)
+      }
     }
   }
 
