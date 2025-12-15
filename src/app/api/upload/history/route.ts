@@ -126,7 +126,6 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
   }[sortBy]
 
   const orderByFn = sortOrder === 'desc' ? desc : asc
-  const secondaryOrderByFn = sortOrder === 'desc' ? desc : asc
 
   const uploads = await db
     .select({
@@ -145,7 +144,7 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
     .from(upload)
     .leftJoin(shoppingMallTemplate, eq(upload.shoppingMallId, shoppingMallTemplate.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(orderByFn(sortColumn), secondaryOrderByFn(upload.id))
+    .orderBy(orderByFn(sortColumn), orderByFn(upload.id))
     .limit(limit + 1)
 
   const hasMore = uploads.length > limit

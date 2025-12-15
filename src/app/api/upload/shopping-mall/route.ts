@@ -10,17 +10,18 @@ import { shoppingMallTemplate } from '@/db/schema/settings'
 import { groupOrdersByManufacturer } from '@/lib/excel'
 import { getCellValue } from '@/lib/excel/util'
 
-import { parseShoppingMallFile } from './excel'
+import type { UploadError } from '../type'
+
 import {
+  autoCreateManufacturers,
+  autoCreateProducts,
   buildLookupMaps,
   calculateManufacturerBreakdown,
   calculateSummary,
-  prepareOrderValues,
-  type UploadError,
-  type UploadResult,
-} from './util'
-
-const VALID_EXTENSIONS = ['.xlsx', '.xls']
+  VALID_EXTENSIONS,
+} from '../common'
+import { parseShoppingMallFile } from './excel'
+import { prepareOrderValues, type UploadResult } from './util'
 
 const uploadFormSchema = z.object({
   file: z
@@ -129,7 +130,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     const lookupMaps = buildLookupMaps(allManufacturers, allProducts, allOptionMappings)
 
-    const { insertedCount, uploadId } = await db.transaction(async (tx) => {
+    const { insertedCount, uploadId, autoCreatedManufacturers } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
@@ -145,6 +146,12 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         })
         .returning()
 
+      const createdManufacturerNames = await autoCreateManufacturers({
+        orders: parseResult.orders,
+        lookupMaps,
+        tx,
+      })
+
       const orderValues = prepareOrderValues({
         orders: parseResult.orders,
         uploadId: uploadRecord.id,
@@ -153,8 +160,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
-        return { insertedCount: 0, uploadId: uploadRecord.id }
+        return { insertedCount: 0, uploadId: uploadRecord.id, autoCreatedManufacturers: createdManufacturerNames }
       }
+
+      await autoCreateProducts({ orderValues, tx })
 
       const insertResult = await tx
         .insert(order)
@@ -162,7 +171,11 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .onConflictDoNothing({ target: order.sabangnetOrderNumber })
         .returning({ id: order.id })
 
-      return { insertedCount: insertResult.length, uploadId: uploadRecord.id }
+      return {
+        insertedCount: insertResult.length,
+        uploadId: uploadRecord.id,
+        autoCreatedManufacturers: createdManufacturerNames,
+      }
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount
@@ -187,6 +200,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       errors,
       orderNumbers: parseResult.orders.map((o) => o.sabangnetOrderNumber),
       summary,
+      autoCreatedManufacturers,
     }
 
     return NextResponse.json(result)

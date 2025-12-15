@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { db } from '@/db/client'
 import { upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
+import { formatDateForFileName } from '@/lib/excel'
 
 const bodySchema = z.object({
   uploadId: z.coerce.number({ message: '업로드 ID가 필요해요' }).int().min(1, '업로드 ID가 필요해요'),
@@ -160,8 +161,7 @@ export async function POST(request: Request) {
     }
 
     const buffer = await workbook.xlsx.writeBuffer()
-    const date = formatDateForFileName(uploadRecord.uploadedAt)
-    const fileName = encodeURIComponent(`${template.displayName}_${date}.xlsx`)
+    const fileName = encodeURIComponent(`${template.displayName}_${formatDateForFileName(uploadRecord.uploadedAt)}.xlsx`)
 
     return new Response(buffer, {
       headers: {
@@ -174,13 +174,6 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : '다운로드 중 오류가 발생했어요'
     return NextResponse.json({ error: message }, { status: 500 })
   }
-}
-
-function formatDateForFileName(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}${month}${day}`
 }
 
 function getCellValueFromSource(source: ExportConfig['columns'][number]['source'], rowCells: string[]): string {

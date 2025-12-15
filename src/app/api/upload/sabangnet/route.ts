@@ -8,18 +8,18 @@ import { order, upload } from '@/db/schema/orders'
 import { exclusionPattern, settings } from '@/db/schema/settings'
 import { groupOrdersByManufacturer } from '@/lib/excel'
 
-import { parseSabangnetFile } from './excel'
+import type { UploadError } from '../type'
+
 import {
+  autoCreateManufacturers,
+  autoCreateProducts,
   buildLookupMaps,
   calculateManufacturerBreakdown,
   calculateSummary,
-  createExclusionChecker,
-  prepareOrderValues,
-  type UploadError,
-  type UploadResult,
-} from './util'
-
-const VALID_EXTENSIONS = ['.xlsx', '.xls']
+  VALID_EXTENSIONS,
+} from '../common'
+import { parseSabangnetFile } from './excel'
+import { createExclusionChecker, prepareOrderValues, type UploadResult } from './util'
 
 const uploadFormSchema = z.object({
   file: z
@@ -48,18 +48,8 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     const [allManufacturers, allProducts, allOptionMappings, [exclusionEnabledSetting], allPatterns] =
       await Promise.all([
-        db
-          .select({
-            id: manufacturer.id,
-            name: manufacturer.name,
-          })
-          .from(manufacturer),
-        db
-          .select({
-            productCode: product.productCode,
-            manufacturerId: product.manufacturerId,
-          })
-          .from(product),
+        db.select({ id: manufacturer.id, name: manufacturer.name }).from(manufacturer),
+        db.select({ productCode: product.productCode, manufacturerId: product.manufacturerId }).from(product),
         db
           .select({
             productCode: optionMapping.productCode,
@@ -67,12 +57,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
             manufacturerId: optionMapping.manufacturerId,
           })
           .from(optionMapping),
-        db
-          .select({
-            value: settings.value,
-          })
-          .from(settings)
-          .where(eq(settings.key, 'exclusion_enabled')),
+        db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'exclusion_enabled')),
         db
           .select({
             enabled: exclusionPattern.enabled,
@@ -88,7 +73,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     const enabledPatterns = exclusionEnabled ? allPatterns.filter((p) => p.enabled) : []
     const checkExclusionPattern = createExclusionChecker(enabledPatterns)
 
-    const { insertedCount } = await db.transaction(async (tx) => {
+    const { insertedCount, autoCreatedManufacturers } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
@@ -102,6 +87,12 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         })
         .returning()
 
+      const createdManufacturerNames = await autoCreateManufacturers({
+        orders: parseResult.orders,
+        lookupMaps,
+        tx,
+      })
+
       const orderValues = prepareOrderValues({
         orders: parseResult.orders,
         uploadId: uploadRecord.id,
@@ -110,8 +101,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
-        return { insertedCount: 0 }
+        return { insertedCount: 0, autoCreatedManufacturers: createdManufacturerNames }
       }
+
+      await autoCreateProducts({ orderValues, tx })
 
       const insertResult = await tx
         .insert(order)
@@ -119,7 +112,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .onConflictDoNothing({ target: order.sabangnetOrderNumber })
         .returning({ id: order.id })
 
-      return { insertedCount: insertResult.length }
+      return { insertedCount: insertResult.length, autoCreatedManufacturers: createdManufacturerNames }
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount
@@ -142,6 +135,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       errors,
       orderNumbers: parseResult.orders.map((o) => o.sabangnetOrderNumber),
       summary,
+      autoCreatedManufacturers,
     }
 
     return NextResponse.json(result)

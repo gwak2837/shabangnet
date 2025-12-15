@@ -123,6 +123,19 @@ function mapRowToOrder(
     return null
   }
 
+  const mallProductNumber = str('mallProductNumber')
+  if (!mallProductNumber) {
+    throw new Error('쇼핑몰상품번호가 없어요')
+  }
+
+  const site = config.displayName.trim()
+  if (!site) {
+    throw new Error('사이트 값이 없어요')
+  }
+
+  // "상품코드"는 (사이트 + 쇼핑몰상품번호) 조합을 사용합니다.
+  const productKey = `${site}::${mallProductNumber}`
+
   return {
     sabangnetOrderNumber,
     mallOrderNumber: str('mallOrderNumber'),
@@ -131,8 +144,8 @@ function mapRowToOrder(
     quantity: parseInt(str('quantity'), 10) || 1,
     optionName: str('optionName'),
     productAbbr: str('productAbbr'),
-    productCode: str('productCode'),
-    mallProductNumber: str('mallProductNumber'),
+    productCode: productKey,
+    mallProductNumber,
     modelNumber: str('modelNumber'),
     orderName: str('orderName'),
     recipientName: str('recipientName'),
@@ -146,7 +159,7 @@ function mapRowToOrder(
     courier: str('courier'),
     trackingNumber: str('trackingNumber'),
     logisticsNote: str('logisticsNote'),
-    shoppingMall: config.displayName,
+    shoppingMall: site,
     manufacturer: str('manufacturerName'),
     paymentAmount: num('paymentAmount'),
     cost: num('cost'),

@@ -123,6 +123,19 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     return null
   }
 
+  const shoppingMall = str(rowData[12]) // L열: 사이트
+  const mallProductNumber = str(rowData[18]) // R열: 쇼핑몰상품번호
+
+  if (!shoppingMall) {
+    throw new Error('사이트 값이 없어요')
+  }
+  if (!mallProductNumber) {
+    throw new Error('쇼핑몰상품번호가 없어요')
+  }
+
+  // "상품코드"는 (사이트 + 쇼핑몰상품번호) 조합을 사용합니다.
+  const productCode = `${shoppingMall}::${mallProductNumber}`
+
   return {
     // 주문 식별자
     sabangnetOrderNumber, // Q열: 사방넷주문번호
@@ -134,8 +147,8 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     quantity: parseInt(str(rowData[2]), 10) || 1, // B열: 수량
     optionName: str(rowData[19]), // S열: 옵션
     productAbbr: str(rowData[22]), // V열: 상품약어
-    productCode: str(rowData[27]) || str(rowData[28]), // [열/\열: 품번코드/자체상품코드
-    mallProductNumber: str(rowData[18]), // R열: 쇼핑몰상품번호
+    productCode,
+    mallProductNumber, // R열: 쇼핑몰상품번호
     modelNumber: str(rowData[29]), // ]열: 모델번호
 
     // 주문자/수취인
@@ -155,7 +168,7 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     logisticsNote: str(rowData[24]), // X열: 물류전달사항
 
     // 소스/제조사
-    shoppingMall: str(rowData[12]), // L열: 사이트
+    shoppingMall, // L열: 사이트
     manufacturer: str(rowData[13]), // M열: 제조사
 
     // 금액
