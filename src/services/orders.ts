@@ -146,7 +146,7 @@ export async function generateOrderExcel(params: {
   })
 
   if (!mfr) {
-    return { error: '제조사를 찾을 수 없습니다' }
+    return { error: '제조사를 찾을 수 없어요' }
   }
 
   const ordersToExport = await db.query.order.findMany({
@@ -154,7 +154,7 @@ export async function generateOrderExcel(params: {
   })
 
   if (ordersToExport.length === 0) {
-    return { error: '내보낼 주문이 없습니다' }
+    return { error: '내보낼 주문이 없어요' }
   }
 
   const date = new Date()
@@ -291,6 +291,14 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
   return Array.from(batchesMap.values()).filter((b) => b.totalOrders > 0)
 }
 
+function hasRowFixedValues(fixedValues: Record<string, string> | undefined): boolean {
+  if (!fixedValues) return false
+  return Object.keys(fixedValues).some((rawKey) => {
+    const key = rawKey.trim().toUpperCase()
+    return /^[A-Z]+$/.test(key) || /^FIELD\s*:/.test(key)
+  })
+}
+
 /**
  * 템플릿의 columnMappings가 유효한지 확인
  * - null/undefined/빈 문자열/빈 객체("{}")인 경우 false 반환
@@ -347,10 +355,6 @@ async function resolveOrderTemplate(params: {
     return { error: '공통 발주서 템플릿 컬럼 연결이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
   }
 
-  if (Object.keys(columnMappings).length === 0) {
-    return { error: '공통 발주서 템플릿 컬럼 연결이 비어있어요. 설정에서 연결을 설정해 주세요.' }
-  }
-
   let fixedValues: Record<string, string> | undefined
   if (common.fixedValues) {
     try {
@@ -358,6 +362,11 @@ async function resolveOrderTemplate(params: {
     } catch {
       return { error: '공통 발주서 템플릿 고정값이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
     }
+  }
+
+  const hasRowRules = Object.keys(columnMappings).length > 0 || hasRowFixedValues(fixedValues)
+  if (!hasRowRules) {
+    return { error: '공통 발주서 템플릿 컬럼 설정이 비어있어요. 설정에서 컬럼을 연결하거나 직접 입력을 추가해 주세요.' }
   }
 
   const config: OrderTemplateConfig = {

@@ -9,25 +9,21 @@ import { getDuplicateCheckSettings } from '@/services/settings'
 export async function updateDuplicateCheckSettings(data: Partial<DuplicateCheckSettings>) {
   const current = await getDuplicateCheckSettings()
   const updated = { ...current, ...data }
-  return setSetting('duplicate_check', updated)
-}
 
-async function setSetting<T>(key: string, value: T, description?: string) {
   const [record] = await db
     .insert(settings)
     .values({
-      key,
-      value: JSON.stringify(value),
-      description,
+      key: 'duplicate_check',
+      value: JSON.stringify(updated),
     })
     .onConflictDoUpdate({
       target: settings.key,
       set: {
-        value: JSON.stringify(value),
+        value: JSON.stringify(updated),
         updatedAt: new Date(),
       },
     })
-    .returning()
+    .returning({ value: settings.value })
 
-  return JSON.parse(record.value!) as T
+  return JSON.parse(record.value ?? '{}') as DuplicateCheckSettings
 }

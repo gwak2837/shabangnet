@@ -82,7 +82,7 @@ export const commonOrderTemplate = pgTable('common_order_template', {
   headerRow: integer('header_row').default(1).notNull(),
   dataStartRow: integer('data_start_row').default(2).notNull(),
   columnMappings: text('column_mappings').notNull(), // JSON: sabangnetKey -> columnLetter
-  fixedValues: text('fixed_values'), // JSON: { "B2": "{{manufacturerName}}", "A": "다온" }
+  fixedValues: text('fixed_values'), // JSON: { "A": "{{manufacturerName}}", "FIELD:orderName": "{{orderName || recipientName}}" }
   createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
