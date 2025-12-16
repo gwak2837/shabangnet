@@ -7,22 +7,41 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface LogTableProps {
+  isAdmin?: boolean
   logs: SendLog[]
+  onSelectAll?: (checked: boolean) => void
+  onSelectLog?: (id: number, checked: boolean) => void
   onViewDetail: (log: SendLog) => void
+  selectedIds?: number[]
 }
 
-export function LogTable({ logs, onViewDetail }: LogTableProps) {
+export function LogTable({ logs, onViewDetail, isAdmin = false, selectedIds = [], onSelectAll, onSelectLog }: LogTableProps) {
+  const isAllSelected = logs.length > 0 && selectedIds.length === logs.length
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected
+  const colSpan = isAdmin ? 8 : 7
+
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
+              {isAdmin ? (
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="전체 선택"
+                    checked={isAllSelected}
+                    className={isSomeSelected ? 'opacity-50' : ''}
+                    onCheckedChange={(checked) => onSelectAll?.(checked as boolean)}
+                  />
+                </TableHead>
+              ) : null}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발송 일시</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수신자</TableHead>
@@ -38,7 +57,20 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
           </TableHeader>
           <TableBody>
             {logs.map((log) => (
-              <TableRow className="hover:bg-muted/50 transition-colors" key={log.id}>
+              <TableRow
+                aria-selected={isAdmin ? selectedIds.includes(log.id) : undefined}
+                className="hover:bg-muted/50 transition-colors aria-selected:bg-blue-50"
+                key={log.id}
+              >
+                {isAdmin ? (
+                  <TableCell className="w-10">
+                    <Checkbox
+                      aria-label={`${log.manufacturerName} 발송 기록 선택`}
+                      checked={selectedIds.includes(log.id)}
+                      onCheckedChange={(checked) => onSelectLog?.(log.id, checked as boolean)}
+                    />
+                  </TableCell>
+                ) : null}
                 <TableCell className="text-sm text-slate-600" title={formatDateTime(log.sentAt)}>
                   {formatRelativeTime(log.sentAt)}
                 </TableCell>
@@ -103,7 +135,7 @@ export function LogTable({ logs, onViewDetail }: LogTableProps) {
             ))}
             {logs.length === 0 && (
               <TableRow>
-                <TableCell className="h-32 text-center text-slate-500" colSpan={7}>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={colSpan}>
                   발송 기록이 없습니다.
                 </TableCell>
               </TableRow>
