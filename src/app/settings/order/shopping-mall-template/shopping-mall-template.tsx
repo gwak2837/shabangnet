@@ -233,7 +233,7 @@ export function ShoppingMallTemplate() {
 
     if (duplicateFields.length > 0) {
       const labels = formatSabangnetFieldLabels(duplicateFields)
-      toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
+      toast.error(labels ? `사방넷 컬럼이 중복으로 연결됐어요: ${labels}` : '사방넷 컬럼이 중복으로 연결됐어요')
       return
     }
 
@@ -271,7 +271,7 @@ export function ShoppingMallTemplate() {
 
     if (duplicateFields.length > 0) {
       const labels = formatSabangnetFieldLabels(duplicateFields)
-      toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
+      toast.error(labels ? `사방넷 컬럼이 중복으로 연결됐어요: ${labels}` : '사방넷 컬럼이 중복으로 연결됐어요')
       return
     }
 
@@ -361,13 +361,13 @@ export function ShoppingMallTemplate() {
               <span className="font-medium text-foreground">쇼핑몰 템플릿</span>을 등록하면 해당 쇼핑몰에서 다운로드한
               주문 파일을 사방넷 양식으로 자동 변환할 수 있어요.
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">샘플 파일을 업로드하면 컬럼 헤더를 자동으로 분석해요.</p>
+            <p className="mt-1 text-sm text-muted-foreground">예시 파일을 업로드하면 컬럼 헤더를 자동으로 분석해요.</p>
           </div>
         </div>
       </section>
 
       <Dialog onOpenChange={(open) => !open && closeModal()} open={Boolean(modalState)}>
-        <DialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogContent className="flex max-h-[85dvh] flex-col overflow-hidden sm:max-w-2xl">
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <DialogHeader className="shrink-0 px-6 pb-4 pt-6">
               <DialogTitle className="text-lg font-semibold tracking-tight">
@@ -379,7 +379,7 @@ export function ShoppingMallTemplate() {
             </DialogHeader>
 
             {modalState && (
-              <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4">
+              <div className="flex-1 flex flex-col gap-8 overflow-y-auto px-6 py-4">
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -418,7 +418,7 @@ export function ShoppingMallTemplate() {
 
                 {/* File Upload */}
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium">샘플 파일 업로드</Label>
+                  <Label className="text-sm font-medium">파일 업로드</Label>
                   <label className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 transition-all hover:border-muted-foreground/50 hover:bg-muted/30">
                     <input
                       accept=".xlsx,.xls"
@@ -438,7 +438,7 @@ export function ShoppingMallTemplate() {
                     ) : (
                       <>
                         <Upload className="h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-foreground">샘플 엑셀 파일을 업로드하세요</p>
+                        <p className="mt-2 text-sm text-foreground">쇼핑몰 엑셀 파일을 업로드하세요</p>
                         <p className="text-xs text-muted-foreground">헤더를 자동으로 분석해요</p>
                       </>
                     )}

@@ -41,7 +41,7 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
     const nextValue = draftValue.trim()
 
     if (!fieldKey) {
-      toast.error('사방넷 필드를 선택해 주세요')
+      toast.error('사방넷 컬럼을 선택해 주세요')
       return
     }
 
@@ -61,7 +61,7 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
   }
 
   return (
-    <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-foreground">고정값</p>
@@ -81,7 +81,7 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
             </colgroup>
             <TableHeader className="bg-muted/40">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">사방넷 필드</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">사방넷 컬럼</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">값</TableHead>
                 <TableHead className="text-center text-xs font-medium text-muted-foreground">관리</TableHead>
               </TableRow>
@@ -113,37 +113,40 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
           </Table>
         )}
       </div>
+      <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+        <div className="grid gap-3 rounded-md bg-background p-3 ring-1 ring-border/50 sm:grid-cols-[220px_1fr_auto]">
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">사방넷 컬럼</Label>
+            <Select onValueChange={setDraftFieldKey} value={draftFieldKey}>
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={availableDraftFields.length > 0 ? '필드를 선택해요' : '추가할 필드가 없어요'}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {availableDraftFields.map((field) => (
+                  <SelectItem key={field.key} value={field.key}>
+                    {field.label}
+                    {field.required && <span className="ml-1 text-destructive">*</span>}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="grid gap-3 rounded-md bg-background p-3 ring-1 ring-border/50 sm:grid-cols-[220px_1fr_auto]">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">사방넷 필드</Label>
-          <Select onValueChange={setDraftFieldKey} value={draftFieldKey}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={availableDraftFields.length > 0 ? '필드를 선택해요' : '추가할 필드가 없어요'} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableDraftFields.map((field) => (
-                <SelectItem key={field.key} value={field.key}>
-                  {field.label}
-                  {field.required && <span className="ml-1 text-destructive">*</span>}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">값</Label>
+            <Input onChange={(e) => setDraftValue(e.target.value)} placeholder="값을 입력해요" value={draftValue} />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">값</Label>
-          <Input onChange={(e) => setDraftValue(e.target.value)} placeholder="값을 입력해요" value={draftValue} />
+          <div className="flex items-end">
+            <Button onClick={handleAdd} type="button" variant="outline">
+              <Plus className="h-4 w-4" />
+              추가
+            </Button>
+          </div>
         </div>
-
-        <div className="flex items-end">
-          <Button onClick={handleAdd} type="button" variant="outline">
-            <Plus className="h-4 w-4" />
-            추가
-          </Button>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

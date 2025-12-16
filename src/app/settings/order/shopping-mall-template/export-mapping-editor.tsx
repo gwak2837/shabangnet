@@ -85,14 +85,14 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
   }
 
   return (
-    <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+    <section>
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-foreground">다운로드 엑셀 템플릿</p>
         <p className="text-xs text-muted-foreground">업로드된 원본 파일을 다운로드용 엑셀 형식으로 변환해요</p>
       </div>
 
       {exportConfig && (
-        <div className="space-y-3">
+        <div className="space-y-3 py-2">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Label className="text-sm font-medium" htmlFor="export-copy-prefix">

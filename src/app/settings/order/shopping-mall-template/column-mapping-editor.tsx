@@ -105,7 +105,7 @@ export function ColumnMappingEditor({
       headerLabel: headerKey,
       mappingValue: value[headerKey] ?? '_none',
       previewValues: [''],
-      warning: hasAnalyzedColumns ? '샘플 파일에 없는 헤더예요. 변환 시 오류가 날 수 있어요' : undefined,
+      warning: hasAnalyzedColumns ? '예시 파일에 없는 헤더예요. 변환 시 오류가 날 수 있어요' : undefined,
     }))
 
     return [...mappedRows, ...missingRows]
@@ -180,7 +180,7 @@ export function ColumnMappingEditor({
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <Label className="text-sm font-medium">컬럼 연결</Label>
-          <p className="text-xs text-muted-foreground">샘플 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.</p>
+          <p className="text-xs text-muted-foreground">예시 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.</p>
           {missingRequiredLabels && <p className="text-xs text-amber-600">필수 필드 미연결: {missingRequiredLabels}</p>}
         </div>
 
@@ -228,7 +228,7 @@ export function ColumnMappingEditor({
         <div className="flex items-start gap-2 rounded-lg bg-destructive/5 px-3 py-2 text-xs text-destructive ring-1 ring-destructive/15">
           <TriangleAlert className="mt-0.5 h-4 w-4" />
           <div>
-            <p className="font-medium">사방넷 필드가 중복 연결됐어요</p>
+            <p className="font-medium">사방넷 컬럼이 중복 연결됐어요</p>
             <p className="mt-0.5 text-destructive/90">중복: {duplicateFieldLabels}</p>
           </div>
         </div>
@@ -247,9 +247,9 @@ export function ColumnMappingEditor({
             </colgroup>
             <TableHeader className="bg-muted/40">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">원본 컬럼</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">쇼핑몰 파일 컬럼</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">예시 행</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">사방넷 필드</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">사방넷 컬럼</TableHead>
                 <TableHead className="text-center text-xs font-medium text-muted-foreground">관리</TableHead>
               </TableRow>
             </TableHeader>

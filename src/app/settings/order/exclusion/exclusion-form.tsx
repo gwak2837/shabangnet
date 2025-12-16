@@ -32,7 +32,7 @@ const defaultSettings: ExclusionSettings = {
 
 const SKELETON_PATTERN: ExclusionPattern = {
   id: 0,
-  pattern: '[00000000]주문_샘플패턴',
+  pattern: '[00000000]주문_예시패턴',
   description: '패턴 설명',
   enabled: true,
 }

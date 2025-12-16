@@ -155,7 +155,7 @@ async function analyzeShoppingMallFile(filePath: string): Promise<ShoppingMallAn
     }
   })
 
-  // 샘플 데이터 추출 (헤더 다음 3행)
+  // 예시 데이터 추출 (헤더 다음 3행)
   const sampleData: string[][] = []
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber <= headerRow || sampleData.length >= 3) return

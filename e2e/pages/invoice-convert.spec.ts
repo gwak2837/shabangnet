@@ -118,7 +118,7 @@ test.describe('송장 변환 결과 검증', () => {
 
   test.skip('송장 파일 변환 및 결과 확인', async ({ page }) => {
     // 송장 파일 샘플이 있어야 테스트 가능
-    // real-data 폴더에 송장 샘플 파일 추가 필요
+    // real-data 폴더에 송장 예시 파일 추가 필요
 
     await page.goto('/invoice-convert')
 

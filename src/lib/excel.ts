@@ -127,9 +127,9 @@ export interface TemplateAnalysis {
   headerRow: number
   /** A열부터 순서대로 헤더 텍스트를 담아요. 빈 셀은 ''로 유지돼요. */
   headers: string[]
-  /** 헤더/샘플 기준으로 "의미 있게 쓰이는" 마지막 컬럼 인덱스(1-based, A=1) */
+  /** 헤더/예시 기준으로 "의미 있게 쓰이는" 마지막 컬럼 인덱스(1-based, A=1) */
   lastUsedColumnIndex: number
-  sampleData: Record<string, string>[] // 샘플 데이터 (최대 3행)
+  sampleData: Record<string, string>[] // 예시 데이터 (최대 3행)
   suggestedMappings: Record<string, string> // 사방넷 key -> 템플릿 컬럼 (A, B, C...)
 }
 
@@ -279,7 +279,7 @@ export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<Tem
     suggestedMappings[fieldKey] = indexToColumnLetter(i)
   }
 
-  // 샘플 데이터 추출 (최대 3행)
+  // 예시 데이터 추출 (최대 3행)
   const sampleData: Record<string, string>[] = []
   let sampleCount = 0
 
@@ -662,7 +662,7 @@ export async function generateTemplateBasedOrderSheet(
       row.getCell(colIndex).value = resolveTemplateValue(rawValue, variables, order)
     }
 
-    // 고정값(필드 단위) 입력: 특정 사방넷 필드의 값을 템플릿으로 "덮어쓰기" 할 때 사용
+    // 고정값(필드 단위) 입력: 특정 사방넷 컬럼의 값을 템플릿으로 "덮어쓰기" 할 때 사용
     // 예: { "field:orderName": "{{orderName || recipientName}}" }
     for (const [sabangnetKey, rawValue] of fixedByFieldKey.entries()) {
       const column = config.columnMappings[sabangnetKey]

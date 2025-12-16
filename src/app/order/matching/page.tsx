@@ -180,7 +180,7 @@ export default function OrderMatchingPage() {
                       상품코드
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      상품명(샘플)
+                      상품명(예시)
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                       주문 수
