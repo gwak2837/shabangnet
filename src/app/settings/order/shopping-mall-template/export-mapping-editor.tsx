@@ -12,11 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-interface AvailableColumn {
-  columnIndex: number
-  columnLetter: string
-  header: string
-}
+import type { AvailableColumn } from './available-column'
+
+import { indexToColumnLetter } from './util/excel-column-letter'
 
 interface ExportMappingEditorProps {
   availableColumns: AvailableColumn[]
@@ -398,14 +396,4 @@ function getDefaultHeader(col: ShoppingMallExportConfig['columns'][number], colu
     return columnMap.get(col.source.columnIndex)?.header ?? ''
   }
   return ''
-}
-
-function indexToColumnLetter(index: number): string {
-  let letter = ''
-  let i = index
-  while (i >= 0) {
-    letter = String.fromCharCode((i % 26) + 65) + letter
-    i = Math.floor(i / 26) - 1
-  }
-  return letter
 }

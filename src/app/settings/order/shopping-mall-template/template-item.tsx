@@ -36,24 +36,26 @@ export function TemplateItem({ template, skeleton, isDeleting, onToggle, onEdit,
       data-disabled={!skeleton && !template.enabled ? '' : undefined}
     >
       <Switch checked={template.enabled} id={switchId} onCheckedChange={onToggle} />
-      <label className="min-w-0 flex-1 cursor-pointer" htmlFor={switchId}>
-        <div className="mb-1.5 flex items-center gap-3">
+      <label className="grid gap-1.5 min-w-0 flex-1 cursor-pointer" htmlFor={switchId}>
+        <div className="flex items-center gap-3">
           <span className="truncate text-base font-medium text-foreground">{template.displayName}</span>
           <span className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 font-mono text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
             {template.mallName}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {columnKeys.slice(0, 4).map((col, i) => (
-            <span
-              className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
-              key={skeleton ? i : col}
-            >
-              {col}
-            </span>
-          ))}
-          {columnKeys.length > 4 && <span className="text-xs text-muted-foreground">+{columnKeys.length - 4}개</span>}
-        </div>
+        {columnKeys.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {columnKeys.slice(0, 4).map((col, i) => (
+              <span
+                className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-border/50"
+                key={skeleton ? i : col}
+              >
+                {col}
+              </span>
+            ))}
+            {columnKeys.length > 4 && <span className="text-xs text-muted-foreground">+{columnKeys.length - 4}개</span>}
+          </div>
+        )}
       </label>
       <div className="flex items-center gap-0.5">
         <button

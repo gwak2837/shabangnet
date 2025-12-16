@@ -12,13 +12,17 @@ import {
   stringifyShoppingMallTemplateColumnConfig,
 } from '@/services/shopping-mall-template-config'
 
+import type { AvailableColumn } from './available-column'
+
+import { indexToColumnLetter } from './util/excel-column-letter'
+
 export interface AnalyzeInput {
   file: File
   headerRow?: number
 }
 
 export interface AnalyzeResult {
-  columns: { columnIndex: number; columnLetter: string; header: string }[]
+  columns: AvailableColumn[]
   detectedHeaderRow: number
   headers: string[]
   previewRows: string[][]
@@ -270,16 +274,6 @@ function getCellValue(cell: ExcelJS.Cell): string {
   }
 
   return String(value)
-}
-
-function indexToColumnLetter(index: number): string {
-  let letter = ''
-  let i = index
-  while (i >= 0) {
-    letter = String.fromCharCode((i % 26) + 65) + letter
-    i = Math.floor(i / 26) - 1
-  }
-  return letter
 }
 
 function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect) {

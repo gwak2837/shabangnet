@@ -46,6 +46,11 @@ import { ColumnMappingEditor } from './column-mapping-editor'
 import { ExportMappingEditor } from './export-mapping-editor'
 import { FixedValuesEditor } from './fixed-values-editor'
 import { TemplateItem } from './template-item'
+import {
+  formatSabangnetFieldLabels,
+  getDuplicateFieldKeys,
+  getMissingRequiredFieldKeys,
+} from './util/sabangnet-field-utils'
 
 const REQUIRED_FIELDS = SABANGNET_COLUMNS.filter((col) => col.required).map((col) => col.key)
 
@@ -200,27 +205,15 @@ export function ShoppingMallTemplate() {
 
   function getMissingRequiredFields(): string[] {
     if (!modalState) return []
-    const satisfied = new Set(Object.values(modalState.columnMappings))
-    for (const [fieldKey, rawValue] of Object.entries(modalState.fixedValues)) {
-      if (rawValue.trim().length > 0) {
-        satisfied.add(fieldKey)
-      }
-    }
-    return REQUIRED_FIELDS.filter((field) => !satisfied.has(field))
+    return getMissingRequiredFieldKeys(REQUIRED_FIELDS, {
+      columnMappings: modalState.columnMappings,
+      fixedValues: modalState.fixedValues,
+    })
   }
 
   function getDuplicateMappedFields(): string[] {
     if (!modalState) return []
-    const counts = new Map<string, number>()
-    for (const fieldKey of Object.values(modalState.columnMappings)) {
-      counts.set(fieldKey, (counts.get(fieldKey) ?? 0) + 1)
-    }
-    for (const [fieldKey, rawValue] of Object.entries(modalState.fixedValues)) {
-      if (rawValue.trim().length > 0) {
-        counts.set(fieldKey, (counts.get(fieldKey) ?? 0) + 1)
-      }
-    }
-    return [...counts.entries()].filter(([, count]) => count > 1).map(([fieldKey]) => fieldKey)
+    return getDuplicateFieldKeys({ columnMappings: modalState.columnMappings, fixedValues: modalState.fixedValues })
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -239,10 +232,7 @@ export function ShoppingMallTemplate() {
     const missingFields = getMissingRequiredFields()
 
     if (duplicateFields.length > 0) {
-      const labels = duplicateFields
-        .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
-        .filter(Boolean)
-        .join(', ')
+      const labels = formatSabangnetFieldLabels(duplicateFields)
       toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
       return
     }
@@ -280,10 +270,7 @@ export function ShoppingMallTemplate() {
     const duplicateFields = getDuplicateMappedFields()
 
     if (duplicateFields.length > 0) {
-      const labels = duplicateFields
-        .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
-        .filter(Boolean)
-        .join(', ')
+      const labels = formatSabangnetFieldLabels(duplicateFields)
       toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
       return
     }
@@ -312,11 +299,7 @@ export function ShoppingMallTemplate() {
   const missingFields = getMissingRequiredFields()
   const duplicateFields = getDuplicateMappedFields()
   const hasDuplicateFields = duplicateFields.length > 0
-
-  const missingLabels = missingFields
-    .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
-    .filter(Boolean)
-    .join(', ')
+  const missingLabels = formatSabangnetFieldLabels(missingFields)
 
   const rowInputKey = modalState?.analyzeResult?.detectedHeaderRow ?? 0
   const mappedFieldKeys = useMemo(

@@ -4,14 +4,14 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { SABANGNET_COLUMN_MAP } from '@/common/constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-import { SABANGNET_COLUMNS_REQUIRED_FIRST } from './sabangnet-columns-required-first'
+import { SABANGNET_COLUMNS_REQUIRED_FIRST } from './util/sabangnet-columns-required-first'
+import { getNonEmptyFixedValueEntries, getSabangnetFieldLabel } from './util/sabangnet-field-utils'
 
 interface FixedValuesEditorProps {
   mappedFieldKeys: Set<string>
@@ -22,10 +22,7 @@ interface FixedValuesEditorProps {
 
 export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }: FixedValuesEditorProps) {
   const activeFixedEntries = useMemo(() => {
-    return Object.entries(value)
-      .map(([fieldKey, rawValue]) => ({ fieldKey, value: rawValue }))
-      .filter((e) => e.value.trim().length > 0)
-      .sort((a, b) => a.fieldKey.localeCompare(b.fieldKey))
+    return getNonEmptyFixedValueEntries(value)
   }, [value])
 
   const activeFixedFieldKeys = useMemo(() => new Set(activeFixedEntries.map((e) => e.fieldKey)), [activeFixedEntries])
@@ -34,7 +31,9 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
   const [draftValue, setDraftValue] = useState('')
 
   const availableDraftFields = useMemo(() => {
-    return SABANGNET_COLUMNS_REQUIRED_FIRST.filter((f) => !mappedFieldKeys.has(f.key) && !activeFixedFieldKeys.has(f.key))
+    return SABANGNET_COLUMNS_REQUIRED_FIRST.filter(
+      (f) => !mappedFieldKeys.has(f.key) && !activeFixedFieldKeys.has(f.key),
+    )
   }, [activeFixedFieldKeys, mappedFieldKeys])
 
   function handleAdd() {
@@ -89,7 +88,7 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
             </TableHeader>
             <TableBody className="divide-y divide-border/50">
               {activeFixedEntries.map((entry) => {
-                const label = SABANGNET_COLUMN_MAP.get(entry.fieldKey)?.label ?? entry.fieldKey
+                const label = getSabangnetFieldLabel(entry.fieldKey)
                 return (
                   <TableRow className="hover:bg-transparent" key={entry.fieldKey}>
                     <TableCell>
@@ -148,5 +147,3 @@ export function FixedValuesEditor({ value, mappedFieldKeys, onUpsert, onRemove }
     </section>
   )
 }
-
-

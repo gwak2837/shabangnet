@@ -3,19 +3,15 @@
 import { Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { SABANGNET_COLUMN_MAP } from '@/common/constants'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-import { SABANGNET_COLUMNS_REQUIRED_FIRST } from './sabangnet-columns-required-first'
+import type { AvailableColumn } from './available-column'
 
-interface AvailableColumn {
-  columnIndex: number
-  columnLetter: string
-  header: string
-}
+import { SABANGNET_COLUMNS_REQUIRED_FIRST } from './util/sabangnet-columns-required-first'
+import { formatSabangnetFieldLabels, getNonEmptyFixedValueKeys } from './util/sabangnet-field-utils'
 
 interface ColumnMappingEditorProps {
   availableColumns: AvailableColumn[]
@@ -136,17 +132,11 @@ export function ColumnMappingEditor({
   }, [headersByField])
 
   const duplicateFieldLabels = useMemo(() => {
-    return duplicateFieldKeys.map((fieldKey) => SABANGNET_COLUMN_MAP.get(fieldKey)?.label ?? fieldKey).join(', ')
+    return formatSabangnetFieldLabels(duplicateFieldKeys)
   }, [duplicateFieldKeys])
 
   const fixedFieldKeySet = useMemo(() => {
-    const out = new Set<string>()
-    for (const [fieldKey, rawValue] of Object.entries(fixedValues ?? {})) {
-      if (rawValue.trim().length > 0) {
-        out.add(fieldKey)
-      }
-    }
-    return out
+    return getNonEmptyFixedValueKeys(fixedValues)
   }, [fixedValues])
 
   const hiddenCandidates = useMemo(() => {
