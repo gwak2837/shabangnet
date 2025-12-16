@@ -3,18 +3,13 @@
 import { Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { SABANGNET_COLUMN_MAP, SABANGNET_COLUMNS } from '@/common/constants'
+import { SABANGNET_COLUMN_MAP } from '@/common/constants'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-const SABANGNET_COLUMNS_REQUIRED_FIRST = [...SABANGNET_COLUMNS].sort((a, b) => {
-  const reqA = a.required ? 1 : 0
-  const reqB = b.required ? 1 : 0
-  if (reqA !== reqB) return reqB - reqA
-  return a.index - b.index
-})
+import { SABANGNET_COLUMNS_REQUIRED_FIRST } from './sabangnet-columns-required-first'
 
 interface AvailableColumn {
   columnIndex: number
