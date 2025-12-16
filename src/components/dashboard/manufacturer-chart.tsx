@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { ChartDataItem } from '@/services/dashboard'
@@ -38,9 +39,9 @@ export function ManufacturerChart({ data, isLoading }: ManufacturerChartProps) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">제조사별 발주 현황</CardTitle>
-          <a className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/order">
+          <Link className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/order">
             상세보기
-          </a>
+          </Link>
         </div>
       </CardHeader>
       <CardContent className="pt-0">

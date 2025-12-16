@@ -15,13 +15,13 @@ export interface ChartDataItem {
 
 export interface DashboardStats {
   completedOrders: number
-  completedOrdersChange: number
+  completedOrdersChange?: number
   errorOrders: number
-  errorOrdersChange: number
+  errorOrdersChange?: number
   pendingOrders: number
-  pendingOrdersChange: number
+  pendingOrdersChange?: number
   todayOrders: number
-  todayOrdersChange: number
+  todayOrdersChange?: number
 }
 
 export interface Upload {
@@ -73,20 +73,53 @@ export async function getStats(): Promise<DashboardStats> {
   const [stats] = await db
     .select({
       todayOrders: sql<number>`count(case when date(${order.createdAt}) = current_date then 1 end)`.mapWith(Number),
-      pendingOrders: sql<number>`count(case when ${order.status} = 'pending' then 1 end)`.mapWith(Number),
-      completedOrders: sql<number>`count(case when ${order.status} = 'completed' then 1 end)`.mapWith(Number),
-      errorOrders: sql<number>`count(case when ${order.status} = 'error' then 1 end)`.mapWith(Number),
+      yesterdayOrders:
+        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') then 1 end)`.mapWith(
+          Number,
+        ),
+
+      pendingOrders:
+        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'pending' then 1 end)`.mapWith(
+          Number,
+        ),
+      yesterdayPendingOrders:
+        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'pending' then 1 end)`.mapWith(
+          Number,
+        ),
+
+      completedOrders:
+        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'completed' then 1 end)`.mapWith(
+          Number,
+        ),
+      yesterdayCompletedOrders:
+        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'completed' then 1 end)`.mapWith(
+          Number,
+        ),
+
+      errorOrders:
+        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'error' then 1 end)`.mapWith(
+          Number,
+        ),
+      yesterdayErrorOrders:
+        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'error' then 1 end)`.mapWith(
+          Number,
+        ),
     })
     .from(order)
 
+  function getChange(today: number, yesterday: number): number | undefined {
+    if (yesterday <= 0) return undefined
+    return Math.round(((today - yesterday) / yesterday) * 100)
+  }
+
   return {
     todayOrders: stats.todayOrders,
-    todayOrdersChange: 0,
+    todayOrdersChange: getChange(stats.todayOrders, stats.yesterdayOrders),
     pendingOrders: stats.pendingOrders,
-    pendingOrdersChange: 0,
+    pendingOrdersChange: getChange(stats.pendingOrders, stats.yesterdayPendingOrders),
     completedOrders: stats.completedOrders,
-    completedOrdersChange: 0,
+    completedOrdersChange: getChange(stats.completedOrders, stats.yesterdayCompletedOrders),
     errorOrders: stats.errorOrders,
-    errorOrdersChange: 0,
+    errorOrdersChange: getChange(stats.errorOrders, stats.yesterdayErrorOrders),
   }
 }

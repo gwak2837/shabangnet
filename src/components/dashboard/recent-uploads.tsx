@@ -1,6 +1,7 @@
 'use client'
 
 import { FileSpreadsheet, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 import type { Upload } from '@/services/dashboard'
 
@@ -21,9 +22,9 @@ export function RecentUploads({ uploads, isLoading }: RecentUploadsProps) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-slate-900">최근 업로드</CardTitle>
-          <a className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/upload/history">
+          <Link className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors" href="/upload/history">
             모두 보기
-          </a>
+          </Link>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
