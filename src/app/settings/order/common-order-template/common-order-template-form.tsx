@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { Download, FileSpreadsheet, Loader2, Upload } from 'lucide-react'
+import { FileSpreadsheet, Loader2, Upload } from 'lucide-react'
 import { type ChangeEvent, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -11,7 +11,6 @@ import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useServerAction } from '@/hooks/use-server-action'
 
 import type { CommonOrderTemplate } from './action'
@@ -21,8 +20,6 @@ import {
   analyzeCurrentCommonOrderTemplate,
   analyzeOrderTemplateFile,
   getCommonOrderTemplate,
-  getCommonTemplateTestCandidates,
-  getRecentOrderIdsForManufacturer,
   upsertCommonOrderTemplate,
 } from './action'
 import {
@@ -30,6 +27,7 @@ import {
   type CommonTemplateColumnRule,
   type CommonTemplateFieldOption,
 } from './common-order-template-column-editor'
+import { TestDownloadSection } from './test-download-section'
 
 const FIELD_OPTIONS: CommonTemplateFieldOption[] = [
   { key: 'sabangnetOrderNumber', label: '사방넷주문번호' },
@@ -180,10 +178,8 @@ function buildConfig(columnRules: Record<string, CommonTemplateColumnRule>): {
 
 function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate }: CommonOrderTemplateFormInnerProps) {
   const [draft, setDraft] = useState<CommonOrderTemplate>(initialDraft)
-  const parsedInitial = useMemo(() => parseInitialConfig(initialDraft), [initialDraft])
-  const [columnRules, setColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(
-    () => parsedInitial.columnRules,
-  )
+  const initialColumnRules = useMemo(() => parseInitialColumnRules(initialDraft), [initialDraft])
+  const [columnRules, setColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(() => initialColumnRules)
   const [uploadedFile, setUploadedFile] = useState<{ buffer: ArrayBuffer; name: string } | null>(null)
   const [analysis, setAnalysis] = useState<TemplateAnalysis | null>(null)
 
@@ -356,13 +352,6 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
           </Button>
         </div>
 
-        {parsedInitial.legacyFieldTemplateCount > 0 ? (
-          <p className="text-xs text-amber-700">
-            이전 설정에 <code className="rounded bg-muted px-1 py-0.5">field:</code> 템플릿이{' '}
-            {parsedInitial.legacyFieldTemplateCount}개 있어요. 이 화면에서는 관리하지 않고, 저장하면 자동으로 정리돼요.
-          </p>
-        ) : null}
-
         <CommonOrderTemplateColumnEditor
           fieldOptions={FIELD_OPTIONS}
           headers={effectiveAnalysis?.headers ?? []}
@@ -381,18 +370,8 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
   )
 }
 
-function getFileNameFromDisposition(disposition: string | null): string | null {
-  if (!disposition) return null
-  const match = disposition.match(/filename="(?<name>.+?)"/i)
-  return match?.groups?.name ? decodeURIComponent(match.groups.name) : null
-}
-
-function parseInitialConfig(template: CommonOrderTemplate): {
-  columnRules: Record<string, CommonTemplateColumnRule>
-  legacyFieldTemplateCount: number
-} {
+function parseInitialColumnRules(template: CommonOrderTemplate): Record<string, CommonTemplateColumnRule> {
   const columnRules: Record<string, CommonTemplateColumnRule> = {}
-  let legacyFieldTemplateCount = 0
 
   for (const [fieldKey, rawColumn] of Object.entries(template.columnMappings ?? {})) {
     const col = String(rawColumn ?? '')
@@ -407,112 +386,11 @@ function parseInitialConfig(template: CommonOrderTemplate): {
     const normalized = key.toUpperCase()
     const value = String(rawValue ?? '')
 
-    if (/^field\s*:/i.test(key)) {
-      legacyFieldTemplateCount += 1
-      continue
-    }
-
     if (/^[A-Z]+$/.test(normalized)) {
       columnRules[normalized] = { kind: 'template', template: value }
       continue
     }
   }
 
-  return { columnRules, legacyFieldTemplateCount }
-}
-
-function TestDownloadSection() {
-  const { data: candidates, isLoading } = useQuery({
-    queryKey: ['common-template-test-candidates'],
-    queryFn: getCommonTemplateTestCandidates,
-  })
-
-  const [manufacturerId, setManufacturerId] = useState<string>('')
-  const [isDownloading, setIsDownloading] = useState(false)
-
-  const options = candidates ?? []
-
-  async function handleDownload() {
-    const id = Number(manufacturerId)
-    if (!Number.isFinite(id) || id <= 0) {
-      toast.error('테스트할 제조사를 선택해 주세요')
-      return
-    }
-
-    setIsDownloading(true)
-    try {
-      const orderIds = await getRecentOrderIdsForManufacturer(id, 50)
-      if (orderIds.length === 0) {
-        toast.error('테스트할 주문이 없어요')
-        return
-      }
-
-      const searchParams = new URLSearchParams()
-      searchParams.set('manufacturer-id', String(id))
-      searchParams.set('order-ids', orderIds.join(','))
-
-      const response = await fetch(`/api/orders/download?${searchParams.toString()}`)
-      if (!response.ok) {
-        const { error } = (await response.json()) as { error?: string }
-        throw new Error(error || '다운로드에 실패했어요')
-      }
-
-      const blob = await response.blob()
-      const disposition = response.headers.get('content-disposition')
-      const fileName =
-        getFileNameFromDisposition(disposition) ??
-        `발주서_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`
-
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = fileName
-      link.click()
-      URL.revokeObjectURL(link.href)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '다운로드 중 오류가 발생했어요')
-    } finally {
-      setIsDownloading(false)
-    }
-  }
-
-  return (
-    <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
-      <div className="flex flex-col gap-1">
-        <Label className="text-sm font-medium">테스트 다운로드</Label>
-        <p className="text-xs text-muted-foreground">
-          여기 제조사는 “제조사 템플릿이 없는” 제조사만 보여줘요. 그래서 이 다운로드는 공통 템플릿이 실제로 적용돼요.
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <Select disabled={isLoading || options.length === 0} onValueChange={setManufacturerId} value={manufacturerId}>
-          <SelectTrigger aria-disabled={isLoading || options.length === 0} className="aria-disabled:opacity-50">
-            <SelectValue
-              placeholder={
-                isLoading ? '불러오는 중...' : options.length > 0 ? '제조사를 선택해요' : '테스트할 제조사가 없어요'
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((m) => (
-              <SelectItem key={m.manufacturerId} value={String(m.manufacturerId)}>
-                {m.manufacturerName} <span className="text-muted-foreground">({m.orderCount}건)</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button
-          className="gap-2"
-          disabled={isDownloading || !manufacturerId}
-          onClick={() => void handleDownload()}
-          type="button"
-          variant="outline"
-        >
-          <Download className="h-4 w-4" />
-          {isDownloading ? '다운로드 중...' : '엑셀 다운로드'}
-        </Button>
-      </div>
-    </section>
-  )
+  return columnRules
 }
