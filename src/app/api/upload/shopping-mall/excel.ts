@@ -8,6 +8,7 @@ export interface ShoppingMallConfig {
   columnMappings: Record<string, string>
   dataStartRow: number
   displayName: string
+  fixedValues?: Record<string, string>
   headerRow: number
   mallName: string
 }
@@ -110,13 +111,19 @@ function mapRowToOrder(
   const str = (dbField: string): string => {
     // columnMappings에서 해당 DB 필드에 연결된 엑셀 컬럼명 찾기
     const excelColumn = Object.entries(config.columnMappings).find(([, field]) => field === dbField)?.[0]
-    if (!excelColumn) return ''
+    if (!excelColumn) {
+      return config.fixedValues?.[dbField]?.trim() ?? ''
+    }
 
     // 엑셀 컬럼명으로 컬럼 인덱스 찾기
     const colIndex = headerColumnMap.get(excelColumn)
-    if (colIndex === undefined) return ''
+    if (colIndex === undefined) {
+      return config.fixedValues?.[dbField]?.trim() ?? ''
+    }
 
-    return rowData[colIndex]?.trim() || ''
+    const cell = rowData[colIndex]?.trim() || ''
+    if (cell.length > 0) return cell
+    return config.fixedValues?.[dbField]?.trim() ?? ''
   }
 
   const num = (dbField: string): number => parseFloat(str(dbField).replace(/[^0-9.-]/g, '')) || 0

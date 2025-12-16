@@ -9,6 +9,7 @@ import { order, upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
 import { groupOrdersByManufacturer } from '@/lib/excel'
 import { getCellValue } from '@/lib/excel/util'
+import { parseShoppingMallTemplateColumnConfig } from '@/services/shopping-mall-template-config'
 
 import type { UploadError } from '../type'
 
@@ -32,7 +33,7 @@ const uploadFormSchema = z.object({
   mallId: z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
 })
 
-interface ShoppingMallUploadSourceSnapshotV1 {
+interface ShoppingMallUploadSourceSnapshot {
   columnCount: number
   dataRows: Array<{ cells: string[]; rowNumber: number }>
   dataStartRow: number
@@ -41,7 +42,6 @@ interface ShoppingMallUploadSourceSnapshotV1 {
   prefixRows: string[][]
   sheetName: string
   totalRows: number
-  version: 1
 }
 
 export async function GET(): Promise<NextResponse> {
@@ -88,15 +88,22 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       return NextResponse.json({ error: '알 수 없는 쇼핑몰이에요' }, { status: 400 })
     }
 
+    const parsedColumnConfig = (() => {
+      try {
+        const raw = dbTemplate.columnMappings ? (JSON.parse(dbTemplate.columnMappings) as unknown) : {}
+        return parseShoppingMallTemplateColumnConfig(raw)
+      } catch {
+        return { columnMappings: {}, fixedValues: {} }
+      }
+    })()
+
     const mallConfig = {
       mallName: dbTemplate.mallName,
       displayName: dbTemplate.displayName,
       headerRow: dbTemplate.headerRow ?? 1,
       dataStartRow: dbTemplate.dataStartRow ?? 2,
-      columnMappings:
-        typeof dbTemplate.columnMappings === 'string'
-          ? (JSON.parse(dbTemplate.columnMappings) as Record<string, string>)
-          : ((dbTemplate.columnMappings as Record<string, string> | null) ?? {}),
+      columnMappings: parsedColumnConfig.columnMappings,
+      fixedValues: parsedColumnConfig.fixedValues,
     }
 
     const buffer = await file.arrayBuffer()
@@ -216,7 +223,7 @@ async function createSourceSnapshot(params: {
   dataStartRow: number
   headerRow: number
   validRowNumbers: number[]
-}): Promise<ShoppingMallUploadSourceSnapshotV1> {
+}): Promise<ShoppingMallUploadSourceSnapshot> {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(params.buffer)
   const worksheet = workbook.worksheets[0]
@@ -245,7 +252,6 @@ async function createSourceSnapshot(params: {
     }))
 
   return {
-    version: 1,
     sheetName: worksheet.name,
     totalRows,
     columnCount,

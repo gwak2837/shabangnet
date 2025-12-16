@@ -2,16 +2,18 @@
 
 import { eq } from 'drizzle-orm'
 
-import type { ShoppingMallExportConfigV1 } from '@/services/shopping-mall-templates'
+import type { ShoppingMallExportConfig } from '@/services/shopping-mall-templates'
 
 import { db } from '@/db/client'
 import { shoppingMallTemplate } from '@/db/schema/settings'
+import { parseShoppingMallTemplateColumnConfig, stringifyShoppingMallTemplateColumnConfig } from '@/services/shopping-mall-template-config'
 
 export interface CreateTemplateData {
   columnMappings: Record<string, string>
   dataStartRow: number
   displayName: string
-  exportConfig?: ShoppingMallExportConfigV1 | null
+  exportConfig?: ShoppingMallExportConfig | null
+  fixedValues?: Record<string, string>
   headerRow: number
   mallName: string
 }
@@ -22,7 +24,8 @@ export interface ShoppingMallTemplate {
   dataStartRow: number
   displayName: string
   enabled: boolean
-  exportConfig: ShoppingMallExportConfigV1 | null
+  exportConfig: ShoppingMallExportConfig | null
+  fixedValues: Record<string, string>
   headerRow: number
   id: number
   mallName: string
@@ -34,7 +37,8 @@ export interface UpdateTemplateData {
   dataStartRow?: number
   displayName?: string
   enabled?: boolean
-  exportConfig?: ShoppingMallExportConfigV1 | null
+  exportConfig?: ShoppingMallExportConfig | null
+  fixedValues?: Record<string, string>
   headerRow?: number
   id: number
   mallName?: string
@@ -46,7 +50,10 @@ export async function addShoppingMallTemplate(data: CreateTemplateData) {
     .values({
       mallName: data.mallName,
       displayName: data.displayName,
-      columnMappings: JSON.stringify(data.columnMappings),
+      columnMappings: stringifyShoppingMallTemplateColumnConfig({
+        columnMappings: data.columnMappings,
+        fixedValues: data.fixedValues ?? {},
+      }),
       exportConfig: data.exportConfig ? JSON.stringify(data.exportConfig) : null,
       headerRow: data.headerRow,
       dataStartRow: data.dataStartRow,
@@ -73,12 +80,36 @@ export async function removeShoppingMallTemplate(id: number) {
 }
 
 export async function updateShoppingMallTemplate(data: UpdateTemplateData) {
+  const shouldUpdateColumnConfig = data.columnMappings !== undefined || data.fixedValues !== undefined
+  const [existing] = shouldUpdateColumnConfig
+    ? await db
+        .select({ columnMappings: shoppingMallTemplate.columnMappings })
+        .from(shoppingMallTemplate)
+        .where(eq(shoppingMallTemplate.id, data.id))
+    : []
+
+  const existingConfig = shouldUpdateColumnConfig
+    ? (() => {
+        try {
+          const raw = existing?.columnMappings ? (JSON.parse(existing.columnMappings) as unknown) : {}
+          return parseShoppingMallTemplateColumnConfig(raw)
+        } catch {
+          return { columnMappings: {}, fixedValues: {} }
+        }
+      })()
+    : null
+
   const [updated] = await db
     .update(shoppingMallTemplate)
     .set({
       mallName: data.mallName,
       displayName: data.displayName,
-      columnMappings: data.columnMappings ? JSON.stringify(data.columnMappings) : undefined,
+      columnMappings: shouldUpdateColumnConfig
+        ? stringifyShoppingMallTemplateColumnConfig({
+            columnMappings: data.columnMappings ?? existingConfig?.columnMappings ?? {},
+            fixedValues: data.fixedValues ?? existingConfig?.fixedValues ?? {},
+          })
+        : undefined,
       exportConfig:
         data.exportConfig !== undefined ? (data.exportConfig ? JSON.stringify(data.exportConfig) : null) : undefined,
       headerRow: data.headerRow,
@@ -109,16 +140,21 @@ export async function updateShoppingMallTemplate(data: UpdateTemplateData) {
 
 function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect) {
   let columnMappings: Record<string, string> = {}
-  let exportConfig: ShoppingMallExportConfigV1 | null = null
+  let fixedValues: Record<string, string> = {}
+  let exportConfig: ShoppingMallExportConfig | null = null
 
   try {
-    columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
+    const raw = record.columnMappings ? (JSON.parse(record.columnMappings) as unknown) : {}
+    const parsed = parseShoppingMallTemplateColumnConfig(raw)
+    columnMappings = parsed.columnMappings
+    fixedValues = parsed.fixedValues
   } catch {
     columnMappings = {}
+    fixedValues = {}
   }
 
   try {
-    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfigV1) : null
+    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfig) : null
   } catch {
     exportConfig = null
   }
@@ -128,6 +164,7 @@ function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSel
     mallName: record.mallName,
     displayName: record.displayName,
     columnMappings,
+    fixedValues,
     headerRow: record.headerRow ?? 1,
     dataStartRow: record.dataStartRow ?? 2,
     enabled: record.enabled ?? true,

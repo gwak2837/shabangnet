@@ -9,6 +9,13 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
+const SABANGNET_COLUMNS_REQUIRED_FIRST = [...SABANGNET_COLUMNS].sort((a, b) => {
+  const reqA = a.required ? 1 : 0
+  const reqB = b.required ? 1 : 0
+  if (reqA !== reqB) return reqB - reqA
+  return a.index - b.index
+})
+
 interface AvailableColumn {
   columnIndex: number
   columnLetter: string
@@ -17,6 +24,7 @@ interface AvailableColumn {
 
 interface ColumnMappingEditorProps {
   availableColumns: AvailableColumn[]
+  fixedValues?: Record<string, string>
   missingRequiredLabels?: string
   onChange: (next: Record<string, string>) => void
   previewRows: string[][]
@@ -39,6 +47,7 @@ type RowKey = `col:${number}` | `missing:${string}`
 
 export function ColumnMappingEditor({
   availableColumns,
+  fixedValues,
   missingRequiredLabels,
   previewRows,
   value,
@@ -134,6 +143,16 @@ export function ColumnMappingEditor({
   const duplicateFieldLabels = useMemo(() => {
     return duplicateFieldKeys.map((fieldKey) => SABANGNET_COLUMN_MAP.get(fieldKey)?.label ?? fieldKey).join(', ')
   }, [duplicateFieldKeys])
+
+  const fixedFieldKeySet = useMemo(() => {
+    const out = new Set<string>()
+    for (const [fieldKey, rawValue] of Object.entries(fixedValues ?? {})) {
+      if (rawValue.trim().length > 0) {
+        out.add(fieldKey)
+      }
+    }
+    return out
+  }, [fixedValues])
 
   const hiddenCandidates = useMemo(() => {
     if (hiddenRows.size === 0) return []
@@ -236,8 +255,8 @@ export function ColumnMappingEditor({
         ) : (
           <Table className="table-fixed">
             <colgroup>
-              <col className="w-[280px]" />
-              <col className="w-[320px]" />
+              <col className="w-[220px]" />
+              <col className="w-[220px]" />
               <col className="w-[220px]" />
               <col className="w-[80px]" />
             </colgroup>
@@ -258,12 +277,12 @@ export function ColumnMappingEditor({
 
                 return (
                   <TableRow className="hover:bg-transparent" key={row.key}>
-                    <TableCell className="align-top">
+                    <TableCell>
                       <div className="flex flex-col gap-1">
                         <p className="text-sm font-medium text-foreground">
                           {row.columnLetter ? (
                             <>
-                              <span className="text-muted-foreground">{row.columnLetter}</span>
+                              <span className="text-muted-foreground font-mono">{row.columnLetter}</span>
                               <span className="mx-1 text-muted-foreground">·</span>
                             </>
                           ) : null}
@@ -273,7 +292,7 @@ export function ColumnMappingEditor({
                       </div>
                     </TableCell>
 
-                    <TableCell className="align-top">
+                    <TableCell>
                       <div className="space-y-1">
                         {row.previewValues.map((v, idx) => (
                           <p className="line-clamp-1 text-xs text-muted-foreground" key={idx}>
@@ -283,7 +302,7 @@ export function ColumnMappingEditor({
                       </div>
                     </TableCell>
 
-                    <TableCell className="align-top">
+                    <TableCell>
                       <Select
                         onValueChange={(fieldKey) => {
                           if (!row.headerKey) return
@@ -302,9 +321,13 @@ export function ColumnMappingEditor({
                           <SelectItem value="_none">
                             <span className="text-muted-foreground">연결 안함</span>
                           </SelectItem>
-                          {SABANGNET_COLUMNS.map((field) => {
+                          {SABANGNET_COLUMNS_REQUIRED_FIRST.map((field) => {
                             const usedElsewhere = (headersByField.get(field.key) ?? []).some((h) => h !== row.headerKey)
-                            const disabled = usedElsewhere
+                            const isSelectedHere = row.headerKey
+                              ? (value[row.headerKey] ?? '_none') === field.key
+                              : false
+                            const usedByFixedValue = fixedFieldKeySet.has(field.key) && !isSelectedHere
+                            const disabled = usedElsewhere || usedByFixedValue
                             return (
                               <SelectItem disabled={disabled} key={field.key} value={field.key}>
                                 {field.label}
@@ -319,7 +342,7 @@ export function ColumnMappingEditor({
                       )}
                     </TableCell>
 
-                    <TableCell className="align-top text-center">
+                    <TableCell className="text-center">
                       <Button onClick={() => hideRow(row)} size="icon-sm" title="행 삭제" type="button" variant="ghost">
                         <Trash2 />
                       </Button>

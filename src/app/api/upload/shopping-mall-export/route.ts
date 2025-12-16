@@ -13,7 +13,6 @@ const bodySchema = z.object({
 })
 
 const exportConfigSchema = z.object({
-  version: z.literal(1),
   copyPrefixRows: z.boolean().optional(),
   columns: z
     .array(
@@ -29,7 +28,6 @@ const exportConfigSchema = z.object({
 })
 
 const sourceSnapshotSchema = z.object({
-  version: z.literal(1),
   sheetName: z.string(),
   totalRows: z.number().int(),
   columnCount: z.number().int().min(1),

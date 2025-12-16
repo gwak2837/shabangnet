@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSpreadsheet, Loader2, Plus, Store, Upload } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
@@ -32,13 +32,14 @@ import { useShoppingMallTemplates } from '@/hooks/use-settings'
 import {
   type AnalyzeResult,
   analyzeShoppingMallFile,
-  type ShoppingMallExportConfigV1,
+  type ShoppingMallExportConfig,
   type ShoppingMallTemplate as ShoppingMallTemplateType,
 } from '@/services/shopping-mall-templates'
 
 import { addShoppingMallTemplate, removeShoppingMallTemplate, updateShoppingMallTemplate } from './action'
 import { ColumnMappingEditor } from './column-mapping-editor'
 import { ExportMappingEditor } from './export-mapping-editor'
+import { FixedValuesEditor } from './fixed-values-editor'
 import { TemplateItem } from './template-item'
 
 const REQUIRED_FIELDS = SABANGNET_COLUMNS.filter((col) => col.required).map((col) => col.key)
@@ -51,9 +52,10 @@ const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
   dataStartRow: 2,
   columnMappings: {
     주문번호: 'sabangnetOrderNumber',
-    수취인명: 'receiverName',
-    연락처: 'receiverPhone',
+    수취인명: 'recipientName',
+    연락처: 'recipientPhone',
   },
+  fixedValues: {},
   exportConfig: null,
   enabled: true,
   createdAt: '',
@@ -63,9 +65,10 @@ const SKELETON_TEMPLATE: ShoppingMallTemplateType = {
 interface ModalState {
   analyzeResult: AnalyzeResult | null
   columnMappings: Record<string, string>
-  exportConfig: ShoppingMallExportConfigV1 | null
+  exportConfig: ShoppingMallExportConfig | null
   file: File | null
   fileName: string | null
+  fixedValues: Record<string, string>
   pendingSave: PendingSave | null
   templateId: number
 }
@@ -123,6 +126,7 @@ export function ShoppingMallTemplate() {
     setModalState({
       templateId: 0,
       columnMappings: {},
+      fixedValues: {},
       exportConfig: null,
       analyzeResult: null,
       file: null,
@@ -135,6 +139,7 @@ export function ShoppingMallTemplate() {
     setModalState({
       templateId: template.id,
       columnMappings: { ...template.columnMappings },
+      fixedValues: { ...(template.fixedValues ?? {}) },
       exportConfig: template.exportConfig ?? null,
       analyzeResult: {
         detectedHeaderRow: template.headerRow,
@@ -188,27 +193,15 @@ export function ShoppingMallTemplate() {
     }
   }
 
-  function handleMappingChange(header: string, value: string) {
-    if (!modalState) {
-      return
-    }
-
-    setModalState((prev) => {
-      if (!prev) return null
-      const newMappings = { ...prev.columnMappings }
-      if (value === '_none') {
-        delete newMappings[header]
-      } else {
-        newMappings[header] = value
-      }
-      return { ...prev, columnMappings: newMappings }
-    })
-  }
-
   function getMissingRequiredFields(): string[] {
     if (!modalState) return []
-    const mapped = new Set(Object.values(modalState.columnMappings))
-    return REQUIRED_FIELDS.filter((field) => !mapped.has(field))
+    const satisfied = new Set(Object.values(modalState.columnMappings))
+    for (const [fieldKey, rawValue] of Object.entries(modalState.fixedValues)) {
+      if (rawValue.trim().length > 0) {
+        satisfied.add(fieldKey)
+      }
+    }
+    return REQUIRED_FIELDS.filter((field) => !satisfied.has(field))
   }
 
   function getDuplicateMappedFields(): string[] {
@@ -216,6 +209,11 @@ export function ShoppingMallTemplate() {
     const counts = new Map<string, number>()
     for (const fieldKey of Object.values(modalState.columnMappings)) {
       counts.set(fieldKey, (counts.get(fieldKey) ?? 0) + 1)
+    }
+    for (const [fieldKey, rawValue] of Object.entries(modalState.fixedValues)) {
+      if (rawValue.trim().length > 0) {
+        counts.set(fieldKey, (counts.get(fieldKey) ?? 0) + 1)
+      }
     }
     return [...counts.entries()].filter(([, count]) => count > 1).map(([fieldKey]) => fieldKey)
   }
@@ -257,6 +255,7 @@ export function ShoppingMallTemplate() {
       headerRow,
       dataStartRow,
       columnMappings: modalState.columnMappings,
+      fixedValues: modalState.fixedValues,
       exportConfig: modalState.exportConfig ?? null,
     }
 
@@ -290,6 +289,7 @@ export function ShoppingMallTemplate() {
       headerRow,
       dataStartRow,
       columnMappings: modalState.columnMappings,
+      fixedValues: modalState.fixedValues,
       exportConfig: modalState.exportConfig ?? null,
     }
 
@@ -314,6 +314,10 @@ export function ShoppingMallTemplate() {
     .join(', ')
 
   const rowInputKey = modalState?.analyzeResult?.detectedHeaderRow ?? 0
+  const mappedFieldKeys = useMemo(
+    () => new Set(Object.values(modalState?.columnMappings ?? {})),
+    [modalState?.columnMappings],
+  )
 
   return (
     <>
@@ -503,9 +507,22 @@ export function ShoppingMallTemplate() {
                     ) : modalState.analyzeResult ? (
                       <ColumnMappingEditor
                         availableColumns={modalState.analyzeResult.columns}
+                        fixedValues={modalState.fixedValues}
                         key={`mapping:${modalState.templateId}:${modalState.file?.lastModified ?? 'no-file'}:${modalState.file?.size ?? 0}:${modalState.analyzeResult.detectedHeaderRow}`}
                         missingRequiredLabels={missingFields.length > 0 ? missingLabels : undefined}
-                        onChange={(next) => setModalState((prev) => (prev ? { ...prev, columnMappings: next } : null))}
+                        onChange={(next) =>
+                          setModalState((prev) => {
+                            if (!prev) return null
+                            const fixedValues = { ...prev.fixedValues }
+                            const usedFields = new Set(Object.values(next))
+                            for (const fieldKey of Object.keys(fixedValues)) {
+                              if (usedFields.has(fieldKey)) {
+                                delete fixedValues[fieldKey]
+                              }
+                            }
+                            return { ...prev, columnMappings: next, fixedValues }
+                          })
+                        }
                         previewRows={modalState.analyzeResult.previewRows}
                         value={modalState.columnMappings}
                       />
@@ -518,6 +535,40 @@ export function ShoppingMallTemplate() {
                     )}
                   </div>
                 )}
+
+                <FixedValuesEditor
+                  mappedFieldKeys={mappedFieldKeys}
+                  onRemove={(fieldKey) =>
+                    setModalState((prev) => {
+                      if (!prev) return null
+                      const nextFixed = { ...prev.fixedValues }
+                      delete nextFixed[fieldKey]
+                      return { ...prev, fixedValues: nextFixed }
+                    })
+                  }
+                  onUpsert={(fieldKey, rawValue) =>
+                    setModalState((prev) => {
+                      if (!prev) return null
+                      const trimmed = rawValue.trim()
+                      const nextFixed = { ...prev.fixedValues }
+                      if (trimmed.length === 0) {
+                        delete nextFixed[fieldKey]
+                      } else {
+                        nextFixed[fieldKey] = trimmed
+                      }
+
+                      const nextMappings = { ...prev.columnMappings }
+                      for (const [headerKey, mappedField] of Object.entries(nextMappings)) {
+                        if (mappedField === fieldKey) {
+                          delete nextMappings[headerKey]
+                        }
+                      }
+
+                      return { ...prev, fixedValues: nextFixed, columnMappings: nextMappings }
+                    })
+                  }
+                  value={modalState.fixedValues}
+                />
 
                 <ExportMappingEditor
                   availableColumns={modalState.analyzeResult?.columns ?? []}

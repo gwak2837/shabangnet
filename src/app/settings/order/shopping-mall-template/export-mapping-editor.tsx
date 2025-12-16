@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
-import type { ShoppingMallExportConfigV1 } from '@/services/shopping-mall-templates'
+import type { ShoppingMallExportConfig } from '@/services/shopping-mall-templates'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,17 +20,17 @@ interface AvailableColumn {
 
 interface ExportMappingEditorProps {
   availableColumns: AvailableColumn[]
-  onChange: (next: ShoppingMallExportConfigV1 | null) => void
-  value: ShoppingMallExportConfigV1 | null
+  onChange: (next: ShoppingMallExportConfig | null) => void
+  value: ShoppingMallExportConfig | null
 }
 
 interface ExportMappingRowProps {
-  column: NonNullable<ShoppingMallExportConfigV1>['columns'][number] & { id: string }
+  column: NonNullable<ShoppingMallExportConfig>['columns'][number] & { id: string }
   columnMap: Map<number, AvailableColumn>
   effectiveAvailableColumns: AvailableColumn[]
   index: number
   total: number
-  updateExportConfig: (updater: (prev: ShoppingMallExportConfigV1) => ShoppingMallExportConfigV1) => void
+  updateExportConfig: (updater: (prev: ShoppingMallExportConfig) => ShoppingMallExportConfig) => void
 }
 
 export function ExportMappingEditor({ availableColumns, value, onChange }: ExportMappingEditorProps) {
@@ -47,7 +47,7 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
     [effectiveAvailableColumns],
   )
 
-  function updateExportConfig(updater: (prev: ShoppingMallExportConfigV1) => ShoppingMallExportConfigV1) {
+  function updateExportConfig(updater: (prev: ShoppingMallExportConfig) => ShoppingMallExportConfig) {
     if (exportConfig) {
       onChange(updater(exportConfig))
     }
@@ -64,7 +64,7 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
       return
     }
 
-    const next: ShoppingMallExportConfigV1 = {
+    const next: ShoppingMallExportConfig = {
       ...exportConfig,
       columns: exportConfig.columns.map((col) => ({
         ...col,
@@ -156,7 +156,7 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
   )
 }
 
-function createFallbackColumnsFromConfig(exportConfig: ShoppingMallExportConfigV1 | null): AvailableColumn[] {
+function createFallbackColumnsFromConfig(exportConfig: ShoppingMallExportConfig | null): AvailableColumn[] {
   if (!exportConfig) return []
 
   const seen = new Set<number>()
@@ -393,7 +393,7 @@ function ExportMappingRow({
   )
 }
 
-function getDefaultHeader(col: ShoppingMallExportConfigV1['columns'][number], columnMap: Map<number, AvailableColumn>) {
+function getDefaultHeader(col: ShoppingMallExportConfig['columns'][number], columnMap: Map<number, AvailableColumn>) {
   if (col.source.type === 'input') {
     return columnMap.get(col.source.columnIndex)?.header ?? ''
   }

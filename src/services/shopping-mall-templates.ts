@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs'
 
 import { db } from '@/db/client'
 import { shoppingMallTemplate } from '@/db/schema/settings'
+import { parseShoppingMallTemplateColumnConfig } from '@/services/shopping-mall-template-config'
 
 export interface AnalyzeInput {
   file: File
@@ -24,7 +25,8 @@ export interface CreateTemplateData {
   columnMappings: Record<string, string>
   dataStartRow: number
   displayName: string
-  exportConfig?: ShoppingMallExportConfigV1 | null
+  exportConfig?: ShoppingMallExportConfig | null
+  fixedValues?: Record<string, string>
   headerRow: number
   mallName: string
 }
@@ -37,10 +39,9 @@ export interface ShoppingMallExportColumn {
 
 export type ShoppingMallExportColumnSource = { columnIndex: number; type: 'input' } | { type: 'const'; value: string }
 
-export interface ShoppingMallExportConfigV1 {
+export interface ShoppingMallExportConfig {
   columns: ShoppingMallExportColumn[]
   copyPrefixRows?: boolean
-  version: 1
 }
 
 export interface ShoppingMallTemplate {
@@ -49,7 +50,8 @@ export interface ShoppingMallTemplate {
   dataStartRow: number
   displayName: string
   enabled: boolean
-  exportConfig: ShoppingMallExportConfigV1 | null
+  exportConfig: ShoppingMallExportConfig | null
+  fixedValues: Record<string, string>
   headerRow: number
   id: number
   mallName: string
@@ -61,7 +63,8 @@ export interface UpdateTemplateData {
   dataStartRow?: number
   displayName?: string
   enabled?: boolean
-  exportConfig?: ShoppingMallExportConfigV1 | null
+  exportConfig?: ShoppingMallExportConfig | null
+  fixedValues?: Record<string, string>
   headerRow?: number
   mallName?: string
 }
@@ -210,16 +213,21 @@ function indexToColumnLetter(index: number): string {
 // Helper function to map DB record to ShoppingMallTemplate
 function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSelect): ShoppingMallTemplate {
   let columnMappings: Record<string, string> = {}
-  let exportConfig: ShoppingMallExportConfigV1 | null = null
+  let fixedValues: Record<string, string> = {}
+  let exportConfig: ShoppingMallExportConfig | null = null
 
   try {
-    columnMappings = record.columnMappings ? JSON.parse(record.columnMappings) : {}
+    const raw = record.columnMappings ? (JSON.parse(record.columnMappings) as unknown) : {}
+    const parsed = parseShoppingMallTemplateColumnConfig(raw)
+    columnMappings = parsed.columnMappings
+    fixedValues = parsed.fixedValues
   } catch {
     columnMappings = {}
+    fixedValues = {}
   }
 
   try {
-    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfigV1) : null
+    exportConfig = record.exportConfig ? (JSON.parse(record.exportConfig) as ShoppingMallExportConfig) : null
   } catch {
     exportConfig = null
   }
@@ -229,6 +237,7 @@ function mapToShoppingMallTemplate(record: typeof shoppingMallTemplate.$inferSel
     mallName: record.mallName,
     displayName: record.displayName,
     columnMappings,
+    fixedValues,
     headerRow: record.headerRow || 1,
     dataStartRow: record.dataStartRow || 2,
     enabled: record.enabled ?? true,
