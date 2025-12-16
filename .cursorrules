@@ -121,6 +121,37 @@ function process(data: unknown): string {
 }
 ```
 
+### React 19 (React Compiler) – Hooks & Performance
+
+- **Avoid `useCallback` by default.** Only use it when you need a stable function identity for dependency management (e.g. `useEffect` deps) or when an API _requires_ referential stability.
+- **For render performance, prefer component boundaries over hook memoization.** If a subtree is expensive, split it into a smaller component and optimize that component instead of sprinkling `useCallback`/`useMemo` in the parent.
+- **Avoid `React.memo` by default.** Prefer splitting components (boundaries) first; use `React.memo` only for measured bottlenecks or when wrapping non-compiled/3rd-party components where it materially reduces re-renders.
+
+```tsx
+// ❌ Bad - adding useCallback just "for performance"
+const onClick = useCallback(() => {
+  doSomething(value)
+}, [value])
+
+return <BigList onItemClick={onClick} />
+
+// ✅ Good - split the component so only the expensive part re-renders when needed
+return <BigListContainer value={value} />
+```
+
+### Drizzle ORM – Query Style
+
+- **Prefer `db.select().from(...).where(...)`** over `db.query.*.findMany()` for clarity and explicit query shape.
+- Use `findMany` only when it materially simplifies relation-heavy queries; otherwise keep queries in `select/from/where` form.
+
+```ts
+// ✅ Preferred
+const rows = await db.select().from(orderEmailLog).where(eq(orderEmailLog.status, 'success'))
+
+// ⚠️ Avoid by default (use when relations ergonomics are worth it)
+// const rows = await db.query.orderEmailLog.findMany({ where: ... })
+```
+
 ### Time Calculations
 
 - **Use `ms()` or `sec()` functions for time calculations.** Never use magic numbers for time values.

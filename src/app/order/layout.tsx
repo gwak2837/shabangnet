@@ -30,7 +30,7 @@ const orderTabs = [
     variant: 'violet',
   },
   {
-    href: '/order/log',
+    href: '/order/history',
     label: '발송 기록',
     icon: FileText,
     description: '이메일 발송 이력을 확인해요',

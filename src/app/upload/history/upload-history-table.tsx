@@ -241,7 +241,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
               <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 크기
               </div>
-              <div className="w-12 shrink-0 px-2 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+              <div className="w-20 shrink-0 px-2 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
                 다운로드
               </div>
               <SortableHeader
@@ -382,7 +382,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       <div className="w-20 shrink-0 px-3 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>
 
       {/* Download (Shopping Mall only) */}
-      <div className="w-12 shrink-0 px-2 text-center">
+      <div className="w-20 shrink-0 px-2 text-center">
         {item.fileType === 'shopping_mall' ? (
           <Button
             aria-label="엑셀 다운로드"

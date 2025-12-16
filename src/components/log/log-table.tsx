@@ -13,11 +13,10 @@ import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface LogTableProps {
   logs: SendLog[]
-  onDownloadExcel?: (log: SendLog) => void
   onViewDetail: (log: SendLog) => void
 }
 
-export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps) {
+export function LogTable({ logs, onViewDetail }: LogTableProps) {
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0 overflow-x-auto">
@@ -76,17 +75,19 @@ export function LogTable({ logs, onViewDetail, onDownloadExcel }: LogTableProps)
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    {onDownloadExcel && (
+                    {log.hasAttachment ? (
                       <Button
+                        asChild
                         className="h-8 w-8 text-slate-400 hover:text-emerald-600"
-                        onClick={() => onDownloadExcel(log)}
                         size="icon"
                         title="엑셀 다운로드"
                         variant="ghost"
                       >
-                        <FileSpreadsheet className="h-4 w-4" />
+                        <a href={`/api/orders/logs/${log.id}/download`}>
+                          <FileSpreadsheet className="h-4 w-4" />
+                        </a>
                       </Button>
-                    )}
+                    ) : null}
                     <Button
                       className="h-8 w-8 text-slate-400 hover:text-slate-600"
                       onClick={() => onViewDetail(log)}

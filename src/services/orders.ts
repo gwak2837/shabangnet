@@ -83,6 +83,14 @@ export async function checkDuplicate(
   const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000)
 
   const recentLogs = await db.query.orderEmailLog.findMany({
+    columns: {
+      id: true,
+      manufacturerName: true,
+      orderCount: true,
+      recipientAddresses: true,
+      sentAt: true,
+      totalAmount: true,
+    },
     where: (logs, { and, eq, gte }) =>
       and(eq(logs.manufacturerId, manufacturerId), eq(logs.status, 'success'), gte(logs.sentAt, periodStart)),
   })

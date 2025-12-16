@@ -52,35 +52,6 @@ export function SendLogsView() {
     setIsDetailOpen(true)
   }
 
-  const handleDownloadExcel = (log: SendLog) => {
-    // CSV 형식으로 데이터 생성
-    const headers = ['사방넷주문번호', '상품명', '옵션', '수량', '금액', '고객명', '배송주소']
-    const rows = log.orders.map((order) => [
-      order.sabangnetOrderNumber,
-      order.productName,
-      order.optionName,
-      order.quantity.toString(),
-      order.price.toLocaleString() + '원',
-      order.customerName,
-      order.address,
-    ])
-
-    const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))].join('\n')
-
-    // BOM 추가하여 한글 깨짐 방지
-    const bom = '\uFEFF'
-    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${log.manufacturerName}_${new Date(log.sentAt).toISOString().split('T')[0]}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
   // Calculate stats
   const stats = useMemo(() => {
     const totalLogs = logs.length
@@ -154,7 +125,7 @@ export function SendLogsView() {
       </div>
 
       {/* Log Table */}
-      <LogTable logs={filteredLogs} onDownloadExcel={handleDownloadExcel} onViewDetail={handleViewDetail} />
+      <LogTable logs={filteredLogs} onViewDetail={handleViewDetail} />
 
       {/* Detail Modal */}
       <LogDetailModal log={selectedLog} onOpenChange={setIsDetailOpen} open={isDetailOpen} />

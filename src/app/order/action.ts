@@ -162,6 +162,8 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
           email: toEmail,
           subject,
           fileName: excelResult.fileName,
+          attachmentFile: excelResult.buffer,
+          attachmentFileSize: excelResult.buffer.length,
           orderCount,
           totalAmount,
           status: 'pending',

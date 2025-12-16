@@ -17,6 +17,7 @@ export interface SendLog {
   email: string
   errorMessage?: string
   fileName: string
+  hasAttachment: boolean
   id: number
   manufacturerId: number | null
   manufacturerName: string
@@ -42,14 +43,69 @@ export interface SendLogOrder {
   sabangnetOrderNumber: string
 }
 
+type SendLogRow = Pick<
+  typeof orderEmailLog.$inferSelect,
+  | 'attachmentFileSize'
+  | 'duplicateReason'
+  | 'email'
+  | 'errorMessage'
+  | 'fileName'
+  | 'id'
+  | 'manufacturerId'
+  | 'manufacturerName'
+  | 'orderCount'
+  | 'recipientAddresses'
+  | 'sentAt'
+  | 'sentBy'
+  | 'status'
+  | 'subject'
+  | 'totalAmount'
+>
+
 export async function getAll(): Promise<SendLog[]> {
-  const result = await db.select().from(orderEmailLog).orderBy(desc(orderEmailLog.sentAt))
+  const result = await db
+    .select({
+      id: orderEmailLog.id,
+      manufacturerId: orderEmailLog.manufacturerId,
+      manufacturerName: orderEmailLog.manufacturerName,
+      email: orderEmailLog.email,
+      subject: orderEmailLog.subject,
+      fileName: orderEmailLog.fileName,
+      attachmentFileSize: orderEmailLog.attachmentFileSize,
+      orderCount: orderEmailLog.orderCount,
+      totalAmount: orderEmailLog.totalAmount,
+      status: orderEmailLog.status,
+      errorMessage: orderEmailLog.errorMessage,
+      recipientAddresses: orderEmailLog.recipientAddresses,
+      duplicateReason: orderEmailLog.duplicateReason,
+      sentAt: orderEmailLog.sentAt,
+      sentBy: orderEmailLog.sentBy,
+    })
+    .from(orderEmailLog)
+    .orderBy(desc(orderEmailLog.sentAt))
   return result.map(mapToSendLog)
 }
 
 export async function getById(id: number): Promise<SendLog | undefined> {
   const result = await db.query.orderEmailLog.findFirst({
     where: eq(orderEmailLog.id, id),
+    columns: {
+      id: true,
+      manufacturerId: true,
+      manufacturerName: true,
+      email: true,
+      subject: true,
+      fileName: true,
+      attachmentFileSize: true,
+      orderCount: true,
+      totalAmount: true,
+      status: true,
+      errorMessage: true,
+      recipientAddresses: true,
+      duplicateReason: true,
+      sentAt: true,
+      sentBy: true,
+    },
     with: {
       items: true,
     },
@@ -94,7 +150,23 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
   }
 
   const result = await db
-    .select()
+    .select({
+      id: orderEmailLog.id,
+      manufacturerId: orderEmailLog.manufacturerId,
+      manufacturerName: orderEmailLog.manufacturerName,
+      email: orderEmailLog.email,
+      subject: orderEmailLog.subject,
+      fileName: orderEmailLog.fileName,
+      attachmentFileSize: orderEmailLog.attachmentFileSize,
+      orderCount: orderEmailLog.orderCount,
+      totalAmount: orderEmailLog.totalAmount,
+      status: orderEmailLog.status,
+      errorMessage: orderEmailLog.errorMessage,
+      recipientAddresses: orderEmailLog.recipientAddresses,
+      duplicateReason: orderEmailLog.duplicateReason,
+      sentAt: orderEmailLog.sentAt,
+      sentBy: orderEmailLog.sentBy,
+    })
     .from(orderEmailLog)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(orderEmailLog.sentAt))
@@ -102,7 +174,7 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
   return result.map(mapToSendLog)
 }
 
-function mapToSendLog(log: typeof orderEmailLog.$inferSelect): SendLog {
+function mapToSendLog(log: SendLogRow): SendLog {
   return {
     id: log.id,
     manufacturerId: log.manufacturerId ?? null,
@@ -110,6 +182,7 @@ function mapToSendLog(log: typeof orderEmailLog.$inferSelect): SendLog {
     email: log.email,
     subject: log.subject,
     fileName: log.fileName || '',
+    hasAttachment: (log.attachmentFileSize ?? 0) > 0,
     orderCount: log.orderCount || 0,
     totalAmount: log.totalAmount ?? 0,
     status: log.status as SendLog['status'],

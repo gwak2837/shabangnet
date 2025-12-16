@@ -13,6 +13,12 @@ const tsvector = customType<{ data: string }>({
   },
 })
 
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return 'bytea'
+  },
+})
+
 export const upload = pgTable('upload', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
@@ -125,6 +131,8 @@ export const orderEmailLog = pgTable('order_email_log', {
   email: varchar('email', { length: 255 }).notNull(),
   subject: text('subject').notNull(),
   fileName: varchar('file_name', { length: 500 }),
+  attachmentFile: bytea('attachment_file'), // 발송 시점에 생성된 발주서 XLSX(원본) 저장
+  attachmentFileSize: integer('attachment_file_size'), // bytes
   orderCount: integer('order_count').default(0),
   totalAmount: bigint('total_amount', { mode: 'number' }).default(0),
   status: emailStatusEnum('status').default('pending').notNull(),
