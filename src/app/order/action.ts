@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 import { db } from '@/db/client'
@@ -59,17 +59,17 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     const mode: SendOrderMode = input.mode ?? 'send'
     const reason = input.reason?.trim() ?? ''
 
-    const mfr = await db.query.manufacturer.findFirst({
-      where: eq(manufacturer.id, input.manufacturerId),
-      columns: {
-        id: true,
-        name: true,
-        email: true,
-        ccEmail: true,
-        emailSubjectTemplate: true,
-        emailBodyTemplate: true,
-      },
-    })
+    const [mfr] = await db
+      .select({
+        id: manufacturer.id,
+        name: manufacturer.name,
+        email: manufacturer.email,
+        ccEmail: manufacturer.ccEmail,
+        emailSubjectTemplate: manufacturer.emailSubjectTemplate,
+        emailBodyTemplate: manufacturer.emailBodyTemplate,
+      })
+      .from(manufacturer)
+      .where(eq(manufacturer.id, input.manufacturerId))
 
     if (!mfr) {
       return { success: false, error: '제조사를 찾을 수 없어요.' }
@@ -85,10 +85,16 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       }
     }
 
-    const ordersForBatch = await db.query.order.findMany({
-      where: (o, { and: andOp, eq: eqOp, inArray: inArrayOp }) =>
-        andOp(eqOp(o.manufacturerId, input.manufacturerId), inArrayOp(o.id, input.orderIds), isNull(o.excludedReason)),
-    })
+    const ordersForBatch = await db
+      .select()
+      .from(order)
+      .where(
+        and(
+          eq(order.manufacturerId, input.manufacturerId),
+          inArray(order.id, input.orderIds),
+          isNull(order.excludedReason),
+        ),
+      )
 
     if (ordersForBatch.length === 0) {
       return { success: false, error: '발송할 주문이 없어요.' }
@@ -282,7 +288,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       return { success: false, error: '이메일 발송에 실패했어요.', logId: emailLogId }
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했어요.'
     return { success: false, error: errorMessage }
   }
 }

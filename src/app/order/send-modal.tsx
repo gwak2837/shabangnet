@@ -5,7 +5,6 @@ import {
   Calendar,
   CheckCircle2,
   ChevronDown,
-  ChevronUp,
   FileSpreadsheet,
   Loader2,
   Mail,
@@ -14,6 +13,7 @@ import {
   Send,
   User,
 } from 'lucide-react'
+import ms from 'ms'
 import { useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -55,7 +55,6 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
   const [isSent, setIsSent] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [duplicateReason, setDuplicateReason] = useState('')
-  const [showOrderDetails, setShowOrderDetails] = useState(false)
   const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResult | null>(null)
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
   const [periodDays, setPeriodDays] = useState(10)
@@ -70,6 +69,9 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
     async function checkForDuplicates() {
       setIsCheckingDuplicate(true)
       try {
+        const currentBatch = batch
+        if (!currentBatch) return
+
         const settings = await getDuplicateCheckSettings()
         if (!settings.enabled) {
           setDuplicateCheck(null)
@@ -77,9 +79,11 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
         }
         setPeriodDays(settings.periodDays)
         const ordersToCheck =
-          batch!.status === 'sent' ? batch!.orders : batch!.orders.filter((o) => o.status !== 'completed')
+          currentBatch.status === 'sent'
+            ? currentBatch.orders
+            : currentBatch.orders.filter((o) => o.status !== 'completed')
         const recipientAddresses = ordersToCheck.map((order) => order.address)
-        const result = await checkDuplicate(batch!.manufacturerId, recipientAddresses, settings.periodDays)
+        const result = await checkDuplicate(currentBatch.manufacturerId, recipientAddresses, settings.periodDays)
         setDuplicateCheck(result)
       } catch {
         setDuplicateCheck(null)
@@ -116,15 +120,17 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
   }
 
   async function handleSend() {
-    if (!canSend || !batch) return
+    if (!canSend) return
+    const currentBatch = batch
+    if (!currentBatch) return
 
     setIsSending(true)
     setSendError(null)
 
     try {
       const result = await sendOrderBatch({
-        manufacturerId: batch.manufacturerId,
-        orderIds: batch.orders.map((o) => o.id),
+        manufacturerId: currentBatch.manufacturerId,
+        orderIds: currentBatch.orders.map((o) => o.id),
         mode: isResend ? 'resend' : 'send',
         reason: needsReason ? duplicateReason : undefined,
       })
@@ -138,7 +144,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
           setDuplicateReason('')
           setSendError(null)
           handleOpenChange(false)
-        }, 2000)
+        }, ms('2s'))
       } else {
         setSendError(result.error || '이메일 발송에 실패했어요.')
       }
@@ -161,7 +167,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
             <p className="mt-2 text-center text-sm text-slate-500">
               {batch.manufacturerName} 발주서가
               <br />
-              성공적으로 발송되었습니다.
+              성공적으로 발송됐어요.
             </p>
           </div>
         </DialogContent>
@@ -237,18 +243,13 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
             </div>
 
             {/* Order Details Toggle */}
-            <button
-              className="mt-3 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-              onClick={() => setShowOrderDetails(!showOrderDetails)}
-              type="button"
-            >
-              <Package className="h-4 w-4" />
-              주문 상세 {showOrderDetails ? '접기' : '보기'}
-              {showOrderDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-
-            {/* Order Details List */}
-            {showOrderDetails && (
+            <details className="group mt-3">
+              <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-blue-600 hover:text-blue-700 [&::-webkit-details-marker]:hidden">
+                <Package className="h-4 w-4" />
+                주문 상세 <span className="group-open:hidden">보기</span>
+                <span className="hidden group-open:inline">접기</span>
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+              </summary>
               <div className="mt-3 max-h-48 overflow-y-auto rounded-md border border-slate-100 bg-slate-50">
                 <div className="divide-y divide-slate-100">
                   {batch.orders.map((order) => (
@@ -271,7 +272,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
                   ))}
                 </div>
               </div>
-            )}
+            </details>
           </div>
 
           {/* Duplicate Warning */}
@@ -383,13 +384,18 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
           </Button>
           <Button
             className="gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-            disabled={isSending || !canSend}
+            disabled={isSending || isCheckingDuplicate || !canSend}
             onClick={handleSend}
           >
             {isSending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 발송 중...
+              </>
+            ) : isCheckingDuplicate ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                중복 체크 중...
               </>
             ) : needsReason ? (
               <>

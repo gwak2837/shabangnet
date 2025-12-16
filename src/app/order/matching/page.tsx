@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Building2, Loader2, Package, Settings2 } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
@@ -46,9 +46,7 @@ export default function OrderMatchingPage() {
 
   const [selectionByProductCode, setSelectionByProductCode] = useState<Record<string, string>>({})
 
-  const manufacturerOptions = useMemo(() => {
-    return manufacturers.map((m) => ({ id: m.id, name: m.name }))
-  }, [manufacturers])
+  const manufacturerOptions = manufacturers.map((m) => ({ id: m.id, name: m.name }))
 
   const [isSaving, saveLink] = useServerAction(saveProductManufacturerLink, {
     invalidateKeys: [queryKeys.orders.batches, queryKeys.orders.matching, queryKeys.products.all],

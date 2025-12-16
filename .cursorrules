@@ -143,6 +143,8 @@ return <BigListContainer value={value} />
 
 - **Prefer `db.select().from(...).where(...)`** over `db.query.*.findMany()` for clarity and explicit query shape.
 - Use `findMany` only when it materially simplifies relation-heavy queries; otherwise keep queries in `select/from/where` form.
+- **Avoid redundant `.limit(1)`** when filtering by a **unique/PK column** (e.g. `where(eq(table.id, ...))`). It adds noise without changing behavior.
+  - If the filter is **not unique** but you only need one row, using `.limit(1)` is fine.
 
 ```ts
 // ✅ Preferred

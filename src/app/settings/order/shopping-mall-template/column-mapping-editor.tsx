@@ -176,7 +176,7 @@ export function ColumnMappingEditor({
   }
 
   return (
-    <div className="space-y-3">
+    <>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <Label className="text-sm font-medium">컬럼 연결</Label>
@@ -339,7 +339,7 @@ export function ColumnMappingEditor({
           </Table>
         )}
       </div>
-    </div>
+    </>
   )
 }
 

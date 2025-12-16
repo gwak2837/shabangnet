@@ -1,7 +1,7 @@
 'use client'
 
 import { Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 
 import { Badge } from '@/components/ui/badge'
@@ -60,23 +60,20 @@ export function OrderTable({
     }
   }
 
-  const handleSelectBatch = useCallback((manufacturerId: number, checked: boolean) => {
+  function handleSelectBatch(manufacturerId: number, checked: boolean) {
     if (checked) {
       setSelectedBatches((prev) => [...prev, manufacturerId])
     } else {
       setSelectedBatches((prev) => prev.filter((id) => id !== manufacturerId))
     }
-  }, [])
+  }
 
   // Infinite scroll: load more when near the end
-  const handleItemsRendered = useCallback(
-    ({ visibleStopIndex }: { visibleStopIndex: number }) => {
-      if (visibleStopIndex >= batches.length - 5 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage?.()
-      }
-    },
-    [batches.length, hasNextPage, isFetchingNextPage, fetchNextPage],
-  )
+  function handleItemsRendered({ visibleStopIndex }: { visibleStopIndex: number }) {
+    if (visibleStopIndex >= batches.length - 5 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage?.()
+    }
+  }
 
   const itemData: RowData = {
     batches,

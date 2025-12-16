@@ -367,7 +367,7 @@ export function ShoppingMallTemplate() {
       </section>
 
       <Dialog onOpenChange={(open) => !open && closeModal()} open={Boolean(modalState)}>
-        <DialogContent className="flex max-h-[85dvh] flex-col overflow-hidden sm:max-w-2xl">
+        <DialogContent className="flex max-h-[85dvh] p-0 flex-col overflow-hidden sm:max-w-2xl">
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <DialogHeader className="shrink-0 px-6 pb-4 pt-6">
               <DialogTitle className="text-lg font-semibold tracking-tight">
@@ -484,7 +484,7 @@ export function ShoppingMallTemplate() {
 
                 {/* Column Mappings */}
                 {(modalState.analyzeResult || isAnalyzing) && (
-                  <div className="space-y-2">
+                  <section className="space-y-2">
                     {isAnalyzing ? (
                       <div className="rounded-md ring-1 ring-border/50">
                         <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
@@ -521,42 +521,44 @@ export function ShoppingMallTemplate() {
                         </div>
                       </div>
                     )}
-                  </div>
+                  </section>
                 )}
 
-                <FixedValuesEditor
-                  mappedFieldKeys={mappedFieldKeys}
-                  onRemove={(fieldKey) =>
-                    setModalState((prev) => {
-                      if (!prev) return null
-                      const nextFixed = { ...prev.fixedValues }
-                      delete nextFixed[fieldKey]
-                      return { ...prev, fixedValues: nextFixed }
-                    })
-                  }
-                  onUpsert={(fieldKey, rawValue) =>
-                    setModalState((prev) => {
-                      if (!prev) return null
-                      const trimmed = rawValue.trim()
-                      const nextFixed = { ...prev.fixedValues }
-                      if (trimmed.length === 0) {
+                <section className="flex flex-col gap-4">
+                  <FixedValuesEditor
+                    mappedFieldKeys={mappedFieldKeys}
+                    onRemove={(fieldKey) =>
+                      setModalState((prev) => {
+                        if (!prev) return null
+                        const nextFixed = { ...prev.fixedValues }
                         delete nextFixed[fieldKey]
-                      } else {
-                        nextFixed[fieldKey] = trimmed
-                      }
-
-                      const nextMappings = { ...prev.columnMappings }
-                      for (const [headerKey, mappedField] of Object.entries(nextMappings)) {
-                        if (mappedField === fieldKey) {
-                          delete nextMappings[headerKey]
+                        return { ...prev, fixedValues: nextFixed }
+                      })
+                    }
+                    onUpsert={(fieldKey, rawValue) =>
+                      setModalState((prev) => {
+                        if (!prev) return null
+                        const trimmed = rawValue.trim()
+                        const nextFixed = { ...prev.fixedValues }
+                        if (trimmed.length === 0) {
+                          delete nextFixed[fieldKey]
+                        } else {
+                          nextFixed[fieldKey] = trimmed
                         }
-                      }
 
-                      return { ...prev, fixedValues: nextFixed, columnMappings: nextMappings }
-                    })
-                  }
-                  value={modalState.fixedValues}
-                />
+                        const nextMappings = { ...prev.columnMappings }
+                        for (const [headerKey, mappedField] of Object.entries(nextMappings)) {
+                          if (mappedField === fieldKey) {
+                            delete nextMappings[headerKey]
+                          }
+                        }
+
+                        return { ...prev, fixedValues: nextFixed, columnMappings: nextMappings }
+                      })
+                    }
+                    value={modalState.fixedValues}
+                  />
+                </section>
 
                 <ExportMappingEditor
                   availableColumns={modalState.analyzeResult?.columns ?? []}
