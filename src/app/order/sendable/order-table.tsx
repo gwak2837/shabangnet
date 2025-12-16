@@ -34,8 +34,8 @@ interface RowData {
   selectedBatches: number[]
 }
 
-const ROW_HEIGHT = 72
-const CONTAINER_HEIGHT = 600
+const ROW_HEIGHT = 60
+const CONTAINER_HEIGHT = 520
 
 export function OrderTable({
   batches,
@@ -92,7 +92,7 @@ export function OrderTable({
       <CardContent className="p-0 overflow-hidden">
         {/* Bulk Actions */}
         {selectedBatches.length > 0 && (
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
             <span className="text-sm font-medium text-slate-700">{selectedBatches.length}개 선택됨</span>
             <div className="flex items-center gap-2">
               <Button
@@ -126,8 +126,8 @@ export function OrderTable({
         )}
 
         {/* Header */}
-        <div className="flex items-center border-b border-slate-200 bg-slate-50 h-10">
-          <div className="w-12 shrink-0 px-4">
+        <div className="flex items-center border-b border-slate-200 bg-slate-50 h-9">
+          <div className="w-12 shrink-0 px-3">
             <Checkbox
               aria-label="전체 선택"
               checked={isAllSelected}
@@ -135,23 +135,23 @@ export function OrderTable({
               onCheckedChange={handleSelectAll}
             />
           </div>
-          <div className="flex-1 min-w-[200px] px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <div className="flex-1 min-w-[200px] px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
             제조사
           </div>
-          <div className="w-24 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+          <div className="w-24 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
             주문 수
           </div>
-          <div className="w-32 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+          <div className="w-32 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
             총 금액
           </div>
-          <div className="flex-1 min-w-[200px] px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <div className="flex-1 min-w-[200px] px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
             이메일
           </div>
-          <div className="w-24 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">상태</div>
-          <div className="w-40 shrink-0 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <div className="w-24 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">상태</div>
+          <div className="w-40 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
             발송 시간
           </div>
-          <div className="w-12 shrink-0 px-4" />
+          <div className="w-12 shrink-0 px-3" />
         </div>
 
         {/* Virtual List */}
@@ -196,7 +196,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
   return (
     <label className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition" style={style}>
       {/* Checkbox */}
-      <div className="w-12 shrink-0 px-4">
+      <div className="w-12 shrink-0 px-3">
         <Checkbox
           aria-label={`${batch.manufacturerName} 선택`}
           checked={selectedBatches.includes(batch.manufacturerId)}
@@ -205,34 +205,34 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
       </div>
 
       {/* Manufacturer */}
-      <div className="flex-1 min-w-[200px] px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
+      <div className="flex-1 min-w-[200px] px-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-600">
             {batch.manufacturerName.slice(0, 2)}
           </div>
-          <span className="font-medium text-slate-900">{batch.manufacturerName}</span>
+          <span className="text-sm font-medium text-slate-900">{batch.manufacturerName}</span>
         </div>
       </div>
 
       {/* Order Count */}
-      <div className="w-24 shrink-0 px-4 text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</div>
+      <div className="w-24 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</div>
 
       {/* Total Amount */}
-      <div className="w-32 shrink-0 px-4 text-right font-medium text-slate-900 tabular-nums">
+      <div className="w-32 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">
         {formatCurrency(batch.totalAmount)}
       </div>
 
       {/* Email */}
-      <div className="flex-1 min-w-[200px] px-4 truncate">
+      <div className="flex-1 min-w-[200px] px-3 truncate">
         {hasEmail ? (
-          <span className="text-slate-600">{batch.email}</span>
+          <span className="text-sm text-slate-600">{batch.email}</span>
         ) : (
-          <span className="text-amber-700">이메일 미설정</span>
+          <span className="text-sm text-amber-700">이메일 미설정</span>
         )}
       </div>
 
       {/* Status */}
-      <div className="w-24 shrink-0 px-4">
+      <div className="w-24 shrink-0 px-3">
         <Badge className={getStatusColor(batch.status)} variant="secondary">
           {getStatusLabel(batch.status)}
         </Badge>
@@ -240,18 +240,18 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 
       {/* Last Sent At */}
       <div
-        className="w-40 shrink-0 px-4 text-sm text-slate-500"
+        className="w-40 shrink-0 px-3 text-xs text-slate-500"
         title={batch.lastSentAt ? formatDateTime(batch.lastSentAt) : undefined}
       >
         {batch.lastSentAt ? formatRelativeTime(batch.lastSentAt) : '-'}
       </div>
 
       {/* Actions */}
-      <div className="w-12 shrink-0 px-4">
+      <div className="w-12 shrink-0 px-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              className="h-8 w-8 text-slate-400 hover:text-slate-600"
+              className="h-7 w-7 text-slate-400 hover:text-slate-600"
               size="icon"
               title="작업 메뉴"
               variant="ghost"

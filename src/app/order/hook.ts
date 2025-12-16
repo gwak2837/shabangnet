@@ -92,7 +92,7 @@ export function useManufacturerOptions() {
 }
 
 export function useOrderBatches(params: UseOrderBatchesParams = {}) {
-  const { limit = 2, filters } = params
+  const { limit = 20, filters } = params
   const { search, manufacturerId, status, dateFrom, dateTo } = filters ?? {}
 
   return useInfiniteQuery({
