@@ -6,6 +6,8 @@ const SEED_SCRIPTS = [
   'seed-settings.ts',
   // 2. 쇼핑몰 템플릿
   'seed-shopping-mall-templates.ts',
+  // 2-1. 쇼핑몰 다운로드 엑셀 템플릿
+  'seed-shopping-mall-export-config.ts',
   // 3. 제조사 데이터
   'seed-real-manufacturers.ts',
   // 4. 상품-제조사 연결

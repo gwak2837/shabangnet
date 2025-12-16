@@ -205,9 +205,10 @@ const EXPORT_CONFIGS: Record<string, ExportConfigV1> = {
 }
 
 async function seed() {
-  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+  const databaseURL =
+    process.env.SUPABASE_POSTGRES_URL_NON_POOLING ?? process.env.SUPABASE_POSTGRES_URL ?? process.env.DATABASE_URL
   if (!databaseURL) {
-    console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
+    console.error('❌ Database URL is not set (SUPABASE_POSTGRES_URL_NON_POOLING / SUPABASE_POSTGRES_URL / DATABASE_URL)')
     process.exit(1)
   }
 

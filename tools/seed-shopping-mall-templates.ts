@@ -5,12 +5,23 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
 import { shoppingMallTemplate } from '../src/db/schema/settings'
+import { stringifyShoppingMallTemplateColumnConfig } from '../src/services/shopping-mall-template-config'
 
 /**
  * 쇼핑몰 템플릿 시드 데이터
  * columnMappings: { 엑셀컬럼헤더: order테이블필드키 }
  */
-const SHOPPING_MALL_SEED_DATA = [
+interface ShoppingMallSeedTemplate {
+  columnMappings: Record<string, string>
+  dataStartRow: number
+  displayName: string
+  enabled: boolean
+  fixedValues?: Record<string, string>
+  headerRow: number
+  mallName: string
+}
+
+const SHOPPING_MALL_SEED_DATA: ShoppingMallSeedTemplate[] = [
   {
     mallName: 'sk_stoa',
     displayName: 'SK스토아',
@@ -33,6 +44,7 @@ const SHOPPING_MALL_SEED_DATA = [
       하위업체명: 'manufacturerName',
       '결제금액(부가세포함)': 'paymentAmount',
     },
+    fixedValues: { shoppingMall: 'SK스토아' },
     enabled: true,
   },
   {
@@ -60,6 +72,7 @@ const SHOPPING_MALL_SEED_DATA = [
       공급금액: 'cost',
       결제금액: 'paymentAmount',
     },
+    fixedValues: { shoppingMall: '삼성카드몰' },
     enabled: true,
   },
   {
@@ -87,14 +100,18 @@ const SHOPPING_MALL_SEED_DATA = [
       공급금액: 'cost',
       결제금액: 'paymentAmount',
     },
+    fixedValues: { shoppingMall: '삼성복지몰' },
     enabled: true,
   },
 ]
 
 async function seed() {
-  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+  const databaseURL =
+    process.env.SUPABASE_POSTGRES_URL_NON_POOLING ?? process.env.SUPABASE_POSTGRES_URL ?? process.env.DATABASE_URL
   if (!databaseURL) {
-    console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
+    console.error(
+      '❌ Database URL is not set (SUPABASE_POSTGRES_URL_NON_POOLING / SUPABASE_POSTGRES_URL / DATABASE_URL)',
+    )
     process.exit(1)
   }
 
@@ -119,7 +136,10 @@ async function seed() {
           displayName: template.displayName,
           headerRow: template.headerRow,
           dataStartRow: template.dataStartRow,
-          columnMappings: JSON.stringify(template.columnMappings),
+          columnMappings: stringifyShoppingMallTemplateColumnConfig({
+            columnMappings: template.columnMappings,
+            fixedValues: template.fixedValues ?? {},
+          }),
           enabled: template.enabled,
         })),
       )
