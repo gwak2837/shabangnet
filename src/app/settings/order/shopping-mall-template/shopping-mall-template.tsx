@@ -37,8 +37,8 @@ import {
 } from '@/services/shopping-mall-templates'
 
 import { addShoppingMallTemplate, removeShoppingMallTemplate, updateShoppingMallTemplate } from './action'
+import { ColumnMappingEditor } from './column-mapping-editor'
 import { ExportMappingEditor } from './export-mapping-editor'
-import { MappingRow } from './mapping-row'
 import { TemplateItem } from './template-item'
 
 const REQUIRED_FIELDS = SABANGNET_COLUMNS.filter((col) => col.required).map((col) => col.key)
@@ -211,6 +211,15 @@ export function ShoppingMallTemplate() {
     return REQUIRED_FIELDS.filter((field) => !mapped.has(field))
   }
 
+  function getDuplicateMappedFields(): string[] {
+    if (!modalState) return []
+    const counts = new Map<string, number>()
+    for (const fieldKey of Object.values(modalState.columnMappings)) {
+      counts.set(fieldKey, (counts.get(fieldKey) ?? 0) + 1)
+    }
+    return [...counts.entries()].filter(([, count]) => count > 1).map(([fieldKey]) => fieldKey)
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
@@ -223,7 +232,17 @@ export function ShoppingMallTemplate() {
     const displayName = String(data.get('display-name') ?? '').trim()
     const headerRow = parseInt(String(data.get('header-row') ?? ''), 10) || 1
     const dataStartRow = parseInt(String(data.get('data-start-row') ?? ''), 10) || headerRow + 1
+    const duplicateFields = getDuplicateMappedFields()
     const missingFields = getMissingRequiredFields()
+
+    if (duplicateFields.length > 0) {
+      const labels = duplicateFields
+        .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
+        .filter(Boolean)
+        .join(', ')
+      toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
+      return
+    }
 
     if (missingFields.length > 0) {
       setModalState((prev) =>
@@ -254,6 +273,16 @@ export function ShoppingMallTemplate() {
     }
 
     const { mallName, displayName, headerRow, dataStartRow } = modalState.pendingSave
+    const duplicateFields = getDuplicateMappedFields()
+
+    if (duplicateFields.length > 0) {
+      const labels = duplicateFields
+        .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
+        .filter(Boolean)
+        .join(', ')
+      toast.error(labels ? `사방넷 필드가 중복으로 연결됐어요: ${labels}` : '사방넷 필드가 중복으로 연결됐어요')
+      return
+    }
 
     const payload = {
       mallName,
@@ -276,6 +305,8 @@ export function ShoppingMallTemplate() {
   }
 
   const missingFields = getMissingRequiredFields()
+  const duplicateFields = getDuplicateMappedFields()
+  const hasDuplicateFields = duplicateFields.length > 0
 
   const missingLabels = missingFields
     .map((f) => SABANGNET_COLUMNS.find((c) => c.key === f)?.label)
@@ -295,7 +326,7 @@ export function ShoppingMallTemplate() {
               </div>
               <div className="space-y-0.5">
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">쇼핑몰 템플릿</h2>
-                <p className="text-sm text-muted-foreground">쇼핑몰별 엑셀 파일 양식을 관리합니다</p>
+                <p className="text-sm text-muted-foreground">쇼핑몰별 엑셀 파일 양식을 관리해요</p>
               </div>
             </div>
             <button
@@ -336,11 +367,9 @@ export function ShoppingMallTemplate() {
           <div className="rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
             <p className="text-sm leading-relaxed text-muted-foreground">
               <span className="font-medium text-foreground">쇼핑몰 템플릿</span>을 등록하면 해당 쇼핑몰에서 다운로드한
-              주문 파일을 사방넷 양식으로 자동 변환할 수 있습니다.
+              주문 파일을 사방넷 양식으로 자동 변환할 수 있어요.
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              샘플 파일을 업로드하면 컬럼 헤더를 자동으로 분석합니다.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">샘플 파일을 업로드하면 컬럼 헤더를 자동으로 분석해요.</p>
           </div>
         </div>
       </section>
@@ -353,7 +382,7 @@ export function ShoppingMallTemplate() {
                 {isNewTemplate ? '새 쇼핑몰 템플릿' : '템플릿 편집'}
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                쇼핑몰 정보와 컬럼 연결을 설정합니다
+                쇼핑몰 정보와 컬럼 연결을 설정해요
               </DialogDescription>
             </DialogHeader>
 
@@ -418,7 +447,7 @@ export function ShoppingMallTemplate() {
                       <>
                         <Upload className="h-8 w-8 text-muted-foreground" />
                         <p className="mt-2 text-sm text-foreground">샘플 엑셀 파일을 업로드하세요</p>
-                        <p className="text-xs text-muted-foreground">헤더를 자동으로 분석합니다</p>
+                        <p className="text-xs text-muted-foreground">헤더를 자동으로 분석해요</p>
                       </>
                     )}
                   </label>
@@ -464,39 +493,29 @@ export function ShoppingMallTemplate() {
                 {/* Column Mappings */}
                 {(modalState.analyzeResult || isAnalyzing) && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">컬럼 연결</Label>
-                      {!isAnalyzing && missingFields.length > 0 && (
-                        <span className="text-xs text-amber-500">필수 필드 미연결: {missingLabels}</span>
-                      )}
-                    </div>
-                    <div className="rounded-md ring-1 ring-border/50">
-                      {isAnalyzing ? (
+                    {isAnalyzing ? (
+                      <div className="rounded-md ring-1 ring-border/50">
                         <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
                           <Loader2 className="h-5 w-5 animate-spin" />
-                          <span>컬럼 분석 중...</span>
+                          <span>컬럼을 분석하고 있어요...</span>
                         </div>
-                      ) : modalState.analyzeResult && modalState.analyzeResult.headers.length > 0 ? (
-                        <div className="divide-y divide-border/50">
-                          <div className="flex items-center gap-4 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground">
-                            <span className="flex-1">쇼핑몰 양식 컬럼</span>
-                            <span className="w-48">사방넷 양식 컬럼</span>
-                          </div>
-                          {modalState.analyzeResult.headers.map((header) => (
-                            <MappingRow
-                              header={header}
-                              key={header}
-                              onChange={handleMappingChange}
-                              value={modalState.columnMappings[header] || '_none'}
-                            />
-                          ))}
-                        </div>
-                      ) : (
+                      </div>
+                    ) : modalState.analyzeResult ? (
+                      <ColumnMappingEditor
+                        availableColumns={modalState.analyzeResult.columns}
+                        key={`mapping:${modalState.templateId}:${modalState.file?.lastModified ?? 'no-file'}:${modalState.file?.size ?? 0}:${modalState.analyzeResult.detectedHeaderRow}`}
+                        missingRequiredLabels={missingFields.length > 0 ? missingLabels : undefined}
+                        onChange={(next) => setModalState((prev) => (prev ? { ...prev, columnMappings: next } : null))}
+                        previewRows={modalState.analyzeResult.previewRows}
+                        value={modalState.columnMappings}
+                      />
+                    ) : (
+                      <div className="rounded-md ring-1 ring-border/50">
                         <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-                          컬럼이 없습니다
+                          컬럼이 없어요
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -513,7 +532,11 @@ export function ShoppingMallTemplate() {
                 <Button className="flex-1" onClick={closeModal} type="button" variant="outline">
                   취소
                 </Button>
-                <Button aria-disabled={isSaving} className="flex-1 aria-disabled:opacity-50" type="submit">
+                <Button
+                  aria-disabled={isSaving || hasDuplicateFields}
+                  className="flex-1 aria-disabled:opacity-50"
+                  type="submit"
+                >
                   {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   저장
                 </Button>
@@ -528,9 +551,9 @@ export function ShoppingMallTemplate() {
           <AlertDialogHeader>
             <AlertDialogTitle>필수 필드 미연결</AlertDialogTitle>
             <AlertDialogDescription>
-              필수 필드가 연결되지 않았습니다: {missingLabels}
+              필수 필드가 연결되지 않았어요: {missingLabels}
               <br />
-              그래도 저장하시겠습니까?
+              그래도 저장할까요?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

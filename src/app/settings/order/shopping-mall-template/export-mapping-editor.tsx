@@ -90,9 +90,7 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
     <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-foreground">다운로드 엑셀 템플릿</p>
-        <p className="text-xs text-muted-foreground">
-          업로드된 원본 파일을 다운로드용 엑셀 형식으로 변환합니다. (중복 포함, 파싱 오류 행 제외)
-        </p>
+        <p className="text-xs text-muted-foreground">업로드된 원본 파일을 다운로드용 엑셀 형식으로 변환해요</p>
       </div>
 
       {exportConfig && (
@@ -122,9 +120,9 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
               <Table className="table-fixed">
                 <colgroup>
                   <col className="w-12" />
-                  <col className="w-[260px]" />
-                  <col className="w-[260px]" />
-                  <col className="w-[160px]" />
+                  <col className="w-[240px]" />
+                  <col className="w-[180px]" />
+                  <col className="w-[100px]" />
                   <col className="w-[160px]" />
                 </colgroup>
                 <TableHeader className="bg-muted/40">
