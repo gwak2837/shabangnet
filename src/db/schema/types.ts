@@ -1,6 +1,5 @@
 import { account, passkey, session, twoFactor, user, verification } from './auth'
 import {
-  commonOrderTemplate,
   invoiceTemplate,
   manufacturer,
   optionMapping,
@@ -9,6 +8,7 @@ import {
 } from './manufacturers'
 import { order, orderEmailLog, orderEmailLogItem, upload } from './orders'
 import {
+  commonOrderTemplate,
   courierMapping,
   emailTemplate,
   exclusionPattern,

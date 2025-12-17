@@ -3,8 +3,9 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { commonOrderTemplate, manufacturer, orderTemplate } from '@/db/schema/manufacturers'
+import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
+import { commonOrderTemplate } from '@/db/schema/settings'
 import {
   generateOrderFileName,
   generateTemplateBasedOrderSheet,

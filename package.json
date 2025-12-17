@@ -18,6 +18,8 @@
     "seed:settings": "pnpm tsx tools/seed-settings.ts",
     "seed:shopping-mall": "pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:shopping-mall:prod": "DB_ENV=production pnpm tsx tools/seed-shopping-mall-templates.ts",
+    "seed:common-order-template": "pnpm tsx tools/seed-common-order-template.ts",
+    "seed:common-order-template:prod": "DB_ENV=production pnpm tsx tools/seed-common-order-template.ts",
     "seed:test-user": "pnpm tsx tools/seed-test-user.ts",
     "analyze-data": "pnpm tsx tools/analyze-real-data.ts",
     "test:db:up": "docker compose up -d db-test",

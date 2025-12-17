@@ -5,8 +5,9 @@ import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
 import type { TemplateAnalysis } from '@/lib/excel'
 
 import { db } from '@/db/client'
-import { commonOrderTemplate, manufacturer, orderTemplate } from '@/db/schema/manufacturers'
+import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
+import { commonOrderTemplate } from '@/db/schema/settings'
 import { analyzeTemplateStructure } from '@/lib/excel'
 
 const COMMON_ORDER_TEMPLATE_KEY = 'default'

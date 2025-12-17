@@ -4,6 +4,8 @@ import path from 'path'
 const SEED_SCRIPTS = [
   // 1. 기본 설정 (택배사 코드, 발송 제외 패턴)
   'seed-settings.ts',
+  // 1-1. 공통 발주서 템플릿 (전사 1개, 무조건 덮어쓰기)
+  'seed-common-order-template.ts',
   // 2. 쇼핑몰 템플릿
   'seed-shopping-mall-templates.ts',
   // 3. 제조사 데이터

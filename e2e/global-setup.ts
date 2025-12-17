@@ -51,6 +51,7 @@ async function globalSetup() {
   // 순서 중요: 제조사 → 템플릿 → 상품 연결 (의존성 순서)
   const seedScripts = [
     'seed-settings.ts',
+    'seed-common-order-template.ts',
     'seed-shopping-mall-templates.ts',
     'seed-real-manufacturers.ts',
     'seed-order-templates.ts',
