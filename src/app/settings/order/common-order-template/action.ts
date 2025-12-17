@@ -177,7 +177,8 @@ export async function getRecentOrderIdsForManufacturer(manufacturerId: number, l
 
   const rows = await db.query.order.findMany({
     columns: { id: true },
-    where: (o, { and: andOp, eq: eqOp }) => andOp(eqOp(o.manufacturerId, manufacturerId), orderIsIncludedSql(o.fulfillmentType)),
+    where: (o, { and: andOp, eq: eqOp }) =>
+      andOp(eqOp(o.manufacturerId, manufacturerId), orderIsIncludedSql(o.fulfillmentType)),
     orderBy: (o, { desc: descOp }) => [descOp(o.createdAt)],
     limit: safeLimit,
   })

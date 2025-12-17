@@ -50,7 +50,7 @@ export default function UsersPage() {
         {/* User Table */}
         <UserTable
           fetchNextPage={() => fetchNextPage()}
-          hasNextPage={hasNextPage ?? false}
+          hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           isLoading={isLoading}
           total={total}

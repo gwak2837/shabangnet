@@ -303,11 +303,7 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         </div>
       ) : null}
 
-      <InfiniteScrollSentinel
-        hasMore={hasNextPage ?? false}
-        isLoading={isFetchingNextPage}
-        onLoadMore={() => fetchNextPage()}
-      />
+      <InfiniteScrollSentinel hasMore={hasNextPage} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
 
       <ProductCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </AppShell>

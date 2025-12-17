@@ -9,7 +9,10 @@ interface SettingsDetailHeaderProps {
 export function SettingsDetailHeader({ title, description }: SettingsDetailHeaderProps) {
   return (
     <div className="space-y-2">
-      <Link className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" href="/settings/order">
+      <Link
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        href="/settings/order"
+      >
         <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         주문 처리 설정
       </Link>
@@ -22,5 +25,3 @@ export function SettingsDetailHeader({ title, description }: SettingsDetailHeade
     </div>
   )
 }
-
-

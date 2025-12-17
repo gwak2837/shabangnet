@@ -1,11 +1,5 @@
 import { account, passkey, session, twoFactor, user, verification } from './auth'
-import {
-  invoiceTemplate,
-  manufacturer,
-  optionMapping,
-  orderTemplate,
-  product,
-} from './manufacturers'
+import { invoiceTemplate, manufacturer, optionMapping, orderTemplate, product } from './manufacturers'
 import { order, orderEmailLog, orderEmailLogItem, upload } from './orders'
 import {
   commonOrderTemplate,

@@ -6,5 +6,3 @@ export const SABANGNET_COLUMNS_REQUIRED_FIRST = [...SABANGNET_COLUMNS].sort((a, 
   if (reqA !== reqB) return reqB - reqA
   return a.index - b.index
 })
-
-

@@ -91,12 +91,7 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
     .set({
       manufacturerId: newManufacturer.id,
     })
-    .where(
-      and(
-        isNull(order.manufacturerId),
-        sql`lower(${order.manufacturerName}) = lower(${newManufacturer.name})`,
-      ),
-    )
+    .where(and(isNull(order.manufacturerId), sql`lower(${order.manufacturerName}) = lower(${newManufacturer.name})`))
 
   return mapToManufacturer(newManufacturer)
 }
@@ -191,12 +186,7 @@ export async function update(id: number, data: Partial<Manufacturer>): Promise<M
       .set({
         manufacturerId: updated.id,
       })
-      .where(
-        and(
-          isNull(order.manufacturerId),
-          sql`lower(${order.manufacturerName}) = lower(${updated.name})`,
-        ),
-      )
+      .where(and(isNull(order.manufacturerId), sql`lower(${order.manufacturerName}) = lower(${updated.name})`))
   }
 
   return mapToManufacturer(updated)

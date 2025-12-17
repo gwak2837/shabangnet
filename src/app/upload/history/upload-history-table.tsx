@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { authClient } from '@/lib/auth-client'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime, formatFileSize } from '@/utils/format/number'
@@ -153,126 +154,135 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
       {/* Table */}
       <Card className="border-slate-200 bg-card shadow-sm overflow-hidden">
-        <CardContent className="p-0 overflow-x-auto">
-          <div className="w-max min-w-full">
-            {/* Header */}
-            <div className="flex items-center border-b border-slate-200 bg-slate-50 h-10">
-              {isAdmin && (
-                <div className="w-10 shrink-0 px-3">
-                  <Checkbox
-                    aria-label="전체 선택"
-                    checked={isAllSelected}
-                    className={isSomeSelected ? 'opacity-50' : ''}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </div>
-              )}
-              <div className="w-14 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">유형</div>
-              <SortableHeader
-                field="fileName"
-                label="파일명"
-                onSort={handleSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-              <SortableHeader
-                className="w-20 text-right"
-                field="totalOrders"
-                label="전체"
-                onSort={handleSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-              <SortableHeader
-                className="w-20 text-right"
-                field="processedOrders"
-                label="유효"
-                onSort={handleSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-              <SortableHeader
-                className="w-20 text-right"
-                field="errorOrders"
-                label="오류"
-                onSort={handleSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-              <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                처리
-              </div>
-              <div className="w-20 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                크기
-              </div>
-              <div className="w-20 shrink-0 px-2 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
-                다운로드
-              </div>
-              <SortableHeader
-                className="w-36 text-right"
-                field="uploadedAt"
-                label="업로드 시간"
-                onSort={handleSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-            </div>
-
-            {/* Virtual List */}
-            {isLoading ? (
-              <div className="flex items-center justify-center h-32 text-slate-500">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                불러오는 중...
-              </div>
-            ) : items.length > 0 ? (
-              <div className="overflow-x-hidden">
-                {items.map((item) => (
-                  <UploadHistoryRow
-                    isAdmin={isAdmin}
-                    isSelected={selectedIds.includes(item.id)}
-                    item={item}
-                    key={item.id}
-                    onSelectItem={handleSelectItem}
-                  />
-                ))}
-
-                {isFetchingNextPage ? (
-                  <div className="flex items-center justify-center py-4 border-t border-slate-100">
-                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                    <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
-                  </div>
-                ) : null}
-
-                <InfiniteScrollSentinel
-                  hasMore={hasNextPage ?? false}
-                  isLoading={isFetchingNextPage}
-                  onLoadMore={() => fetchNextPage()}
+        <CardContent className="p-0">
+          <Table className="min-w-max">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                {isAdmin && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      aria-label="전체 선택"
+                      checked={isAllSelected}
+                      className={isSomeSelected ? 'opacity-50' : ''}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                )}
+                <TableHead className="w-14 text-xs font-medium text-slate-500 uppercase tracking-wider">유형</TableHead>
+                <SortableHeader
+                  field="fileName"
+                  label="파일명"
+                  onSort={handleSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
                 />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-32 text-slate-500">업로드 기록이 없어요.</div>
-            )}
-          </div>
+                <SortableHeader
+                  className="w-20 text-right"
+                  field="totalOrders"
+                  label="전체"
+                  onSort={handleSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+                <SortableHeader
+                  className="w-20 text-right"
+                  field="processedOrders"
+                  label="유효"
+                  onSort={handleSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+                <SortableHeader
+                  className="w-20 text-right"
+                  field="errorOrders"
+                  label="오류"
+                  onSort={handleSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+                <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                  처리
+                </TableHead>
+                <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                  크기
+                </TableHead>
+                <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                  다운로드
+                </TableHead>
+                <SortableHeader
+                  className="w-36 text-right"
+                  field="uploadedAt"
+                  label="업로드 시간"
+                  onSort={handleSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                    <Loader2 className="mr-2 inline-block h-5 w-5 animate-spin align-middle" />
+                    불러오는 중...
+                  </TableCell>
+                </TableRow>
+              ) : items.length > 0 ? (
+                <>
+                  {items.map((item) => (
+                    <UploadHistoryRow
+                      isAdmin={isAdmin}
+                      isSelected={selectedIds.includes(item.id)}
+                      item={item}
+                      key={item.id}
+                      onSelectItem={handleSelectItem}
+                    />
+                  ))}
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                    업로드 기록이 없어요.
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {isFetchingNextPage ? (
+                <TableRow>
+                  <TableCell className="py-4 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                    <Loader2 className="mr-2 inline-block h-5 w-5 animate-spin align-middle text-slate-400" />더
+                    불러오는 중...
+                  </TableCell>
+                </TableRow>
+              ) : null}
+
+              <TableRow>
+                <TableCell className="p-0" colSpan={isAdmin ? 10 : 9}>
+                  <InfiniteScrollSentinel
+                    hasMore={hasNextPage}
+                    isLoading={isFetchingNextPage}
+                    onLoadMore={() => fetchNextPage()}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
   )
 }
 
-function SortableHeader({
-  field,
-  label,
-  sortBy,
-  sortOrder,
-  onSort,
-  className = 'flex-1 min-w-[200px]',
-}: SortableHeaderProps) {
+function SortableHeader({ field, label, sortBy, sortOrder, onSort, className = 'min-w-[200px]' }: SortableHeaderProps) {
   const isActive = sortBy === field
+  const isRightAligned = className.includes('text-right')
 
   return (
-    <div className={`${className} shrink-0 px-2`}>
+    <TableHead className={className}>
       <Button
-        className="h-auto p-2 py-1 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
+        className={`h-auto w-full p-2 py-1 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700 ${
+          isRightAligned ? 'justify-end' : 'justify-start'
+        }`}
         onClick={() => onSort(field)}
         size="none"
         variant="ghost"
@@ -288,7 +298,7 @@ function SortableHeader({
           <ArrowUpDown className="h-3 w-3 opacity-50" />
         )}
       </Button>
-    </div>
+    </TableHead>
   )
 }
 
@@ -325,23 +335,18 @@ function UploadHistoryRow({
   }
 
   return (
-    <label
-      aria-selected={isSelected}
-      className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition aria-selected:bg-blue-50"
-    >
-      {/* Checkbox (Admin only) */}
+    <TableRow aria-selected={isSelected} className="hover:bg-slate-50 transition aria-selected:bg-blue-50">
       {isAdmin && (
-        <div className="w-10 shrink-0 px-3">
+        <TableCell className="w-10">
           <Checkbox
             aria-label={`${item.fileName} 선택`}
             checked={isSelected}
             onCheckedChange={(checked) => onSelectItem(item.id, checked as boolean)}
           />
-        </div>
+        </TableCell>
       )}
 
-      {/* File Type */}
-      <div className="w-14 shrink-0 px-3">
+      <TableCell className="w-14">
         {item.fileType === 'sabangnet' ? (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100" title="사방넷">
             <FileSpreadsheet className="h-4 w-4 text-blue-600" />
@@ -351,24 +356,20 @@ function UploadHistoryRow({
             <Store className="h-4 w-4 text-violet-600" />
           </div>
         )}
-      </div>
+      </TableCell>
 
-      {/* File Name */}
-      <div className="flex-1 min-w-[200px] px-3">
-        <div className="truncate font-medium text-slate-900" title={item.fileName}>
-          {item.fileName}
+      <TableCell className="min-w-[200px] whitespace-normal">
+        <div className="min-w-0">
+          <div className="truncate font-medium text-slate-900" title={item.fileName}>
+            {item.fileName}
+          </div>
+          {item.shoppingMallName && <div className="text-xs text-slate-500">{item.shoppingMallName}</div>}
         </div>
-        {item.shoppingMallName && <div className="text-xs text-slate-500">{item.shoppingMallName}</div>}
-      </div>
+      </TableCell>
 
-      {/* Total Orders */}
-      <div className="w-20 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">{item.totalOrders}건</div>
-
-      {/* Processed Orders */}
-      <div className="w-20 shrink-0 px-3 text-right text-slate-600 tabular-nums">{item.processedOrders}건</div>
-
-      {/* Error Orders */}
-      <div className="w-20 shrink-0 px-3 text-right tabular-nums">
+      <TableCell className="w-20 text-right font-medium text-slate-900 tabular-nums">{item.totalOrders}건</TableCell>
+      <TableCell className="w-20 text-right text-slate-600 tabular-nums">{item.processedOrders}건</TableCell>
+      <TableCell className="w-20 text-right tabular-nums">
         {item.errorOrders > 0 ? (
           <Badge className="bg-rose-100 text-rose-700" variant="secondary">
             {item.errorOrders}건
@@ -376,16 +377,10 @@ function UploadHistoryRow({
         ) : (
           <span className="text-slate-400">0건</span>
         )}
-      </div>
-
-      {/* Current Order Count */}
-      <div className="w-20 shrink-0 px-3 text-right text-emerald-600 tabular-nums">{item.currentOrderCount}건</div>
-
-      {/* File Size */}
-      <div className="w-20 shrink-0 px-3 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</div>
-
-      {/* Download (Shopping Mall only) */}
-      <div className="w-20 shrink-0 px-2 text-center">
+      </TableCell>
+      <TableCell className="w-20 text-right text-emerald-600 tabular-nums">{item.currentOrderCount}건</TableCell>
+      <TableCell className="w-20 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</TableCell>
+      <TableCell className="w-20 text-center">
         {item.fileType === 'shopping_mall' ? (
           <Button
             aria-label="엑셀 다운로드"
@@ -400,12 +395,10 @@ function UploadHistoryRow({
         ) : (
           <span className="text-slate-300">-</span>
         )}
-      </div>
-
-      {/* Uploaded At */}
-      <div className="w-36 shrink-0 px-3 text-right text-sm text-slate-500" title={formatDateTime(item.uploadedAt)}>
+      </TableCell>
+      <TableCell className="w-36 text-right text-sm text-slate-500" title={formatDateTime(item.uploadedAt)}>
         {formatRelativeTime(item.uploadedAt)}
-      </div>
-    </label>
+      </TableCell>
+    </TableRow>
   )
 }

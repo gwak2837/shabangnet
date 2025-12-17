@@ -189,11 +189,7 @@ export default function OptionMappingsPage() {
         </div>
       ) : null}
 
-      <InfiniteScrollSentinel
-        hasMore={hasNextPage ?? false}
-        isLoading={isFetchingNextPage}
-        onLoadMore={() => fetchNextPage()}
-      />
+      <InfiniteScrollSentinel hasMore={hasNextPage} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
 
       {/* Modal */}
       <OptionMappingModal

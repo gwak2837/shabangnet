@@ -130,5 +130,3 @@ export function DeleteProductsDialog({ selectedIds, onSuccess }: DeleteProductsD
     </AlertDialog>
   )
 }
-
-

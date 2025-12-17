@@ -5,7 +5,14 @@ import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useFormAction } from '@/hooks/use-server-action'
 
@@ -20,23 +27,27 @@ interface ProductCsvDialogProps {
 }
 
 export function ProductCsvDialog({ open, onOpenChange }: ProductCsvDialogProps) {
-  const [state, formAction, isPending] = useFormAction<ProductCsvImportResult | null, FormData>(importProductsCsv, null, {
-    invalidateKeys: [queryKeys.products.all, queryKeys.orders.batches, queryKeys.orders.matching],
-    onError: (error) => toast.error(error),
-    onSuccess: (result) => {
-      if (!result || 'error' in result) {
-        return
-      }
+  const [state, formAction, isPending] = useFormAction<ProductCsvImportResult | null, FormData>(
+    importProductsCsv,
+    null,
+    {
+      invalidateKeys: [queryKeys.products.all, queryKeys.orders.batches, queryKeys.orders.matching],
+      onError: (error) => toast.error(error),
+      onSuccess: (result) => {
+        if (!result || 'error' in result) {
+          return
+        }
 
-      const parts = [
-        result.created ? `추가 ${result.created}개` : null,
-        result.updated ? `수정 ${result.updated}개` : null,
-        result.skipped ? `건너뜀 ${result.skipped}행` : null,
-      ].filter(Boolean)
+        const parts = [
+          result.created ? `추가 ${result.created}개` : null,
+          result.updated ? `수정 ${result.updated}개` : null,
+          result.skipped ? `건너뜀 ${result.skipped}행` : null,
+        ].filter(Boolean)
 
-      toast.success(parts.length > 0 ? `CSV를 반영했어요 (${parts.join(' · ')})` : 'CSV를 반영했어요')
+        toast.success(parts.length > 0 ? `CSV를 반영했어요 (${parts.join(' · ')})` : 'CSV를 반영했어요')
+      },
     },
-  })
+  )
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -64,7 +75,7 @@ export function ProductCsvDialog({ open, onOpenChange }: ProductCsvDialogProps) 
           </ul>
         </div>
 
-        <form action={formAction} className="flex flex-col gap-3" encType="multipart/form-data">
+        <form action={formAction} className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-slate-900" htmlFor="product-csv">
               CSV 파일
@@ -114,7 +125,9 @@ export function ProductCsvDialog({ open, onOpenChange }: ProductCsvDialogProps) 
                       </li>
                     ))}
                   </ul>
-                  {state.errors.length > 50 && <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>}
+                  {state.errors.length > 50 && (
+                    <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -140,5 +153,3 @@ export function ProductCsvDialog({ open, onOpenChange }: ProductCsvDialogProps) 
     </Dialog>
   )
 }
-
-

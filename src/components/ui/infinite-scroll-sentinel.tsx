@@ -39,5 +39,5 @@ export function InfiniteScrollSentinel({
     onLoadMoreRef.current()
   }, [disabled, hasMore, inView, isLoading])
 
-  return <div aria-hidden="true" className="h-px w-full" ref={ref} />
+  return <div aria-hidden="true" className="h-px w-full" data-slot="infinite-scroll-sentinel" ref={ref} />
 }

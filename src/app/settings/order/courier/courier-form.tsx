@@ -194,12 +194,7 @@ export function CourierForm() {
                     <legend>별칭</legend>
                   </Label>
                   <div className="flex gap-2">
-                    <Input
-                      form="alias-form"
-                      name="alias"
-                      placeholder="거래처에서 사용하는 표기"
-                      required
-                    />
+                    <Input form="alias-form" name="alias" placeholder="거래처에서 사용하는 표기" required />
                     <Button className="shrink-0" form="alias-form" size="sm" type="submit" variant="outline">
                       추가
                     </Button>

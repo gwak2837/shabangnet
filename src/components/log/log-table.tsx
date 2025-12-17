@@ -21,7 +21,14 @@ interface LogTableProps {
   selectedIds?: number[]
 }
 
-export function LogTable({ logs, onViewDetail, isAdmin = false, selectedIds = [], onSelectAll, onSelectLog }: LogTableProps) {
+export function LogTable({
+  logs,
+  onViewDetail,
+  isAdmin = false,
+  selectedIds = [],
+  onSelectAll,
+  onSelectLog,
+}: LogTableProps) {
   const isAllSelected = logs.length > 0 && selectedIds.length === logs.length
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected
   const colSpan = isAdmin ? 8 : 7

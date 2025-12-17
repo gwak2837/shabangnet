@@ -210,8 +210,7 @@ export function UserTable({
                 <td className="px-4 py-4" colSpan={4}>
                   {isFetchingNextPage ? (
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
-                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                      더 불러오는 중...
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
                     </div>
                   ) : null}
 

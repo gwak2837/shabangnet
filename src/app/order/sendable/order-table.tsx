@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
@@ -17,7 +18,7 @@ import type { OrderBatch } from '../hook'
 interface OrderTableProps {
   batches: OrderBatch[]
   fetchNextPage?: () => void
-  hasNextPage?: boolean
+  hasNextPage: boolean
   isFetchingNextPage?: boolean
   onBatchSend?: (batches: OrderBatch[]) => void
   onDownload?: (batch: OrderBatch) => void
@@ -93,66 +94,79 @@ export function OrderTable({
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex items-center border-b border-slate-200 bg-slate-50 h-9">
-          <div className="w-12 shrink-0 px-3">
-            <Checkbox
-              aria-label="전체 선택"
-              checked={isAllSelected}
-              className={isSomeSelected ? 'opacity-50' : ''}
-              onCheckedChange={handleSelectAll}
-            />
-          </div>
-          <div className="flex-1 min-w-[200px] px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-            제조사
-          </div>
-          <div className="w-24 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-            주문 수
-          </div>
-          <div className="w-32 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-            총 금액
-          </div>
-          <div className="flex-1 min-w-[200px] px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-            이메일
-          </div>
-          <div className="w-24 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">상태</div>
-          <div className="w-40 shrink-0 px-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-            발송 시간
-          </div>
-          <div className="w-12 shrink-0 px-3" />
-        </div>
-
-        {/* List */}
-        {batches.length > 0 ? (
-          <div>
-            {batches.map((batch) => (
-              <OrderRow
-                batch={batch}
-                key={batch.manufacturerId}
-                onDownload={onDownload}
-                onPreview={onPreview}
-                onSelectBatch={handleSelectBatch}
-                onSendEmail={onSendEmail}
-                selected={selectedBatches.includes(batch.manufacturerId)}
-              />
-            ))}
+        <Table className="min-w-max">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-12">
+                <Checkbox
+                  aria-label="전체 선택"
+                  checked={isAllSelected}
+                  className={isSomeSelected ? 'opacity-50' : ''}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead className="min-w-[200px] text-xs font-medium text-slate-500 uppercase tracking-wider">
+                제조사
+              </TableHead>
+              <TableHead className="w-24 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                주문 수
+              </TableHead>
+              <TableHead className="w-32 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                총 금액
+              </TableHead>
+              <TableHead className="min-w-[200px] text-xs font-medium text-slate-500 uppercase tracking-wider">
+                이메일
+              </TableHead>
+              <TableHead className="w-24 text-xs font-medium text-slate-500 uppercase tracking-wider">상태</TableHead>
+              <TableHead className="w-40 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                발송 시간
+              </TableHead>
+              <TableHead className="w-12" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {batches.length > 0 ? (
+              <>
+                {batches.map((batch) => (
+                  <OrderRow
+                    batch={batch}
+                    key={batch.manufacturerId}
+                    onDownload={onDownload}
+                    onPreview={onPreview}
+                    onSelectBatch={handleSelectBatch}
+                    onSendEmail={onSendEmail}
+                    selected={selectedBatches.includes(batch.manufacturerId)}
+                  />
+                ))}
+              </>
+            ) : (
+              <TableRow>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={8}>
+                  주문 데이터가 없어요.
+                </TableCell>
+              </TableRow>
+            )}
 
             {isFetchingNextPage ? (
-              <div className="flex items-center justify-center py-4 border-t border-slate-100">
-                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
-              </div>
+              <TableRow>
+                <TableCell className="py-4 text-center text-slate-500" colSpan={8}>
+                  <Loader2 className="mr-2 inline-block h-5 w-5 animate-spin align-middle text-slate-400" />더 불러오는
+                  중...
+                </TableCell>
+              </TableRow>
             ) : null}
 
-            <InfiniteScrollSentinel
-              hasMore={hasNextPage ?? false}
-              isLoading={isFetchingNextPage}
-              onLoadMore={() => fetchNextPage?.()}
-            />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-32 text-slate-500">주문 데이터가 없어요.</div>
-        )}
+            <TableRow>
+              <TableCell className="p-0" colSpan={8}>
+                <InfiniteScrollSentinel
+                  hasMore={hasNextPage}
+                  isLoading={isFetchingNextPage}
+                  onLoadMore={() => fetchNextPage?.()}
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )
@@ -176,60 +190,51 @@ function OrderRow({
   const hasEmail = batch.email.trim().length > 0
 
   return (
-    <label className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition">
-      {/* Checkbox */}
-      <div className="w-12 shrink-0 px-3">
+    <TableRow className="hover:bg-slate-50 transition">
+      <TableCell className="w-12">
         <Checkbox
           aria-label={`${batch.manufacturerName} 선택`}
           checked={selected}
           onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked as boolean)}
         />
-      </div>
+      </TableCell>
 
-      {/* Manufacturer */}
-      <div className="flex-1 min-w-[200px] px-3">
+      <TableCell className="min-w-[200px] whitespace-normal">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-600">
             {batch.manufacturerName.slice(0, 2)}
           </div>
           <span className="text-sm font-medium text-slate-900">{batch.manufacturerName}</span>
         </div>
-      </div>
+      </TableCell>
 
-      {/* Order Count */}
-      <div className="w-24 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</div>
-
-      {/* Total Amount */}
-      <div className="w-32 shrink-0 px-3 text-right font-medium text-slate-900 tabular-nums">
+      <TableCell className="w-24 text-right font-medium text-slate-900 tabular-nums">{batch.totalOrders}건</TableCell>
+      <TableCell className="w-32 text-right font-medium text-slate-900 tabular-nums">
         {formatCurrency(batch.totalAmount)}
-      </div>
+      </TableCell>
 
-      {/* Email */}
-      <div className="flex-1 min-w-[200px] px-3 truncate">
+      <TableCell className="min-w-[200px]">
         {hasEmail ? (
           <span className="text-sm text-slate-600">{batch.email}</span>
         ) : (
           <span className="text-sm text-amber-700">이메일 미설정</span>
         )}
-      </div>
+      </TableCell>
 
-      {/* Status */}
-      <div className="w-24 shrink-0 px-3">
+      <TableCell className="w-24">
         <Badge className={getStatusColor(batch.status)} variant="secondary">
           {getStatusLabel(batch.status)}
         </Badge>
-      </div>
+      </TableCell>
 
-      {/* Last Sent At */}
-      <div
-        className="w-40 shrink-0 px-3 text-xs text-slate-500"
+      <TableCell
+        className="w-40 text-xs text-slate-500"
         title={batch.lastSentAt ? formatDateTime(batch.lastSentAt) : undefined}
       >
         {batch.lastSentAt ? formatRelativeTime(batch.lastSentAt) : '-'}
-      </div>
+      </TableCell>
 
-      {/* Actions */}
-      <div className="w-12 shrink-0 px-3">
+      <TableCell className="w-12">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -262,7 +267,7 @@ function OrderRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-    </label>
+      </TableCell>
+    </TableRow>
   )
 }

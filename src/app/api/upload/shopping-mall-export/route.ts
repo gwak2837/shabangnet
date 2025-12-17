@@ -159,7 +159,9 @@ export async function POST(request: Request) {
     }
 
     const buffer = await workbook.xlsx.writeBuffer()
-    const fileName = encodeURIComponent(`${template.displayName}_${formatDateForFileName(uploadRecord.uploadedAt)}.xlsx`)
+    const fileName = encodeURIComponent(
+      `${template.displayName}_${formatDateForFileName(uploadRecord.uploadedAt)}.xlsx`,
+    )
 
     return new Response(buffer, {
       headers: {

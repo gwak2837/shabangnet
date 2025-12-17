@@ -16,7 +16,11 @@ export function useUsers(params: UserListParams = {}) {
   })
 }
 
-async function fetchUsers(params: { cursor?: string | null; limit: number; status?: UserListParams['status'] }): Promise<UserListResult> {
+async function fetchUsers(params: {
+  cursor?: string | null
+  limit: number
+  status?: UserListParams['status']
+}): Promise<UserListResult> {
   const searchParams = new URLSearchParams()
 
   if (params.status && params.status !== 'all') {

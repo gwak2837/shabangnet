@@ -180,5 +180,3 @@ export function DeleteManufacturersDialog({ selectedIds, onSuccess }: DeleteManu
     </AlertDialog>
   )
 }
-
-

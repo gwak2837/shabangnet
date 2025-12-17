@@ -155,7 +155,10 @@ export async function getManufacturerDeletePreview(manufacturerIds: number[]): P
 
     const [emailLogItemCountRow] =
       emailLogIds.length > 0
-        ? await db.select({ count: count() }).from(orderEmailLogItem).where(inArray(orderEmailLogItem.emailLogId, emailLogIds))
+        ? await db
+            .select({ count: count() })
+            .from(orderEmailLogItem)
+            .where(inArray(orderEmailLogItem.emailLogId, emailLogIds))
         : [{ count: 0 }]
 
     return {
@@ -174,7 +177,9 @@ export async function getManufacturerDeletePreview(manufacturerIds: number[]): P
   }
 }
 
-export async function updateManufacturerBundle(input: UpdateManufacturerBundleInput): Promise<UpdateManufacturerBundleResult> {
+export async function updateManufacturerBundle(
+  input: UpdateManufacturerBundleInput,
+): Promise<UpdateManufacturerBundleResult> {
   const manufacturerId = Number(input.manufacturerId)
   if (!Number.isFinite(manufacturerId) || manufacturerId <= 0) {
     return { success: false, error: '제조사를 선택해 주세요.' }
@@ -434,7 +439,9 @@ function normalizeOrderTemplateInput(input: UpdateManufacturerBundleInput['order
   for (const [rawFieldKey, rawColumn] of Object.entries(input.columnMappings ?? {})) {
     const fieldKey = String(rawFieldKey ?? '').trim()
     if (!fieldKey) continue
-    const column = String(rawColumn ?? '').trim().toUpperCase()
+    const column = String(rawColumn ?? '')
+      .trim()
+      .toUpperCase()
     if (!/^[A-Z]+$/.test(column)) {
       throw new Error(`발주서 컬럼 연결을 확인해 주세요. (${fieldKey})`)
     }
@@ -514,5 +521,3 @@ function validateSingleEmail(email: string | null, label: string) {
     throw new Error(`${label} 형식을 확인해 주세요.`)
   }
 }
-
-

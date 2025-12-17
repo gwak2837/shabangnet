@@ -5,7 +5,14 @@ import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useFormAction } from '@/hooks/use-server-action'
 
@@ -145,5 +152,3 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
     </Dialog>
   )
 }
-
-

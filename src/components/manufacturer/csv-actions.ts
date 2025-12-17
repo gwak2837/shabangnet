@@ -211,8 +211,15 @@ function headerToCanonicalField(header: string): CanonicalField | null {
   if (hNoSpace === '제조사명' || hNoSpace === '제조사' || normalized === 'name') return 'name'
   if (hNoSpace === '담당자명' || hNoSpace === '담당자' || normalized === 'contactname') return 'contactName'
   if (hNoSpace === '이메일' || normalized === 'email') return 'email'
-  if (normalized === 'cc이메일' || normalized === '참조이메일' || normalized === '참조이메일(cc)' || normalized === 'ccemail') return 'ccEmail'
-  if (hNoSpace === '휴대전화번호' || hNoSpace === '전화번호' || normalized === 'phone' || normalized === 'mobile') return 'phone'
+  if (
+    normalized === 'cc이메일' ||
+    normalized === '참조이메일' ||
+    normalized === '참조이메일(cc)' ||
+    normalized === 'ccemail'
+  )
+    return 'ccEmail'
+  if (hNoSpace === '휴대전화번호' || hNoSpace === '전화번호' || normalized === 'phone' || normalized === 'mobile')
+    return 'phone'
 
   return null
 }
@@ -242,5 +249,3 @@ function normalizeOptionalCell(value: string): string | undefined {
   const trimmed = value.trim()
   return trimmed ? trimmed : undefined
 }
-
-

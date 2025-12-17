@@ -53,7 +53,9 @@ export async function getUserList(params: UserListParams = {}): Promise<UserList
     const cursorCreatedAt = new Date(decoded.createdAt)
     const cursorId = decoded.id
 
-    whereConditions.push(or(lt(user.createdAt, cursorCreatedAt), and(eq(user.createdAt, cursorCreatedAt), lt(user.id, cursorId))))
+    whereConditions.push(
+      or(lt(user.createdAt, cursorCreatedAt), and(eq(user.createdAt, cursorCreatedAt), lt(user.id, cursorId))),
+    )
   }
 
   const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined
@@ -98,6 +100,7 @@ export async function getUserList(params: UserListParams = {}): Promise<UserList
     total: count,
     limit,
     totalPages: Math.ceil(count / limit),
-    nextCursor: hasMore && lastItem ? encodeCursor({ createdAt: lastItem.createdAt.toISOString(), id: lastItem.id }) : null,
+    nextCursor:
+      hasMore && lastItem ? encodeCursor({ createdAt: lastItem.createdAt.toISOString(), id: lastItem.id }) : null,
   }
 }

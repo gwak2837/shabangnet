@@ -19,7 +19,14 @@ interface TemplateTokenInputProps {
   value: string
 }
 
-export function TemplateTokenInput({ value, onChange, tokens, placeholder, rows = 2, className }: TemplateTokenInputProps) {
+export function TemplateTokenInput({
+  value,
+  onChange,
+  tokens,
+  placeholder,
+  rows = 2,
+  className,
+}: TemplateTokenInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [selectKey, setSelectKey] = useState(0)
 
@@ -85,5 +92,3 @@ export function TemplateTokenInput({ value, onChange, tokens, placeholder, rows 
     </div>
   )
 }
-
-

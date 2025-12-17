@@ -1,16 +1,6 @@
 'use client'
 
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Copy,
-  Key,
-  KeyRound,
-  Loader2,
-  Shield,
-  Smartphone,
-  Trash2,
-} from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Copy, Key, KeyRound, Loader2, Shield, Smartphone, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'

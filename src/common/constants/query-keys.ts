@@ -76,7 +76,8 @@ export const queryKeys = {
   },
   optionMappings: {
     all: ['option-mappings'] as const,
-    list: (filters: { limit?: number; manufacturerId?: number; search?: string }) => ['option-mappings', 'list', filters] as const,
+    list: (filters: { limit?: number; manufacturerId?: number; search?: string }) =>
+      ['option-mappings', 'list', filters] as const,
   },
   dashboard: {
     /** 대시보드 전체(부분 무효화용) */

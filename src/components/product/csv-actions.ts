@@ -9,7 +9,14 @@ import { parseCsv } from '@/utils/csv'
 
 import type { ProductCsvImportResult, ProductCsvRowError } from './product-csv.types'
 
-type CanonicalField = 'cost' | 'manufacturerName' | 'optionName' | 'price' | 'productCode' | 'productName' | 'shippingFee'
+type CanonicalField =
+  | 'cost'
+  | 'manufacturerName'
+  | 'optionName'
+  | 'price'
+  | 'productCode'
+  | 'productName'
+  | 'shippingFee'
 
 export async function importProductsCsv(
   _prevState: ProductCsvImportResult | null,
@@ -134,7 +141,11 @@ export async function importProductsCsv(
       const shippingFeeParsed = parseOptionalWon(getCell(row, indexByField.get('shippingFee')))
       if (!shippingFeeParsed.ok) {
         skipped += 1
-        errors.push({ row: rowNumber, productCode: rawProductCode.trim(), message: `배송비: ${shippingFeeParsed.message}` })
+        errors.push({
+          row: rowNumber,
+          productCode: rawProductCode.trim(),
+          message: `배송비: ${shippingFeeParsed.message}`,
+        })
         continue
       }
 
@@ -297,7 +308,8 @@ function headerToCanonicalField(header: string): CanonicalField | null {
   const hNoSpace = h.replaceAll(' ', '')
   const normalized = hNoSpace.toLowerCase().replaceAll('_', '').replaceAll('-', '')
 
-  if (hNoSpace === '상품코드' || hNoSpace === '상품코드(필수)' || normalized === 'productcode' || normalized === 'code') return 'productCode'
+  if (hNoSpace === '상품코드' || hNoSpace === '상품코드(필수)' || normalized === 'productcode' || normalized === 'code')
+    return 'productCode'
   if (hNoSpace === '상품명' || normalized === 'productname') return 'productName'
   if (hNoSpace === '옵션명' || normalized === 'optionname') return 'optionName'
   if (hNoSpace === '제조사명' || hNoSpace === '제조사' || normalized === 'manufacturername') return 'manufacturerName'
@@ -359,5 +371,3 @@ function parseOptionalWon(value: string): { ok: false; message: string } | { ok:
 
   return { ok: true, value: Math.round(parsed) }
 }
-
-

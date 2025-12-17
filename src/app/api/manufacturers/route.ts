@@ -152,5 +152,3 @@ async function getManufacturerSummary(): Promise<ManufacturerListSummary> {
 
   return { totalManufacturers, totalOrders }
 }
-
-

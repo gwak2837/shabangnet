@@ -115,7 +115,9 @@ async function getProducts(params: z.infer<typeof queryParamsSchema>): Promise<P
     )
     const cursorCreatedAt = new Date(decoded.createdAt)
     const cursorId = decoded.id
-    conditions.push(or(lt(product.createdAt, cursorCreatedAt), and(eq(product.createdAt, cursorCreatedAt), lt(product.id, cursorId))))
+    conditions.push(
+      or(lt(product.createdAt, cursorCreatedAt), and(eq(product.createdAt, cursorCreatedAt), lt(product.id, cursorId))),
+    )
   }
 
   const rows = await db
@@ -186,5 +188,3 @@ async function getProductSummary(): Promise<ProductListSummary> {
     priceErrorProducts,
   }
 }
-
-

@@ -65,4 +65,3 @@ async function checkAdminRole(): Promise<boolean> {
   return Boolean(session?.user?.isAdmin)
 }
 
-

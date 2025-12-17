@@ -24,10 +24,14 @@ interface SettingsIconBadgeProps {
 
 export function SettingsIconBadge({ accent, icon: Icon, className, iconClassName }: SettingsIconBadgeProps) {
   return (
-    <div className={cn('flex items-center justify-center rounded-lg ring-1 ring-inset', settingsAccentStyles[accent], className)}>
+    <div
+      className={cn(
+        'flex items-center justify-center rounded-lg ring-1 ring-inset',
+        settingsAccentStyles[accent],
+        className,
+      )}
+    >
       <Icon aria-hidden="true" className={cn('h-5 w-5', iconClassName)} />
     </div>
   )
 }
-
-

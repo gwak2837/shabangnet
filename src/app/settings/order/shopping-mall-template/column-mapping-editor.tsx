@@ -182,7 +182,9 @@ export function ColumnMappingEditor({
         <div className="flex flex-col gap-1">
           <Label className="text-sm font-medium">컬럼 연결</Label>
           <p className="text-xs text-muted-foreground">
-            {showPreviewColumn ? '예시 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.' : '예시 파일을 분석하면 예시 행이 보여요.'}
+            {showPreviewColumn
+              ? '예시 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.'
+              : '예시 파일을 분석하면 예시 행이 보여요.'}
           </p>
           {missingRequiredLabels && <p className="text-xs text-amber-600">필수 필드 미연결: {missingRequiredLabels}</p>}
         </div>

@@ -156,5 +156,3 @@ async function getOptionMappingSummary(): Promise<OptionMappingListSummary> {
 
   return { totalMappings, uniqueProductCodes, uniqueManufacturers }
 }
-
-

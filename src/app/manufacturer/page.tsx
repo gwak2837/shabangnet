@@ -89,7 +89,7 @@ export default function ManufacturersPage() {
       {/* Manufacturer Table */}
       <ManufacturerTable
         fetchNextPage={() => fetchNextPage()}
-        hasNextPage={hasNextPage ?? false}
+        hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         manufacturers={manufacturers}
         onEdit={handleEdit}
