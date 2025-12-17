@@ -26,7 +26,7 @@ const orderTabs = [
     href: '/order/excluded',
     label: '발송 제외',
     icon: Ban,
-    description: 'F열 값이 제외 패턴과 일치하는 주문 목록입니다',
+    description: '주문 유형 값이 제외 패턴과 일치하는 주문 목록이에요',
     variant: 'violet',
   },
   {

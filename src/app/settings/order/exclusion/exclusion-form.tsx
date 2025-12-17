@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -107,9 +108,7 @@ export function ExclusionForm() {
       <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/10 to-violet-600/5 ring-1 ring-violet-500/10">
-              <Filter className="h-5 w-5 text-violet-500" />
-            </div>
+            <SettingsIconBadge accent="rose" className="h-10 w-10" icon={Filter} />
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">발송 제외 설정</h2>
               <p className="text-sm text-muted-foreground">특정 주문 유형을 이메일 발송에서 자동으로 제외합니다</p>
@@ -182,12 +181,12 @@ export function ExclusionForm() {
               주문 유형에 패턴이 포함되면 자동으로 발송 제외 대상으로 분류됩니다
             </p>
           </form>
-          <div className="rounded-lg bg-violet-500/10 p-4 ring-1 ring-violet-500/20">
+          <div className="rounded-lg bg-rose-600/10 p-4 ring-1 ring-rose-600/20">
             <div className="flex items-start gap-3">
-              <Filter className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" />
+              <Filter className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
               <div className="text-sm">
-                <p className="font-medium text-violet-600">제외된 주문 확인하기</p>
-                <p className="mt-1 text-violet-500">
+                <p className="font-medium text-rose-600">제외된 주문 확인하기</p>
+                <p className="mt-1 text-rose-500">
                   자동 제외된 주문은 주문 페이지 &quot;발송제외&quot; 탭에서 검토하고 필요시 복원할 수 있습니다.
                 </p>
               </div>

@@ -27,6 +27,7 @@ export interface Order {
   address: string
   createdAt: string
   customerName: string
+  excludedReason?: string
   fulfillmentType?: string
   id: number
   manufacturerId: number
@@ -286,7 +287,8 @@ export async function getExcludedBatches(): Promise<OrderBatch[]> {
         manufacturerName: o.manufacturerName || '',
         status: o.status as Order['status'],
         createdAt: o.createdAt.toISOString(),
-        fulfillmentType: o.fulfillmentType || o.shoppingMall || '',
+        fulfillmentType: o.fulfillmentType || '',
+        excludedReason: o.excludedReason || undefined,
       })
     }
   }

@@ -11,6 +11,7 @@ import type {
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -313,9 +314,7 @@ export function ShoppingMallTemplate() {
         <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/10 to-violet-600/5 ring-1 ring-violet-500/10">
-                <Store className="h-5 w-5 text-violet-500" />
-              </div>
+              <SettingsIconBadge accent="violet" className="h-10 w-10" icon={Store} />
               <div className="space-y-0.5">
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">쇼핑몰 템플릿</h2>
                 <p className="text-sm text-muted-foreground">쇼핑몰별 엑셀 파일 양식을 관리해요</p>

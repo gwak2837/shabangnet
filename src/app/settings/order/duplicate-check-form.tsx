@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import type { DuplicateCheckPeriod, DuplicateCheckSettings } from '@/services/settings'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -33,9 +34,7 @@ export function DuplicateCheckForm() {
     <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-amber-500/10 to-amber-600/5 ring-1 ring-amber-500/10">
-            <ShieldCheck className="h-5 w-5 text-amber-500" />
-          </div>
+          <SettingsIconBadge accent="amber" className="h-10 w-10" icon={ShieldCheck} />
           <div className="space-y-0.5">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">중복 발주 방지</h2>
             <p className="text-sm text-muted-foreground">동일 제조사 + 동일 주소로 발송 이력이 있으면 경고합니다</p>

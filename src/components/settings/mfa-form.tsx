@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useState } from 'react'
 
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -352,9 +353,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-purple-500/10 to-purple-600/5 ring-1 ring-purple-500/10">
-              <Shield className="h-5 w-5 text-purple-500" />
-            </div>
+            <SettingsIconBadge accent="emerald" className="h-10 w-10" icon={Shield} />
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">다중 인증 (MFA)</h2>
               <p className="text-sm text-muted-foreground">계정 보안을 강화하기 위한 추가 인증 수단을 설정합니다</p>

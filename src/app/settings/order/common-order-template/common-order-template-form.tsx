@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import type { TemplateAnalysis } from '@/lib/excel'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -104,9 +105,7 @@ export function CommonOrderTemplateForm({ onDirtyChange }: CommonOrderTemplateFo
       <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
-              <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-            </div>
+            <SettingsIconBadge accent="blue" className="h-10 w-10" icon={FileSpreadsheet} />
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">공통 발주서 템플릿</h2>
               <p className="text-sm text-muted-foreground">제조사 템플릿이 없을 때 이 템플릿으로 생성해요</p>
@@ -341,9 +340,7 @@ function CommonOrderTemplateFormInner({
     <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
-            <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-          </div>
+          <SettingsIconBadge accent="blue" className="h-10 w-10" icon={FileSpreadsheet} />
           <div className="space-y-0.5">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">공통 발주서 템플릿</h2>
             <p className="text-sm text-muted-foreground">제조사 템플릿이 없을 때 이 템플릿으로 생성해요</p>

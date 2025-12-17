@@ -5,6 +5,7 @@ import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -100,9 +101,7 @@ export function CourierForm() {
         <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
-                <Truck className="h-5 w-5 text-blue-500" />
-              </div>
+              <SettingsIconBadge accent="blue" className="h-10 w-10" icon={Truck} />
               <div className="space-y-0.5">
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">택배사</h2>
                 <p className="text-sm text-muted-foreground">송장의 택배사명을 자동으로 인식합니다</p>

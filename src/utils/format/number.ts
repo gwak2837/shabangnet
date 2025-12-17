@@ -129,22 +129,3 @@ function formatWithPrecision(num: number): string {
   }
   return num.toFixed(2).replace(/\.?0+$/, '')
 }
-
-// Exclusion label map - should be synced with backend exclusion patterns
-const EXCLUSION_LABELS: Record<string, string> = {
-  'f-농협-': '농협 배송',
-  'f-자사-': '자사 배송',
-  'f-새벽-': '새벽 배송',
-  'f-직접-': '직접 배송',
-}
-
-export function getExclusionLabelSync(fulfillmentType?: string): string | null {
-  if (!fulfillmentType) return null
-
-  for (const [pattern, label] of Object.entries(EXCLUSION_LABELS)) {
-    if (fulfillmentType.includes(pattern.replace(/^f-|-$/g, ''))) {
-      return label
-    }
-  }
-  return null
-}

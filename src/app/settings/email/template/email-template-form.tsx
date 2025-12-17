@@ -5,6 +5,7 @@ import { type FormEvent, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -84,9 +85,7 @@ export function EmailTemplateForm() {
       <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-amber-500/10 to-amber-600/5 ring-1 ring-amber-500/10">
-              <FileText className="h-5 w-5 text-amber-500" />
-            </div>
+            <SettingsIconBadge accent="violet" className="h-10 w-10" icon={FileText} />
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">발주서 이메일 템플릿</h2>
               <p className="text-sm text-muted-foreground">제조사에게 발송되는 발주서 이메일의 양식을 설정합니다</p>
@@ -146,7 +145,7 @@ export function EmailTemplateForm() {
                       className="inline-flex items-center gap-1 text-xs bg-background border border-input rounded px-2 py-1"
                       key={key}
                     >
-                      <code className="text-amber-600">{`{{${key}}}`}</code>
+                      <code className="text-violet-600">{`{{${key}}}`}</code>
                       <span className="text-muted-foreground">- {description}</span>
                     </span>
                   ))}

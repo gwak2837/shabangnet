@@ -5,6 +5,7 @@ import { type FormEvent } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,9 +52,7 @@ export function SMTPAccountCard() {
     <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-orange-500/10 to-orange-600/5 ring-1 ring-orange-500/10">
-            <Package className="h-5 w-5 text-orange-500" />
-          </div>
+          <SettingsIconBadge accent="indigo" className="h-10 w-10" icon={Package} />
           <div className="space-y-0.5">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">발주서 발송</h2>
             <p className="text-sm text-muted-foreground">제조사에게 발주서 이메일을 발송합니다</p>

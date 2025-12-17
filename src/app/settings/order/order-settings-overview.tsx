@@ -7,24 +7,16 @@ import { ChevronRight, FileSpreadsheet, Filter, type LucideIcon, ShieldCheck, St
 import Link from 'next/link'
 
 import { queryKeys } from '@/common/constants/query-keys'
+import { type SettingsAccent, SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useDuplicateCheckSettings, useShoppingMallTemplates } from '@/hooks/use-settings'
-import { cn } from '@/utils/cn'
 
 import { updateDuplicateCheckSettings } from './action'
 import { getCommonOrderTemplate } from './common-order-template/action'
 import { useCourierMappings } from './courier/hook'
 import { updateExclusionSettings } from './exclusion/action'
 import { useExclusionSettings } from './exclusion/hook'
-
-type SettingsAccent = 'blue' | 'orange' | 'purple'
-
-const accentStyles: Record<SettingsAccent, string> = {
-  blue: 'bg-blue-600/10 text-blue-600 ring-blue-600/15',
-  purple: 'bg-violet-600/10 text-violet-600 ring-violet-600/15',
-  orange: 'bg-amber-600/10 text-amber-600 ring-amber-600/15',
-}
 
 interface BadgeProps {
   accent: SettingsAccent
@@ -113,7 +105,7 @@ export function OrderSettingsOverview() {
     <div className="grid gap-8 max-w-3xl">
       <SettingsGroup title="템플릿">
         <NavigableRow
-          accent="purple"
+          accent="violet"
           description="쇼핑몰별 엑셀 파일 양식을 관리해요"
           href="/settings/order/shopping-mall-template"
           icon={Store}
@@ -132,7 +124,7 @@ export function OrderSettingsOverview() {
 
       <SettingsGroup title="검증 & 필터">
         <ToggleRow
-          accent="purple"
+          accent="rose"
           checked={exclusionSettings?.enabled ?? true}
           description={exclusionSummary}
           disabled={isLoadingExclusion || isUpdatingExclusion}
@@ -142,7 +134,7 @@ export function OrderSettingsOverview() {
           title="발송 제외"
         />
         <ToggleRow
-          accent="orange"
+          accent="amber"
           checked={duplicateCheckSettings?.enabled ?? false}
           description={duplicateSummary}
           disabled={isLoadingDuplicateCheck || isUpdatingDuplicateCheck}
@@ -168,11 +160,7 @@ export function OrderSettingsOverview() {
 }
 
 function IconBadge({ accent, icon: Icon }: BadgeProps) {
-  return (
-    <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg ring-1 ring-inset', accentStyles[accent])}>
-      <Icon aria-hidden="true" className="h-5 w-5" />
-    </div>
-  )
+  return <SettingsIconBadge accent={accent} className="h-9 w-9 shrink-0" icon={Icon} />
 }
 
 function NavigableRow({ href, accent, icon, title, description, summary }: NavigableRowProps) {
