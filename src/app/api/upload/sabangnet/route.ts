@@ -19,7 +19,7 @@ import {
   VALID_EXTENSIONS,
 } from '../common'
 import { parseSabangnetFile } from './excel'
-import { createExclusionChecker, prepareOrderValues, type UploadResult } from './util'
+import { createExclusionChecker, mapOrderValues, type UploadResult } from './util'
 
 const uploadFormSchema = z.object({
   file: z
@@ -93,7 +93,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         tx,
       })
 
-      const orderValues = prepareOrderValues({
+      const orderValues = mapOrderValues({
         orders: parseResult.orders,
         uploadId: uploadRecord.id,
         lookupMaps,
@@ -101,7 +101,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
-        return { insertedCount: 0, autoCreatedManufacturers: createdManufacturerNames }
+        return {
+          insertedCount: 0,
+          autoCreatedManufacturers: createdManufacturerNames,
+        }
       }
 
       await autoCreateProducts({ orderValues, tx })
@@ -112,7 +115,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .onConflictDoNothing({ target: order.sabangnetOrderNumber })
         .returning({ id: order.id })
 
-      return { insertedCount: insertResult.length, autoCreatedManufacturers: createdManufacturerNames }
+      return {
+        insertedCount: insertResult.length,
+        autoCreatedManufacturers: createdManufacturerNames,
+      }
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount

@@ -39,7 +39,7 @@ export function createExclusionChecker(patterns: ExclusionPattern[]) {
   }
 }
 
-export function prepareOrderValues({ orders, uploadId, lookupMaps, checkExclusionPattern }: PrepareOrderParams) {
+export function mapOrderValues({ orders, uploadId, lookupMaps, checkExclusionPattern }: PrepareOrderParams) {
   return orders.map((o) => {
     const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
     const excludedReason = checkExclusionPattern(o.fulfillmentType)

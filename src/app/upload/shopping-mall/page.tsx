@@ -16,6 +16,8 @@ import { useShoppingMallTemplates } from '@/hooks/use-settings'
 import { UploadState } from '../common'
 import { invalidateCachesAfterUpload } from '../invalidate-after-upload'
 
+const ACCEPTED_EXTENSIONS = ['.xlsx', '.xls']
+
 export default function ShoppingMallUploadPage() {
   const queryClient = useQueryClient()
   const [selectedMall, setSelectedMall] = useState('')
@@ -24,6 +26,10 @@ export default function ShoppingMallUploadPage() {
   const enabledTemplates = shoppingMallTemplates?.filter((t) => t.enabled) ?? []
   const isProcessing = status === 'processing'
   const selectedFile = status === 'processing' || status === 'success' ? file : null
+
+  function handleError(message: string) {
+    setUploadState({ status: 'error', message })
+  }
 
   async function handleFileSelect(file: File) {
     if (!selectedMall) {
@@ -107,9 +113,11 @@ export default function ShoppingMallUploadPage() {
       <div className="max-w-2xl mx-auto">
         {status !== 'success' && (
           <Dropzone
+            acceptedExtensions={ACCEPTED_EXTENSIONS}
             disabled={!selectedMall || enabledTemplates.length === 0}
             isProcessing={isProcessing}
             onClear={handleClear}
+            onError={handleError}
             onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
           />

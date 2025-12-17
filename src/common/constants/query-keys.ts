@@ -9,6 +9,8 @@ export const queryKeys = {
     common: ['order-templates', 'common'] as const,
     /** 제조사별 발주서 템플릿(제조사 관리 화면) */
     manufacturer: (manufacturerId: number) => ['orderTemplate', manufacturerId] as const,
+    /** 제조사별 발주서 템플릿 파일 분석 결과(제조사 관리 > 수정 모달) */
+    manufacturerAnalysis: (manufacturerId: number) => ['orderTemplate', manufacturerId, 'analysis'] as const,
     /** 제조사별 발주서 템플릿 전체(부분 무효화용) */
     manufacturerAll: ['orderTemplate'] as const,
     /** 공통 템플릿 파일 분석 결과(설정 > 발주 설정) */

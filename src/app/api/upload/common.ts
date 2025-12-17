@@ -3,7 +3,7 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import type { Transaction } from '@/db/client'
 import type { ParsedOrder } from '@/lib/excel'
 
-import { manufacturer, product } from '@/db/schema/manufacturers'
+import { product } from '@/db/schema/manufacturers'
 
 import type {
   LookupMaps,
@@ -35,11 +35,7 @@ interface AutoCreateProductsParams {
   tx: Transaction
 }
 
-export async function autoCreateManufacturers({
-  orders,
-  lookupMaps,
-  tx,
-}: AutoCreateManufacturersParams): Promise<string[]> {
+export async function autoCreateManufacturers({ orders, lookupMaps, tx }: AutoCreateManufacturersParams) {
   const createdNames: string[] = []
 
   const manufacturerNames = [
@@ -52,30 +48,22 @@ export async function autoCreateManufacturers({
 
   for (const rawName of manufacturerNames) {
     const name = rawName.trim()
-    const key = name.toLowerCase()
 
-    if (lookupMaps.manufacturerMap.has(key)) {
+    if (lookupMaps.manufacturerMap.has(name)) {
       continue
     }
 
-    const [existing] = await tx
-      .select({ id: manufacturer.id, name: manufacturer.name })
-      .from(manufacturer)
-      .where(sql`lower(trim(${manufacturer.name})) = ${key}`)
-      .limit(1)
-
-    const record =
-      existing ??
-      (
-        await tx
-          .insert(manufacturer)
-          .values({ name, email: null, orderCount: 0 })
-          .returning({ id: manufacturer.id, name: manufacturer.name })
-      )[0]
+    // NOTE: xmax 떄문에 sql 사용함
+    const [record] = await tx.execute<{ id: number; name: string; isNew: boolean }>(sql`
+      INSERT INTO manufacturer (name, email, order_count)
+      VALUES (${name}, null, 0)
+      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id, name, (xmax = 0) AS is_new
+    `)
 
     if (record) {
-      lookupMaps.manufacturerMap.set(record.name.toLowerCase(), { id: record.id, name: record.name })
-      if (!existing) {
+      lookupMaps.manufacturerMap.set(record.name, { id: record.id, name: record.name })
+      if (record.isNew) {
         createdNames.push(record.name)
       }
     }
@@ -84,7 +72,7 @@ export async function autoCreateManufacturers({
   return createdNames
 }
 
-export async function autoCreateProducts({ orderValues, tx }: AutoCreateProductsParams): Promise<void> {
+export async function autoCreateProducts({ orderValues, tx }: AutoCreateProductsParams) {
   const productByCode = new Map<
     string,
     { cost: number; manufacturerId: number | null; optionName: string | null; price: number; productName: string }

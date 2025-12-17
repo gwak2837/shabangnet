@@ -8,15 +8,34 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatFileSize } from '@/utils/format/number'
 
 interface DropzoneProps {
+  acceptedExtensions: string[]
   disabled?: boolean
   isProcessing: boolean
   onClear: () => void
+  onError: (message: string) => void
   onFileSelect: (file: File) => void
   selectedFile: File | null
 }
 
-export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect, selectedFile }: DropzoneProps) {
+export function Dropzone({
+  acceptedExtensions,
+  disabled,
+  isProcessing,
+  onClear,
+  onError,
+  onFileSelect,
+  selectedFile,
+}: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
+
+  function validateAndSelect(file: File) {
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+    if (!acceptedExtensions.includes(ext)) {
+      onError('파일 형식이 올바르지 않아요')
+      return
+    }
+    onFileSelect(file)
+  }
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
@@ -37,9 +56,7 @@ export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect
     }
 
     const file = e.dataTransfer.files[0]
-    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-      onFileSelect(file)
-    }
+    validateAndSelect(file)
   }
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -53,7 +70,7 @@ export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect
       return
     }
 
-    onFileSelect(file)
+    validateAndSelect(file)
   }
 
   if (selectedFile) {
@@ -102,7 +119,7 @@ export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect
           onDrop={handleDrop}
         >
           <input
-            accept=".xlsx,.xls"
+            accept={acceptedExtensions.join(',')}
             aria-disabled={disabled}
             className="absolute inset-0 opacity-0 cursor-pointer aria-disabled:cursor-not-allowed"
             disabled={disabled}
@@ -121,14 +138,12 @@ export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect
           <p className="mt-4 text-lg font-semibold text-slate-900">파일을 드래그하거나 클릭하여 업로드</p>
           <p className="mt-1 text-sm text-slate-500">사방넷에서 다운로드한 주문 엑셀 파일을 업로드하세요</p>
           <div className="mt-6 flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
-              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-slate-600">.xlsx</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
-              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-slate-600">.xls</span>
-            </div>
+            {acceptedExtensions.map((ext) => (
+              <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5" key={ext}>
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                <span className="text-sm font-medium text-slate-600">{ext}</span>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>

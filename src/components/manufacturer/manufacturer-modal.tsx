@@ -1,9 +1,22 @@
 'use client'
 
-import { Building2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Trash2, Upload } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { FileSpreadsheet, Loader2, Save } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { toast } from 'sonner'
 
-import { SABANGNET_COLUMNS } from '@/common/constants'
+import type { TemplateTokenOption } from '@/app/settings/order/common-order-template/template-token-input'
+import type { TemplateAnalysis } from '@/lib/excel'
+import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
+
+import { analyzeCurrentManufacturerOrderTemplate, updateManufacturerBundle } from '@/app/manufacturer/actions'
+import { analyzeOrderTemplateFile } from '@/app/settings/order/common-order-template/action'
+import {
+  CommonOrderTemplateColumnEditor,
+  type CommonTemplateColumnRule,
+  type CommonTemplateFieldOption,
+} from '@/app/settings/order/common-order-template/common-order-template-column-editor'
+import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,525 +28,764 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { defaultInvoiceTemplate, type InvoiceTemplate, type Manufacturer } from '@/services/manufacturers.types'
+import { useServerAction } from '@/hooks/use-server-action'
+import { getInvoiceTemplateOrDefault, getOrderTemplateOrDefault } from '@/services/manufacturers'
 
-import { analyzeOrderTemplate } from './actions'
-
-// 발주서 템플릿 타입
-interface OrderTemplate {
-  columnMappings: Record<string, string>
+interface InvoiceTemplateDraft {
+  courierColumn: string
   dataStartRow: number
-  fixedValues: Record<string, string>
   headerRow: number
-  templateFileBuffer?: ArrayBuffer
-  templateFileName?: string
+  orderNumberColumn: string
+  trackingNumberColumn: string
+  useColumnIndex: boolean
 }
 
-const defaultOrderTemplate: OrderTemplate = {
-  headerRow: 1,
-  dataStartRow: 2,
-  columnMappings: {},
-  fixedValues: {},
+interface ManufacturerDraft {
+  ccEmail: string
+  contactName: string
+  email: string
+  phone: string
 }
 
 interface ManufacturerModalProps {
-  isSaving?: boolean
   manufacturer: Manufacturer | null
   onOpenChange: (open: boolean) => void
-  onSave: (
-    data: Partial<Manufacturer>,
-    invoiceTemplate?: Partial<InvoiceTemplate>,
-    orderTemplate?: Partial<OrderTemplate>,
-  ) => void
   open: boolean
 }
 
-export function ManufacturerModal({
-  open,
-  onOpenChange,
-  manufacturer,
-  onSave,
-  isSaving = false,
-}: ManufacturerModalProps) {
-  const [formData, setFormData] = useState(() => getFormDataFromManufacturer(manufacturer))
-  const [invoiceTemplate, setInvoiceTemplate] = useState(() => getInvoiceTemplateFromManufacturer(manufacturer))
-  const [orderTemplate, setOrderTemplate] = useState<OrderTemplate>(defaultOrderTemplate)
-  const [showInvoiceSettings, setShowInvoiceSettings] = useState(false)
-  const [showOrderTemplateSettings, setShowOrderTemplateSettings] = useState(false)
-  const [templateHeaders, setTemplateHeaders] = useState<string[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [prevManufacturerId, setPrevManufacturerId] = useState(manufacturer?.id)
-  const [prevOpen, setPrevOpen] = useState(open)
-  const isEdit = !!manufacturer
+type OrderTemplateData = Awaited<ReturnType<typeof getOrderTemplateOrDefault>>
 
-  if (manufacturer?.id !== prevManufacturerId || (open && !prevOpen)) {
-    setPrevManufacturerId(manufacturer?.id)
-    setPrevOpen(open)
-    setFormData(getFormDataFromManufacturer(manufacturer))
-    setInvoiceTemplate(getInvoiceTemplateFromManufacturer(manufacturer))
-    setOrderTemplate(defaultOrderTemplate)
-    setShowInvoiceSettings(false)
-    setShowOrderTemplateSettings(false)
-    setTemplateHeaders([])
-    setErrors({})
-  } else if (open !== prevOpen) {
-    setPrevOpen(open)
-  }
+interface OrderTemplateDraft {
+  dataStartRow: number
+  headerRow: number
+}
 
-  // 템플릿 파일 업로드 및 분석
-  const handleTemplateUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
+const ORDER_FIELD_OPTIONS: CommonTemplateFieldOption[] = [
+  { key: 'sabangnetOrderNumber', label: '사방넷주문번호' },
+  { key: 'mallOrderNumber', label: '쇼핑몰주문번호' },
+  { key: 'subOrderNumber', label: '부주문번호' },
+  { key: 'orderName', label: '주문인' },
+  { key: 'recipientName', label: '받는인' },
+  { key: 'orderMobile', label: '주문인 핸드폰' },
+  { key: 'orderPhone', label: '주문인 연락처' },
+  { key: 'recipientMobile', label: '받는인 핸드폰' },
+  { key: 'recipientPhone', label: '받는인 연락처' },
+  { key: 'postalCode', label: '우편번호' },
+  { key: 'address', label: '배송지' },
+  { key: 'productName', label: '상품명' },
+  { key: 'optionName', label: '옵션' },
+  { key: 'quantity', label: '수량' },
+  { key: 'paymentAmount', label: '결제금액' },
+  { key: 'memo', label: '전언' },
+  { key: 'productCode', label: '상품코드' },
+  { key: 'mallProductNumber', label: '쇼핑몰상품번호' },
+  { key: 'shoppingMall', label: '사이트' },
+  { key: 'manufacturer', label: '제조사' },
+  { key: 'courier', label: '택배사' },
+  { key: 'trackingNumber', label: '송장번호' },
+  { key: 'logisticsNote', label: '물류전달사항' },
+  { key: 'productAbbr', label: '상품약어' },
+  { key: 'modelNumber', label: '모델번호' },
+  { key: 'fulfillmentType', label: '주문유형' },
+  { key: 'cjDate', label: '씨제이날짜' },
+  { key: 'collectedAt', label: '수집일시' },
+]
 
-      setIsAnalyzing(true)
+const TEMPLATE_TOKENS: TemplateTokenOption[] = [
+  // 주문 데이터(한글 토큰)
+  { label: '사방넷주문번호', token: '사방넷주문번호' },
+  { label: '쇼핑몰주문번호', token: '쇼핑몰주문번호' },
+  { label: '부주문번호', token: '부주문번호' },
+  { label: '주문인', token: '주문인' },
+  { label: '받는인', token: '받는인' },
+  { label: '주문인연락처', token: '주문인연락처' },
+  { label: '주문인핸드폰', token: '주문인핸드폰' },
+  { label: '받는인연락처', token: '받는인연락처' },
+  { label: '받는인핸드폰', token: '받는인핸드폰' },
+  { label: '우편번호', token: '우편번호' },
+  { label: '배송지', token: '배송지' },
+  { label: '전언', token: '전언' },
+  { label: '상품명', token: '상품명' },
+  { label: '옵션', token: '옵션' },
+  { label: '수량', token: '수량' },
+  { label: '결제금액', token: '결제금액' },
+  { label: '상품코드', token: '상품코드' },
+  { label: '쇼핑몰상품번호', token: '쇼핑몰상품번호' },
+  { label: '사이트', token: '사이트' },
+  { label: '제조사', token: '제조사' },
+  { label: '택배사', token: '택배사' },
+  { label: '송장번호', token: '송장번호' },
+  { label: '물류전달사항', token: '물류전달사항' },
+  { label: '상품약어', token: '상품약어' },
+  { label: '모델번호', token: '모델번호' },
+  { label: '주문유형', token: '주문유형' },
+  { label: '씨제이날짜', token: '씨제이날짜' },
+  { label: '수집일시', token: '수집일시' },
 
-      try {
-        const fileBuffer = await file.arrayBuffer()
-        const result = await analyzeOrderTemplate(fileBuffer)
+  // 공통 변수
+  { label: '제조사명', token: '제조사명' },
+  { label: '날짜', token: '날짜' },
+  { label: '총건수', token: '총건수' },
+  { label: '총수량', token: '총수량' },
+  { label: '총금액', token: '총금액' },
+]
 
-        if (result.success && result.analysis) {
-          setTemplateHeaders(result.analysis.headers || [])
-          setOrderTemplate({
-            ...orderTemplate,
-            templateFileName: file.name,
-            templateFileBuffer: fileBuffer,
-            headerRow: result.analysis.headerRow,
-            dataStartRow: result.analysis.dataStartRow,
-            columnMappings: result.analysis.suggestedMappings || {},
-          })
-        }
-      } catch (error) {
-        console.error('Template analysis failed:', error)
-      } finally {
-        setIsAnalyzing(false)
-      }
+interface ManufacturerModalBodyProps {
+  invoiceTemplate: InvoiceTemplate
+  isFetchingStoredAnalysis: boolean
+  isSaving: boolean
+  manufacturer: Manufacturer
+  onClose: () => void
+  onSave: (input: Parameters<typeof updateManufacturerBundle>[0]) => void
+  orderTemplate: OrderTemplateData
+  storedAnalysis: TemplateAnalysis | null
+}
+
+export function ManufacturerModal({ open, onOpenChange, manufacturer }: ManufacturerModalProps) {
+  const manufacturerId = manufacturer?.id ?? 0
+  const canQuery = open && manufacturerId > 0
+
+  const { data: invoiceTemplate, isFetching: isFetchingInvoiceTemplate } = useQuery({
+    queryKey: queryKeys.invoiceTemplates.manufacturer(manufacturerId),
+    queryFn: () => getInvoiceTemplateOrDefault(manufacturerId),
+    enabled: canQuery,
+  })
+
+  const { data: orderTemplate, isFetching: isFetchingOrderTemplate } = useQuery({
+    queryKey: queryKeys.orderTemplates.manufacturer(manufacturerId),
+    queryFn: () => getOrderTemplateOrDefault(manufacturerId),
+    enabled: canQuery,
+  })
+
+  const { data: storedAnalysisResult, isFetching: isFetchingStoredAnalysis } = useQuery({
+    queryKey: queryKeys.orderTemplates.manufacturerAnalysis(manufacturerId),
+    queryFn: () => analyzeCurrentManufacturerOrderTemplate(manufacturerId),
+    enabled: canQuery,
+  })
+
+  const storedAnalysis = storedAnalysisResult?.success ? (storedAnalysisResult.analysis ?? null) : null
+
+  const [isSaving, saveBundle] = useServerAction(updateManufacturerBundle, {
+    invalidateKeys: [
+      queryKeys.manufacturers.all,
+      queryKeys.orders.all,
+      queryKeys.invoiceTemplates.all,
+      queryKeys.orderTemplates.manufacturerAll,
+    ],
+    onSuccess: () => {
+      toast.success('저장됐어요')
+      onOpenChange(false)
     },
-    [orderTemplate],
-  )
+    onError: (error) => toast.error(error),
+  })
 
-  // 연결 업데이트
-  const updateMapping = (sabangnetKey: string, column: string) => {
-    setOrderTemplate({
-      ...orderTemplate,
-      columnMappings: {
-        ...orderTemplate.columnMappings,
-        [sabangnetKey]: column,
-      },
-    })
-  }
-
-  // 연결 삭제
-  const removeMapping = (sabangnetKey: string) => {
-    const newMappings = { ...orderTemplate.columnMappings }
-    delete newMappings[sabangnetKey]
-    setOrderTemplate({
-      ...orderTemplate,
-      columnMappings: newMappings,
-    })
-  }
-
-  function validate() {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = '제조사명을 입력하세요'
+  function handleOpenChange(nextOpen: boolean) {
+    if (!isSaving) {
+      onOpenChange(nextOpen)
     }
-    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식을 입력하세요'
-    }
-    if (formData.ccEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ccEmail)) {
-      newErrors.ccEmail = '올바른 이메일 형식을 입력하세요'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (!validate()) return
-
-    onSave(
-      {
-        ...formData,
-        email: formData.email.trim() || null,
-        ccEmail: formData.ccEmail || undefined,
-      },
-      invoiceTemplate,
-      orderTemplate,
-    )
-
-    onOpenChange(false)
+  if (!manufacturer) {
+    return null
   }
 
-  // 주요 사방넷 컬럼 (연결 UI에 표시)
-  const mainSabangnetColumns = SABANGNET_COLUMNS.filter((col) =>
-    [
-      'address',
-      'memo',
-      'optionName',
-      'orderName',
-      'productName',
-      'quantity',
-      'recipientMobile',
-      'recipientName',
-      'sabangnetOrderNumber',
-    ].includes(col.key),
-  )
+  const isLoading = isFetchingInvoiceTemplate || isFetchingOrderTemplate
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg h-[90dvh] max-h-[90dvh] overflow-hidden grid grid-rows-[auto_minmax(0,1fr)]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-              <Building2 className="h-5 w-5 text-slate-600" />
-            </div>
-            <div>
-              <DialogTitle>{isEdit ? '제조사 수정' : '제조사 추가'}</DialogTitle>
-              <DialogDescription>
-                {isEdit ? '제조사 정보를 수정합니다.' : '새로운 제조사를 등록합니다.'}
-              </DialogDescription>
-            </div>
-          </div>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
+          <DialogTitle>제조사 정보 수정</DialogTitle>
+          <DialogDescription>기본 정보와 템플릿 설정을 수정해요. 제조사명은 변경할 수 없어요.</DialogDescription>
         </DialogHeader>
 
-        <form className="min-h-0 flex flex-col" onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-4 pr-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="name">
-                제조사명 <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                className={errors.name ? 'border-rose-500' : ''}
-                id="name"
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="예: 농심식품"
-                value={formData.name}
-              />
-              {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="contactName">담당자명</Label>
-              <Input
-                id="contactName"
-                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                placeholder="예: 김영희"
-                value={formData.contactName}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                className={errors.email ? 'border-rose-500' : ''}
-                id="email"
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="예: contact@company.com"
-                type="email"
-                value={formData.email}
-              />
-              {!formData.email.trim() && <p className="text-xs text-amber-700">이메일이 없으면 발주서 발송이 막혀요</p>}
-              {errors.email && <p className="text-xs text-rose-500">{errors.email}</p>}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="ccEmail">참조 이메일 (CC)</Label>
-              <Input
-                className={errors.ccEmail ? 'border-rose-500' : ''}
-                id="ccEmail"
-                onChange={(e) => setFormData({ ...formData, ccEmail: e.target.value })}
-                placeholder="예: order@company.com"
-                type="email"
-                value={formData.ccEmail}
-              />
-              {errors.ccEmail && <p className="text-xs text-rose-500">{errors.ccEmail}</p>}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="phone">전화번호</Label>
-              <Input
-                id="phone"
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="예: 02-1234-5678"
-                type="tel"
-                value={formData.phone}
-              />
-            </div>
-
-            {/* Order Template Settings (발주서 양식) - Collapsible */}
-            <div className="border border-blue-200 rounded-lg overflow-hidden">
-              <button
-                className="flex items-center justify-between w-full px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
-                onClick={() => setShowOrderTemplateSettings(!showOrderTemplateSettings)}
-                type="button"
-              >
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800">발주서 양식 설정</span>
-                </div>
-                {showOrderTemplateSettings ? (
-                  <ChevronUp className="h-4 w-4 text-blue-600" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-blue-600" />
-                )}
-              </button>
-
-              {showOrderTemplateSettings && (
-                <div className="p-4 flex flex-col gap-4 bg-background/50">
-                  <p className="text-xs text-slate-500">
-                    제조사의 발주서 양식 파일을 업로드하면 컬럼 구조를 자동으로 분석합니다.
-                  </p>
-
-                  {/* Template Upload */}
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs">양식 파일 업로드</Label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1">
-                        <input accept=".xlsx,.xls" className="hidden" onChange={handleTemplateUpload} type="file" />
-                        <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                          <Upload className="h-4 w-4 text-slate-400" />
-                          <span className="text-sm text-slate-600">
-                            {orderTemplate.templateFileName || '양식 파일 선택...'}
-                          </span>
-                        </div>
-                      </label>
-                      {isAnalyzing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
-                    </div>
-                  </div>
-
-                  {/* Row Settings */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">헤더 행 번호</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        min={1}
-                        onChange={(e) =>
-                          setOrderTemplate({ ...orderTemplate, headerRow: parseInt(e.target.value) || 1 })
-                        }
-                        placeholder="1"
-                        type="number"
-                        value={orderTemplate.headerRow}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">데이터 시작 행</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        min={1}
-                        onChange={(e) =>
-                          setOrderTemplate({ ...orderTemplate, dataStartRow: parseInt(e.target.value) || 2 })
-                        }
-                        placeholder="2"
-                        type="number"
-                        value={orderTemplate.dataStartRow}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Column Mappings */}
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs">컬럼 연결</Label>
-                    <p className="text-xs text-slate-400">사방넷 데이터를 제조사 양식의 어느 열에 넣을지 설정합니다.</p>
-                    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                      {mainSabangnetColumns.map((col) => (
-                        <div className="flex items-center gap-2" key={col.key}>
-                          <span className="text-xs text-slate-600 w-24 truncate">{col.label}</span>
-                          <span className="text-slate-400">→</span>
-                          <Select
-                            onValueChange={(value) => {
-                              if (value === '__none__') {
-                                removeMapping(col.key)
-                              } else {
-                                updateMapping(col.key, value)
-                              }
-                            }}
-                            value={orderTemplate.columnMappings[col.key] || '__none__'}
-                          >
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue placeholder="컬럼 선택" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="__none__">미지정</SelectItem>
-                              {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'].map(
-                                (letter) => (
-                                  <SelectItem key={letter} value={letter}>
-                                    {letter}열{' '}
-                                    {templateHeaders[letter.charCodeAt(0) - 65]
-                                      ? `(${templateHeaders[letter.charCodeAt(0) - 65]})`
-                                      : ''}
-                                  </SelectItem>
-                                ),
-                              )}
-                            </SelectContent>
-                          </Select>
-                          {orderTemplate.columnMappings[col.key] && (
-                            <button
-                              className="p-1 text-slate-400 hover:text-rose-500"
-                              onClick={() => removeMapping(col.key)}
-                              type="button"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Invoice Template Settings (송장 양식) - Collapsible */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <button
-                className="flex items-center justify-between w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
-                onClick={() => setShowInvoiceSettings(!showInvoiceSettings)}
-                type="button"
-              >
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm font-medium text-slate-700">송장 양식 설정</span>
-                </div>
-                {showInvoiceSettings ? (
-                  <ChevronUp className="h-4 w-4 text-slate-500" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-slate-500" />
-                )}
-              </button>
-
-              {showInvoiceSettings && (
-                <div className="p-4 flex flex-col gap-4 bg-background/50">
-                  <p className="text-xs text-slate-500">
-                    거래처에서 받은 송장 파일의 컬럼 위치를 설정합니다. 기본값으로 대부분의 양식에 대응됩니다.
-                  </p>
-
-                  {/* Column Index Toggle */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm">컬럼 지정 방식</Label>
-                      <p className="text-xs text-slate-500">
-                        {invoiceTemplate.useColumnIndex ? 'A, B, C 형식 (엑셀 열)' : '헤더명으로 찾기'}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={invoiceTemplate.useColumnIndex}
-                      onCheckedChange={(checked) => setInvoiceTemplate({ ...invoiceTemplate, useColumnIndex: checked })}
-                    />
-                  </div>
-
-                  {/* Column Mappings */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">주문번호 컬럼</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, orderNumberColumn: e.target.value })}
-                        placeholder={invoiceTemplate.useColumnIndex ? 'A' : '주문번호'}
-                        value={invoiceTemplate.orderNumberColumn}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">택배사 컬럼</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        onChange={(e) => setInvoiceTemplate({ ...invoiceTemplate, courierColumn: e.target.value })}
-                        placeholder={invoiceTemplate.useColumnIndex ? 'B' : '택배사'}
-                        value={invoiceTemplate.courierColumn}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">송장번호 컬럼</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        onChange={(e) =>
-                          setInvoiceTemplate({ ...invoiceTemplate, trackingNumberColumn: e.target.value })
-                        }
-                        placeholder={invoiceTemplate.useColumnIndex ? 'C' : '송장번호'}
-                        value={invoiceTemplate.trackingNumberColumn}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row Settings */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">헤더 행 번호</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        min={1}
-                        onChange={(e) =>
-                          setInvoiceTemplate({ ...invoiceTemplate, headerRow: parseInt(e.target.value) || 1 })
-                        }
-                        placeholder="1"
-                        type="number"
-                        value={invoiceTemplate.headerRow}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">데이터 시작 행</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        min={1}
-                        onChange={(e) =>
-                          setInvoiceTemplate({
-                            ...invoiceTemplate,
-                            dataStartRow: parseInt(e.target.value) || 2,
-                          })
-                        }
-                        placeholder="2"
-                        type="number"
-                        value={invoiceTemplate.dataStartRow}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+        {isLoading || !invoiceTemplate || !orderTemplate ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-0 pt-4 shrink-0">
-            <Button disabled={isSaving} onClick={() => onOpenChange(false)} type="button" variant="outline">
-              취소
-            </Button>
-            <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving} type="submit">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : isEdit ? (
-                '수정'
-              ) : (
-                '추가'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        ) : (
+          <ManufacturerModalBody
+            invoiceTemplate={invoiceTemplate}
+            isFetchingStoredAnalysis={isFetchingStoredAnalysis}
+            isSaving={isSaving}
+            manufacturer={manufacturer}
+            onClose={() => onOpenChange(false)}
+            onSave={saveBundle}
+            orderTemplate={orderTemplate}
+            storedAnalysis={storedAnalysis}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )
 }
 
-function getFormDataFromManufacturer(manufacturer: Manufacturer | null) {
+function buildOrderTemplateConfig(columnRules: Record<string, CommonTemplateColumnRule>): {
+  columnMappings: Record<string, string>
+  fixedValues?: Record<string, string>
+  fieldRuleCount: number
+} {
+  const columnMappings: Record<string, string> = {}
+  const fixedValues: Record<string, string> = {}
+  let fieldRuleCount = 0
+
+  for (const [col, rule] of Object.entries(columnRules)) {
+    const columnLetter = col.trim().toUpperCase()
+    if (!/^[A-Z]+$/.test(columnLetter)) continue
+
+    if (rule.kind === 'field') {
+      const fieldKey = rule.fieldKey.trim()
+      if (!fieldKey) continue
+      columnMappings[fieldKey] = columnLetter
+      fieldRuleCount += 1
+      continue
+    }
+
+    if (rule.kind === 'template') {
+      const template = rule.template.trim()
+      if (template.length === 0) continue
+      fixedValues[columnLetter] = template
+    }
+  }
+
   return {
-    name: manufacturer?.name ?? '',
-    contactName: manufacturer?.contactName ?? '',
-    email: manufacturer?.email ?? '',
-    ccEmail: manufacturer?.ccEmail ?? '',
-    phone: manufacturer?.phone ?? '',
+    columnMappings,
+    fixedValues: Object.keys(fixedValues).length > 0 ? fixedValues : undefined,
+    fieldRuleCount,
   }
 }
 
-function getInvoiceTemplateFromManufacturer(_manufacturer: Manufacturer | null): Partial<InvoiceTemplate> {
-  // Invoice template loading is now handled async via API
-  // Default template is used initially, actual template should be fetched separately
-  return { ...defaultInvoiceTemplate }
+function ManufacturerModalBody({
+  invoiceTemplate,
+  isFetchingStoredAnalysis,
+  isSaving,
+  manufacturer,
+  onClose,
+  onSave,
+  orderTemplate,
+  storedAnalysis,
+}: ManufacturerModalBodyProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const [manufacturerDraft, setManufacturerDraft] = useState<ManufacturerDraft>(() => ({
+    contactName: manufacturer.contactName,
+    email: manufacturer.email ?? '',
+    ccEmail: manufacturer.ccEmail ?? '',
+    phone: manufacturer.phone,
+  }))
+
+  const [invoiceDraft, setInvoiceDraft] = useState<InvoiceTemplateDraft>(() => toInvoiceTemplateDraft(invoiceTemplate))
+
+  const [orderDraft, setOrderDraft] = useState<OrderTemplateDraft>(() => ({
+    headerRow: orderTemplate.headerRow ?? 1,
+    dataStartRow: orderTemplate.dataStartRow ?? 2,
+  }))
+
+  const [columnRules, setColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(() =>
+    parseInitialColumnRules(orderTemplate),
+  )
+
+  const [baseline] = useState(() => {
+    return {
+      manufacturer: {
+        contactName: manufacturer.contactName,
+        email: manufacturer.email ?? '',
+        ccEmail: manufacturer.ccEmail ?? '',
+        phone: manufacturer.phone,
+      } satisfies ManufacturerDraft,
+      invoice: toInvoiceTemplateDraft(invoiceTemplate),
+      order: {
+        headerRow: orderTemplate.headerRow ?? 1,
+        dataStartRow: orderTemplate.dataStartRow ?? 2,
+      } satisfies OrderTemplateDraft,
+      columnRulesKey: serializeColumnRules(parseInitialColumnRules(orderTemplate)),
+    }
+  })
+
+  const [uploadedOrderTemplateFile, setUploadedOrderTemplateFile] = useState<{
+    buffer: ArrayBuffer
+    name: string
+  } | null>(null)
+  const [analysis, setAnalysis] = useState<TemplateAnalysis | null>(null)
+
+  const effectiveAnalysis = uploadedOrderTemplateFile ? analysis : storedAnalysis
+
+  const [isAnalyzingUpload, analyzeUploadTemplate] = useServerAction(analyzeOrderTemplateFile, {
+    onSuccess: (result) => {
+      if (!result.success || !result.analysis) return
+      setAnalysis(result.analysis)
+      setOrderDraft((prev) => ({
+        ...prev,
+        headerRow: result.analysis!.headerRow,
+        dataStartRow: result.analysis!.dataStartRow,
+      }))
+      toast.success('템플릿 분석이 완료됐어요')
+    },
+  })
+
+  const currentRulesKey = serializeColumnRules(columnRules)
+
+  const isManufacturerDirty =
+    manufacturerDraft.contactName !== baseline.manufacturer.contactName ||
+    manufacturerDraft.email !== baseline.manufacturer.email ||
+    manufacturerDraft.ccEmail !== baseline.manufacturer.ccEmail ||
+    manufacturerDraft.phone !== baseline.manufacturer.phone
+
+  const isInvoiceDirty =
+    invoiceDraft.orderNumberColumn !== baseline.invoice.orderNumberColumn ||
+    invoiceDraft.courierColumn !== baseline.invoice.courierColumn ||
+    invoiceDraft.trackingNumberColumn !== baseline.invoice.trackingNumberColumn ||
+    invoiceDraft.headerRow !== baseline.invoice.headerRow ||
+    invoiceDraft.dataStartRow !== baseline.invoice.dataStartRow ||
+    invoiceDraft.useColumnIndex !== baseline.invoice.useColumnIndex
+
+  const isOrderDirty =
+    Boolean(uploadedOrderTemplateFile) ||
+    orderDraft.headerRow !== baseline.order.headerRow ||
+    orderDraft.dataStartRow !== baseline.order.dataStartRow ||
+    currentRulesKey !== baseline.columnRulesKey
+
+  const canSave = !isSaving && (isManufacturerDirty || isInvoiceDirty || isOrderDirty)
+
+  async function handleTemplateUpload(file: File) {
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      toast.error('xlsx 파일만 업로드할 수 있어요')
+      return
+    }
+
+    const buffer = await file.arrayBuffer()
+    setUploadedOrderTemplateFile({ name: file.name, buffer })
+    analyzeUploadTemplate(buffer)
+  }
+
+  function applySuggestions() {
+    const suggestedMappings = effectiveAnalysis?.suggestedMappings ?? {}
+    const entries = Object.entries(suggestedMappings)
+    if (entries.length === 0) {
+      toast.error('적용할 추천 연결이 없어요')
+      return
+    }
+
+    let applied = 0
+    setColumnRules((prev) => {
+      const next = { ...prev }
+      for (const [fieldKey, columnLetter] of entries) {
+        const col = columnLetter.trim().toUpperCase()
+        if (!col) continue
+        const existing = next[col]
+        if (existing && existing.kind !== 'none') continue
+        next[col] = { kind: 'field', fieldKey }
+        applied += 1
+      }
+      return next
+    })
+
+    if (applied > 0) {
+      toast.success(`추천 연결 ${applied}개를 적용했어요`)
+    } else {
+      toast('이미 설정된 컬럼이 많아서 적용할 게 없어요')
+    }
+  }
+
+  function handleSave() {
+    const input: Parameters<typeof updateManufacturerBundle>[0] = { manufacturerId: manufacturer.id }
+
+    if (isManufacturerDirty) {
+      input.manufacturer = {
+        contactName: normalizeToNullableString(manufacturerDraft.contactName),
+        email: normalizeToNullableString(manufacturerDraft.email),
+        ccEmail: normalizeToNullableString(manufacturerDraft.ccEmail),
+        phone: normalizeToNullableString(manufacturerDraft.phone),
+      }
+    }
+
+    if (isInvoiceDirty) {
+      input.invoiceTemplate = {
+        orderNumberColumn: invoiceDraft.orderNumberColumn,
+        courierColumn: invoiceDraft.courierColumn,
+        trackingNumberColumn: invoiceDraft.trackingNumberColumn,
+        headerRow: invoiceDraft.headerRow,
+        dataStartRow: invoiceDraft.dataStartRow,
+        useColumnIndex: invoiceDraft.useColumnIndex,
+      }
+    }
+
+    if (isOrderDirty) {
+      const { columnMappings, fixedValues, fieldRuleCount } = buildOrderTemplateConfig(columnRules)
+      if (fieldRuleCount === 0) {
+        toast.error('발주서 컬럼 연결이 비어있어요. 최소 1개 이상 연결해 주세요.')
+        return
+      }
+
+      input.orderTemplate = {
+        headerRow: orderDraft.headerRow,
+        dataStartRow: orderDraft.dataStartRow,
+        columnMappings,
+        fixedValues,
+        templateFileName: uploadedOrderTemplateFile?.name,
+        templateFileBuffer: uploadedOrderTemplateFile?.buffer,
+      }
+    }
+
+    onSave(input)
+  }
+
+  return (
+    <>
+      <div className="flex flex-col gap-5 overflow-y-auto flex-1 pr-2">
+        {/* Basic */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-foreground">기본 정보</h3>
+            <p className="text-xs text-muted-foreground">빈 값으로 저장하면 기존 값이 삭제돼요.</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="manufacturer-name">제조사명</Label>
+              <Input aria-disabled disabled id="manufacturer-name" value={manufacturer.name} />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="manufacturer-contact-name">담당자</Label>
+              <Input
+                id="manufacturer-contact-name"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setManufacturerDraft((prev) => ({ ...prev, contactName: value }))
+                }}
+                placeholder="예: 홍길동"
+                value={manufacturerDraft.contactName}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="manufacturer-email">이메일</Label>
+              <Input
+                autoCapitalize="none"
+                autoCorrect="off"
+                id="manufacturer-email"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setManufacturerDraft((prev) => ({ ...prev, email: value }))
+                }}
+                placeholder="예: orders@example.com"
+                type="email"
+                value={manufacturerDraft.email}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="manufacturer-cc-email">CC 이메일</Label>
+              <Input
+                autoCapitalize="none"
+                autoCorrect="off"
+                id="manufacturer-cc-email"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setManufacturerDraft((prev) => ({ ...prev, ccEmail: value }))
+                }}
+                placeholder="예: a@example.com, b@example.com"
+                value={manufacturerDraft.ccEmail}
+              />
+              <p className="text-xs text-muted-foreground">여러 개면 쉼표(,)로 구분해요.</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="manufacturer-phone">전화번호</Label>
+              <Input
+                id="manufacturer-phone"
+                inputMode="tel"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setManufacturerDraft((prev) => ({ ...prev, phone: value }))
+                }}
+                placeholder="예: 032-000-0000"
+                type="tel"
+                value={manufacturerDraft.phone}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Invoice template */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-foreground">송장 템플릿</h3>
+              <p className="text-xs text-muted-foreground">송장 업로드 파일을 읽을 때 어떤 컬럼을 볼지 설정해요.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={invoiceDraft.useColumnIndex}
+                id="invoice-use-column-index"
+                onCheckedChange={(checked) => setInvoiceDraft((prev) => ({ ...prev, useColumnIndex: checked }))}
+              />
+              <Label className="text-xs text-muted-foreground" htmlFor="invoice-use-column-index">
+                컬럼 문자로 지정
+              </Label>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="invoice-order-number">주문번호 {invoiceDraft.useColumnIndex ? '컬럼' : '헤더명'}</Label>
+              <Input
+                id="invoice-order-number"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setInvoiceDraft((prev) => ({ ...prev, orderNumberColumn: value }))
+                }}
+                placeholder={invoiceDraft.useColumnIndex ? '예: A' : '예: 사방넷주문번호'}
+                value={invoiceDraft.orderNumberColumn}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="invoice-courier">택배사 {invoiceDraft.useColumnIndex ? '컬럼' : '헤더명'}</Label>
+              <Input
+                id="invoice-courier"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setInvoiceDraft((prev) => ({ ...prev, courierColumn: value }))
+                }}
+                placeholder={invoiceDraft.useColumnIndex ? '예: B' : '예: 택배사'}
+                value={invoiceDraft.courierColumn}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="invoice-tracking">송장번호 {invoiceDraft.useColumnIndex ? '컬럼' : '헤더명'}</Label>
+              <Input
+                id="invoice-tracking"
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  setInvoiceDraft((prev) => ({ ...prev, trackingNumberColumn: value }))
+                }}
+                placeholder={invoiceDraft.useColumnIndex ? '예: C' : '예: 송장번호'}
+                value={invoiceDraft.trackingNumberColumn}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="invoice-header-row">헤더 행</Label>
+                <Input
+                  id="invoice-header-row"
+                  min={1}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value
+                    setInvoiceDraft((prev) => ({ ...prev, headerRow: toSafeInt(value, 1) }))
+                  }}
+                  type="number"
+                  value={invoiceDraft.headerRow}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="invoice-data-start-row">데이터 시작 행</Label>
+                <Input
+                  id="invoice-data-start-row"
+                  min={1}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value
+                    setInvoiceDraft((prev) => ({ ...prev, dataStartRow: toSafeInt(value, 2) }))
+                  }}
+                  type="number"
+                  value={invoiceDraft.dataStartRow}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Order template */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-foreground">발주서 템플릿</h3>
+            <p className="text-xs text-muted-foreground">
+              제조사 템플릿이 “파일 + 컬럼 연결” 모두 유효할 때만 적용돼요. 아니면 공통 템플릿이 사용돼요.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-4">
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
+                  <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">템플릿 파일</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {uploadedOrderTemplateFile?.name || orderTemplate.templateFileName || '업로드된 파일이 없어요'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer">
+                  <input
+                    accept=".xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.currentTarget.files?.[0]
+                      if (!file) return
+                      handleTemplateUpload(file)
+                    }}
+                    ref={fileInputRef}
+                    type="file"
+                  />
+                  <Button size="sm" type="button" variant="outline">
+                    파일 선택
+                  </Button>
+                </label>
+
+                {uploadedOrderTemplateFile && (
+                  <Button
+                    onClick={() => {
+                      setUploadedOrderTemplateFile(null)
+                      setAnalysis(null)
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = ''
+                      }
+                    }}
+                    size="sm"
+                    type="button"
+                    variant="ghost"
+                  >
+                    선택 해제
+                  </Button>
+                )}
+
+                {(isAnalyzingUpload || isFetchingStoredAnalysis) && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="order-template-header-row">헤더 행</Label>
+                <Input
+                  id="order-template-header-row"
+                  min={1}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value
+                    setOrderDraft((prev) => ({ ...prev, headerRow: toSafeInt(value, 1) }))
+                  }}
+                  type="number"
+                  value={orderDraft.headerRow}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="order-template-data-start-row">데이터 시작 행</Label>
+                <Input
+                  id="order-template-data-start-row"
+                  min={1}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value
+                    setOrderDraft((prev) => ({ ...prev, dataStartRow: toSafeInt(value, 2) }))
+                  }}
+                  type="number"
+                  value={orderDraft.dataStartRow}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="overflow-x-auto">
+              <CommonOrderTemplateColumnEditor
+                fieldOptions={ORDER_FIELD_OPTIONS}
+                headers={effectiveAnalysis?.headers ?? []}
+                lastUsedColumnIndex={effectiveAnalysis?.lastUsedColumnIndex}
+                onApplySuggestions={applySuggestions}
+                onChange={setColumnRules}
+                sampleData={effectiveAnalysis?.sampleData ?? []}
+                suggestionsCount={Object.keys(effectiveAnalysis?.suggestedMappings ?? {}).length}
+                tokens={TEMPLATE_TOKENS}
+                value={columnRules}
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <DialogFooter className="gap-2 sm:gap-0 shrink-0 pt-4 border-t border-border">
+        <Button disabled={isSaving} onClick={onClose} type="button" variant="outline">
+          취소
+        </Button>
+        <Button disabled={!canSave} onClick={handleSave} type="button">
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              저장 중...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              저장
+            </>
+          )}
+        </Button>
+      </DialogFooter>
+    </>
+  )
+}
+
+function normalizeToNullableString(raw: string): string | null {
+  const v = raw.trim()
+  return v.length > 0 ? v : null
+}
+
+function parseInitialColumnRules(template: OrderTemplateData): Record<string, CommonTemplateColumnRule> {
+  const columnRules: Record<string, CommonTemplateColumnRule> = {}
+
+  for (const [fieldKey, rawColumn] of Object.entries(template.columnMappings ?? {})) {
+    const col = String(rawColumn ?? '')
+      .trim()
+      .toUpperCase()
+    if (!/^[A-Z]+$/.test(col)) continue
+    columnRules[col] = { kind: 'field', fieldKey }
+  }
+
+  for (const [rawKey, rawValue] of Object.entries(template.fixedValues ?? {})) {
+    const key = String(rawKey ?? '').trim()
+    const normalized = key.toUpperCase()
+    const value = String(rawValue ?? '')
+    if (!/^[A-Z]+$/.test(normalized)) continue
+    columnRules[normalized] = { kind: 'template', template: value }
+  }
+
+  return columnRules
+}
+
+function serializeColumnRules(columnRules: Record<string, CommonTemplateColumnRule>): string {
+  const keys = Object.keys(columnRules).sort((a, b) => a.localeCompare(b))
+  return JSON.stringify(
+    keys.map((key) => {
+      const rule = columnRules[key]
+      if (!rule || rule.kind === 'none') return [key, 'none']
+      if (rule.kind === 'field') return [key, 'field', rule.fieldKey.trim()]
+      return [key, 'template', rule.template.trim()]
+    }),
+  )
+}
+
+function toInvoiceTemplateDraft(template: InvoiceTemplate): InvoiceTemplateDraft {
+  return {
+    orderNumberColumn: template.orderNumberColumn,
+    courierColumn: template.courierColumn,
+    trackingNumberColumn: template.trackingNumberColumn,
+    headerRow: template.headerRow,
+    dataStartRow: template.dataStartRow,
+    useColumnIndex: template.useColumnIndex,
+  }
+}
+
+function toSafeInt(raw: string, fallback: number): number {
+  const n = Number.parseInt(raw, 10)
+  if (Number.isFinite(n) && n > 0) return n
+  return fallback
 }

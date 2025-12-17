@@ -2,27 +2,14 @@
 
 import { Building2, Loader2, TrendingUp, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
-import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
+import type { Manufacturer } from '@/services/manufacturers.types'
 
-import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { ManufacturerModal } from '@/components/manufacturer/manufacturer-modal'
 import { ManufacturerTable } from '@/components/manufacturer/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
-import { useServerAction } from '@/hooks/use-server-action'
-import { update, updateInvoiceTemplate, updateOrderTemplate } from '@/services/manufacturers'
-
-interface OrderTemplateDraft {
-  columnMappings: Record<string, string>
-  dataStartRow: number
-  fixedValues?: Record<string, string>
-  headerRow: number
-  templateFileBuffer?: ArrayBuffer
-  templateFileName?: string
-}
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -30,83 +17,10 @@ export default function ManufacturersPage() {
 
   const { data: manufacturers = [], isLoading } = useManufacturers()
 
-  const [isUpdating, updateManufacturer] = useServerAction(
-    ({ id, data }: { id: number; data: Partial<Manufacturer> }) => update(id, data),
-    {
-      invalidateKeys: [queryKeys.manufacturers.all],
-      onSuccess: () => toast.success('제조사 정보가 수정되었습니다'),
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const [isSavingInvoice, saveInvoiceTemplate] = useServerAction(
-    ({ manufacturerId, template }: { manufacturerId: number; template: InvoiceTemplate }) =>
-      updateInvoiceTemplate(manufacturerId, template),
-    {
-      invalidateKeys: [queryKeys.invoiceTemplates.all],
-    },
-  )
-
-  const [isSavingOrder, saveOrderTemplate] = useServerAction(
-    ({ manufacturerId, template }: { manufacturerId: number; template: OrderTemplateDraft }) =>
-      updateOrderTemplate(manufacturerId, template),
-    {
-      invalidateKeys: [queryKeys.orderTemplates.manufacturerAll],
-    },
-  )
-
   const handleEdit = (manufacturer: Manufacturer) => {
     setEditingManufacturer(manufacturer)
     setIsModalOpen(true)
   }
-
-  const handleSave = (
-    data: Partial<Manufacturer>,
-    invoiceTemplate?: Partial<InvoiceTemplate>,
-    orderTemplate?: Partial<OrderTemplateDraft>,
-  ) => {
-    if (editingManufacturer) {
-      // 제조사 정보 업데이트
-      updateManufacturer({ id: editingManufacturer.id, data })
-
-      // 송장 템플릿 업데이트
-      if (invoiceTemplate) {
-        saveInvoiceTemplate({
-          manufacturerId: editingManufacturer.id,
-          template: {
-            id: 0,
-            manufacturerId: editingManufacturer.id,
-            manufacturerName: data.name || editingManufacturer.name,
-            orderNumberColumn: invoiceTemplate.orderNumberColumn || 'A',
-            courierColumn: invoiceTemplate.courierColumn || 'B',
-            trackingNumberColumn: invoiceTemplate.trackingNumberColumn || 'C',
-            headerRow: invoiceTemplate.headerRow || 1,
-            dataStartRow: invoiceTemplate.dataStartRow || 2,
-            useColumnIndex: invoiceTemplate.useColumnIndex ?? true,
-          },
-        })
-      }
-
-      // 발주서 템플릿 업데이트
-      if (orderTemplate && Object.keys(orderTemplate.columnMappings || {}).length > 0) {
-        saveOrderTemplate({
-          manufacturerId: editingManufacturer.id,
-          template: {
-            headerRow: orderTemplate.headerRow || 1,
-            dataStartRow: orderTemplate.dataStartRow || 2,
-            columnMappings: orderTemplate.columnMappings || {},
-            fixedValues: orderTemplate.fixedValues,
-            templateFileName: orderTemplate.templateFileName,
-            templateFileBuffer: orderTemplate.templateFileBuffer,
-          },
-        })
-      }
-    } else {
-      toast.error('제조사 추가는 CSV 업로드로 해 주세요')
-    }
-  }
-
-  const isSaving = isUpdating || isSavingInvoice || isSavingOrder
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -118,7 +32,7 @@ export default function ManufacturersPage() {
 
   if (isLoading) {
     return (
-      <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
+      <AppShell description="거래처 제조사 정보를 관리해요" title="제조사 관리">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -127,7 +41,7 @@ export default function ManufacturersPage() {
   }
 
   return (
-    <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
+    <AppShell description="거래처 제조사 정보를 관리해요" title="제조사 관리">
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card className="border-slate-200 bg-card shadow-sm">
@@ -172,10 +86,13 @@ export default function ManufacturersPage() {
 
       {/* Add/Edit Modal */}
       <ManufacturerModal
-        isSaving={isSaving}
         manufacturer={editingManufacturer}
-        onOpenChange={setIsModalOpen}
-        onSave={handleSave}
+        onOpenChange={(open) => {
+          setIsModalOpen(open)
+          if (!open) {
+            setEditingManufacturer(null)
+          }
+        }}
         open={isModalOpen}
       />
     </AppShell>

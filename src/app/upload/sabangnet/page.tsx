@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { UploadState } from '../common'
 import { invalidateCachesAfterUpload } from '../invalidate-after-upload'
 
+const ACCEPTED_EXTENSIONS = ['.xlsx', '.xls']
+
 export default function SabangnetUploadPage() {
   const queryClient = useQueryClient()
   const [{ status, message, file, result }, setUploadState] = useState<UploadState>({ status: 'idle' })
@@ -44,6 +46,10 @@ export default function SabangnetUploadPage() {
     }
   }
 
+  function handleError(message: string) {
+    setUploadState({ status: 'error', message })
+  }
+
   function handleClear() {
     setUploadState({ status: 'idle' })
   }
@@ -53,8 +59,10 @@ export default function SabangnetUploadPage() {
       <div className="max-w-2xl mx-auto">
         {status !== 'success' && (
           <Dropzone
+            acceptedExtensions={ACCEPTED_EXTENSIONS}
             isProcessing={isProcessing}
             onClear={handleClear}
+            onError={handleError}
             onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
           />

@@ -4,11 +4,6 @@ import type { ParseError } from '@/lib/excel'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
 
-/**
- * 사방넷 원본 파일 파싱 (다온발주양식.xlsx 기준)
- * 첫 번째 행이 헤더, 두 번째 행부터 데이터
- * 13번째 열(index 12)이 제조사
- */
 export async function parseSabangnetFile(buffer: ArrayBuffer) {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(buffer)
@@ -56,7 +51,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer) {
         continue
       }
 
-      const order = mapRowToOrder(rowData, rowNumber)
+      const order = mapExcelRowToOrderTable(rowData, rowNumber)
 
       if (order) {
         orders.push(order)
@@ -79,44 +74,7 @@ export async function parseSabangnetFile(buffer: ArrayBuffer) {
 const str = (val: unknown) => (val != null ? String(val).trim() : '')
 const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, '')) || 0
 
-/**
- * 사방넷 행 데이터를 ParsedOrder로 변환
- *
- * row.values는 1-based 배열 (index 0 = undefined, A열 = index 1)
- *
- * 컬럼 연결:
- * [1] A열: 상품명
- * [2] B열: 수량
- * [3] C열: 주문인
- * [4] D열: 받는인
- * [5] E열: 주문인 연락처
- * [6] F열: 주문인 핸드폰
- * [7] G열: 받는인 연락처
- * [8] H열: 받는인 핸드폰
- * [9] I열: 우편번호
- * [10] J열: 배송지
- * [11] K열: 전언
- * [12] L열: 사이트
- * [13] M열: 제조사
- * [14] N열: 택배사
- * [15] O열: 송장번호
- * [16] P열: 쇼핑몰주문번호
- * [17] Q열: 사방넷주문번호
- * [18] R열: 쇼핑몰상품번호
- * [19] S열: 옵션
- * [20] T열: F (주문유형)
- * [21] U열: 결제금액
- * [22] V열: 상품약어
- * [23] W열: 씨제이날짜
- * [24] X열: 물류전달사항
- * [25] Y열: 수집일시
- * [26] Z열: 부주문번호
- * [27] [열: 품번코드
- * [28] \열: 자체상품코드
- * [29] ]열: 모델번호
- * [30] ^열: 원가(상품)*수량
- */
-function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
+function mapExcelRowToOrderTable(rowData: CellValue[], rowNumber: number) {
   const sabangnetOrderNumber = str(rowData[17])
 
   if (!sabangnetOrderNumber) {
@@ -133,7 +91,6 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     throw new Error('쇼핑몰상품번호가 없어요')
   }
 
-  // "상품코드"는 (사이트 + 쇼핑몰상품번호) 조합을 사용합니다.
   const productCode = `${shoppingMall}::${mallProductNumber}`
 
   return {
