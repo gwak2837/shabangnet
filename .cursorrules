@@ -96,6 +96,7 @@ toast.error('삭제에 실패했어요')
 - **Never use `any` type.** Use `unknown` and narrow the type, or define proper interfaces/types.
 - Prefer type inference where possible, but be explicit for function parameters and return types.
 - Use strict TypeScript configuration.
+- **Prefer `T[]` over `Array<T>` for array types.**
 
 ```typescript
 // ❌ Bad

@@ -1,5 +1,11 @@
-import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, customType, integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
+
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return 'bytea'
+  },
+})
 
 export const settings = pgTable('settings', {
   key: varchar('key', { length: 100 }).primaryKey(),
@@ -9,6 +15,34 @@ export const settings = pgTable('settings', {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+}).enableRLS()
+
+export const shoppingMallTemplate = pgTable('shopping_mall_template', {
+  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 연결
+  exportConfig: text('export_config'), // JSON: 쇼핑몰 원본 -> 다운로드 엑셀 컬럼 연결(순서 포함)
+  headerRow: integer('header_row').default(1),
+  dataStartRow: integer('data_start_row').default(2),
+  enabled: boolean('enabled').default(true),
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+}).enableRLS()
+
+export const commonOrderTemplate = pgTable('common_order_template', {
+  key: varchar('key', { length: 50 }).primaryKey(), // e.g. "default"
+  templateFileName: varchar('template_file_name', { length: 255 }).notNull(),
+  templateFile: bytea('template_file').notNull(),
+  headerRow: integer('header_row').default(1).notNull(),
+  dataStartRow: integer('data_start_row').default(2).notNull(),
+  columnMappings: text('column_mappings').notNull(), // JSON: sabangnetKey -> columnLetter
+  fixedValues: text('fixed_values'), // JSON: { "A": "{{manufacturerName}}", "FIELD:orderName": "{{orderName || recipientName}}" }
+  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
 export const courierMapping = pgTable('courier_mapping', {
@@ -24,22 +58,6 @@ export const exclusionPattern = pgTable('exclusion_pattern', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   pattern: varchar('pattern', { length: 255 }).notNull().unique(),
   description: text('description'),
-  enabled: boolean('enabled').default(true),
-  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-}).enableRLS()
-
-export const shoppingMallTemplate = pgTable('shopping_mall_template', {
-  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  mallName: varchar('mall_name', { length: 100 }).notNull().unique(),
-  displayName: varchar('display_name', { length: 100 }).notNull(),
-  columnMappings: text('column_mappings'), // JSON: 쇼핑몰 컬럼 -> 사방넷 컬럼 연결
-  exportConfig: text('export_config'), // JSON: 쇼핑몰 원본 -> 다운로드 엑셀 컬럼 연결(순서 포함)
-  headerRow: integer('header_row').default(1),
-  dataStartRow: integer('data_start_row').default(2),
   enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })

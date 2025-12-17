@@ -5,9 +5,6 @@ import postgres from 'postgres'
 
 import { courierMapping, exclusionPattern } from '../src/db/schema/settings'
 
-// ============================================
-// 발송 제외 패턴 기본값
-// ============================================
 const DEFAULT_EXCLUSION_PATTERNS = [
   { pattern: '[30002002]주문_센터택배', description: 'CJ온스타일 센터택배' },
   { pattern: '[30002002]주문_직택배', description: 'CJ온스타일 직택배' },
@@ -15,9 +12,6 @@ const DEFAULT_EXCLUSION_PATTERNS = [
   { pattern: '현대홈직택배', description: '현대홈쇼핑 직택배' },
 ]
 
-// ============================================
-// 택배사 코드 기본값
-// ============================================
 const DEFAULT_COURIER_MAPPINGS = [
   { name: 'CJ대한통운', code: '04', aliases: ['CJ대한통운', 'CJ택배', 'CJ', '대한통운', 'CJGLS'] },
   { name: '한진택배', code: '05', aliases: ['한진택배', '한진', 'HANJIN'] },

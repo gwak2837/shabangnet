@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Info, Loader2, Package, Upload } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, Info, Loader2, Package, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -10,7 +10,9 @@ import type { Product } from '@/services/products'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
-import { CostUploadModal } from '@/components/product/cost-upload-modal'
+import { DeleteProductsDialog } from '@/components/product/delete-products-dialog'
+import { ProductCsvDialog } from '@/components/product/product-csv-dialog'
+import { PRODUCT_CSV_HEADER } from '@/components/product/product-csv.types'
 import { ProductFilters } from '@/components/product/product-filters'
 import { ProductTable } from '@/components/product/product-table'
 import { Button } from '@/components/ui/button'
@@ -18,8 +20,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useProducts } from '@/hooks/use-products'
 import { useServerAction } from '@/hooks/use-server-action'
+import { authClient } from '@/lib/auth-client'
 import { saveProductManufacturerLink } from '@/services/product-manufacturer-links'
-import { create, update } from '@/services/products'
+import { update } from '@/services/products'
+import { stringifyCsv } from '@/utils/csv'
 
 interface MatchingSummaryResponse {
   missingEmailManufacturers: unknown[]
@@ -35,15 +39,18 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
   const [searchQuery, setSearchQuery] = useState(() => initialSearchQuery)
   const [showUnmappedOnly, setShowUnmappedOnly] = useState(() => initialShowUnmappedOnly)
   const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
-  const [isCostUploadOpen, setIsCostUploadOpen] = useState(false)
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   const { data: products = [], isLoading: isLoadingProducts } = useProducts()
   const { data: manufacturers = [] } = useManufacturers()
+  const { data: session } = authClient.useSession()
+  const isAdmin = session?.user?.isAdmin ?? false
 
   const { data: matchingSummary } = useQuery({
     queryKey: queryKeys.orders.matching,
     queryFn: async () => {
-      const res = await fetch('/api/orders/matching', { cache: 'no-store' })
+      const res = await fetch('/api/orders/matching')
       const json = (await res.json()) as MatchingSummaryResponse & { error?: string }
       if (!res.ok) {
         throw new Error(json.error || '연결 상태를 불러오지 못했어요')
@@ -76,17 +83,8 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     onError: (error) => toast.error(error),
   })
 
-  const [, updateProduct] = useServerAction(
-    ({ id, data }: { id: number; data: Partial<Product> }) => update(id, data),
-    {
-      invalidateKeys: [queryKeys.products.all],
-      onError: (error) => toast.error(error),
-    },
-  )
-
-  const [, createProduct] = useServerAction(create, {
+  const [, updateProduct] = useServerAction(update, {
     invalidateKeys: [queryKeys.products.all],
-    onSuccess: () => toast.success('상품이 등록되었습니다'),
     onError: (error) => toast.error(error),
   })
 
@@ -102,6 +100,44 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
       return matchesSearch && matchesUnmapped && matchesPriceError
     })
   }, [products, searchQuery, showUnmappedOnly, showPriceErrorsOnly])
+
+  const filteredIds = useMemo(() => filteredProducts.map((p) => p.id), [filteredProducts])
+
+  const visibleSelectedIds = useMemo(() => {
+    if (selectedIds.length === 0 || filteredIds.length === 0) {
+      return []
+    }
+
+    const filteredIdSet = new Set(filteredIds)
+    return selectedIds.filter((id) => filteredIdSet.has(id))
+  }, [filteredIds, selectedIds])
+
+  const selectionState = useMemo<'all' | 'mixed' | 'none'>(() => {
+    if (filteredIds.length === 0) return 'none'
+    const selectedCount = visibleSelectedIds.length
+    if (selectedCount === 0) return 'none'
+    if (selectedCount === filteredIds.length) return 'all'
+    return 'mixed'
+  }, [filteredIds.length, visibleSelectedIds.length])
+
+  function handleSelectAll(checked: boolean) {
+    setSelectedIds(checked ? filteredIds : [])
+  }
+
+  function handleSelectItem(id: number, checked: boolean) {
+    setSelectedIds((prev) => {
+      const filteredIdSet = new Set(filteredIds)
+      const prunedPrev = prev.filter((selectedId) => filteredIdSet.has(selectedId))
+      if (checked) {
+        return prunedPrev.includes(id) ? prunedPrev : [...prunedPrev, id]
+      }
+      return prunedPrev.filter((selectedId) => selectedId !== id)
+    })
+  }
+
+  function handleDeleteSuccess() {
+    setSelectedIds([])
+  }
 
   const handleUpdateManufacturer = (productId: number, manufacturerId: number | null) => {
     const target = products.find((p) => p.id === productId)
@@ -121,51 +157,39 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     })
   }
 
-  const handleBulkUpload = (
-    data: {
-      productCode: string
-      productName: string
-      optionName: string
-      manufacturerId: number | null
-      manufacturerName: string
-      cost: number
-      shippingFee: number
-    }[],
-  ) => {
-    data.forEach(({ productCode, productName, optionName, manufacturerId, cost }) => {
-      const existingProduct = products.find((p) => p.productCode === productCode)
-      const manufacturer = manufacturerId ? manufacturers.find((m) => m.id === manufacturerId) : null
-
-      if (existingProduct) {
-        // 기존 상품 업데이트 - 값이 있는 필드만 업데이트
-        const updateData: Partial<Product> = {}
-        if (productName) updateData.productName = productName
-        if (optionName) updateData.optionName = optionName
-        if (manufacturerId !== null) {
-          updateData.manufacturerId = manufacturerId
-          updateData.manufacturerName = manufacturer?.name ?? null
-        }
-        if (cost > 0) updateData.cost = cost
-
-        if (Object.keys(updateData).length > 0) {
-          updateProduct({
-            id: existingProduct.id,
-            data: updateData,
-          })
-        }
-      } else {
-        // 새 상품 생성
-        createProduct({
-          productCode,
-          productName: productName || '',
-          optionName: optionName || '',
-          manufacturerId,
-          manufacturerName: manufacturer?.name ?? null,
-          price: 0,
-          cost: cost || 0,
-        })
-      }
+  const handleUpdateShippingFee = (productId: number, shippingFee: number) => {
+    updateProduct({
+      id: productId,
+      data: { shippingFee },
     })
+  }
+
+  function handleDownloadCsv() {
+    const rows = [
+      PRODUCT_CSV_HEADER,
+      ...products.map((p) => [
+        p.productCode,
+        p.productName,
+        p.optionName,
+        p.manufacturerName ?? '',
+        p.price > 0 ? String(p.price) : '',
+        p.cost > 0 ? String(p.cost) : '',
+        p.shippingFee > 0 ? String(p.shippingFee) : '',
+      ]),
+    ] as const
+
+    const csvText = stringifyCsv(rows, { bom: true })
+    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+
+    const today = new Date().toISOString().split('T')[0]
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `상품_원가_배송비_${today}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   // Calculate stats
@@ -273,27 +297,34 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
           searchQuery={searchQuery}
           showUnmappedOnly={showUnmappedOnly}
         />
-        <Button className="gap-2" onClick={() => setIsCostUploadOpen(true)}>
-          <Upload className="h-4 w-4" />
-          원가 일괄 업로드
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAdmin && <DeleteProductsDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
+          <Button className="gap-2" onClick={handleDownloadCsv} variant="outline">
+            <Download className="h-4 w-4" />
+            CSV 다운로드
+          </Button>
+          <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            CSV 업로드
+          </Button>
+        </div>
       </div>
 
       {/* Product Table */}
       <ProductTable
+        isAdmin={isAdmin}
         manufacturers={manufacturers}
+        onSelectAll={handleSelectAll}
+        onSelectItem={handleSelectItem}
         onUpdateCost={handleUpdateCost}
         onUpdateManufacturer={handleUpdateManufacturer}
+        onUpdateShippingFee={handleUpdateShippingFee}
         products={filteredProducts}
+        selectedIds={visibleSelectedIds}
+        selectionState={selectionState}
       />
 
-      {/* Cost Upload Modal */}
-      <CostUploadModal
-        manufacturers={manufacturers}
-        onOpenChange={setIsCostUploadOpen}
-        onUpload={handleBulkUpload}
-        open={isCostUploadOpen}
-      />
+      <ProductCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </AppShell>
   )
 }

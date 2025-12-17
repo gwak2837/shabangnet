@@ -180,7 +180,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
         </div>
 
         {/* Admin Delete Button */}
-        {isAdmin && (
+        {isAdmin && selectedIds.length > 0 && (
           <div className="ml-auto flex items-center gap-3">
             <DeleteUploadsDialog onSuccess={handleDeleteSuccess} selectedIds={selectedIds} />
           </div>

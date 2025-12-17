@@ -88,7 +88,7 @@ export async function remove(id: number): Promise<void> {
   await db.delete(product).where(eq(product.id, id))
 }
 
-export async function update(id: number, data: Partial<Product>): Promise<Product> {
+export async function update({ id, data }: { id: number; data: Partial<Product> }): Promise<Product> {
   const [updated] = await db
     .update(product)
     .set({

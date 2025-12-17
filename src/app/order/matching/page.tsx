@@ -117,21 +117,19 @@ export default function OrderMatchingPage() {
       </div>
 
       {/* Missing Email Manufacturers */}
-      <Card className="border-slate-200 bg-card shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-slate-600" />
-              <p className="font-medium text-slate-900">이메일 설정이 필요한 제조사</p>
+      {missingEmail.length > 0 && (
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-slate-600" />
+                <p className="font-medium text-slate-900">이메일 설정이 필요한 제조사</p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/manufacturer">제조사 관리로 이동</Link>
+              </Button>
             </div>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/manufacturer">제조사 관리로 이동</Link>
-            </Button>
-          </div>
 
-          {missingEmail.length === 0 ? (
-            <p className="text-sm text-slate-500">이메일 미설정 제조사가 없어요</p>
-          ) : (
             <div className="flex flex-wrap gap-2">
               {missingEmail.slice(0, 12).map((m) => (
                 <span
@@ -147,9 +145,9 @@ export default function OrderMatchingPage() {
                 <span className="text-sm text-slate-500">외 {missingEmail.length - 12}곳</span>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Unmatched product codes */}
       <Card className="border-slate-200 bg-card shadow-sm">

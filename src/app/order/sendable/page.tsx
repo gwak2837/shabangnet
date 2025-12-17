@@ -370,8 +370,6 @@ export default function SendableOrdersPage() {
                 <p className="font-semibold text-slate-900">발송 대상이 없어요</p>
                 <p className="mt-1 text-sm text-slate-600">
                   업로드된 주문이 제조사와 연결되지 않으면 여기에 표시되지 않아요.
-                  <br />
-                  상품/옵션 연결을 추가하면 기존 주문에도 자동으로 반영돼요.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">

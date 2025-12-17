@@ -51,10 +51,6 @@ export const optionMapping = pgTable('option_mapping', {
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-// ============================================
-// 제조사별 발주서 템플릿 (Order Template)
-// ============================================
-
 export const orderTemplate = pgTable('order_template', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   manufacturerId: bigint('manufacturer_id', { mode: 'number' })
@@ -70,27 +66,6 @@ export const orderTemplate = pgTable('order_template', {
   createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
-
-// ============================================
-// 공통 발주서 템플릿 (Common Order Template)
-// 서버리스 환경에서 파일 시스템 대신 DB에 저장
-// ============================================
-
-export const commonOrderTemplate = pgTable('common_order_template', {
-  key: varchar('key', { length: 50 }).primaryKey(), // e.g. "default"
-  templateFileName: varchar('template_file_name', { length: 255 }).notNull(),
-  templateFile: bytea('template_file').notNull(),
-  headerRow: integer('header_row').default(1).notNull(),
-  dataStartRow: integer('data_start_row').default(2).notNull(),
-  columnMappings: text('column_mappings').notNull(), // JSON: sabangnetKey -> columnLetter
-  fixedValues: text('fixed_values'), // JSON: { "A": "{{manufacturerName}}", "FIELD:orderName": "{{orderName || recipientName}}" }
-  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
-
-// ============================================
-// 송장 변환 템플릿 (Invoice Template)
-// ============================================
 
 export const invoiceTemplate = pgTable('invoice_template', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
