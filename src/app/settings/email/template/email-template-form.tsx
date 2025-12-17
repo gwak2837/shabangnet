@@ -81,7 +81,7 @@ export function EmailTemplateForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-amber-500/10 to-amber-600/5 ring-1 ring-amber-500/10">
@@ -138,7 +138,7 @@ export function EmailTemplateForm() {
                   required
                 />
               </div>
-              <div className="glass-panel rounded-lg p-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-medium mb-2">사용 가능한 변수</p>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(template?.variables || {}).map(([key, description]) => (
@@ -167,7 +167,7 @@ export function EmailTemplateForm() {
         </div>
       </section>
       {previewHtml && (
-        <section className="glass-card p-0 overflow-hidden">
+        <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
           <header className="px-6 pt-6">
             <div className="space-y-0.5">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">미리보기</h2>

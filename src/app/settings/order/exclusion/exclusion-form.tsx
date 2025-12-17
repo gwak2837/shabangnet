@@ -104,7 +104,7 @@ export function ExclusionForm() {
 
   return (
     <>
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/10 to-violet-600/5 ring-1 ring-violet-500/10">
@@ -117,7 +117,7 @@ export function ExclusionForm() {
           </div>
         </header>
         <div className="p-6 space-y-5">
-          <label className="glass-panel rounded-lg p-4 flex items-center justify-between cursor-pointer">
+          <label className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 cursor-pointer">
             <div className="flex flex-col gap-0.5">
               <span className="text-base font-medium">자동 필터링 사용</span>
               <p className="text-sm text-muted-foreground">
@@ -137,7 +137,7 @@ export function ExclusionForm() {
               {isLoading ? (
                 <PatternItem pattern={SKELETON_PATTERN} skeleton />
               ) : settings.patterns.length === 0 ? (
-                <div className="glass-panel rounded-lg p-8 text-center">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
                   <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                     <Filter className="h-5 w-5 text-muted-foreground" />
                   </div>
@@ -160,7 +160,7 @@ export function ExclusionForm() {
               )}
             </div>
           </div>
-          <form className="glass-panel rounded-lg p-4 space-y-3" onSubmit={handleAddPattern}>
+          <form className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3" onSubmit={handleAddPattern}>
             <p className="text-sm font-medium">새 패턴 추가</p>
             <div className="flex gap-2">
               <div className="flex-1 space-y-2">
@@ -267,7 +267,7 @@ function PatternItem({
   return (
     <div
       aria-busy={skeleton}
-      className="glass-panel rounded-lg p-3 flex items-center gap-3 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
       data-disabled={!skeleton && !pattern.enabled ? '' : undefined}
     >
       <label className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer">

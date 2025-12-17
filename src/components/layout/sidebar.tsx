@@ -92,18 +92,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isAdmin = user?.isAdmin || false
   const userInitial = userName.charAt(0)
 
+  function isActivePath(href: string): boolean {
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
   return (
     <TooltipProvider>
       {isOpen && <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />}
       <aside
-        className="fixed left-0 top-0 z-50 h-screen w-64 border-r bg-sidebar transition duration-300 ease-in-out motion-reduce:transition-none md:z-40 md:translate-x-0 -translate-x-full data-open:translate-x-0"
+        className="fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-slate-50 transition duration-300 ease-in-out motion-reduce:transition-none md:z-40 md:translate-x-0 -translate-x-full data-open:translate-x-0"
         data-open={isOpen || undefined}
       >
         <div className="flex h-full flex-col">
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
-                <FileSpreadsheet className="h-5 w-5 text-primary-foreground" />
+                <FileSpreadsheet className="h-5 w-5 text-slate-50" />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold text-slate-900">사방넷 발주</span>
@@ -113,55 +117,66 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <button
               className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden"
               onClick={onClose}
+              type="button"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-          <nav className="flex-1 flex flex-col gap-1 overflow-y-auto p-4">
-            <div className="flex flex-col gap-1">
-              {mainNavItems.map((item) => (
-                <Link
-                  aria-selected={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                  className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground aria-selected:before:absolute aria-selected:before:left-0 aria-selected:before:top-1/2 aria-selected:before:h-5 aria-selected:before:-translate-y-1/2 aria-selected:before:w-[3px] aria-selected:before:rounded-full aria-selected:before:bg-foreground"
-                  href={item.href}
-                  key={item.href}
-                  onClick={onClose}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-            <Separator className="my-4" />
-            <div className="flex flex-col gap-1">
-              <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-slate-400">관리</p>
-              {managementNavItems.map((item) => {
-                if (item.isAdminOnly && !isAdmin) {
-                  return null
-                }
-
+          <nav className="flex-1 overflow-y-auto p-4">
+            <ul className="flex flex-col gap-1">
+              {mainNavItems.map((item) => {
+                const isActive = isActivePath(item.href)
                 return (
-                  <Tooltip key={item.href}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        aria-selected={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                        className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground aria-selected:before:absolute aria-selected:before:left-0 aria-selected:before:top-1/2 aria-selected:before:h-5 aria-selected:before:-translate-y-1/2 aria-selected:before:w-[3px] aria-selected:before:rounded-full aria-selected:before:bg-foreground"
-                        href={item.href}
-                        onClick={onClose}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        {item.title}
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>{item.description}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <li key={item.href}>
+                    <Link
+                      aria-current={isActive ? 'page' : undefined}
+                      className="relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 aria-[current=page]:bg-slate-200 aria-[current=page]:text-slate-900 aria-[current=page]:before:absolute aria-[current=page]:before:left-0 aria-[current=page]:before:top-1/2 aria-[current=page]:before:h-4 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:w-[2px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-slate-400"
+                      href={item.href}
+                      onClick={onClose}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.title}
+                    </Link>
+                  </li>
                 )
               })}
+            </ul>
+            <Separator className="my-4 bg-slate-200" />
+            <div className="flex flex-col gap-2">
+              <p className="px-3 text-xs font-medium text-slate-500">관리</p>
+              <ul className="flex flex-col gap-1">
+                {managementNavItems.map((item) => {
+                  if (item.isAdminOnly && !isAdmin) {
+                    return null
+                  }
+
+                  const isActive = isActivePath(item.href)
+
+                  return (
+                    <li key={item.href}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            aria-current={isActive ? 'page' : undefined}
+                            className="relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 aria-[current=page]:bg-slate-200 aria-[current=page]:text-slate-900 aria-[current=page]:before:absolute aria-[current=page]:before:left-0 aria-[current=page]:before:top-1/2 aria-[current=page]:before:h-4 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:w-[2px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-slate-400"
+                            href={item.href}
+                            onClick={onClose}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            {item.title}
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>{item.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
           </nav>
-          <div className="border-t p-4">
+          <div className="border-t border-slate-200 p-4">
             <div className="flex items-center gap-3 rounded-lg px-3 py-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
                 <span className="text-sm font-medium text-slate-700">{userInitial}</span>
@@ -172,15 +187,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
             </div>
             <div className="mt-2 flex gap-1">
-              <Link
-                aria-selected={pathname.startsWith('/settings')}
-                className="relative flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground aria-selected:bg-accent aria-selected:text-foreground"
-                href="/settings"
-                onClick={onClose}
-              >
-                <Settings className="h-4 w-4" />
-                설정
-              </Link>
+              {(() => {
+                const isActive = pathname.startsWith('/settings')
+                return (
+                  <Link
+                    aria-current={isActive ? 'page' : undefined}
+                    className="relative flex h-10 flex-1 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 aria-[current=page]:bg-slate-200 aria-[current=page]:text-slate-900"
+                    href="/settings"
+                    onClick={onClose}
+                  >
+                    <Settings className="h-4 w-4" />
+                    설정
+                  </Link>
+                )
+              })()}
               <LogoutDialog />
             </div>
           </div>

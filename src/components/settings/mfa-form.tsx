@@ -349,7 +349,7 @@ export function MFAForm({ settings }: MFAFormProps) {
 
   return (
     <>
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-purple-500/10 to-purple-600/5 ring-1 ring-purple-500/10">
@@ -376,7 +376,7 @@ export function MFAForm({ settings }: MFAFormProps) {
           )}
 
           {settings?.hasPassword === false && (
-            <div className="glass-panel rounded-lg p-4 space-y-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <KeyRound className="h-5 w-5 text-muted-foreground" />
@@ -403,7 +403,7 @@ export function MFAForm({ settings }: MFAFormProps) {
             </div>
           )}
 
-          <div className="glass-panel rounded-lg p-4">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Smartphone className="h-5 w-5 text-muted-foreground" />
@@ -439,7 +439,7 @@ export function MFAForm({ settings }: MFAFormProps) {
             </div>
           </div>
 
-          <div className="glass-panel rounded-lg p-4 space-y-3">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Key className="h-5 w-5 text-muted-foreground" />
@@ -484,7 +484,7 @@ export function MFAForm({ settings }: MFAFormProps) {
             )}
           </div>
 
-          <div className="glass-panel rounded-lg p-4">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />

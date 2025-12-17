@@ -96,7 +96,7 @@ export function CourierForm() {
 
   return (
     <>
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -108,13 +108,10 @@ export function CourierForm() {
                 <p className="text-sm text-muted-foreground">송장의 택배사명을 자동으로 인식합니다</p>
               </div>
             </div>
-            <button
-              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground"
-              onClick={handleAddCourier}
-            >
+            <Button className="gap-2" onClick={handleAddCourier} size="sm" type="button" variant="outline">
               <Plus className="h-4 w-4" />
               추가
-            </button>
+            </Button>
           </div>
         </header>
         <div className="p-6 space-y-5">
@@ -122,7 +119,7 @@ export function CourierForm() {
             {isLoading ? (
               <CourierItem courier={SKELETON_COURIER} skeleton />
             ) : mappings.length === 0 ? (
-              <div className="glass-panel rounded-lg p-8 text-center">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
                 <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                   <Truck className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -177,7 +174,6 @@ export function CourierForm() {
                       name="name"
                       placeholder="CJ대한통운"
                       required
-                      variant="glass"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -191,7 +187,6 @@ export function CourierForm() {
                       name="code"
                       placeholder="04"
                       required
-                      variant="glass"
                     />
                   </div>
                 </div>
@@ -205,7 +200,6 @@ export function CourierForm() {
                       name="alias"
                       placeholder="거래처에서 사용하는 표기"
                       required
-                      variant="glass"
                     />
                     <Button className="shrink-0" form="alias-form" size="sm" type="submit" variant="outline">
                       추가
@@ -261,7 +255,7 @@ function CourierItem({
   return (
     <div
       aria-busy={skeleton}
-      className="glass-panel rounded-lg p-4 py-3 flex items-center gap-4 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
+      className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 py-3 transition data-disabled:opacity-50 aria-busy:animate-pulse aria-busy:cursor-not-allowed"
       data-disabled={!skeleton && !courier.enabled ? '' : undefined}
     >
       <Switch checked={courier.enabled} id={`courier-${courier.id}`} onCheckedChange={onToggle} />

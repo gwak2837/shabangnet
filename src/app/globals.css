@@ -11,13 +11,13 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
 
-  /* Colors - Auto Light/Dark (Apple-inspired) */
-  --color-background: light-dark(oklch(0.984 0.003 247.858), oklch(0.12 0 0));
-  --color-foreground: light-dark(oklch(0.145 0 0), oklch(0.93 0 0));
-  --color-card: light-dark(oklch(1 0 0), oklch(0.16 0 0));
-  --color-card-foreground: light-dark(oklch(0.145 0 0), oklch(0.93 0 0));
-  --color-popover: light-dark(oklch(1 0 0), oklch(0.16 0 0));
-  --color-popover-foreground: light-dark(oklch(0.145 0 0), oklch(0.93 0 0));
+  /* Colors */
+  --color-background: light-dark(oklch(0.975 0.003 247.858), oklch(0.14 0 0));
+  --color-foreground: light-dark(oklch(0.18 0 0), oklch(0.88 0 0));
+  --color-card: light-dark(oklch(0.995 0 0), oklch(0.18 0 0));
+  --color-card-foreground: light-dark(oklch(0.18 0 0), oklch(0.88 0 0));
+  --color-popover: light-dark(oklch(0.995 0 0), oklch(0.18 0 0));
+  --color-popover-foreground: light-dark(oklch(0.18 0 0), oklch(0.88 0 0));
   --color-primary: light-dark(oklch(0.205 0 0), oklch(0.93 0 0));
   --color-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.12 0 0));
   --color-secondary: light-dark(oklch(0.97 0 0), oklch(0.2 0 0));
@@ -26,7 +26,7 @@
   --color-muted-foreground: light-dark(oklch(0.556 0 0), oklch(0.55 0 0));
   --color-accent: light-dark(oklch(0.97 0 0), oklch(0.2 0 0));
   --color-accent-foreground: light-dark(oklch(0.205 0 0), oklch(0.93 0 0));
-  --color-destructive: light-dark(oklch(0.634 0.27 29), oklch(0.68 0.24 27)); /* Apple System Red */
+  --color-destructive: light-dark(oklch(0.634 0.27 29), oklch(0.68 0.24 27));
   --color-border: light-dark(oklch(0.922 0 0), oklch(0.25 0 0));
   --color-input: light-dark(oklch(0.922 0 0), oklch(0.25 0 0));
   --color-ring: light-dark(oklch(0.708 0 0), oklch(0.4 0 0));
@@ -41,18 +41,8 @@
   --color-switch-track: light-dark(oklch(0.88 0 0), oklch(0.35 0 0));
   --color-switch-track-active: oklch(0.696 0.17 162.48);
 
-  /* Sidebar */
-  --color-sidebar: light-dark(oklch(0.985 0 0), oklch(0.14 0 0));
-  --color-sidebar-foreground: light-dark(oklch(0.145 0 0), oklch(0.93 0 0));
-  --color-sidebar-primary: light-dark(oklch(0.205 0 0), oklch(0.93 0 0));
-  --color-sidebar-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.12 0 0));
-  --color-sidebar-accent: light-dark(oklch(0.97 0 0), oklch(0.2 0 0));
-  --color-sidebar-accent-foreground: light-dark(oklch(0.205 0 0), oklch(0.93 0 0));
-  --color-sidebar-border: light-dark(oklch(0.922 0 0), oklch(0.25 0 0));
-  --color-sidebar-ring: light-dark(oklch(0.708 0 0), oklch(0.4 0 0));
-
-  /* Slate - Light/Dark adaptive */
-  --color-slate-50: light-dark(oklch(0.984 0.003 247.858), oklch(0.18 0.005 247.858));
+  /* Slate */
+  --color-slate-50: light-dark(oklch(0.975 0.003 247.858), oklch(0.19 0.005 247.858));
   --color-slate-100: light-dark(oklch(0.968 0.007 247.896), oklch(0.2 0.006 247.896));
   --color-slate-200: light-dark(oklch(0.929 0.013 255.508), oklch(0.25 0.01 255.508));
   --color-slate-300: light-dark(oklch(0.869 0.022 252.894), oklch(0.35 0.015 252.894));
@@ -61,11 +51,11 @@
   --color-slate-600: light-dark(oklch(0.446 0.043 257.281), oklch(0.7 0.035 257.281));
   --color-slate-700: light-dark(oklch(0.372 0.044 257.287), oklch(0.8 0.025 257.287));
   --color-slate-800: light-dark(oklch(0.279 0.041 260.031), oklch(0.9 0.015 260.031));
-  --color-slate-900: light-dark(oklch(0.208 0.042 265.755), oklch(0.95 0.01 265.755));
-  --color-slate-950: light-dark(oklch(0.129 0.042 264.695), oklch(0.98 0.005 264.695));
+  --color-slate-900: light-dark(oklch(0.225 0.042 265.755), oklch(0.88 0.01 265.755));
+  --color-slate-950: light-dark(oklch(0.15 0.042 264.695), oklch(0.92 0.005 264.695));
 
-  /* Gray - Light/Dark adaptive */
-  --color-gray-50: light-dark(oklch(0.985 0 0), oklch(0.18 0 0));
+  /* Gray */
+  --color-gray-50: light-dark(oklch(0.975 0 0), oklch(0.19 0 0));
   --color-gray-100: light-dark(oklch(0.967 0 0), oklch(0.2 0 0));
   --color-gray-200: light-dark(oklch(0.928 0 0), oklch(0.25 0 0));
   --color-gray-300: light-dark(oklch(0.872 0 0), oklch(0.35 0 0));
@@ -74,8 +64,8 @@
   --color-gray-600: light-dark(oklch(0.446 0 0), oklch(0.7 0 0));
   --color-gray-700: light-dark(oklch(0.373 0 0), oklch(0.8 0 0));
   --color-gray-800: light-dark(oklch(0.278 0 0), oklch(0.9 0 0));
-  --color-gray-900: light-dark(oklch(0.21 0 0), oklch(0.95 0 0));
-  --color-gray-950: light-dark(oklch(0.13 0 0), oklch(0.98 0 0));
+  --color-gray-900: light-dark(oklch(0.225 0 0), oklch(0.88 0 0));
+  --color-gray-950: light-dark(oklch(0.15 0 0), oklch(0.92 0 0));
 
   /* Amber - warnings */
   --color-amber-50: light-dark(oklch(0.987 0.022 95.277), oklch(0.2 0.04 85));

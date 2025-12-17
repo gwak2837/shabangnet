@@ -38,7 +38,6 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const pathname = usePathname()
-
   const currentItem = settingsNavItems.find((item) => pathname.startsWith(item.href)) ?? settingsNavItems[0]
 
   return (

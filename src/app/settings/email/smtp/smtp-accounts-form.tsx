@@ -48,7 +48,7 @@ export function SMTPAccountCard() {
   }
 
   return (
-    <section className="glass-card p-0 overflow-hidden">
+    <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-orange-500/10 to-orange-600/5 ring-1 ring-orange-500/10">

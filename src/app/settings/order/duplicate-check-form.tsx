@@ -30,7 +30,7 @@ export function DuplicateCheckForm() {
   })
 
   return (
-    <section className="glass-card p-0 overflow-hidden">
+    <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-amber-500/10 to-amber-600/5 ring-1 ring-amber-500/10">
@@ -49,7 +49,7 @@ export function DuplicateCheckForm() {
           </div>
         ) : (
           <>
-            <label className="glass-panel rounded-lg p-4 flex items-center justify-between cursor-pointer">
+            <label className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 cursor-pointer">
               <div className="flex flex-col gap-0.5">
                 <span className="text-base font-medium">중복 체크 사용</span>
                 <p className="text-sm text-muted-foreground">

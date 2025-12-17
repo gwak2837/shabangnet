@@ -309,7 +309,7 @@ export function ShoppingMallTemplate() {
 
   return (
     <>
-      <section className="glass-card overflow-hidden p-0">
+      <section className="rounded-xl border border-slate-200 bg-card overflow-hidden p-0 shadow-sm">
         <header className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -321,14 +321,10 @@ export function ShoppingMallTemplate() {
                 <p className="text-sm text-muted-foreground">쇼핑몰별 엑셀 파일 양식을 관리해요</p>
               </div>
             </div>
-            <button
-              className="glass-button inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground"
-              onClick={openNewTemplate}
-              type="button"
-            >
+            <Button className="gap-2" onClick={openNewTemplate} size="sm" type="button" variant="outline">
               <Plus className="h-4 w-4" />
               추가
-            </button>
+            </Button>
           </div>
         </header>
         <div className="space-y-5 p-6">
@@ -336,7 +332,7 @@ export function ShoppingMallTemplate() {
             {isLoading ? (
               <TemplateItem skeleton template={SKELETON_TEMPLATE} />
             ) : templates.length === 0 ? (
-              <div className="glass-panel rounded-lg p-8 text-center">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
                 <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-muted/50">
                   <Store className="h-5 w-5 text-muted-foreground" />
                 </div>

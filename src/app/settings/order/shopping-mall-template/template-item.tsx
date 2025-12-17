@@ -32,7 +32,7 @@ export function TemplateItem({ template, skeleton, isDeleting, onToggle, onEdit,
   return (
     <div
       aria-busy={skeleton}
-      className="glass-panel flex items-center gap-4 rounded-lg p-4 py-3 transition aria-busy:animate-pulse aria-busy:cursor-not-allowed aria-busy:text-muted-foreground data-disabled:opacity-50"
+      className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 py-3 transition aria-busy:animate-pulse aria-busy:cursor-not-allowed aria-busy:text-muted-foreground data-disabled:opacity-50"
       data-disabled={!skeleton && !template.enabled ? '' : undefined}
     >
       <Switch checked={template.enabled} id={switchId} onCheckedChange={onToggle} />

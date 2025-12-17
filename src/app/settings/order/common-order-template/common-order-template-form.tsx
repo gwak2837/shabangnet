@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { FileSpreadsheet, Loader2, Upload } from 'lucide-react'
-import { type ChangeEvent, useMemo, useState } from 'react'
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { TemplateAnalysis } from '@/lib/excel'
@@ -86,9 +86,14 @@ const TEMPLATE_TOKENS: TemplateTokenOption[] = [
 interface CommonOrderTemplateFormInnerProps {
   initialDraft: CommonOrderTemplate
   initialHasExistingTemplate: boolean
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
-export function CommonOrderTemplateForm() {
+interface CommonOrderTemplateFormProps {
+  onDirtyChange?: (isDirty: boolean) => void
+}
+
+export function CommonOrderTemplateForm({ onDirtyChange }: CommonOrderTemplateFormProps) {
   const { data: currentTemplate, isLoading: isLoadingTemplate } = useQuery({
     queryKey: queryKeys.orderTemplates.common,
     queryFn: getCommonOrderTemplate,
@@ -96,7 +101,7 @@ export function CommonOrderTemplateForm() {
 
   if (isLoadingTemplate) {
     return (
-      <section className="glass-card p-0 overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
         <header className="px-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
@@ -135,6 +140,7 @@ export function CommonOrderTemplateForm() {
       initialDraft={initialDraft}
       initialHasExistingTemplate={Boolean(currentTemplate?.templateFileName)}
       key={key}
+      onDirtyChange={onDirtyChange}
     />
   )
 }
@@ -176,12 +182,25 @@ function buildConfig(columnRules: Record<string, CommonTemplateColumnRule>): {
   }
 }
 
-function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate }: CommonOrderTemplateFormInnerProps) {
+function CommonOrderTemplateFormInner({
+  initialDraft,
+  initialHasExistingTemplate,
+  onDirtyChange,
+}: CommonOrderTemplateFormInnerProps) {
   const [draft, setDraft] = useState<CommonOrderTemplate>(initialDraft)
   const initialColumnRules = useMemo(() => parseInitialColumnRules(initialDraft), [initialDraft])
   const [columnRules, setColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(() => initialColumnRules)
   const [uploadedFile, setUploadedFile] = useState<{ buffer: ArrayBuffer; name: string } | null>(null)
   const [analysis, setAnalysis] = useState<TemplateAnalysis | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [baselineDraft, setBaselineDraft] = useState<CommonOrderTemplate>(initialDraft)
+  const [baselineColumnRules, setBaselineColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(
+    () => initialColumnRules,
+  )
+  const pendingBaselineRef = useRef<{
+    draft: CommonOrderTemplate
+    columnRules: Record<string, CommonTemplateColumnRule>
+  } | null>(null)
 
   const [isSaving, saveCommonTemplate] = useServerAction(upsertCommonOrderTemplate, {
     invalidateKeys: [queryKeys.orderTemplates.common],
@@ -189,6 +208,12 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
       if (result.success) {
         toast.success('공통 발주서 템플릿이 저장됐어요')
         setUploadedFile(null)
+        const pending = pendingBaselineRef.current
+        if (pending) {
+          setBaselineDraft(pending.draft)
+          setBaselineColumnRules(pending.columnRules)
+          pendingBaselineRef.current = null
+        }
       }
     },
   })
@@ -211,6 +236,19 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
   const hasExistingTemplate = initialHasExistingTemplate
   const hasUploadedTemplate = !!uploadedFile
   const canSave = hasExistingTemplate || hasUploadedTemplate
+
+  const baselineRulesKey = serializeColumnRules(baselineColumnRules)
+  const currentRulesKey = serializeColumnRules(columnRules)
+  const isDirty =
+    Boolean(uploadedFile) ||
+    draft.templateFileName !== baselineDraft.templateFileName ||
+    draft.headerRow !== baselineDraft.headerRow ||
+    draft.dataStartRow !== baselineDraft.dataStartRow ||
+    currentRulesKey !== baselineRulesKey
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   const { data: storedAnalysisResult, isFetching: isFetchingStoredAnalysis } = useQuery({
     queryKey: ['common-order-template-analysis', draft.templateFileName],
@@ -238,6 +276,16 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
     setDraft((prev) => (prev ? { ...prev, templateFileName: file.name } : prev))
 
     analyzeUploadTemplate(buffer)
+  }
+
+  function handleCancel() {
+    setDraft(baselineDraft)
+    setColumnRules(baselineColumnRules)
+    setUploadedFile(null)
+    setAnalysis(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   function applySuggestions() {
@@ -277,6 +325,8 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
       return
     }
 
+    pendingBaselineRef.current = { draft, columnRules }
+
     saveCommonTemplate({
       headerRow: draft.headerRow,
       dataStartRow: draft.dataStartRow,
@@ -288,7 +338,7 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
   }
 
   return (
-    <section className="glass-card p-0 overflow-hidden">
+    <section className="rounded-xl border border-slate-200 bg-card p-0 shadow-sm overflow-hidden">
       <header className="px-6 pt-6">
         <div className="flex items-center gap-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-blue-500/10 to-blue-600/5 ring-1 ring-blue-500/10">
@@ -307,7 +357,13 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
             <Label className="text-sm font-medium">템플릿 파일</Label>
             <div className="flex items-center gap-2">
               <label className="flex-1">
-                <input accept=".xlsx" className="hidden" onChange={handleTemplateUpload} type="file" />
+                <input
+                  accept=".xlsx"
+                  className="hidden"
+                  onChange={handleTemplateUpload}
+                  ref={fileInputRef}
+                  type="file"
+                />
                 <div className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 transition-colors hover:bg-accent/40">
                   <Upload className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
@@ -347,8 +403,11 @@ function CommonOrderTemplateFormInner({ initialDraft, initialHasExistingTemplate
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button disabled={isSaving || !canSave} onClick={handleSave} size="sm" type="button">
+          <Button disabled={isSaving || !canSave || !isDirty} onClick={handleSave} size="sm" type="button">
             저장
+          </Button>
+          <Button disabled={isSaving || !isDirty} onClick={handleCancel} size="sm" type="button" variant="outline">
+            취소
           </Button>
         </div>
 
@@ -393,4 +452,20 @@ function parseInitialColumnRules(template: CommonOrderTemplate): Record<string, 
   }
 
   return columnRules
+}
+
+function serializeColumnRules(columnRules: Record<string, CommonTemplateColumnRule>): string {
+  const keys = Object.keys(columnRules).sort((a, b) => a.localeCompare(b))
+  return JSON.stringify(
+    keys.map((key) => {
+      const rule = columnRules[key]
+      if (!rule || rule.kind === 'none') {
+        return [key, 'none']
+      }
+      if (rule.kind === 'field') {
+        return [key, 'field', rule.fieldKey.trim()]
+      }
+      return [key, 'template', rule.template.trim()]
+    }),
+  )
 }
