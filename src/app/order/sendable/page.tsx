@@ -27,7 +27,7 @@ interface BulkSendState {
 
 interface OrderBatchesResponse {
   items: OrderBatch[]
-  nextCursor: number | null
+  nextCursor: string | null
 }
 
 export default function SendableOrdersPage() {
@@ -149,7 +149,7 @@ export default function SendableOrdersPage() {
 
   async function fetchAllPendingBatches(): Promise<OrderBatch[]> {
     const all: OrderBatch[] = []
-    let cursor: number | null = null
+    let cursor: string | null = null
 
     // NOTE: 전체 발송은 현재 필터 범위 내에서 "pending"만 대상으로 처리해요.
     while (true) {

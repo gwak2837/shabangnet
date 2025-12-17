@@ -52,7 +52,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '1392x855',
         type: 'image/webp',
         form_factor: 'narrow',
-        label: '발주 생성/발송',
+        label: '발주 생성',
       },
     ],
   }

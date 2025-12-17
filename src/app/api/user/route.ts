@@ -25,13 +25,13 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') as 'all' | UserStatus | null
-  const page = parseInt(searchParams.get('page') ?? '1', 10)
+  const cursor = searchParams.get('cursor') ?? undefined
   const limit = parseInt(searchParams.get('limit') ?? '20', 10)
 
   try {
     const result = await getUserList({
       status: status ?? 'all',
-      page,
+      cursor,
       limit,
     })
 

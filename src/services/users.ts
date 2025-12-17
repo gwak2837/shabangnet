@@ -1,10 +1,12 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, lt, or, sql } from 'drizzle-orm'
+import { z } from 'zod'
 
+import { decodeCursor, encodeCursor } from '@/app/api/_utils/cursor'
 import { db } from '@/db/client'
 import { user } from '@/db/schema/auth'
 
 export interface UserListItem {
-  createdAt: Date
+  createdAt: string
   email: string
   emailVerified: boolean
   id: string
@@ -14,14 +16,14 @@ export interface UserListItem {
 }
 
 export interface UserListParams {
+  cursor?: string
   limit?: number
-  page?: number
   status?: 'all' | UserStatus
 }
 
 export interface UserListResult {
   limit: number
-  page: number
+  nextCursor: string | null
   total: number
   totalPages: number
   users: UserListItem[]
@@ -30,17 +32,37 @@ export interface UserListResult {
 export type UserStatus = 'approved' | 'pending' | 'rejected'
 
 export async function getUserList(params: UserListParams = {}): Promise<UserListResult> {
-  const { status = 'all', page = 1, limit = 20 } = params
-  const offset = (page - 1) * limit
+  const { status = 'all', cursor, limit = 20 } = params
 
   // Build where clause
-  const whereClause = status !== 'all' ? eq(user.status, status) : undefined
+  const baseWhereClause = status !== 'all' ? eq(user.status, status) : undefined
+  const whereConditions = []
+
+  if (baseWhereClause) {
+    whereConditions.push(baseWhereClause)
+  }
+
+  if (cursor) {
+    const decoded = decodeCursor(
+      cursor,
+      z.object({
+        createdAt: z.string().datetime(),
+        id: z.string().min(1),
+      }),
+    )
+    const cursorCreatedAt = new Date(decoded.createdAt)
+    const cursorId = decoded.id
+
+    whereConditions.push(or(lt(user.createdAt, cursorCreatedAt), and(eq(user.createdAt, cursorCreatedAt), lt(user.id, cursorId))))
+  }
+
+  const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined
 
   // Get total count
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(user)
-    .where(whereClause)
+    .where(baseWhereClause)
 
   const userList = await db
     .select({
@@ -54,20 +76,28 @@ export async function getUserList(params: UserListParams = {}): Promise<UserList
     })
     .from(user)
     .where(whereClause)
-    .orderBy(desc(user.createdAt))
-    .limit(limit)
-    .offset(offset)
+    .orderBy(desc(user.createdAt), desc(user.id))
+    .limit(limit + 1)
 
-  const users: UserListItem[] = userList.map((u) => ({
-    ...u,
+  const hasMore = userList.length > limit
+  const pageItems = hasMore ? userList.slice(0, -1) : userList
+  const lastItem = pageItems[pageItems.length - 1]
+
+  const users: UserListItem[] = pageItems.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    emailVerified: u.emailVerified,
     status: u.status as UserStatus,
+    isAdmin: u.isAdmin,
+    createdAt: u.createdAt.toISOString(),
   }))
 
   return {
     users,
     total: count,
-    page,
     limit,
     totalPages: Math.ceil(count / limit),
+    nextCursor: hasMore && lastItem ? encodeCursor({ createdAt: lastItem.createdAt.toISOString(), id: lastItem.id }) : null,
   }
 }

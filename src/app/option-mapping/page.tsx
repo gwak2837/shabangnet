@@ -12,6 +12,7 @@ import { OptionMappingFilters } from '@/components/option-mapping/option-mapping
 import { OptionMappingModal } from '@/components/option-mapping/option-mapping-modal'
 import { OptionMappingTable } from '@/components/option-mapping/option-mapping-table'
 import { Card, CardContent } from '@/components/ui/card'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useOptionMappings } from '@/hooks/use-option-mappings'
 import { useServerAction } from '@/hooks/use-server-action'
@@ -23,7 +24,20 @@ export default function OptionMappingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMapping, setEditingMapping] = useState<OptionManufacturerMapping | null>(null)
 
-  const { data: mappings = [], isLoading: isLoadingMappings } = useOptionMappings()
+  const manufacturerId = selectedManufacturer === 'all' ? undefined : Number(selectedManufacturer)
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingMappings,
+  } = useOptionMappings({
+    filters: {
+      manufacturerId,
+      search: searchQuery.trim().length > 0 ? searchQuery : undefined,
+    },
+  })
+  const mappings = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
   const { data: manufacturers = [] } = useManufacturers()
 
   const [isCreating, createMapping] = useServerAction(create, {
@@ -54,18 +68,6 @@ export default function OptionMappingsPage() {
     onError: (error) => toast.error(error),
   })
 
-  const filteredMappings = useMemo(() => {
-    return mappings.filter((m) => {
-      const matchesSearch =
-        m.productCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.optionName.toLowerCase().includes(searchQuery.toLowerCase())
-
-      const matchesManufacturer = selectedManufacturer === 'all' || m.manufacturerId === Number(selectedManufacturer)
-
-      return matchesSearch && matchesManufacturer
-    })
-  }, [mappings, searchQuery, selectedManufacturer])
-
   const handleAddNew = () => {
     setEditingMapping(null)
     setIsModalOpen(true)
@@ -92,11 +94,13 @@ export default function OptionMappingsPage() {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalMappings = mappings.length
-    const uniqueProductCodes = new Set(mappings.map((m) => m.productCode)).size
-    const uniqueManufacturers = new Set(mappings.map((m) => m.manufacturerId)).size
-    return { totalMappings, uniqueProductCodes, uniqueManufacturers }
-  }, [mappings])
+    const summary = data?.pages[0]?.summary
+    return {
+      totalMappings: summary?.totalMappings ?? 0,
+      uniqueProductCodes: summary?.uniqueProductCodes ?? 0,
+      uniqueManufacturers: summary?.uniqueManufacturers ?? 0,
+    }
+  }, [data?.pages])
 
   if (isLoadingMappings) {
     return (
@@ -177,7 +181,19 @@ export default function OptionMappingsPage() {
       </div>
 
       {/* Mapping Table */}
-      <OptionMappingTable mappings={filteredMappings} onDelete={handleDelete} onEdit={handleEdit} />
+      <OptionMappingTable mappings={mappings} onDelete={handleDelete} onEdit={handleEdit} />
+
+      {isFetchingNextPage ? (
+        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
+        </div>
+      ) : null}
+
+      <InfiniteScrollSentinel
+        hasMore={hasNextPage ?? false}
+        isLoading={isFetchingNextPage}
+        onLoadMore={() => fetchNextPage()}
+      />
 
       {/* Modal */}
       <OptionMappingModal

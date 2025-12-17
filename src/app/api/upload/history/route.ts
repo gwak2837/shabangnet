@@ -1,8 +1,9 @@
-import { and, asc, count, desc, eq, gt, gte, inArray, lt, lte, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, gte, inArray, lt, lte, or, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { decodeCursor, encodeCursor } from '@/app/api/_utils/cursor'
 import { db } from '@/db/client'
 import { order, upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
@@ -42,6 +43,20 @@ const queryParamsSchema = z.object({
 
 type QueryParams = z.infer<typeof queryParamsSchema>
 
+type UploadHistoryRow = {
+  errorOrders: number | null
+  fileName: string
+  fileSize: number | null
+  fileType: 'sabangnet' | 'shopping_mall' | null
+  id: number
+  processedOrders: number | null
+  shoppingMallId: number | null
+  shoppingMallName: string | null
+  status: string | null
+  totalOrders: number | null
+  uploadedAt: Date
+}
+
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() })
 
@@ -77,10 +92,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function getNextUploadHistoryCursor(sortBy: QueryParams['sortBy'], row: UploadHistoryRow): string {
+  switch (sortBy) {
+    case 'errorOrders':
+      return encodeCursor({ sortValue: row.errorOrders ?? 0, id: row.id })
+    case 'fileName':
+      return encodeCursor({ sortValue: row.fileName ?? '', id: row.id })
+    case 'processedOrders':
+      return encodeCursor({ sortValue: row.processedOrders ?? 0, id: row.id })
+    case 'totalOrders':
+      return encodeCursor({ sortValue: row.totalOrders ?? 0, id: row.id })
+    case 'uploadedAt': {
+      return encodeCursor({ sortValue: row.uploadedAt.toISOString(), id: row.id })
+    }
+  }
+}
+
 async function getUploadHistory(params: QueryParams): Promise<UploadHistoryResponse> {
   const { cursor, limit, fileType, startDate, endDate, sortBy, sortOrder } = params
 
   const conditions = []
+  const sortExpr = getUploadHistorySortExpr(sortBy)
 
   if (fileType) {
     conditions.push(eq(upload.fileType, fileType))
@@ -97,37 +129,106 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
   }
 
   if (cursor) {
-    const { uploadedAt: cursorDate, id: cursorId } = JSON.parse(cursor) as { id: number; uploadedAt: string }
-    const cursorTimestamp = new Date(cursorDate)
+    const baseSchema = z.object({ id: z.number().int().positive() })
 
-    if (sortOrder === 'desc') {
-      conditions.push(
-        or(
-          lt(upload.uploadedAt, cursorTimestamp),
-          and(eq(upload.uploadedAt, cursorTimestamp), lt(upload.id, cursorId)),
-        ),
-      )
-    } else {
-      conditions.push(
-        or(
-          gt(upload.uploadedAt, cursorTimestamp),
-          and(eq(upload.uploadedAt, cursorTimestamp), gt(upload.id, cursorId)),
-        ),
-      )
+    switch (sortBy) {
+      case 'errorOrders': {
+        const parsed = decodeCursor(cursor, baseSchema.extend({ sortValue: z.number() }))
+        const cursorId = parsed.id
+        const sortValue = parsed.sortValue
+        const expr = sql<number>`coalesce(${upload.errorOrders}, 0)`
+
+        if (sortOrder === 'desc') {
+          conditions.push(or(lt(expr, sortValue), and(eq(expr, sortValue), lt(upload.id, cursorId))))
+        } else {
+          conditions.push(or(gt(expr, sortValue), and(eq(expr, sortValue), gt(upload.id, cursorId))))
+        }
+        break
+      }
+      case 'fileName': {
+        const parsed = decodeCursor(
+          cursor,
+          baseSchema.extend({
+            sortValue: z.string(),
+          }),
+        )
+        const cursorId = parsed.id
+        const sortValue = parsed.sortValue
+
+        if (sortOrder === 'desc') {
+          conditions.push(
+            or(lt(upload.fileName, sortValue), and(eq(upload.fileName, sortValue), lt(upload.id, cursorId))),
+          )
+        } else {
+          conditions.push(
+            or(gt(upload.fileName, sortValue), and(eq(upload.fileName, sortValue), gt(upload.id, cursorId))),
+          )
+        }
+        break
+      }
+      case 'processedOrders': {
+        const parsed = decodeCursor(
+          cursor,
+          baseSchema.extend({
+            sortValue: z.number(),
+          }),
+        )
+        const cursorId = parsed.id
+        const sortValue = parsed.sortValue
+        const expr = sql<number>`coalesce(${upload.processedOrders}, 0)`
+
+        if (sortOrder === 'desc') {
+          conditions.push(or(lt(expr, sortValue), and(eq(expr, sortValue), lt(upload.id, cursorId))))
+        } else {
+          conditions.push(or(gt(expr, sortValue), and(eq(expr, sortValue), gt(upload.id, cursorId))))
+        }
+        break
+      }
+      case 'totalOrders': {
+        const parsed = decodeCursor(
+          cursor,
+          baseSchema.extend({
+            sortValue: z.number(),
+          }),
+        )
+        const cursorId = parsed.id
+        const sortValue = parsed.sortValue
+        const expr = sql<number>`coalesce(${upload.totalOrders}, 0)`
+
+        if (sortOrder === 'desc') {
+          conditions.push(or(lt(expr, sortValue), and(eq(expr, sortValue), lt(upload.id, cursorId))))
+        } else {
+          conditions.push(or(gt(expr, sortValue), and(eq(expr, sortValue), gt(upload.id, cursorId))))
+        }
+        break
+      }
+      case 'uploadedAt': {
+        const parsed = decodeCursor(
+          cursor,
+          baseSchema.extend({
+            sortValue: z.string().datetime(),
+          }),
+        )
+        const cursorId = parsed.id
+        const sortValue = new Date(parsed.sortValue)
+
+        if (sortOrder === 'desc') {
+          conditions.push(
+            or(lt(upload.uploadedAt, sortValue), and(eq(upload.uploadedAt, sortValue), lt(upload.id, cursorId))),
+          )
+        } else {
+          conditions.push(
+            or(gt(upload.uploadedAt, sortValue), and(eq(upload.uploadedAt, sortValue), gt(upload.id, cursorId))),
+          )
+        }
+        break
+      }
     }
   }
 
-  const sortColumn = {
-    uploadedAt: upload.uploadedAt,
-    fileName: upload.fileName,
-    totalOrders: upload.totalOrders,
-    processedOrders: upload.processedOrders,
-    errorOrders: upload.errorOrders,
-  }[sortBy]
-
   const orderByFn = sortOrder === 'desc' ? desc : asc
 
-  const uploads = await db
+  const uploads: UploadHistoryRow[] = await db
     .select({
       id: upload.id,
       fileName: upload.fileName,
@@ -144,7 +245,7 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
     .from(upload)
     .leftJoin(shoppingMallTemplate, eq(upload.shoppingMallId, shoppingMallTemplate.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(orderByFn(sortColumn), orderByFn(upload.id))
+    .orderBy(orderByFn(sortExpr), orderByFn(upload.id))
     .limit(limit + 1)
 
   const hasMore = uploads.length > limit
@@ -171,8 +272,7 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
 
   // Build next cursor
   const lastItem = items[items.length - 1]
-  const nextCursor =
-    hasMore && lastItem ? JSON.stringify({ uploadedAt: lastItem.uploadedAt.toISOString(), id: lastItem.id }) : null
+  const nextCursor = hasMore && lastItem ? getNextUploadHistoryCursor(sortBy, lastItem) : null
 
   return {
     items: items.map((u) => ({
@@ -191,5 +291,20 @@ async function getUploadHistory(params: QueryParams): Promise<UploadHistoryRespo
     })),
     nextCursor,
     hasMore,
+  }
+}
+
+function getUploadHistorySortExpr(sortBy: QueryParams['sortBy']) {
+  switch (sortBy) {
+    case 'errorOrders':
+      return sql<number>`coalesce(${upload.errorOrders}, 0)`
+    case 'fileName':
+      return upload.fileName
+    case 'processedOrders':
+      return sql<number>`coalesce(${upload.processedOrders}, 0)`
+    case 'totalOrders':
+      return sql<number>`coalesce(${upload.totalOrders}, 0)`
+    case 'uploadedAt':
+      return upload.uploadedAt
   }
 }

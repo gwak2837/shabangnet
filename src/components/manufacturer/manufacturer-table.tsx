@@ -1,74 +1,62 @@
 'use client'
 
-import { Download, Mail, MoreHorizontal, Pencil, Phone, Search, Upload } from 'lucide-react'
+import { Download, Loader2, Mail, MoreHorizontal, Pencil, Phone, Search, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
 
 import { ManufacturerCsvDialog } from '@/components/manufacturer/manufacturer-csv-dialog'
-import { MANUFACTURER_CSV_HEADER } from '@/components/manufacturer/manufacturer-csv.types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { authClient } from '@/lib/auth-client'
-import { stringifyCsv } from '@/utils/csv'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
 
 interface ManufacturerTableProps {
+  fetchNextPage?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
   manufacturers: Manufacturer[]
   onEdit: (manufacturer: Manufacturer) => void
+  onSearchChange: (value: string) => void
+  searchQuery: string
 }
 
 import { DeleteManufacturersDialog } from './delete-manufacturers-dialog'
 
-export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTableProps) {
+export function ManufacturerTable({
+  manufacturers,
+  onEdit,
+  searchQuery,
+  onSearchChange,
+  fetchNextPage,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+}: ManufacturerTableProps) {
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
 
-  const filteredManufacturers = useMemo(() => {
-    return manufacturers.filter(
-      (m) =>
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (m.email ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  }, [manufacturers, searchQuery])
-
-  const filteredIds = useMemo(() => filteredManufacturers.map((m) => m.id), [filteredManufacturers])
-  const isAllSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.includes(id))
-  const isSomeSelected = filteredIds.some((id) => selectedIds.includes(id)) && !isAllSelected
-
-  function handleDownloadCsv() {
-    const rows = [
-      MANUFACTURER_CSV_HEADER,
-      ...manufacturers.map((m) => [m.name, m.contactName, m.email ?? '', m.ccEmail ?? '', m.phone]),
-    ] as const
-
-    const csvText = stringifyCsv(rows, { bom: true })
-    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-
-    const today = new Date().toISOString().split('T')[0]
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `제조사_${today}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
+  const visibleIds = useMemo(() => manufacturers.map((m) => m.id), [manufacturers])
+  const visibleIdSet = useMemo(() => new Set(visibleIds), [visibleIds])
+  const effectiveSelectedIds = useMemo(
+    () => selectedIds.filter((id) => visibleIdSet.has(id)),
+    [selectedIds, visibleIdSet],
+  )
+  const effectiveSelectedIdSet = useMemo(() => new Set(effectiveSelectedIds), [effectiveSelectedIds])
+  const isAllSelected = visibleIds.length > 0 && visibleIds.every((id) => effectiveSelectedIdSet.has(id))
+  const isSomeSelected = visibleIds.some((id) => effectiveSelectedIdSet.has(id)) && !isAllSelected
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedIds(filteredIds)
+      setSelectedIds(visibleIds)
     } else {
       setSelectedIds([])
     }
@@ -96,17 +84,21 @@ export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTablePr
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 className="pl-9 bg-slate-50 border-slate-200"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="제조사명, 담당자, 이메일 검색..."
                 type="search"
                 value={searchQuery}
               />
             </div>
             <div className="flex items-center gap-2">
-              {isAdmin && <DeleteManufacturersDialog onSuccess={handleDeleteSuccess} selectedIds={selectedIds} />}
-              <Button className="gap-2" onClick={handleDownloadCsv} variant="outline">
-                <Download className="h-4 w-4" />
-                CSV 다운로드
+              {isAdmin && (
+                <DeleteManufacturersDialog onSuccess={handleDeleteSuccess} selectedIds={effectiveSelectedIds} />
+              )}
+              <Button asChild className="gap-2" variant="outline">
+                <a href="/api/manufacturers/csv">
+                  <Download className="h-4 w-4" />
+                  CSV 다운로드
+                </a>
               </Button>
               <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
                 <Upload className="h-4 w-4" />
@@ -141,13 +133,13 @@ export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTablePr
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredManufacturers.map((manufacturer) => (
+              {manufacturers.map((manufacturer) => (
                 <TableRow className="hover:bg-slate-50 transition-colors" key={manufacturer.id}>
                   {isAdmin && (
                     <TableCell className="w-10">
                       <Checkbox
                         aria-label={`${manufacturer.name} 선택`}
-                        checked={selectedIds.includes(manufacturer.id)}
+                        checked={effectiveSelectedIdSet.has(manufacturer.id)}
                         onCheckedChange={(checked) => handleSelectItem(manufacturer.id, checked === true)}
                       />
                     </TableCell>
@@ -205,7 +197,7 @@ export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTablePr
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredManufacturers.length === 0 && (
+              {manufacturers.length === 0 && (
                 <TableRow>
                   <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 7 : 6}>
                     검색 결과가 없습니다.
@@ -214,6 +206,19 @@ export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTablePr
               )}
             </TableBody>
           </Table>
+
+          {isFetchingNextPage ? (
+            <div className="flex items-center justify-center py-4 border-t border-slate-100">
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+              <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
+            </div>
+          ) : null}
+
+          <InfiniteScrollSentinel
+            hasMore={hasNextPage}
+            isLoading={isFetchingNextPage}
+            onLoadMore={() => fetchNextPage?.()}
+          />
         </CardContent>
       </Card>
 

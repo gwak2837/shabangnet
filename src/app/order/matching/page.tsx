@@ -165,81 +165,77 @@ export default function OrderMatchingPage() {
           {unmatched.length === 0 ? (
             <div className="px-4 py-6 text-sm text-slate-500">제조사 미연결 주문이 없어요</div>
           ) : (
-            <div className="pb-4">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      상품코드
-                    </TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      상품명
-                    </TableHead>
-                    <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      주문 수
-                    </TableHead>
-                    <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      제조사 연결
-                    </TableHead>
-                    <TableHead className="w-[1%] whitespace-nowrap" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {unmatched.map((row) => {
-                    const selected = selectionByProductCode[row.productCode] ?? ''
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    상품코드
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
+                  <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    주문 수
+                  </TableHead>
+                  <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    제조사 연결
+                  </TableHead>
+                  <TableHead className="w-[1%] whitespace-nowrap" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {unmatched.map((row) => {
+                  const selected = selectionByProductCode[row.productCode] ?? ''
 
-                    return (
-                      <TableRow className="hover:bg-slate-50 transition-colors" key={row.productCode}>
-                        <TableCell className="font-mono text-sm text-slate-800">{row.productCode}</TableCell>
-                        <TableCell className="text-slate-700 max-w-[360px] truncate" title={row.productNameSample}>
-                          {row.productNameSample || '-'}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums text-slate-700">{row.orderCount}건</TableCell>
-                        <TableCell className="w-[1%]">
-                          <Select
-                            onValueChange={(value) =>
-                              setSelectionByProductCode((prev) => ({ ...prev, [row.productCode]: value }))
+                  return (
+                    <TableRow className="hover:bg-slate-50 transition-colors" key={row.productCode}>
+                      <TableCell className="font-mono text-sm text-slate-800">{row.productCode}</TableCell>
+                      <TableCell className="text-slate-700 max-w-[360px] truncate" title={row.productNameSample}>
+                        {row.productNameSample || '-'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-slate-700">{row.orderCount}건</TableCell>
+                      <TableCell className="w-[1%]">
+                        <Select
+                          onValueChange={(value) =>
+                            setSelectionByProductCode((prev) => ({ ...prev, [row.productCode]: value }))
+                          }
+                          value={selected}
+                        >
+                          <SelectTrigger className="w-[220px] bg-background border-slate-200">
+                            <SelectValue placeholder="제조사 선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {manufacturerOptions.map((m) => (
+                              <SelectItem key={m.id} value={String(m.id)}>
+                                {m.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="w-[1%] whitespace-nowrap">
+                        <Button
+                          disabled={!selected || isSaving}
+                          onClick={() => {
+                            const manufacturerId = Number(selected)
+                            if (!manufacturerId) {
+                              toast.error('제조사를 선택해 주세요')
+                              return
                             }
-                            value={selected}
-                          >
-                            <SelectTrigger className="w-[220px] bg-background border-slate-200">
-                              <SelectValue placeholder="제조사 선택" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {manufacturerOptions.map((m) => (
-                                <SelectItem key={m.id} value={String(m.id)}>
-                                  {m.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="w-[1%] whitespace-nowrap">
-                          <Button
-                            disabled={!selected || isSaving}
-                            onClick={() => {
-                              const manufacturerId = Number(selected)
-                              if (!manufacturerId) {
-                                toast.error('제조사를 선택해 주세요')
-                                return
-                              }
-                              saveLink({
-                                productCode: row.productCode,
-                                productName: row.productNameSample || undefined,
-                                manufacturerId,
-                              })
-                            }}
-                            size="sm"
-                          >
-                            연결하기
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                            saveLink({
+                              productCode: row.productCode,
+                              productName: row.productNameSample || undefined,
+                              manufacturerId,
+                            })
+                          }}
+                          size="sm"
+                        >
+                          연결하기
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

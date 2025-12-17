@@ -1,14 +1,14 @@
 'use client'
 
 import { Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { FixedSizeList, type ListChildComponentProps } from 'react-window'
+import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
@@ -25,18 +25,6 @@ interface OrderTableProps {
   onSendEmail: (batch: OrderBatch) => void
 }
 
-interface RowData {
-  batches: OrderBatch[]
-  onDownload?: (batch: OrderBatch) => void
-  onPreview: (batch: OrderBatch) => void
-  onSelectBatch: (manufacturerId: number, checked: boolean) => void
-  onSendEmail: (batch: OrderBatch) => void
-  selectedBatches: number[]
-}
-
-const ROW_HEIGHT = 60
-const CONTAINER_HEIGHT = 520
-
 export function OrderTable({
   batches,
   onSendEmail,
@@ -48,7 +36,6 @@ export function OrderTable({
   isFetchingNextPage,
 }: OrderTableProps) {
   const [selectedBatches, setSelectedBatches] = useState<number[]>([])
-  const listRef = useRef<FixedSizeList<RowData>>(null)
   const isAllSelected = batches.length > 0 && selectedBatches.length === batches.length
   const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
 
@@ -68,25 +55,9 @@ export function OrderTable({
     }
   }
 
-  // Infinite scroll: load more when near the end
-  function handleItemsRendered({ visibleStopIndex }: { visibleStopIndex: number }) {
-    if (visibleStopIndex >= batches.length - 5 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage?.()
-    }
-  }
-
-  const itemData: RowData = {
-    batches,
-    selectedBatches,
-    onSelectBatch: handleSelectBatch,
-    onPreview,
-    onDownload,
-    onSendEmail,
-  }
-
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
-      <CardContent className="p-0 overflow-hidden">
+      <CardContent className="p-0">
         {/* Bulk Actions */}
         {selectedBatches.length > 0 && (
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
@@ -151,52 +122,66 @@ export function OrderTable({
           <div className="w-12 shrink-0 px-3" />
         </div>
 
-        {/* Virtual List */}
+        {/* List */}
         {batches.length > 0 ? (
-          <FixedSizeList
-            height={Math.min(CONTAINER_HEIGHT, batches.length * ROW_HEIGHT)}
-            itemCount={batches.length}
-            itemData={itemData}
-            itemSize={ROW_HEIGHT}
-            onItemsRendered={handleItemsRendered}
-            ref={listRef}
-            width="100%"
-          >
-            {Row}
-          </FixedSizeList>
-        ) : (
-          <div className="flex items-center justify-center h-32 text-slate-500">주문 데이터가 없습니다.</div>
-        )}
+          <div>
+            {batches.map((batch) => (
+              <OrderRow
+                batch={batch}
+                key={batch.manufacturerId}
+                onDownload={onDownload}
+                onPreview={onPreview}
+                onSelectBatch={handleSelectBatch}
+                onSendEmail={onSendEmail}
+                selected={selectedBatches.includes(batch.manufacturerId)}
+              />
+            ))}
 
-        {/* Loading indicator for next page */}
-        {isFetchingNextPage && (
-          <div className="flex items-center justify-center py-4 border-t border-slate-100">
-            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-            <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
+            {isFetchingNextPage ? (
+              <div className="flex items-center justify-center py-4 border-t border-slate-100">
+                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
+              </div>
+            ) : null}
+
+            <InfiniteScrollSentinel
+              hasMore={hasNextPage ?? false}
+              isLoading={isFetchingNextPage}
+              onLoadMore={() => fetchNextPage?.()}
+            />
           </div>
+        ) : (
+          <div className="flex items-center justify-center h-32 text-slate-500">주문 데이터가 없어요.</div>
         )}
       </CardContent>
     </Card>
   )
 }
 
-function Row({ index, style, data }: ListChildComponentProps<RowData>) {
-  const { batches, selectedBatches, onSelectBatch, onPreview, onDownload, onSendEmail } = data
-  const batch = batches[index]
-
-  if (!batch) {
-    return null
-  }
-
+function OrderRow({
+  batch,
+  selected,
+  onSelectBatch,
+  onPreview,
+  onDownload,
+  onSendEmail,
+}: {
+  batch: OrderBatch
+  selected: boolean
+  onSelectBatch: (manufacturerId: number, checked: boolean) => void
+  onPreview: (batch: OrderBatch) => void
+  onDownload?: (batch: OrderBatch) => void
+  onSendEmail: (batch: OrderBatch) => void
+}) {
   const hasEmail = batch.email.trim().length > 0
 
   return (
-    <label className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition" style={style}>
+    <label className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition">
       {/* Checkbox */}
       <div className="w-12 shrink-0 px-3">
         <Checkbox
           aria-label={`${batch.manufacturerName} 선택`}
-          checked={selectedBatches.includes(batch.manufacturerId)}
+          checked={selected}
           onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked as boolean)}
         />
       </div>

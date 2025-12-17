@@ -1,22 +1,33 @@
 'use client'
 
-import { CheckCircle2, Mail, Package } from 'lucide-react'
+import { CheckCircle2, Loader2, Mail, Package } from 'lucide-react'
 
 import type { SendLog } from '@/services/logs'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { cn } from '@/utils/cn'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface OrderSelectProps {
+  fetchNextPage?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
   logs: SendLog[]
   onSelect: (log: SendLog) => void
   selectedLog: SendLog | null
 }
 
-export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
+export function OrderSelect({
+  logs,
+  selectedLog,
+  onSelect,
+  fetchNextPage,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+}: OrderSelectProps) {
   // 발송 완료된 로그만 필터링
   const completedLogs = logs.filter((log) => log.status === 'success')
 
@@ -34,7 +45,7 @@ export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2">
+        <div className="flex flex-col gap-2">
           {completedLogs.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
               <Mail className="h-12 w-12 mx-auto mb-3 text-slate-300" />
@@ -80,6 +91,18 @@ export function OrderSelect({ logs, selectedLog, onSelect }: OrderSelectProps) {
             ))
           )}
         </div>
+
+        {isFetchingNextPage ? (
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
+          </div>
+        ) : null}
+
+        <InfiniteScrollSentinel
+          hasMore={hasNextPage}
+          isLoading={isFetchingNextPage}
+          onLoadMore={() => fetchNextPage?.()}
+        />
 
         {selectedLog && (
           <div className="mt-4 pt-4 border-t border-slate-200">

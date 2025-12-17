@@ -6,24 +6,21 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import type { Product } from '@/services/products'
-
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { DeleteProductsDialog } from '@/components/product/delete-products-dialog'
 import { ProductCsvDialog } from '@/components/product/product-csv-dialog'
-import { PRODUCT_CSV_HEADER } from '@/components/product/product-csv.types'
 import { ProductFilters } from '@/components/product/product-filters'
 import { ProductTable } from '@/components/product/product-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useProducts } from '@/hooks/use-products'
 import { useServerAction } from '@/hooks/use-server-action'
 import { authClient } from '@/lib/auth-client'
 import { saveProductManufacturerLink } from '@/services/product-manufacturer-links'
 import { update } from '@/services/products'
-import { stringifyCsv } from '@/utils/csv'
 
 interface MatchingSummaryResponse {
   missingEmailManufacturers: unknown[]
@@ -42,7 +39,20 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
-  const { data: products = [], isLoading: isLoadingProducts } = useProducts()
+  const {
+    data: productsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingProducts,
+  } = useProducts({
+    filters: {
+      search: searchQuery.trim().length > 0 ? searchQuery : undefined,
+      unmapped: showUnmappedOnly,
+      priceError: showPriceErrorsOnly,
+    },
+  })
+  const products = useMemo(() => productsData?.pages.flatMap((page) => page.items) ?? [], [productsData])
   const { data: manufacturers = [] } = useManufacturers()
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
@@ -88,46 +98,33 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     onError: (error) => toast.error(error),
   })
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchesSearch =
-        p.productCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.productName.toLowerCase().includes(searchQuery.toLowerCase())
-
-      const matchesUnmapped = showUnmappedOnly ? !p.manufacturerId : true
-      const matchesPriceError = showPriceErrorsOnly ? hasPriceValidationError(p) : true
-
-      return matchesSearch && matchesUnmapped && matchesPriceError
-    })
-  }, [products, searchQuery, showUnmappedOnly, showPriceErrorsOnly])
-
-  const filteredIds = useMemo(() => filteredProducts.map((p) => p.id), [filteredProducts])
+  const visibleIds = useMemo(() => products.map((p) => p.id), [products])
 
   const visibleSelectedIds = useMemo(() => {
-    if (selectedIds.length === 0 || filteredIds.length === 0) {
+    if (selectedIds.length === 0 || visibleIds.length === 0) {
       return []
     }
 
-    const filteredIdSet = new Set(filteredIds)
-    return selectedIds.filter((id) => filteredIdSet.has(id))
-  }, [filteredIds, selectedIds])
+    const visibleIdSet = new Set(visibleIds)
+    return selectedIds.filter((id) => visibleIdSet.has(id))
+  }, [selectedIds, visibleIds])
 
   const selectionState = useMemo<'all' | 'mixed' | 'none'>(() => {
-    if (filteredIds.length === 0) return 'none'
+    if (visibleIds.length === 0) return 'none'
     const selectedCount = visibleSelectedIds.length
     if (selectedCount === 0) return 'none'
-    if (selectedCount === filteredIds.length) return 'all'
+    if (selectedCount === visibleIds.length) return 'all'
     return 'mixed'
-  }, [filteredIds.length, visibleSelectedIds.length])
+  }, [visibleIds.length, visibleSelectedIds.length])
 
   function handleSelectAll(checked: boolean) {
-    setSelectedIds(checked ? filteredIds : [])
+    setSelectedIds(checked ? visibleIds : [])
   }
 
   function handleSelectItem(id: number, checked: boolean) {
     setSelectedIds((prev) => {
-      const filteredIdSet = new Set(filteredIds)
-      const prunedPrev = prev.filter((selectedId) => filteredIdSet.has(selectedId))
+      const visibleIdSet = new Set(visibleIds)
+      const prunedPrev = prev.filter((selectedId) => visibleIdSet.has(selectedId))
       if (checked) {
         return prunedPrev.includes(id) ? prunedPrev : [...prunedPrev, id]
       }
@@ -164,42 +161,16 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     })
   }
 
-  function handleDownloadCsv() {
-    const rows = [
-      PRODUCT_CSV_HEADER,
-      ...products.map((p) => [
-        p.productCode,
-        p.productName,
-        p.optionName,
-        p.manufacturerName ?? '',
-        p.price > 0 ? String(p.price) : '',
-        p.cost > 0 ? String(p.cost) : '',
-        p.shippingFee > 0 ? String(p.shippingFee) : '',
-      ]),
-    ] as const
-
-    const csvText = stringifyCsv(rows, { bom: true })
-    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-
-    const today = new Date().toISOString().split('T')[0]
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `상품_원가_배송비_${today}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
   // Calculate stats
   const stats = useMemo(() => {
-    const totalProducts = products.length
-    const unmappedProducts = products.filter((p) => !p.manufacturerId).length
-    const mappedProducts = totalProducts - unmappedProducts
-    const priceErrorProducts = products.filter(hasPriceValidationError).length
-    return { totalProducts, unmappedProducts, mappedProducts, priceErrorProducts }
-  }, [products])
+    const summary = productsData?.pages[0]?.summary
+    return {
+      totalProducts: summary?.totalProducts ?? 0,
+      unmappedProducts: summary?.unmappedProducts ?? 0,
+      mappedProducts: summary?.mappedProducts ?? 0,
+      priceErrorProducts: summary?.priceErrorProducts ?? 0,
+    }
+  }, [productsData?.pages])
 
   if (isLoadingProducts) {
     return (
@@ -299,9 +270,11 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         />
         <div className="flex items-center gap-2">
           {isAdmin && <DeleteProductsDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
-          <Button className="gap-2" onClick={handleDownloadCsv} variant="outline">
-            <Download className="h-4 w-4" />
-            CSV 다운로드
+          <Button asChild className="gap-2" variant="outline">
+            <a href="/api/products/csv">
+              <Download className="h-4 w-4" />
+              CSV 다운로드
+            </a>
           </Button>
           <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
             <Upload className="h-4 w-4" />
@@ -319,17 +292,24 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         onUpdateCost={handleUpdateCost}
         onUpdateManufacturer={handleUpdateManufacturer}
         onUpdateShippingFee={handleUpdateShippingFee}
-        products={filteredProducts}
+        products={products}
         selectedIds={visibleSelectedIds}
         selectionState={selectionState}
+      />
+
+      {isFetchingNextPage ? (
+        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
+        </div>
+      ) : null}
+
+      <InfiniteScrollSentinel
+        hasMore={hasNextPage ?? false}
+        isLoading={isFetchingNextPage}
+        onLoadMore={() => fetchNextPage()}
       />
 
       <ProductCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </AppShell>
   )
-}
-
-// 원가가 판매가보다 높은지 검증
-function hasPriceValidationError(product: Product): boolean {
-  return product.cost > 0 && product.price > 0 && product.cost > product.price
 }

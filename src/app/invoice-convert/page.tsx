@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowRight, CheckCircle2, FileInput, FileOutput, Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { InvoiceConvertResultItem } from '@/services/invoice-convert'
 import type { SendLog } from '@/services/logs'
@@ -31,7 +31,16 @@ export default function InvoiceConvertPage() {
   // 다운로드 버퍼 저장용 ref
   const downloadBufferRef = useRef<Buffer | null>(null)
 
-  const { data: logs = [], isLoading: isLoadingLogs } = useSendLogs()
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingLogs,
+  } = useSendLogs({
+    filters: { status: 'success' },
+  })
+  const logs = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
 
   // 제조사 선택 시 템플릿 로드
   const loadTemplate = useCallback(async (manufacturerId: number) => {
@@ -228,7 +237,14 @@ export default function InvoiceConvertPage() {
           {/* Main Content */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left: Order Select */}
-            <OrderSelect logs={logs} onSelect={handleSelectLog} selectedLog={selectedLog} />
+            <OrderSelect
+              fetchNextPage={() => fetchNextPage()}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              logs={logs}
+              onSelect={handleSelectLog}
+              selectedLog={selectedLog}
+            />
 
             {/* Right: Invoice Upload */}
             <InvoiceDropzone

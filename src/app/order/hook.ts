@@ -3,7 +3,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { getExcludedBatches } from '@/services/orders'
 
 export interface OrderBatch {
   ccEmail?: string
@@ -59,7 +58,7 @@ interface Order {
 
 interface OrderBatchesResponse {
   items: OrderBatch[]
-  nextCursor: number | null
+  nextCursor: string | null
 }
 
 interface UseOrderBatchesParams {
@@ -69,13 +68,6 @@ interface UseOrderBatchesParams {
 
 interface UseOrderBatchSummaryParams {
   filters?: OrderFilters
-}
-
-export function useExcludedOrderBatches() {
-  return useQuery({
-    queryKey: queryKeys.orders.excluded,
-    queryFn: getExcludedBatches,
-  })
 }
 
 export function useManufacturerOptions() {
@@ -129,7 +121,7 @@ export function useOrderBatches(params: UseOrderBatchesParams = {}) {
       return response.json()
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: null as number | null,
+    initialPageParam: null as string | null,
   })
 }
 

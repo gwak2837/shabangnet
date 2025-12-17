@@ -1,8 +1,7 @@
 'use client'
 
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, FileSpreadsheet, Loader2, Store } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
-import { FixedSizeList, type ListChildComponentProps } from 'react-window'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { downloadShoppingMallExcel } from '@/app/upload/utils'
@@ -10,34 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { authClient } from '@/lib/auth-client'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime, formatFileSize } from '@/utils/format/number'
 
 import { DeleteUploadsDialog } from './delete-uploads-dialog'
 import { type UploadHistoryFilters, type UploadHistoryItem, useUploadHistory } from './use-upload-history'
-
-// ============================================
-// Types
-// ============================================
-
-interface RowData {
-  isAdmin: boolean
-  items: UploadHistoryItem[]
-  onSelectItem: (id: number, checked: boolean) => void
-  selectedIds: number[]
-}
-
-interface UploadHistoryTableProps {
-  initialFilters?: UploadHistoryFilters
-}
-
-// ============================================
-// Constants
-// ============================================
-
-const ROW_HEIGHT = 48
-const CONTAINER_HEIGHT = 600
 
 interface SortableHeaderProps {
   className?: string
@@ -48,11 +26,11 @@ interface SortableHeaderProps {
   sortOrder: 'asc' | 'desc'
 }
 
-// ============================================
-// Component
-// ============================================
-
 type SortField = 'errorOrders' | 'fileName' | 'processedOrders' | 'totalOrders' | 'uploadedAt'
+
+interface UploadHistoryTableProps {
+  initialFilters?: UploadHistoryFilters
+}
 
 // ============================================
 // Row Component
@@ -65,7 +43,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useUploadHistory({ filters })
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
-  const listRef = useRef<FixedSizeList<RowData>>(null)
   const isAllSelected = items.length > 0 && selectedIds.length === items.length
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected
 
@@ -82,12 +59,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
       setSelectedIds((prev) => [...prev, id])
     } else {
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
-    }
-  }
-
-  function handleItemsRendered({ visibleStopIndex }: { visibleStopIndex: number }) {
-    if (visibleStopIndex >= items.length - 5 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
     }
   }
 
@@ -122,13 +93,6 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
   function handleDeleteSuccess() {
     setSelectedIds([])
-  }
-
-  const itemData: RowData = {
-    items,
-    selectedIds,
-    onSelectItem: handleSelectItem,
-    isAdmin,
   }
 
   const sortBy = filters.sortBy ?? 'uploadedAt'
@@ -261,28 +225,32 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
                 불러오는 중...
               </div>
             ) : items.length > 0 ? (
-              <FixedSizeList
-                height={Math.min(CONTAINER_HEIGHT, items.length * ROW_HEIGHT)}
-                itemCount={items.length}
-                itemData={itemData}
-                itemSize={ROW_HEIGHT}
-                onItemsRendered={handleItemsRendered}
-                ref={listRef}
-                style={{ overflowX: 'hidden' }}
-                width="100%"
-              >
-                {Row}
-              </FixedSizeList>
+              <div className="overflow-x-hidden">
+                {items.map((item) => (
+                  <UploadHistoryRow
+                    isAdmin={isAdmin}
+                    isSelected={selectedIds.includes(item.id)}
+                    item={item}
+                    key={item.id}
+                    onSelectItem={handleSelectItem}
+                  />
+                ))}
+
+                {isFetchingNextPage ? (
+                  <div className="flex items-center justify-center py-4 border-t border-slate-100">
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                    <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
+                  </div>
+                ) : null}
+
+                <InfiniteScrollSentinel
+                  hasMore={hasNextPage ?? false}
+                  isLoading={isFetchingNextPage}
+                  onLoadMore={() => fetchNextPage()}
+                />
+              </div>
             ) : (
               <div className="flex items-center justify-center h-32 text-slate-500">업로드 기록이 없어요.</div>
-            )}
-
-            {/* Loading indicator for next page */}
-            {isFetchingNextPage && (
-              <div className="flex items-center justify-center py-4 border-t border-slate-100">
-                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                <span className="ml-2 text-sm text-slate-500">더 불러오는 중...</span>
-              </div>
             )}
           </div>
         </CardContent>
@@ -291,15 +259,51 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
   )
 }
 
-function Row({ index, style, data }: ListChildComponentProps<RowData>) {
-  const { items, selectedIds, onSelectItem, isAdmin } = data
-  const item = items[index]
-  const isSelected = selectedIds.includes(item.id)
-  const [isDownloading, setIsDownloading] = useState(false)
+function SortableHeader({
+  field,
+  label,
+  sortBy,
+  sortOrder,
+  onSort,
+  className = 'flex-1 min-w-[200px]',
+}: SortableHeaderProps) {
+  const isActive = sortBy === field
 
-  if (!item) {
-    return null
-  }
+  return (
+    <div className={`${className} shrink-0 px-2`}>
+      <Button
+        className="h-auto p-2 py-1 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
+        onClick={() => onSort(field)}
+        size="none"
+        variant="ghost"
+      >
+        {label}
+        {isActive ? (
+          sortOrder === 'desc' ? (
+            <ArrowDown className="h-3 w-3" />
+          ) : (
+            <ArrowUp className="h-3 w-3" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-50" />
+        )}
+      </Button>
+    </div>
+  )
+}
+
+function UploadHistoryRow({
+  item,
+  isSelected,
+  isAdmin,
+  onSelectItem,
+}: {
+  isAdmin: boolean
+  isSelected: boolean
+  item: UploadHistoryItem
+  onSelectItem: (id: number, checked: boolean) => void
+}) {
+  const [isDownloading, setIsDownloading] = useState(false)
 
   async function handleDownload(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
@@ -324,7 +328,6 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
     <label
       aria-selected={isSelected}
       className="flex items-center border-b border-slate-100 hover:bg-slate-50 transition aria-selected:bg-blue-50"
-      style={style}
     >
       {/* Checkbox (Admin only) */}
       {isAdmin && (
@@ -404,38 +407,5 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
         {formatRelativeTime(item.uploadedAt)}
       </div>
     </label>
-  )
-}
-
-function SortableHeader({
-  field,
-  label,
-  sortBy,
-  sortOrder,
-  onSort,
-  className = 'flex-1 min-w-[200px]',
-}: SortableHeaderProps) {
-  const isActive = sortBy === field
-
-  return (
-    <div className={`${className} shrink-0 px-2`}>
-      <Button
-        className="h-auto p-2 py-1 text-xs font-medium text-slate-500 uppercase tracking-wider hover:text-slate-700"
-        onClick={() => onSort(field)}
-        size="none"
-        variant="ghost"
-      >
-        {label}
-        {isActive ? (
-          sortOrder === 'desc' ? (
-            <ArrowDown className="h-3 w-3" />
-          ) : (
-            <ArrowUp className="h-3 w-3" />
-          )
-        ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-50" />
-        )}
-      </Button>
-    </div>
   )
 }

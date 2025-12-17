@@ -10,6 +10,7 @@ import { LogDetailModal } from '@/components/log/log-detail-modal'
 import { LogFilters } from '@/components/log/log-filters'
 import { LogTable } from '@/components/log/log-table'
 import { Card, CardContent } from '@/components/ui/card'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useSendLogs } from '@/hooks/use-logs'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { authClient } from '@/lib/auth-client'
@@ -26,43 +27,33 @@ export function SendLogsView() {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
-  const { data: logs = [], isLoading: isLoadingLogs } = useSendLogs()
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingLogs,
+  } = useSendLogs({
+    filters: {
+      manufacturerId: manufacturer !== 'all' ? Number(manufacturer) : undefined,
+      status: status as 'all' | 'failed' | 'pending' | 'success',
+      startDate: dateFrom || undefined,
+      endDate: dateTo || undefined,
+    },
+  })
+  const logs = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
   const { data: manufacturers = [] } = useManufacturers()
-
-  const filteredLogs = useMemo(() => {
-    return logs
-      .filter((log) => {
-        // Date filter
-        if (dateFrom) {
-          const logDate = new Date(log.sentAt).toISOString().split('T')[0]
-          if (logDate < dateFrom) return false
-        }
-        if (dateTo) {
-          const logDate = new Date(log.sentAt).toISOString().split('T')[0]
-          if (logDate > dateTo) return false
-        }
-
-        // Status filter
-        if (status !== 'all' && log.status !== status) return false
-
-        // Manufacturer filter
-        if (manufacturer !== 'all' && log.manufacturerId !== Number(manufacturer)) return false
-
-        return true
-      })
-      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
-  }, [logs, dateFrom, dateTo, status, manufacturer])
 
   const effectiveSelectedIds = useMemo(() => {
     if (!isAdmin || selectedIds.length === 0) return []
-    const visible = new Set(filteredLogs.map((l) => l.id))
+    const visible = new Set(logs.map((l) => l.id))
     return selectedIds.filter((id) => visible.has(id))
-  }, [filteredLogs, isAdmin, selectedIds])
+  }, [isAdmin, logs, selectedIds])
 
   function handleSelectAll(checked: boolean) {
     if (!isAdmin) return
     if (checked) {
-      setSelectedIds(filteredLogs.map((log) => log.id))
+      setSelectedIds(logs.map((log) => log.id))
     } else {
       setSelectedIds([])
     }
@@ -88,11 +79,13 @@ export function SendLogsView() {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalLogs = logs.length
-    const successLogs = logs.filter((l) => l.status === 'success').length
-    const failedLogs = logs.filter((l) => l.status === 'failed').length
-    return { totalLogs, successLogs, failedLogs }
-  }, [logs])
+    const summary = data?.pages[0]?.summary
+    return {
+      totalLogs: summary?.totalLogs ?? 0,
+      successLogs: summary?.successLogs ?? 0,
+      failedLogs: summary?.failedLogs ?? 0,
+    }
+  }, [data?.pages])
 
   if (isLoadingLogs) {
     return (
@@ -164,12 +157,20 @@ export function SendLogsView() {
       {/* Log Table */}
       <LogTable
         isAdmin={isAdmin}
-        logs={filteredLogs}
+        logs={logs}
         onSelectAll={handleSelectAll}
         onSelectLog={handleSelectLog}
         onViewDetail={handleViewDetail}
         selectedIds={effectiveSelectedIds}
       />
+
+      {isFetchingNextPage ? (
+        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
+        </div>
+      ) : null}
+
+      <InfiniteScrollSentinel hasMore={hasNextPage} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
 
       {/* Detail Modal */}
       <LogDetailModal log={selectedLog} onOpenChange={setIsDetailOpen} open={isDetailOpen} />

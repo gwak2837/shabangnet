@@ -9,13 +9,18 @@ import { AppShell } from '@/components/layout/app-shell'
 import { ManufacturerModal } from '@/components/manufacturer/manufacturer-modal'
 import { ManufacturerTable } from '@/components/manufacturer/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
-import { useManufacturers } from '@/hooks/use-manufacturers'
+import { useManufacturersList } from '@/hooks/use-manufacturers-list'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const { data: manufacturers = [], isLoading } = useManufacturers()
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useManufacturersList({
+    search: searchQuery,
+  })
+  const manufacturers = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
+  const summary = data?.pages[0]?.summary
 
   const handleEdit = (manufacturer: Manufacturer) => {
     setEditingManufacturer(manufacturer)
@@ -24,11 +29,11 @@ export default function ManufacturersPage() {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalManufacturers = manufacturers.length
-    const totalOrders = manufacturers.reduce((sum, m) => sum + m.orderCount, 0)
+    const totalManufacturers = summary?.totalManufacturers ?? 0
+    const totalOrders = summary?.totalOrders ?? 0
     const avgOrders = totalManufacturers > 0 ? Math.round(totalOrders / totalManufacturers) : 0
     return { totalManufacturers, totalOrders, avgOrders }
-  }, [manufacturers])
+  }, [summary?.totalManufacturers, summary?.totalOrders])
 
   if (isLoading) {
     return (
@@ -82,7 +87,15 @@ export default function ManufacturersPage() {
       </div>
 
       {/* Manufacturer Table */}
-      <ManufacturerTable manufacturers={manufacturers} onEdit={handleEdit} />
+      <ManufacturerTable
+        fetchNextPage={() => fetchNextPage()}
+        hasNextPage={hasNextPage ?? false}
+        isFetchingNextPage={isFetchingNextPage}
+        manufacturers={manufacturers}
+        onEdit={handleEdit}
+        onSearchChange={setSearchQuery}
+        searchQuery={searchQuery}
+      />
 
       {/* Add/Edit Modal */}
       <ManufacturerModal

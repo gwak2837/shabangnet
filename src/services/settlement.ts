@@ -5,6 +5,7 @@ import { and, eq, gte, lte } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
+import { orderExcludedReasonSql } from '@/services/order-exclusion'
 
 export interface SettlementData {
   orders: SettlementOrder[]
@@ -61,7 +62,19 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
 
   // Query completed orders for the manufacturer within the date range
   const result = await db
-    .select()
+    .select({
+      id: order.id,
+      sabangnetOrderNumber: order.sabangnetOrderNumber,
+      productName: order.productName,
+      optionName: order.optionName,
+      quantity: order.quantity,
+      cost: order.cost,
+      shippingCost: order.shippingCost,
+      recipientName: order.recipientName,
+      address: order.address,
+      createdAt: order.createdAt,
+      excludedReason: orderExcludedReasonSql(order.fulfillmentType),
+    })
     .from(order)
     .where(
       and(
@@ -79,6 +92,8 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
     const shippingCost = o.shippingCost ?? 0
     const quantity = o.quantity || 1
     const totalCost = cost * quantity + shippingCost
+    const excludedReason = typeof o.excludedReason === 'string' ? o.excludedReason.trim() : ''
+    const excludedFromEmail = excludedReason.length > 0
 
     return {
       id: o.id,
@@ -92,8 +107,8 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
       customerName: o.recipientName || '',
       address: o.address || '',
       sentAt: o.createdAt.toISOString(),
-      excludedFromEmail: !!o.excludedReason,
-      excludedReason: o.excludedReason || undefined,
+      excludedFromEmail,
+      excludedReason: excludedFromEmail ? excludedReason : undefined,
     }
   })
 

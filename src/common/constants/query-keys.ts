@@ -21,10 +21,13 @@ export const queryKeys = {
   manufacturers: {
     all: ['manufacturers'] as const,
     detail: (id: number) => ['manufacturers', id] as const,
+    list: (filters: { limit?: number; search?: string }) => ['manufacturers', 'list', filters] as const,
   },
   products: {
     all: ['products'] as const,
     detail: (id: number) => ['products', id] as const,
+    list: (filters: { limit?: number; priceError?: boolean; search?: string; unmapped?: boolean }) =>
+      ['products', 'list', filters] as const,
   },
   orders: {
     /** 주문 관련 전체(부분 무효화용) */
@@ -65,6 +68,7 @@ export const queryKeys = {
     detail: (id: number) => ['logs', id] as const,
     list: (filters?: {
       endDate?: string
+      limit?: number
       manufacturerId?: number
       startDate?: string
       status?: string
@@ -72,6 +76,7 @@ export const queryKeys = {
   },
   optionMappings: {
     all: ['option-mappings'] as const,
+    list: (filters: { limit?: number; manufacturerId?: number; search?: string }) => ['option-mappings', 'list', filters] as const,
   },
   dashboard: {
     /** 대시보드 전체(부분 무효화용) */
@@ -106,6 +111,6 @@ export const queryKeys = {
   },
   users: {
     all: ['users'] as const,
-    list: (params: { status?: string; page?: number; limit?: number }) => ['users', 'list', params] as const,
+    list: (params: { status?: string; limit?: number }) => ['users', 'list', params] as const,
   },
 } as const

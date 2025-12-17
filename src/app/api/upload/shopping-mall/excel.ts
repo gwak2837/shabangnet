@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs'
 import type { ParseError } from '@/lib/excel'
 
 import { getCellValue } from '@/lib/excel/util'
+import { parseLooseNumber } from '@/utils/coerce'
 
 export interface ShoppingMallConfig {
   columnMappings: Record<string, string>
@@ -126,7 +127,7 @@ function mapRowToOrder(
     return config.fixedValues?.[dbField]?.trim() ?? ''
   }
 
-  const num = (dbField: string): number => parseFloat(str(dbField).replace(/[^0-9.-]/g, '')) || 0
+  const num = (dbField: string): number => parseLooseNumber(str(dbField))
 
   // sabangnetOrderNumber는 필수 (UNIQUE KEY)
   const sabangnetOrderNumber = str('sabangnetOrderNumber')

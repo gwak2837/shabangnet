@@ -47,7 +47,7 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
   const currentTab = orderTabs.find((tab) => pathname.startsWith(tab.href)) ?? orderTabs[0]
 
   return (
-    <AppShell description={currentTab.description} title="발주 생성/발송">
+    <AppShell description={currentTab.description} title="발주 생성">
       <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
         {orderTabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href)
