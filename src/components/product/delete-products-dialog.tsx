@@ -5,7 +5,7 @@ import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { deleteUploads, getDeletePreview } from '@/app/upload/actions'
+import { deleteProducts, getProductDeletePreview } from '@/app/product/actions'
 import { queryKeys } from '@/common/constants/query-keys'
 import {
   AlertDialog,
@@ -19,14 +19,14 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 
-interface DeleteUploadsDialogProps {
+interface DeleteProductsDialogProps {
   onSuccess?: () => void
   selectedIds: number[]
 }
 
-export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDialogProps) {
+export function DeleteProductsDialog({ selectedIds, onSuccess }: DeleteProductsDialogProps) {
   const [open, setOpen] = useState(false)
-  const [orderCount, setOrderCount] = useState<number | null>(null)
+  const [productCount, setProductCount] = useState<number | null>(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const [isPending, startTransition] = useTransition()
   const queryClient = useQueryClient()
@@ -41,13 +41,13 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
     setIsLoadingPreview(true)
     setOpen(true)
 
-    const result = await getDeletePreview(selectedIds)
+    const result = await getProductDeletePreview(selectedIds)
 
     if (result.error) {
       toast.error(result.error)
       setOpen(false)
     } else {
-      setOrderCount(result.orderCount ?? 0)
+      setProductCount(result.productCount ?? 0)
     }
 
     setIsLoadingPreview(false)
@@ -57,20 +57,23 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
     if (!isPending) {
       setOpen(newOpen)
       if (!newOpen) {
-        setOrderCount(null)
+        setProductCount(null)
       }
     }
   }
 
   function handleDelete() {
     startTransition(async () => {
-      const result = await deleteUploads(selectedIds)
+      const result = await deleteProducts(selectedIds)
 
       if (result.error) {
         toast.error(result.error)
       } else {
         toast.success(result.success)
-        await queryClient.invalidateQueries({ queryKey: queryKeys.uploads.all })
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.orders.matching }),
+        ])
         setOpen(false)
         onSuccess?.()
       }
@@ -87,7 +90,7 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
-            업로드 기록 삭제
+            상품 삭제
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3">
@@ -96,15 +99,12 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
                   <Loader2 className="h-4 w-4 animate-spin" />
                   삭제 영향 범위를 확인하고 있어요...
                 </div>
-              ) : orderCount != null ? (
+              ) : productCount != null ? (
                 <>
                   <p>다음 항목이 영구적으로 삭제돼요:</p>
                   <ul className="list-disc list-inside space-y-1 text-slate-700">
                     <li>
-                      업로드 기록 <strong className="text-red-600">{selectedIds.length}건</strong>
-                    </li>
-                    <li>
-                      연관된 주문 데이터 <strong className="text-red-600">{orderCount}건</strong>
+                      상품 <strong className="text-red-600">{productCount}개</strong>
                     </li>
                   </ul>
                   <p className="font-medium text-red-600">이 작업은 되돌릴 수 없어요.</p>
@@ -119,7 +119,7 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
           <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            disabled={isPending || orderCount == null}
+            disabled={isPending || productCount == null}
             onClick={handleDelete}
           >
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
@@ -130,3 +130,5 @@ export function DeleteUploadsDialog({ selectedIds, onSuccess }: DeleteUploadsDia
     </AlertDialog>
   )
 }
+
+

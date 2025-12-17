@@ -1,42 +1,36 @@
 'use client'
 
-import { Download, Mail, MoreHorizontal, Pencil, Phone, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Download, Mail, MoreHorizontal, Pencil, Phone, Search, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
 
 import { ManufacturerCsvDialog } from '@/components/manufacturer/manufacturer-csv-dialog'
 import { MANUFACTURER_CSV_HEADER } from '@/components/manufacturer/manufacturer-csv.types'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { authClient } from '@/lib/auth-client'
 import { stringifyCsv } from '@/utils/csv'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
 
 interface ManufacturerTableProps {
   manufacturers: Manufacturer[]
-  onAdd: () => void
-  onDelete: (id: number) => void
   onEdit: (manufacturer: Manufacturer) => void
 }
 
-export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: ManufacturerTableProps) {
+import { DeleteManufacturersDialog } from './delete-manufacturers-dialog'
+
+export function ManufacturerTable({ manufacturers, onEdit }: ManufacturerTableProps) {
+  const { data: session } = authClient.useSession()
+  const isAdmin = session?.user?.isAdmin ?? false
   const [searchQuery, setSearchQuery] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState<Manufacturer | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
 
   const filteredManufacturers = useMemo(() => {
@@ -48,12 +42,9 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
     )
   }, [manufacturers, searchQuery])
 
-  function handleDelete() {
-    if (deleteTarget) {
-      onDelete(deleteTarget.id)
-    }
-    setDeleteTarget(null)
-  }
+  const filteredIds = useMemo(() => filteredManufacturers.map((m) => m.id), [filteredManufacturers])
+  const isAllSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.includes(id))
+  const isSomeSelected = filteredIds.some((id) => selectedIds.includes(id)) && !isAllSelected
 
   function handleDownloadCsv() {
     const rows = [
@@ -75,6 +66,26 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
     URL.revokeObjectURL(url)
   }
 
+  function handleSelectAll(checked: boolean) {
+    if (checked) {
+      setSelectedIds(filteredIds)
+    } else {
+      setSelectedIds([])
+    }
+  }
+
+  function handleSelectItem(id: number, checked: boolean) {
+    if (checked) {
+      setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    } else {
+      setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
+    }
+  }
+
+  function handleDeleteSuccess() {
+    setSelectedIds([])
+  }
+
   return (
     <>
       <Card className="border-slate-200 bg-card shadow-sm">
@@ -92,17 +103,14 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
               />
             </div>
             <div className="flex items-center gap-2">
+              {isAdmin && <DeleteManufacturersDialog onSuccess={handleDeleteSuccess} selectedIds={selectedIds} />}
               <Button className="gap-2" onClick={handleDownloadCsv} variant="outline">
                 <Download className="h-4 w-4" />
                 CSV 다운로드
               </Button>
-              <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)} variant="outline">
+              <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
                 <Upload className="h-4 w-4" />
                 CSV 업로드
-              </Button>
-              <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAdd}>
-                <Plus className="h-4 w-4" />
-                제조사 추가
               </Button>
             </div>
           </div>
@@ -110,6 +118,16 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
+                {isAdmin && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      aria-label="전체 선택"
+                      checked={isAllSelected}
+                      className={isSomeSelected ? 'opacity-50' : ''}
+                      onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">담당자</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">연락처</TableHead>
@@ -125,6 +143,15 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
             <TableBody>
               {filteredManufacturers.map((manufacturer) => (
                 <TableRow className="hover:bg-slate-50 transition-colors" key={manufacturer.id}>
+                  {isAdmin && (
+                    <TableCell className="w-10">
+                      <Checkbox
+                        aria-label={`${manufacturer.name} 선택`}
+                        checked={selectedIds.includes(manufacturer.id)}
+                        onCheckedChange={(checked) => handleSelectItem(manufacturer.id, checked === true)}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
@@ -173,13 +200,6 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
                           <Pencil className="mr-2 h-4 w-4" />
                           수정
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-rose-600 focus:text-rose-600"
-                          onClick={() => setDeleteTarget(manufacturer)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          삭제
-                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -187,7 +207,7 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
               ))}
               {filteredManufacturers.length === 0 && (
                 <TableRow>
-                  <TableCell className="h-32 text-center text-slate-500" colSpan={6}>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 7 : 6}>
                     검색 결과가 없습니다.
                   </TableCell>
                 </TableRow>
@@ -196,26 +216,6 @@ export function ManufacturerTable({ manufacturers, onEdit, onAdd, onDelete }: Ma
           </Table>
         </CardContent>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog onOpenChange={() => setDeleteTarget(null)} open={!!deleteTarget}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>제조사 삭제</AlertDialogTitle>
-            <AlertDialogDescription>
-              <span className="font-semibold text-slate-900">{deleteTarget?.name}</span>
-              을(를) 삭제하시겠습니까?
-              <br />이 작업은 되돌릴 수 없습니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={handleDelete}>
-              삭제
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <ManufacturerCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </>

@@ -16,6 +16,7 @@ export interface Product {
   price: number
   productCode: string
   productName: string
+  shippingFee: number
   updatedAt: string
 }
 
@@ -29,6 +30,7 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
       manufacturerId: data.manufacturerId,
       price: data.price,
       cost: data.cost,
+      shippingFee: data.shippingFee,
     })
     .returning()
 
@@ -96,6 +98,7 @@ export async function update(id: number, data: Partial<Product>): Promise<Produc
       manufacturerId: data.manufacturerId,
       price: data.price,
       cost: data.cost,
+      shippingFee: data.shippingFee,
       updatedAt: new Date(),
     })
     .where(eq(product.id, id))
@@ -144,6 +147,7 @@ function mapToProduct(
     manufacturerName: p.manufacturer?.name || null,
     price: p.price ?? 0,
     cost: p.cost ?? 0,
+    shippingFee: p.shippingFee ?? 0,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   }

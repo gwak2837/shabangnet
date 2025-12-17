@@ -18,7 +18,7 @@ const settingsNavItems = [
   },
   {
     title: '이메일',
-    description: 'SMTP, 템플릿, 발송 로그',
+    description: 'SMTP, 템플릿, 발송 기록',
     href: '/settings/email',
     icon: Mail,
   },

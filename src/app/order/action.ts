@@ -159,7 +159,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       },
     )
 
-    // 1) DB에 발송 로그(pending) + 항목 저장 + 주문 상태(processing) 반영 (트랜잭션)
+    // 1) DB에 발송 기록(pending) + 항목 저장 + 주문 상태(processing) 반영 (트랜잭션)
     const emailLogId = await db.transaction(async (tx) => {
       const [emailLog] = await tx
         .insert(orderEmailLog)
@@ -217,7 +217,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     })
 
     if (!emailLogId) {
-      return { success: false, error: '발송 로그를 생성하지 못했어요.' }
+      return { success: false, error: '발송 기록을 생성하지 못했어요.' }
     }
 
     // 이메일 발송

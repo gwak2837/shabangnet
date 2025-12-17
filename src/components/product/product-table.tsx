@@ -9,6 +9,7 @@ import type { Product } from '@/services/products'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -17,16 +18,35 @@ import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
 interface ProductTableProps {
+  isAdmin?: boolean
   manufacturers: Manufacturer[]
+  onSelectAll?: (checked: boolean) => void
+  onSelectItem?: (id: number, checked: boolean) => void
   onUpdateCost?: (productId: number, cost: number) => void
   onUpdateManufacturer: (productId: number, manufacturerId: number | null) => void
+  onUpdateShippingFee?: (productId: number, shippingFee: number) => void
   products: Product[]
+  selectedIds?: number[]
+  selectionState?: 'all' | 'mixed' | 'none'
 }
 
-export function ProductTable({ products, manufacturers, onUpdateManufacturer, onUpdateCost }: ProductTableProps) {
+export function ProductTable({
+  products,
+  manufacturers,
+  onUpdateManufacturer,
+  onUpdateCost,
+  onUpdateShippingFee,
+  isAdmin = false,
+  onSelectAll,
+  onSelectItem,
+  selectedIds = [],
+  selectionState = 'none',
+}: ProductTableProps) {
   const [editingProductId, setEditingProductId] = useState<number | null>(null)
   const [editingCostProductId, setEditingCostProductId] = useState<number | null>(null)
   const [costInputValue, setCostInputValue] = useState<string>('')
+  const [editingShippingFeeProductId, setEditingShippingFeeProductId] = useState<number | null>(null)
+  const [shippingFeeInputValue, setShippingFeeInputValue] = useState<string>('')
 
   function handleManufacturerChange(productId: number, value: string) {
     onUpdateManufacturer(productId, value === 'none' ? null : Number(value))
@@ -56,12 +76,45 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
     }
   }
 
+  function handleShippingFeeEdit(productId: number, currentShippingFee: number) {
+    setEditingShippingFeeProductId(productId)
+    setShippingFeeInputValue(currentShippingFee.toString())
+  }
+
+  function handleShippingFeeSave(productId: number) {
+    const shippingFee = parseFloat(shippingFeeInputValue) || 0
+    if (onUpdateShippingFee) {
+      onUpdateShippingFee(productId, shippingFee)
+    }
+    setEditingShippingFeeProductId(null)
+    setShippingFeeInputValue('')
+  }
+
+  function handleShippingFeeKeyDown(e: React.KeyboardEvent, productId: number) {
+    if (e.key === 'Enter') {
+      handleShippingFeeSave(productId)
+    } else if (e.key === 'Escape') {
+      setEditingShippingFeeProductId(null)
+      setShippingFeeInputValue('')
+    }
+  }
+
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
+              {isAdmin && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="전체 선택"
+                    checked={selectionState === 'all'}
+                    className={selectionState === 'mixed' ? 'opacity-50' : ''}
+                    onCheckedChange={(checked) => onSelectAll?.(checked === true)}
+                  />
+                </TableHead>
+              )}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
@@ -69,6 +122,9 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 원가
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                배송비
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수정일</TableHead>
@@ -86,6 +142,15 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                     className={`hover:bg-slate-50 transition-colors ${isUnmapped ? 'bg-amber-50/50' : ''} ${hasPriceError ? 'bg-rose-50/50' : ''}`}
                     key={product.id}
                   >
+                    {isAdmin && (
+                      <TableCell className="w-10">
+                        <Checkbox
+                          aria-label={`${product.productCode} 선택`}
+                          checked={selectedIds.includes(product.id)}
+                          onCheckedChange={(checked) => onSelectItem?.(product.id, checked === true)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100">
@@ -143,6 +208,31 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                         </div>
                       )}
                     </TableCell>
+                    <TableCell className="text-right">
+                      {editingShippingFeeProductId === product.id ? (
+                        <Input
+                          autoFocus
+                          className="w-24 h-8 text-right"
+                          onBlur={() => handleShippingFeeSave(product.id)}
+                          onChange={(e) => setShippingFeeInputValue(e.target.value)}
+                          onKeyDown={(e) => handleShippingFeeKeyDown(e, product.id)}
+                          type="number"
+                          value={shippingFeeInputValue}
+                        />
+                      ) : (
+                        <div
+                          className="flex items-center justify-end gap-1 cursor-pointer group"
+                          onClick={() => handleShippingFeeEdit(product.id, product.shippingFee)}
+                        >
+                          <span
+                            className={`font-medium tabular-nums ${product.shippingFee > 0 ? 'text-slate-900' : 'text-slate-400'}`}
+                          >
+                            {product.shippingFee > 0 ? formatCurrency(product.shippingFee) : '미등록'}
+                          </span>
+                          <Pencil className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {isEditing ? (
                         <Select
@@ -194,7 +284,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
             </TooltipProvider>
             {products.length === 0 && (
               <TableRow>
-                <TableCell className="h-32 text-center text-slate-500" colSpan={6}>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 8 : 7}>
                   상품이 없습니다.
                 </TableCell>
               </TableRow>

@@ -345,7 +345,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
                   placeholder="예: 고객 요청으로 재발송, 이전 발주 취소 후 재주문 등"
                   value={duplicateReason}
                 />
-                <p className="text-xs text-amber-600">입력한 사유는 발송 로그에 기록됩니다</p>
+                <p className="text-xs text-amber-600">입력한 사유는 발송 기록에 남아요</p>
               </div>
             </div>
           )}
@@ -360,7 +360,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
                 placeholder="예: 제조사 요청으로 재발송, 수신 실패로 재발송 등"
                 value={duplicateReason}
               />
-              <p className="text-xs text-slate-500">입력한 사유는 발송 로그에 기록돼요</p>
+              <p className="text-xs text-slate-500">입력한 사유는 발송 기록에 남아요</p>
             </div>
           )}
 

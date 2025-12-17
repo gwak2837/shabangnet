@@ -188,7 +188,7 @@ export function ManufacturerModal({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh]">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden grid grid-rows-[auto_minmax(0,1fr)]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
@@ -203,8 +203,8 @@ export function ManufacturerModal({
           </div>
         </DialogHeader>
 
-        <form className="flex flex-col" onSubmit={handleSubmit}>
-          <div className="max-h-[55vh] overflow-y-auto flex flex-col gap-4 pr-2">
+        <form className="min-h-0 flex flex-col" onSubmit={handleSubmit}>
+          <div className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-4 pr-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">
                 제조사명 <span className="text-rose-500">*</span>

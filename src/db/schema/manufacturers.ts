@@ -35,6 +35,7 @@ export const product = pgTable('product', {
   }),
   price: integer('price').default(0),
   cost: integer('cost').default(0), // 원가
+  shippingFee: integer('shipping_fee').default(0), // 배송비
   createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()

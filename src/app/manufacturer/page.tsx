@@ -13,7 +13,7 @@ import { ManufacturerTable } from '@/components/manufacturer/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useServerAction } from '@/hooks/use-server-action'
-import { create, remove, update, updateInvoiceTemplate, updateOrderTemplate } from '@/services/manufacturers'
+import { update, updateInvoiceTemplate, updateOrderTemplate } from '@/services/manufacturers'
 
 interface OrderTemplateDraft {
   columnMappings: Record<string, string>
@@ -30,12 +30,6 @@ export default function ManufacturersPage() {
 
   const { data: manufacturers = [], isLoading } = useManufacturers()
 
-  const [isCreating, createManufacturer] = useServerAction(create, {
-    invalidateKeys: [queryKeys.manufacturers.all],
-    onSuccess: () => toast.success('제조사가 등록되었습니다'),
-    onError: (error) => toast.error(error),
-  })
-
   const [isUpdating, updateManufacturer] = useServerAction(
     ({ id, data }: { id: number; data: Partial<Manufacturer> }) => update(id, data),
     {
@@ -44,12 +38,6 @@ export default function ManufacturersPage() {
       onError: (error) => toast.error(error),
     },
   )
-
-  const [isDeleting, deleteManufacturer] = useServerAction(remove, {
-    invalidateKeys: [queryKeys.manufacturers.all],
-    onSuccess: () => toast.success('제조사가 삭제되었습니다'),
-    onError: (error) => toast.error(error),
-  })
 
   const [isSavingInvoice, saveInvoiceTemplate] = useServerAction(
     ({ manufacturerId, template }: { manufacturerId: number; template: InvoiceTemplate }) =>
@@ -67,18 +55,9 @@ export default function ManufacturersPage() {
     },
   )
 
-  const handleAdd = () => {
-    setEditingManufacturer(null)
-    setIsModalOpen(true)
-  }
-
   const handleEdit = (manufacturer: Manufacturer) => {
     setEditingManufacturer(manufacturer)
     setIsModalOpen(true)
-  }
-
-  const handleDelete = (id: number) => {
-    deleteManufacturer(id)
   }
 
   const handleSave = (
@@ -123,13 +102,11 @@ export default function ManufacturersPage() {
         })
       }
     } else {
-      // 새 제조사 생성
-      createManufacturer(data as Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>)
-      // 새로 생성된 제조사에 대한 템플릿은 나중에 수정 시 설정
+      toast.error('제조사 추가는 CSV 업로드로 해 주세요')
     }
   }
 
-  const isSaving = isCreating || isUpdating || isSavingInvoice || isSavingOrder
+  const isSaving = isUpdating || isSavingInvoice || isSavingOrder
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -191,7 +168,7 @@ export default function ManufacturersPage() {
       </div>
 
       {/* Manufacturer Table */}
-      <ManufacturerTable manufacturers={manufacturers} onAdd={handleAdd} onDelete={handleDelete} onEdit={handleEdit} />
+      <ManufacturerTable manufacturers={manufacturers} onEdit={handleEdit} />
 
       {/* Add/Edit Modal */}
       <ManufacturerModal

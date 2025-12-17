@@ -30,11 +30,14 @@ export function DeleteSendLogsDialog({ selectedIds, onSuccess }: DeleteSendLogsD
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const [isPending, startTransition] = useTransition()
   const queryClient = useQueryClient()
-  const isDisabled = selectedIds.length === 0
+  const hasSelection = selectedIds.length > 0
+
+  // 선택한 항목이 없으면, 버튼 자체를 숨겨요.
+  if (!hasSelection) {
+    return null
+  }
 
   async function handleOpenDialog() {
-    if (selectedIds.length === 0) return
-
     setIsLoadingPreview(true)
     setOpen(true)
 
@@ -76,7 +79,7 @@ export function DeleteSendLogsDialog({ selectedIds, onSuccess }: DeleteSendLogsD
 
   return (
     <AlertDialog onOpenChange={handleOpenChange} open={open}>
-      <Button className="tabular-nums" disabled={isDisabled} onClick={handleOpenDialog} size="sm" variant="destructive">
+      <Button className="tabular-nums" onClick={handleOpenDialog} size="sm" variant="destructive">
         <Trash2 className="mr-2 h-4 w-4" />
         선택 삭제 ({selectedIds.length})
       </Button>

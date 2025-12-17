@@ -93,7 +93,7 @@ export function DuplicateCheckForm() {
             <div className="text-sm">
               <p className="font-medium text-amber-600">중복 감지 시 동작</p>
               <p className="mt-1 text-amber-500">
-                중복이 감지되면 발송 사유를 필수로 입력해야 합니다. 입력한 사유는 발송 로그에 기록됩니다.
+                중복이 감지되면 발송 사유를 필수로 입력해야 해요. 입력한 사유는 발송 기록에 남아요.
               </p>
             </div>
           </div>

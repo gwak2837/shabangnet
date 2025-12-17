@@ -77,6 +77,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
           manufacturerName?: string
           원가?: number
           cost?: number
+          배송비?: number
           택배비?: number
           shippingFee?: number
         }>(file)
@@ -89,7 +90,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
             const optionName = row['옵션명'] || row['optionName'] || ''
             const manufacturerName = row['제조사명'] || row['manufacturerName'] || ''
             const cost = row['원가'] || row['cost'] || 0
-            const shippingFee = row['택배비'] || row['shippingFee'] || 0
+            const shippingFee = row['배송비'] || row['택배비'] || row['shippingFee'] || 0
 
             if (!productCode) {
               return {
@@ -144,9 +145,9 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
 
   const handleDownloadTemplate = async () => {
     const templateData = [
-      { 상품코드: 'NS-001', 상품명: '신라면 멀티팩', 옵션명: '5개입', 제조사명: '농심식품', 원가: 5500, 택배비: '' },
-      { 상품코드: 'CJ-101', 상품명: '햇반 210g', 옵션명: '12개입', 제조사명: 'CJ제일제당', 원가: 11000, 택배비: '' },
-      { 상품코드: 'OT-201', 상품명: '진라면 순한맛', 옵션명: '5개입', 제조사명: '오뚜기', 원가: 3100, 택배비: '' },
+      { 상품코드: 'NS-001', 상품명: '신라면 멀티팩', 옵션명: '5개입', 제조사명: '농심식품', 원가: 5500, 배송비: '' },
+      { 상품코드: 'CJ-101', 상품명: '햇반 210g', 옵션명: '12개입', 제조사명: 'CJ제일제당', 원가: 11000, 배송비: '' },
+      { 상품코드: 'OT-201', 상품명: '진라면 순한맛', 옵션명: '5개입', 제조사명: '오뚜기', 원가: 3100, 배송비: '' },
     ]
     await downloadExcel(templateData, {
       fileName: '상품_일괄등록_템플릿.xlsx',
@@ -179,7 +180,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
             <Upload className="h-5 w-5" />
             원가 일괄 업로드
           </DialogTitle>
-          <DialogDescription>엑셀 파일(.xlsx)을 업로드하여 상품 정보(연결, 원가)를 일괄 등록합니다.</DialogDescription>
+          <DialogDescription>엑셀 파일(.xlsx)을 업로드해서 상품 정보(연결, 원가, 배송비)를 일괄 등록해요.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto flex flex-col gap-4">
@@ -206,7 +207,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                   <p className="text-slate-600 font-medium mb-1">엑셀 파일을 드래그하거나 클릭하여 선택</p>
                   <p className="text-sm text-slate-400">파일 형식: .xlsx, .xls</p>
                   <p className="text-sm text-slate-400 mt-2">
-                    필수 컬럼: 상품코드 / 선택 컬럼: 상품명, 옵션명, 제조사명, 원가, 택배비
+                    필수 컬럼: 상품코드 / 선택 컬럼: 상품명, 옵션명, 제조사명, 원가, 배송비
                   </p>
                 </div>
               )}
@@ -281,7 +282,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                       <TableHead className="text-xs">옵션명</TableHead>
                       <TableHead className="text-xs">제조사명</TableHead>
                       <TableHead className="text-xs text-right">원가</TableHead>
-                      <TableHead className="text-xs text-right">택배비</TableHead>
+                      <TableHead className="text-xs text-right">배송비</TableHead>
                       <TableHead className="text-xs">상태</TableHead>
                     </TableRow>
                   </TableHeader>

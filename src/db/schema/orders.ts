@@ -83,7 +83,9 @@ export const order = pgTable(
     // ============================================
     shoppingMall: varchar('shopping_mall', { length: 100 }), // L열: 사이트
     manufacturerName: varchar('manufacturer_name', { length: 255 }), // M열: 제조사
-    manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
+    manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id, {
+      onDelete: 'set null',
+    }),
 
     // ============================================
     // 금액 (Amounts)
@@ -126,7 +128,9 @@ export const order = pgTable(
 
 export const orderEmailLog = pgTable('order_email_log', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id),
+  manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id, {
+    onDelete: 'set null',
+  }),
   manufacturerName: varchar('manufacturer_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
   subject: text('subject').notNull(),
@@ -154,7 +158,7 @@ export const orderEmailLog = pgTable('order_email_log', {
 export const orderEmailLogItem = pgTable('order_email_log_item', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   emailLogId: bigint('email_log_id', { mode: 'number' })
-    .references(() => orderEmailLog.id)
+    .references(() => orderEmailLog.id, { onDelete: 'cascade' })
     .notNull(),
   sabangnetOrderNumber: varchar('sabangnet_order_number', { length: 100 }).notNull(),
   productName: varchar('product_name', { length: 500 }).notNull(),
