@@ -59,14 +59,6 @@ export default function SabangnetUploadPage() {
             selectedFile={selectedFile}
           />
         )}
-        {isProcessing && (
-          <div className="mt-4 flex items-center justify-center">
-            <div className="flex items-center gap-3 rounded-lg bg-blue-50 px-4 py-3">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-              <span className="text-sm font-medium text-blue-700">파일을 분석하고 있어요</span>
-            </div>
-          </div>
-        )}
         {status === 'error' && (
           <div className="mt-4 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
             <p className="text-sm font-medium text-rose-700">{message}</p>

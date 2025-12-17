@@ -107,9 +107,6 @@ export default function OrderMatchingPage() {
               <p className="text-sm text-slate-500">제조사 연결 필요(상품 기준)</p>
               <div className="flex items-center gap-2">
                 <p className="text-xl font-semibold text-slate-900">{unmappedProducts.length}개</p>
-                <Button asChild className="h-7 px-2 text-xs" size="sm" variant="outline">
-                  <Link href="/product?unlinked=1">상품 연결로 이동</Link>
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -130,7 +127,7 @@ export default function OrderMatchingPage() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {missingEmail.slice(0, 12).map((m) => (
                 <span
                   className="inline-flex items-center gap-2 rounded-full bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 text-sm"

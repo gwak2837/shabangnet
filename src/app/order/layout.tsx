@@ -27,7 +27,7 @@ const orderTabs = [
     label: '발송 제외',
     icon: Ban,
     description: 'F 값이 제외 패턴과 일치하는 주문 목록이에요',
-    variant: 'violet',
+    variant: 'rose',
   },
   {
     href: '/order/history',
@@ -54,7 +54,7 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
           return (
             <Link
               aria-selected={isActive}
-              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=amber]:text-amber-700 aria-selected:data-[variant=violet]:text-violet-600 aria-selected:data-[variant=slate]:text-slate-700"
+              className="relative p-3 sm:px-4 text-sm font-medium transition-colors text-slate-500 hover:text-slate-700 aria-selected:data-[variant=blue]:text-blue-600 aria-selected:data-[variant=amber]:text-amber-700 aria-selected:data-[variant=rose]:text-rose-600 aria-selected:data-[variant=violet]:text-violet-600 aria-selected:data-[variant=slate]:text-slate-700"
               data-variant={tab.variant}
               href={tab.href}
               key={tab.href}
@@ -67,7 +67,7 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
               <div
                 aria-hidden="true"
                 aria-selected={isActive}
-                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=amber]:bg-amber-600 data-[variant=violet]:bg-violet-600 data-[variant=slate]:bg-slate-600"
+                className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 aria-selected:opacity-100 data-[variant=blue]:bg-blue-600 data-[variant=amber]:bg-amber-600 data-[variant=rose]:bg-rose-600 data-[variant=violet]:bg-violet-600 data-[variant=slate]:bg-slate-600"
                 data-variant={tab.variant}
               />
             </Link>

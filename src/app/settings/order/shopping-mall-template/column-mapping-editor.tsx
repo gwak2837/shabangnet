@@ -46,6 +46,7 @@ export function ColumnMappingEditor({
 }: ColumnMappingEditorProps) {
   const [hiddenRows, setHiddenRows] = useState<Set<RowKey>>(() => new Set<RowKey>())
   const [restoreSelectKey, setRestoreSelectKey] = useState(0)
+  const showPreviewColumn = previewRows.length > 0
 
   const rows = useMemo<MappingRowModel[]>(() => {
     const hasAnalyzedColumns = availableColumns.length > 0
@@ -180,7 +181,9 @@ export function ColumnMappingEditor({
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <Label className="text-sm font-medium">컬럼 연결</Label>
-          <p className="text-xs text-muted-foreground">예시 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.</p>
+          <p className="text-xs text-muted-foreground">
+            {showPreviewColumn ? '예시 데이터를 보면서 어떤 컬럼을 어디에 넣을지 정해요.' : '예시 파일을 분석하면 예시 행이 보여요.'}
+          </p>
           {missingRequiredLabels && <p className="text-xs text-amber-600">필수 필드 미연결: {missingRequiredLabels}</p>}
         </div>
 
@@ -240,15 +243,17 @@ export function ColumnMappingEditor({
         ) : (
           <Table className="table-fixed">
             <colgroup>
-              <col className="w-[220px]" />
-              <col className="w-[220px]" />
-              <col className="w-[220px]" />
+              <col className={showPreviewColumn ? 'w-[220px]' : 'w-[260px]'} />
+              {showPreviewColumn ? <col className="w-[220px]" /> : null}
+              <col className={showPreviewColumn ? 'w-[220px]' : 'w-[260px]'} />
               <col className="w-[80px]" />
             </colgroup>
             <TableHeader className="bg-muted/40">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-medium text-muted-foreground">쇼핑몰 파일 컬럼</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">예시 행</TableHead>
+                {showPreviewColumn ? (
+                  <TableHead className="text-xs font-medium text-muted-foreground">예시 행</TableHead>
+                ) : null}
                 <TableHead className="text-xs font-medium text-muted-foreground">사방넷 컬럼</TableHead>
                 <TableHead className="text-center text-xs font-medium text-muted-foreground">관리</TableHead>
               </TableRow>
@@ -277,15 +282,17 @@ export function ColumnMappingEditor({
                       </div>
                     </TableCell>
 
-                    <TableCell>
-                      <div className="space-y-1">
-                        {row.previewValues.map((v, idx) => (
-                          <p className="line-clamp-1 text-xs text-muted-foreground" key={idx}>
-                            {v || <span className="text-muted-foreground/60">(빈 값)</span>}
-                          </p>
-                        ))}
-                      </div>
-                    </TableCell>
+                    {showPreviewColumn ? (
+                      <TableCell>
+                        <div className="space-y-1">
+                          {row.previewValues.map((v, idx) => (
+                            <p className="line-clamp-1 text-xs text-muted-foreground" key={idx}>
+                              {v || <span className="text-muted-foreground/60">(빈 값)</span>}
+                            </p>
+                          ))}
+                        </div>
+                      </TableCell>
+                    ) : null}
 
                     <TableCell>
                       <Select

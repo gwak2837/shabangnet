@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSpreadsheet, Upload, X } from 'lucide-react'
+import { FileSpreadsheet, Loader2, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -78,13 +78,11 @@ export function Dropzone({ disabled = false, isProcessing, onClear, onFileSelect
           </div>
           {isProcessing && (
             <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">파일 처리 중...</span>
-                <span className="text-sm text-slate-500">75%</span>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                <span className="font-medium">파일을 분석하고 있어요</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-blue-500 transition-all duration-500" style={{ width: '75%' }} />
-              </div>
+              <p className="mt-1 text-xs text-slate-500">보통 수 초 정도 걸려요.</p>
             </div>
           )}
         </CardContent>
