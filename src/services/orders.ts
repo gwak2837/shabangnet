@@ -35,7 +35,6 @@ export interface Order {
   address: string
   createdAt: string
   customerName: string
-  excludedReason?: string
   fulfillmentType?: string
   id: number
   manufacturerId: number
@@ -216,7 +215,7 @@ export async function generateOrderExcel(params: {
     cost: o.cost ?? 0,
     shippingCost: o.shippingCost ?? 0,
     // 주문 메타
-    fulfillmentType: o.fulfillmentType || o.excludedReason || '',
+    fulfillmentType: o.fulfillmentType || '',
     cjDate: o.cjDate?.toISOString().split('T')[0] || '',
     collectedAt: o.collectedAt?.toISOString() || '',
     // 시스템
@@ -243,64 +242,6 @@ export async function generateOrderExcel(params: {
   const fileName = generateOrderFileName(mfr.name, date)
 
   return { buffer: excelBuffer, fileName }
-}
-
-export async function getExcludedBatches(): Promise<ExcludedReasonBatch[]> {
-  const allOrders = await db.query.order.findMany({
-    where: (o, { isNotNull }) => isNotNull(o.excludedReason),
-    orderBy: (o, { desc }) => [desc(o.createdAt)],
-  })
-
-  const batchesByReason = new Map<string, ExcludedReasonBatch>()
-
-  for (const o of allOrders) {
-    const rawReason = typeof o.excludedReason === 'string' ? o.excludedReason.trim() : ''
-    const reason = rawReason.length > 0 ? rawReason : '사유 없음'
-
-    const batch =
-      batchesByReason.get(reason) ??
-      (() => {
-        const next: ExcludedReasonBatch = {
-          reason,
-          orders: [],
-          totalAmount: 0,
-          totalOrders: 0,
-        }
-        batchesByReason.set(reason, next)
-        return next
-      })()
-
-    batch.orders.push({
-      id: o.id,
-      sabangnetOrderNumber: o.sabangnetOrderNumber,
-      customerName: o.recipientName || '',
-      phone: o.recipientMobile || o.recipientPhone || '',
-      address: o.address || '',
-      productCode: o.productCode || '',
-      productName: o.productName || '',
-      optionName: o.optionName || '',
-      quantity: o.quantity || 0,
-      price: (() => {
-        const quantity = o.quantity && o.quantity > 0 ? o.quantity : 1
-        return Math.round((o.paymentAmount ?? 0) / quantity)
-      })(),
-      manufacturerId: o.manufacturerId ?? 0,
-      manufacturerName: o.manufacturerName || '',
-      status: o.status as Order['status'],
-      createdAt: o.createdAt.toISOString(),
-      fulfillmentType: o.fulfillmentType || '',
-      excludedReason: o.excludedReason || undefined,
-    })
-  }
-
-  for (const batch of batchesByReason.values()) {
-    batch.totalOrders = batch.orders.length
-    batch.totalAmount = batch.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
-  }
-
-  return Array.from(batchesByReason.values()).sort(
-    (a, b) => b.totalOrders - a.totalOrders || a.reason.localeCompare(b.reason, 'ko'),
-  )
 }
 
 function hasRowFixedValues(fixedValues: Record<string, string> | undefined): boolean {

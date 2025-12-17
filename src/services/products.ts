@@ -51,7 +51,6 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
       .where(
         and(
           isNull(order.manufacturerId),
-          isNull(order.excludedReason),
           sql`lower(trim(${order.productCode})) = lower(trim(${data.productCode}))`,
           sql`${order.status} <> 'completed'`,
         ),
@@ -123,7 +122,6 @@ export async function update({ id, data }: { id: number; data: Partial<Product> 
       .where(
         and(
           isNull(order.manufacturerId),
-          isNull(order.excludedReason),
           sql`lower(trim(${order.productCode})) = lower(trim(${updated.productCode}))`,
           sql`${order.status} <> 'completed'`,
         ),

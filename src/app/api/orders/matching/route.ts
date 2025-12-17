@@ -6,6 +6,7 @@ import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 
 interface MatchingResponse {
   missingEmailManufacturers: MissingEmailManufacturer[]
@@ -43,7 +44,7 @@ export async function GET() {
     .innerJoin(manufacturer, eq(order.manufacturerId, manufacturer.id))
     .where(
       and(
-        isNull(order.excludedReason),
+        orderIsIncludedSql(order.fulfillmentType),
         isNotNull(order.manufacturerId),
         sql`trim(coalesce(${manufacturer.email}, '')) = ''`,
       ),
@@ -61,7 +62,7 @@ export async function GET() {
     .from(order)
     .where(
       and(
-        isNull(order.excludedReason),
+        orderIsIncludedSql(order.fulfillmentType),
         isNull(order.manufacturerId),
         isNotNull(order.productCode),
         sql`trim(${order.productCode}) <> ''`,
@@ -81,7 +82,7 @@ export async function GET() {
     .leftJoin(
       order,
       and(
-        isNull(order.excludedReason),
+        orderIsIncludedSql(order.fulfillmentType),
         isNotNull(order.productCode),
         sql`lower(trim(${order.productCode})) = lower(trim(${product.productCode}))`,
       ),

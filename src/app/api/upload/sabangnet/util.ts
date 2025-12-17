@@ -4,12 +4,6 @@ import type { LookupMaps, ManufacturerBreakdown, UploadError, UploadSummary } fr
 
 import { matchManufacturerId } from '../common'
 
-export interface ExclusionPattern {
-  description: string | null
-  enabled: boolean | null
-  pattern: string
-}
-
 export interface UploadResult {
   autoCreatedManufacturers?: string[]
   duplicateOrders: number
@@ -22,27 +16,14 @@ export interface UploadResult {
 }
 
 interface PrepareOrderParams {
-  checkExclusionPattern: (fulfillmentType: string) => string | null
   lookupMaps: LookupMaps
   orders: ParsedOrder[]
   uploadId: number
 }
 
-export function createExclusionChecker(patterns: ExclusionPattern[]) {
-  return function checkExclusionPattern(fulfillmentType: string): string | null {
-    if (!fulfillmentType || patterns.length === 0) {
-      return null
-    }
-
-    const matched = patterns.find((p) => fulfillmentType.includes(p.pattern))
-    return matched ? matched.description || matched.pattern : null
-  }
-}
-
-export function mapOrderValues({ orders, uploadId, lookupMaps, checkExclusionPattern }: PrepareOrderParams) {
+export function mapOrderValues({ orders, uploadId, lookupMaps }: PrepareOrderParams) {
   return orders.map((o) => {
     const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
-    const excludedReason = checkExclusionPattern(o.fulfillmentType)
 
     return {
       uploadId,
@@ -78,7 +59,6 @@ export function mapOrderValues({ orders, uploadId, lookupMaps, checkExclusionPat
       cjDate: o.cjDate ? parseDate(o.cjDate) : null,
       collectedAt: o.collectedAt ? parseDateTime(o.collectedAt) : null,
       status: 'pending' as const,
-      excludedReason,
     }
   })
 }

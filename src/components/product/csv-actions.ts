@@ -281,7 +281,6 @@ async function applyManufacturerToExistingOrders({
     .where(
       and(
         isNull(order.manufacturerId),
-        isNull(order.excludedReason),
         sql`lower(trim(${order.productCode})) = lower(trim(${productCode}))`,
         sql`${order.status} <> 'completed'`,
       ),

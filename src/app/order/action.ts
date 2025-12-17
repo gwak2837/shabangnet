@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 import { db } from '@/db/client'
@@ -9,6 +9,7 @@ import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
 import { getSMTPAccount, sendEmail } from '@/lib/email/send'
 import { renderManufacturerOrderEmail } from '@/services/manufacturer-email-template'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 import { checkDuplicate, generateOrderExcel } from '@/services/orders'
 import { getDuplicateCheckSettings } from '@/services/settings'
 
@@ -92,7 +93,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
         and(
           eq(order.manufacturerId, input.manufacturerId),
           inArray(order.id, input.orderIds),
-          isNull(order.excludedReason),
+          orderIsIncludedSql(order.fulfillmentType),
         ),
       )
 

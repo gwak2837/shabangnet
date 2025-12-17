@@ -1,17 +1,15 @@
-import { and, desc, eq, gt, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, isNotNull, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { decodeCursor, encodeCursor } from '@/app/api/_utils/cursor'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { orderEmailLog } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 import { createCacheControl } from '@/utils/cache-control'
-
-// ============================================
-// Types
-// ============================================
 
 interface Order {
   address: string
@@ -46,15 +44,11 @@ interface OrderBatch {
 
 interface OrderBatchesResponse {
   items: OrderBatch[]
-  nextCursor: number | null
+  nextCursor: string | null
 }
 
-// ============================================
-// Query Params Schema
-// ============================================
-
 const queryParamsSchema = z.object({
-  cursor: z.coerce.number().positive().optional(),
+  cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().max(100).optional(),
   manufacturerId: z.coerce.number().positive().optional(),
@@ -63,12 +57,8 @@ const queryParamsSchema = z.object({
   dateTo: z.string().optional(),
 })
 
-// ============================================
-// GET /api/orders
-// ============================================
-
 interface GetOrderBatchesParams {
-  cursor?: number
+  cursor?: string
   dateFrom?: string
   dateTo?: string
   limit: number
@@ -76,10 +66,6 @@ interface GetOrderBatchesParams {
   search?: string
   status?: 'all' | 'error' | 'pending' | 'sent'
 }
-
-// ============================================
-// Data Fetching Logic
-// ============================================
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -120,6 +106,9 @@ export async function GET(request: NextRequest) {
 
 async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatchesResponse> {
   const { cursor, limit, search, manufacturerId, status, dateFrom, dateTo } = params
+  const cursorId = cursor
+    ? decodeCursor(cursor, z.object({ manufacturerId: z.number().int().positive() })).manufacturerId
+    : undefined
 
   // 검색/기간 조건
   const searchCondition = search
@@ -137,7 +126,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
 
   // 제조사 0건은 숨기되, 페이지가 빈 배열로 내려오지 않도록 내부에서 더 스캔
   const items: OrderBatch[] = []
-  let scanCursor = manufacturerId ? undefined : cursor
+  let scanCursor = manufacturerId ? undefined : cursorId
   let nextCursor: number | null = null
 
   const manufacturerPageSize = manufacturerId ? 1 : Math.min(200, Math.max(50, limit * 10))
@@ -179,13 +168,13 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
     const manufacturerIds = manufacturersToProcess.map((m) => m.id)
     const scanEndId = manufacturersToProcess[manufacturersToProcess.length - 1]!.id
 
-    // 주문 조회 (발송 대상만: excludedReason is null)
+    // 주문 조회 (발송 대상만: fulfillmentType + exclusion patterns로 제외되지 않은 주문)
     const allOrders = await db.query.order.findMany({
       where: (o, { and: andOp, inArray: inArrayOp }) =>
         andOp(
           isNotNull(o.manufacturerId),
           inArrayOp(o.manufacturerId, manufacturerIds),
-          isNull(o.excludedReason),
+          orderIsIncludedSql(o.fulfillmentType),
           searchCondition,
           dateFromCondition,
           dateToCondition,
@@ -319,5 +308,8 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
     }
   }
 
-  return { items, nextCursor }
+  return {
+    items,
+    nextCursor: nextCursor ? encodeCursor({ manufacturerId: nextCursor }) : null,
+  }
 }

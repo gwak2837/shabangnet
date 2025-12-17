@@ -187,7 +187,7 @@ export function ExclusionForm() {
               <div className="text-sm">
                 <p className="font-medium text-rose-600">제외된 주문 확인하기</p>
                 <p className="mt-1 text-rose-500">
-                  자동 제외된 주문은 주문 페이지 &quot;발송제외&quot; 탭에서 검토하고 필요시 복원할 수 있습니다.
+                  자동 제외된 주문은 주문 페이지 &quot;발송제외&quot; 탭에서 확인할 수 있어요.
                 </p>
               </div>
             </div>

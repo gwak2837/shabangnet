@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
 
 import type { TemplateAnalysis } from '@/lib/excel'
 
@@ -9,6 +9,7 @@ import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 import { commonOrderTemplate } from '@/db/schema/settings'
 import { analyzeTemplateStructure } from '@/lib/excel'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 
 const COMMON_ORDER_TEMPLATE_KEY = 'default'
 
@@ -108,7 +109,7 @@ export async function getCommonOrderTemplate(): Promise<CommonOrderTemplate | nu
 /**
  * 공통 템플릿(제조사 템플릿 없음)으로 "실제로 전송될" 발주서를 테스트 다운로드할 수 있는 후보 제조사 목록이에요.
  * - 제조사 템플릿이 유효하지 않은 제조사만 포함돼요.
- * - 제외 주문(excludedReason)은 제외해요.
+ * - 제외 주문(fulfillmentType + 제외 패턴)은 제외해요.
  */
 export async function getCommonTemplateTestCandidates(): Promise<CommonTemplateTestCandidate[]> {
   const manufacturers = await db
@@ -148,7 +149,7 @@ export async function getCommonTemplateTestCandidates(): Promise<CommonTemplateT
     .where(
       and(
         isNotNull(order.manufacturerId),
-        isNull(order.excludedReason),
+        orderIsIncludedSql(order.fulfillmentType),
         inArray(order.manufacturerId, candidateManufacturerIds),
       ),
     )
@@ -176,8 +177,7 @@ export async function getRecentOrderIdsForManufacturer(manufacturerId: number, l
 
   const rows = await db.query.order.findMany({
     columns: { id: true },
-    where: (o, { and: andOp, eq: eqOp, isNull: isNullOp }) =>
-      andOp(eqOp(o.manufacturerId, manufacturerId), isNullOp(o.excludedReason)),
+    where: (o, { and: andOp, eq: eqOp }) => andOp(eqOp(o.manufacturerId, manufacturerId), orderIsIncludedSql(o.fulfillmentType)),
     orderBy: (o, { desc: descOp }) => [descOp(o.createdAt)],
     limit: safeLimit,
   })

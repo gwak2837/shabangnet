@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatCurrency } from '@/utils/format/number'
 
-import { useExcludedOrderBatches } from '../hook'
+import { useExcludedOrderBatches } from './hook'
 
 export function ExcludedOrderTable() {
   const { data: batches = [], isLoading } = useExcludedOrderBatches()

@@ -1,4 +1,4 @@
-import { and, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, isNotNull, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { db } from '@/db/client'
 import { order } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 import { createCacheControl } from '@/utils/cache-control'
 
 interface OrderBatchSummaryResponse {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           isNotNull(order.manufacturerId),
-          isNull(order.excludedReason),
+          orderIsIncludedSql(order.fulfillmentType),
           manufacturerId ? sql`${order.manufacturerId} = ${manufacturerId}` : undefined,
           searchCondition,
           dateFromCondition,

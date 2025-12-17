@@ -105,7 +105,6 @@ export const order = pgTable(
     // 시스템 필드 (System)
     // ============================================
     status: orderStatusEnum('status').default('pending'),
-    excludedReason: varchar('excluded_reason', { length: 255 }), // 발송 제외 사유
     createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 
     // Full-text Search용 generated column

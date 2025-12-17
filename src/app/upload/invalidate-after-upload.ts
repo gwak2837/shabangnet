@@ -2,12 +2,6 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '@/common/constants/query-keys'
 
-/**
- * 업로드로 인해 바뀌는 데이터(주문/업로드 기록/대시보드 통계/제조사/상품 등) 캐시를 한 번에 무효화해요.
- *
- * - 업로드는 주문/업로드 테이블에 영향을 주고, 업로드 과정에서 제조사/상품이 자동 생성될 수도 있어요.
- * - 따라서 관련 화면(헤더 통계, 제조사 관리, 상품 연결, 발주 생성 등)이 즉시 최신 상태로 보이도록 합니다.
- */
 export async function invalidateCachesAfterUpload(queryClient: QueryClient): Promise<void> {
   await Promise.all([
     // 헤더 통계(StatusIndicator) 포함 대시보드 영역

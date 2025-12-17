@@ -94,7 +94,6 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
     .where(
       and(
         isNull(order.manufacturerId),
-        isNull(order.excludedReason),
         sql`lower(${order.manufacturerName}) = lower(${newManufacturer.name})`,
       ),
     )
@@ -195,7 +194,6 @@ export async function update(id: number, data: Partial<Manufacturer>): Promise<M
       .where(
         and(
           isNull(order.manufacturerId),
-          isNull(order.excludedReason),
           sql`lower(${order.manufacturerName}) = lower(${updated.name})`,
         ),
       )

@@ -3,6 +3,7 @@ import ExcelJS, { CellValue } from 'exceljs'
 import type { ParseError } from '@/lib/excel'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
+import { parseLooseNumber, toTrimmedString } from '@/utils/coerce'
 
 export async function parseSabangnetFile(buffer: ArrayBuffer) {
   const workbook = new ExcelJS.Workbook()
@@ -71,8 +72,8 @@ export async function parseSabangnetFile(buffer: ArrayBuffer) {
   }
 }
 
-const str = (val: unknown) => (val != null ? String(val).trim() : '')
-const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, '')) || 0
+const str = toTrimmedString
+const num = parseLooseNumber
 
 function mapExcelRowToOrderTable(rowData: CellValue[], rowNumber: number) {
   const sabangnetOrderNumber = str(rowData[17])

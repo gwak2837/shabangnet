@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
@@ -43,7 +43,6 @@ export async function create(
     })
     .where(
       and(
-        isNull(order.excludedReason),
         sql`lower(${order.productCode}) = lower(${data.productCode})`,
         sql`lower(${order.optionName}) = lower(${optionName})`,
         sql`${order.status} <> 'completed'`,
@@ -113,7 +112,6 @@ export async function update(
     })
     .where(
       and(
-        isNull(order.excludedReason),
         sql`lower(${order.productCode}) = lower(${updated.productCode})`,
         sql`lower(${order.optionName}) = lower(${normalizeOptionName(updated.optionName)})`,
         sql`${order.status} <> 'completed'`,
