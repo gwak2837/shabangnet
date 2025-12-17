@@ -76,14 +76,12 @@ const num = (val: unknown) => parseFloat(String(val ?? '').replace(/[^0-9.-]/g, 
 
 function mapExcelRowToOrderTable(rowData: CellValue[], rowNumber: number) {
   const sabangnetOrderNumber = str(rowData[17])
-
-  if (!sabangnetOrderNumber) {
-    return null
-  }
-
   const shoppingMall = str(rowData[12]) // L열: 사이트
   const mallProductNumber = str(rowData[18]) // R열: 쇼핑몰상품번호
 
+  if (!sabangnetOrderNumber) {
+    throw new Error('사방넷주문번호가 없어요')
+  }
   if (!shoppingMall) {
     throw new Error('사이트 값이 없어요')
   }
@@ -134,7 +132,7 @@ function mapExcelRowToOrderTable(rowData: CellValue[], rowNumber: number) {
     shippingCost: 0,
 
     // 주문 메타
-    fulfillmentType: str(rowData[20]), // T열: F (주문유형)
+    fulfillmentType: str(rowData[20]), // T열: F
     cjDate: str(rowData[23]), // W열: 씨제이날짜
     collectedAt: str(rowData[25]), // Y열: 수집일시
 

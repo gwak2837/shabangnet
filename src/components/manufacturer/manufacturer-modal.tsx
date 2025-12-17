@@ -389,7 +389,13 @@ function ManufacturerModalBody({
     }
   }
 
-  function handleSave() {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    if (!canSave) {
+      return
+    }
+
     const input: Parameters<typeof updateManufacturerBundle>[0] = { manufacturerId: manufacturer.id }
 
     if (isManufacturerDirty) {
@@ -433,7 +439,7 @@ function ManufacturerModalBody({
   }
 
   return (
-    <>
+    <form className="flex flex-col flex-1 min-h-0" onSubmit={handleSubmit}>
       <div className="flex flex-col gap-5 overflow-y-auto flex-1 pr-2">
         {/* Basic */}
         <section className="rounded-lg border border-border bg-card p-4">
@@ -716,7 +722,7 @@ function ManufacturerModalBody({
         <Button disabled={isSaving} onClick={onClose} type="button" variant="outline">
           취소
         </Button>
-        <Button disabled={!canSave} onClick={handleSave} type="button">
+        <Button disabled={!canSave} type="submit">
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -730,7 +736,7 @@ function ManufacturerModalBody({
           )}
         </Button>
       </DialogFooter>
-    </>
+    </form>
   )
 }
 
