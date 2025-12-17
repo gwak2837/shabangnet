@@ -22,6 +22,13 @@ export interface DuplicateCheckResult {
   matchedAddresses: string[]
 }
 
+export interface ExcludedReasonBatch {
+  orders: Order[]
+  reason: string
+  totalAmount: number
+  totalOrders: number
+}
+
 // Order types
 export interface Order {
   address: string
@@ -237,68 +244,59 @@ export async function generateOrderExcel(params: {
   return { buffer: excelBuffer, fileName }
 }
 
-export async function getExcludedBatches(): Promise<OrderBatch[]> {
-  // excludedReason이 설정된 주문만 조회
+export async function getExcludedBatches(): Promise<ExcludedReasonBatch[]> {
   const allOrders = await db.query.order.findMany({
-    with: {
-      manufacturer: true,
-    },
-    where: (order, { and, isNotNull }) => and(isNotNull(order.manufacturerId), isNotNull(order.excludedReason)),
+    where: (o, { isNotNull }) => isNotNull(o.excludedReason),
+    orderBy: (o, { desc }) => [desc(o.createdAt)],
   })
 
-  const batchesMap = new Map<number, OrderBatch>()
-  const allManufacturers = await db
-    .select({
-      id: manufacturer.id,
-      name: manufacturer.name,
-      email: manufacturer.email,
-    })
-    .from(manufacturer)
-
-  for (const m of allManufacturers) {
-    batchesMap.set(m.id, {
-      manufacturerId: m.id,
-      manufacturerName: m.name,
-      email: m.email ?? '',
-      orders: [],
-      status: 'pending',
-      totalAmount: 0,
-      totalOrders: 0,
-    })
-  }
+  const batchesByReason = new Map<string, ExcludedReasonBatch>()
 
   for (const o of allOrders) {
-    if (!o.manufacturerId) continue
+    const rawReason = typeof o.excludedReason === 'string' ? o.excludedReason.trim() : ''
+    const reason = rawReason.length > 0 ? rawReason : '사유 없음'
 
-    const batch = batchesMap.get(o.manufacturerId)
-    if (batch) {
-      batch.orders.push({
-        id: o.id,
-        sabangnetOrderNumber: o.sabangnetOrderNumber,
-        customerName: o.recipientName || '',
-        phone: o.recipientMobile || o.recipientPhone || '',
-        address: o.address || '',
-        productCode: o.productCode || '',
-        productName: o.productName || '',
-        optionName: o.optionName || '',
-        quantity: o.quantity || 0,
-        price: o.paymentAmount ?? 0,
-        manufacturerId: o.manufacturerId,
-        manufacturerName: o.manufacturerName || '',
-        status: o.status as Order['status'],
-        createdAt: o.createdAt.toISOString(),
-        fulfillmentType: o.fulfillmentType || '',
-        excludedReason: o.excludedReason || undefined,
-      })
-    }
+    const batch =
+      batchesByReason.get(reason) ??
+      (() => {
+        const next: ExcludedReasonBatch = {
+          reason,
+          orders: [],
+          totalAmount: 0,
+          totalOrders: 0,
+        }
+        batchesByReason.set(reason, next)
+        return next
+      })()
+
+    batch.orders.push({
+      id: o.id,
+      sabangnetOrderNumber: o.sabangnetOrderNumber,
+      customerName: o.recipientName || '',
+      phone: o.recipientMobile || o.recipientPhone || '',
+      address: o.address || '',
+      productCode: o.productCode || '',
+      productName: o.productName || '',
+      optionName: o.optionName || '',
+      quantity: o.quantity || 0,
+      price: o.paymentAmount ?? 0,
+      manufacturerId: o.manufacturerId ?? 0,
+      manufacturerName: o.manufacturerName || '',
+      status: o.status as Order['status'],
+      createdAt: o.createdAt.toISOString(),
+      fulfillmentType: o.fulfillmentType || '',
+      excludedReason: o.excludedReason || undefined,
+    })
   }
 
-  for (const batch of batchesMap.values()) {
+  for (const batch of batchesByReason.values()) {
     batch.totalOrders = batch.orders.length
     batch.totalAmount = batch.orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
   }
 
-  return Array.from(batchesMap.values()).filter((b) => b.totalOrders > 0)
+  return Array.from(batchesByReason.values()).sort(
+    (a, b) => b.totalOrders - a.totalOrders || a.reason.localeCompare(b.reason, 'ko'),
+  )
 }
 
 function hasRowFixedValues(fixedValues: Record<string, string> | undefined): boolean {

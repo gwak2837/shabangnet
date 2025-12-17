@@ -1,11 +1,10 @@
 'use client'
 
-import { Ban, Loader2 } from 'lucide-react'
+import { Ban, ChevronRight, Loader2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatCurrency } from '@/utils/format/number'
 
 import { useExcludedOrderBatches } from '../hook'
@@ -41,70 +40,79 @@ export function ExcludedOrderTable() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제외 사유</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 주문 수
               </TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 총 금액
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">이메일</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제외 사유</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {batches.map((batch) => {
-              const reasons = [...new Set(batch.orders.map((o) => o.excludedReason).filter(Boolean))] as string[]
+              const sampleOrders = batch.orders.slice(0, 3)
 
               return (
-                <TableRow className="hover:bg-slate-50 transition-colors" key={batch.manufacturerId}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
-                        {batch.manufacturerName.slice(0, 2)}
+                <TableRow className="hover:bg-slate-50 transition-colors" key={batch.reason}>
+                  <TableCell className="align-top">
+                    <details className="group">
+                      <summary className="flex cursor-pointer list-none items-start gap-3 [&::-webkit-details-marker]:hidden">
+                        <ChevronRight
+                          aria-hidden="true"
+                          className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-90"
+                        />
+                        <div className="min-w-0 space-y-1">
+                          <p className="truncate font-medium text-slate-900">{batch.reason}</p>
+                          {sampleOrders.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {sampleOrders.map((o) => (
+                                <Badge
+                                  className="bg-slate-100 text-slate-600 text-xs font-mono max-w-[220px] truncate"
+                                  key={o.id}
+                                  variant="secondary"
+                                >
+                                  {o.sabangnetOrderNumber}
+                                </Badge>
+                              ))}
+                              {batch.orders.length > sampleOrders.length && (
+                                <span className="text-xs text-slate-400">
+                                  +{batch.orders.length - sampleOrders.length}건
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </summary>
+
+                      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <div className="grid grid-cols-[1fr_auto] gap-2 text-xs text-slate-500">
+                          <span>사방넷주문번호</span>
+                          <span className="text-right">금액</span>
+                        </div>
+                        <div className="mt-2 space-y-1">
+                          {batch.orders.slice(0, 10).map((o) => (
+                            <div className="grid grid-cols-[1fr_auto] gap-2 text-sm" key={o.id}>
+                              <span className="font-mono text-slate-700">{o.sabangnetOrderNumber}</span>
+                              <span className="text-right tabular-nums text-slate-700">
+                                {formatCurrency(o.price * o.quantity)}
+                              </span>
+                            </div>
+                          ))}
+                          {batch.orders.length > 10 && (
+                            <p className="pt-2 text-xs text-slate-400">
+                              나머지 {batch.orders.length - 10}건은 생략했어요
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-medium text-slate-900">{batch.manufacturerName}</span>
-                    </div>
+                    </details>
                   </TableCell>
                   <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                     {batch.totalOrders}건
                   </TableCell>
                   <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                     {formatCurrency(batch.totalAmount)}
-                  </TableCell>
-                  <TableCell className="text-slate-600">{batch.email}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {reasons.slice(0, 2).map((reason, idx) => (
-                        <Badge
-                          className="bg-violet-50 text-violet-700 text-xs max-w-[200px] truncate"
-                          key={idx}
-                          variant="secondary"
-                        >
-                          {reason}
-                        </Badge>
-                      ))}
-                      {reasons.length > 2 && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge className="bg-slate-100 text-slate-600 text-xs cursor-help" variant="secondary">
-                                +{reasons.length - 2}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <div className="flex flex-col gap-1">
-                                {reasons.slice(2).map((reason, idx) => (
-                                  <p className="text-xs" key={idx}>
-                                    {reason}
-                                  </p>
-                                ))}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
                   </TableCell>
                 </TableRow>
               )
