@@ -135,7 +135,7 @@ export function CommonOrderTemplateColumnEditor({
   }
 
   return (
-    <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+    <>
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="flex flex-col gap-1">
           <Label className="text-sm font-medium">템플릿 컬럼 채우기</Label>
@@ -191,20 +191,17 @@ export function CommonOrderTemplateColumnEditor({
 
                 return (
                   <TableRow className="hover:bg-transparent" key={col.columnLetter}>
-                    <TableCell className="align-top">
+                    <TableCell className="align-middle">
                       <div className="flex flex-col gap-1">
                         <p className="text-sm font-medium text-foreground">
                           <span className="font-mono text-muted-foreground">{col.columnLetter}</span>
                           <span className="mx-1 text-muted-foreground">·</span>
                           {headerLabel}
                         </p>
-                        {col.headerLabel.length > 0 ? (
-                          <p className="text-xs text-muted-foreground">헤더: {col.headerLabel}</p>
-                        ) : null}
                       </div>
                     </TableCell>
 
-                    <TableCell className="align-top">
+                    <TableCell className="align-middle">
                       <Select onValueChange={(v) => updateSelectValue(col.columnLetter, v)} value={selectValue}>
                         <SelectTrigger className="w-full" size="sm">
                           <SelectValue placeholder="선택해요" />
@@ -230,7 +227,7 @@ export function CommonOrderTemplateColumnEditor({
                       </Select>
                     </TableCell>
 
-                    <TableCell className="align-top">
+                    <TableCell className="align-middle">
                       {isTemplate ? (
                         <TemplateTokenInput
                           onChange={(next) => updateTemplate(col.columnLetter, next)}
@@ -240,7 +237,7 @@ export function CommonOrderTemplateColumnEditor({
                           value={rule.template}
                         />
                       ) : (
-                        <p className="pt-2 text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           직접 입력/조합을 선택하면 여기서 편집할 수 있어요.
                         </p>
                       )}
@@ -252,7 +249,7 @@ export function CommonOrderTemplateColumnEditor({
           </Table>
         )}
       </div>
-    </section>
+    </>
   )
 }
 

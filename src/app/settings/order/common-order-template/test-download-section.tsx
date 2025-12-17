@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { Download } from 'lucide-react'
+import { Download, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -66,14 +66,10 @@ export function TestDownloadSection() {
   }
 
   return (
-    <section className="space-y-3 rounded-lg bg-muted/30 p-4 ring-1 ring-border/30">
+    <>
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-medium">테스트 다운로드</Label>
-        <p className="text-xs text-muted-foreground">
-          여기 제조사는 “제조사 템플릿이 없는” 제조사만 보여줘요. 그래서 이 다운로드는 공통 템플릿이 실제로 적용돼요.
-        </p>
       </div>
-
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <Select disabled={isLoading || options.length === 0} onValueChange={setManufacturerId} value={manufacturerId}>
           <SelectTrigger aria-disabled={isLoading || options.length === 0} className="aria-disabled:opacity-50">
@@ -99,11 +95,11 @@ export function TestDownloadSection() {
           type="button"
           variant="outline"
         >
-          <Download className="h-4 w-4" />
-          {isDownloading ? '다운로드 중...' : '엑셀 다운로드'}
+          {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          엑셀 다운로드
         </Button>
       </div>
-    </section>
+    </>
   )
 }
 
