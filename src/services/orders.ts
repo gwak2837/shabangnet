@@ -279,7 +279,10 @@ export async function getExcludedBatches(): Promise<ExcludedReasonBatch[]> {
       productName: o.productName || '',
       optionName: o.optionName || '',
       quantity: o.quantity || 0,
-      price: o.paymentAmount ?? 0,
+      price: (() => {
+        const quantity = o.quantity && o.quantity > 0 ? o.quantity : 1
+        return Math.round((o.paymentAmount ?? 0) / quantity)
+      })(),
       manufacturerId: o.manufacturerId ?? 0,
       manufacturerName: o.manufacturerName || '',
       status: o.status as Order['status'],

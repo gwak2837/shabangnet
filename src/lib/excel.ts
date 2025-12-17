@@ -211,7 +211,7 @@ export async function analyzeTemplateStructure(buffer: ArrayBuffer): Promise<Tem
     비고: 'memo',
   }
 
-  // "첫 번째 내용 있는 행" 대신, 헤더처럼 보이는 행(키워드 매칭이 많은 행)을 우선으로 잡아요.
+  // "첫 번째 내용 있는 행" 대신, 헤더처럼 보이는 행(키워드 일치가 많은 행)을 우선으로 잡아요.
   const maxScanRows = Math.min(worksheet.rowCount || 1, 50)
   let firstContentRowNumber: number | null = null
   let firstContentRowValues: string[] = []
@@ -821,13 +821,10 @@ export async function parseInvoiceFile(
   return { invoices, errors }
 }
 
-// ============================================
-// 헬퍼 함수들
-// ============================================
-
 function buildTemplateVariables(orders: ParsedOrder[], manufacturerName: string, date: Date): TemplateVariables {
   const totalQuantity = orders.reduce((sum, o) => sum + (o.quantity ?? 0), 0)
-  const totalAmount = orders.reduce((sum, o) => sum + (o.paymentAmount ?? 0) * (o.quantity ?? 0), 0)
+  // 결제금액은 "수량 포함" 총액이에요.
+  const totalAmount = orders.reduce((sum, o) => sum + (o.paymentAmount ?? 0), 0)
 
   return {
     manufacturerName,

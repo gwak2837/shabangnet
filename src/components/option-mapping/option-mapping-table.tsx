@@ -1,6 +1,6 @@
 'use client'
 
-import { Edit2, Settings2, Trash2 } from 'lucide-react'
+import { Link2, Pencil, Trash2 } from 'lucide-react'
 
 import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
@@ -50,7 +50,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100">
-                      <Settings2 className="h-4 w-4 text-slate-500" />
+                      <Link2 className="h-4 w-4 text-slate-500" />
                     </div>
                     <code className="text-sm font-mono text-slate-700">{mapping.productCode}</code>
                   </div>
@@ -71,7 +71,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <Button className="h-8 w-8 p-0" onClick={() => onEdit(mapping)} size="sm" variant="ghost">
-                      <Edit2 className="h-4 w-4 text-slate-500" />
+                      <Pencil className="h-4 w-4 text-slate-500" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>

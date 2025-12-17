@@ -1,6 +1,6 @@
 'use client'
 
-import { Ban, Check } from 'lucide-react'
+import { Ban, CheckCircle2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -118,7 +118,7 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                           className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 gap-1"
                           variant="secondary"
                         >
-                          <Check className="h-3 w-3" />
+                          <CheckCircle2 className="h-3 w-3" />
                           발송
                         </Badge>
                       )}

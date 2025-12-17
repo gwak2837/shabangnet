@@ -25,7 +25,7 @@ export interface SaveProductManufacturerLinkResult {
  * 상품코드 → 제조사 연결을 저장하고, 필요하면 기존 주문에도 자동 반영합니다.
  *
  * - manufacturerId가 null이면: product.manufacturerId만 해제(주문 backfill 없음)
- * - manufacturerId가 있으면: product upsert + 주문 backfill(미매칭 주문만)
+ * - manufacturerId가 있으면: product upsert + 주문 backfill(미연결 주문만)
  */
 export async function saveProductManufacturerLink(
   input: SaveProductManufacturerLinkInput,

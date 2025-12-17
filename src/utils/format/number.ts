@@ -37,10 +37,9 @@ export function formatCompactNumber(value: number): string {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW',
-  }).format(amount)
+  const abs = Math.abs(amount)
+  const sign = amount < 0 ? '-' : ''
+  return `${sign}${abs.toLocaleString('ko-KR')}원`
 }
 
 export function formatDate(dateString: string): string {

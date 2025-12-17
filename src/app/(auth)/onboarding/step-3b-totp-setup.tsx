@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy, Loader2 } from 'lucide-react'
+import { CheckCircle2, Copy, Loader2 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 
@@ -65,7 +65,7 @@ export function Step3bTOTPSetup({ formRef, isPending, onBack, onSubmit, totpUri 
                 onClick={handleCopySecret}
                 type="button"
               >
-                {secretCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                {secretCopied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -226,7 +226,7 @@ export function ColumnMappingEditor({
 
       {duplicateFieldKeys.length > 0 && (
         <div className="flex items-start gap-2 rounded-lg bg-destructive/5 px-3 py-2 text-xs text-destructive ring-1 ring-destructive/15">
-          <TriangleAlert className="mt-0.5 h-4 w-4" />
+          <AlertTriangle className="mt-0.5 h-4 w-4" />
           <div>
             <p className="font-medium">사방넷 컬럼이 중복 연결됐어요</p>
             <p className="mt-0.5 text-destructive/90">중복: {duplicateFieldLabels}</p>

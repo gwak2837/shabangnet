@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Building2, Loader2, Package, Settings2 } from 'lucide-react'
+import { AlertTriangle, Building2, Link2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -89,7 +89,7 @@ export default function OrderMatchingPage() {
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <Package className="h-5 w-5 text-blue-600" />
+              <Link2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사 연결 필요(주문 기준)</p>
@@ -101,7 +101,7 @@ export default function OrderMatchingPage() {
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-              <Settings2 className="h-5 w-5 text-slate-600" />
+              <Link2 className="h-5 w-5 text-slate-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">제조사 연결 필요(상품 기준)</p>
@@ -159,7 +159,7 @@ export default function OrderMatchingPage() {
               <p className="font-medium text-slate-900">제조사 연결 필요(주문 기준)</p>
               <p className="text-sm text-slate-500">
                 제조사를 연결하면 <span className="font-medium">기존 주문에도 자동으로 반영</span>되고, 다음 업로드부터
-                자동 매칭돼요.
+                자동 연결돼요.
               </p>
             </div>
             <Button disabled={isSaving} onClick={() => void refetch()} size="sm" variant="outline">
@@ -168,7 +168,7 @@ export default function OrderMatchingPage() {
           </div>
 
           {unmatched.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-slate-500">제조사 미매칭 주문이 없어요</div>
+            <div className="px-4 py-6 text-sm text-slate-500">제조사 미연결 주문이 없어요</div>
           ) : (
             <div className="pb-4">
               <Table>
@@ -178,12 +178,12 @@ export default function OrderMatchingPage() {
                       상품코드
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      상품명(예시)
+                      상품명
                     </TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                    <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                       주문 수
                     </TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <TableHead className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                       제조사 연결
                     </TableHead>
                     <TableHead className="w-[1%] whitespace-nowrap" />
@@ -200,7 +200,7 @@ export default function OrderMatchingPage() {
                           {row.productNameSample || '-'}
                         </TableCell>
                         <TableCell className="text-right tabular-nums text-slate-700">{row.orderCount}건</TableCell>
-                        <TableCell>
+                        <TableCell className="w-[1%]">
                           <Select
                             onValueChange={(value) =>
                               setSelectionByProductCode((prev) => ({ ...prev, [row.productCode]: value }))
@@ -256,7 +256,7 @@ async function getMatchingData(): Promise<MatchingResponse> {
   const response = await fetch('/api/orders/matching', { cache: 'no-store' })
   if (!response.ok) {
     const { error } = (await response.json()) as { error?: string }
-    throw new Error(error || '매칭 상태를 불러오지 못했어요')
+    throw new Error(error || '연결 상태를 불러오지 못했어요')
   }
   return response.json()
 }

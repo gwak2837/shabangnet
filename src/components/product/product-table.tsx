@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, AlertTriangle, Check, Package, Pencil } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, Package, Pencil } from 'lucide-react'
 import { useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
@@ -64,7 +64,6 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
             <TableRow className="hover:bg-transparent">
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                 판매가
               </TableHead>
@@ -95,8 +94,14 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                         <code className="text-sm font-mono text-slate-700">{product.productCode}</code>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium text-slate-900">{product.productName}</TableCell>
-                    <TableCell className="text-slate-600">{product.optionName}</TableCell>
+                    <TableCell>
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900">{product.productName}</p>
+                        {product.optionName.trim().length > 0 && (
+                          <p className="mt-0.5 truncate text-xs text-slate-500">{product.optionName}</p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right font-medium text-slate-900 tabular-nums">
                       {formatCurrency(product.price)}
                     </TableCell>
@@ -165,7 +170,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                           size="sm"
                           variant="outline"
                         >
-                          <AlertCircle className="h-4 w-4" />
+                          <Info className="h-4 w-4" />
                           연결 필요
                         </Button>
                       ) : (
@@ -176,7 +181,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
                           <Badge className="bg-slate-100 text-slate-700 group-hover:bg-slate-200" variant="secondary">
                             {product.manufacturerName}
                           </Badge>
-                          <Check className="h-4 w-4 text-emerald-500" />
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         </div>
                       )}
                     </TableCell>
@@ -189,7 +194,7 @@ export function ProductTable({ products, manufacturers, onUpdateManufacturer, on
             </TooltipProvider>
             {products.length === 0 && (
               <TableRow>
-                <TableCell className="h-32 text-center text-slate-500" colSpan={7}>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={6}>
                   상품이 없습니다.
                 </TableCell>
               </TableRow>

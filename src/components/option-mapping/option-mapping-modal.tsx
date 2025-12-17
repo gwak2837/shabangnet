@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, Settings2 } from 'lucide-react'
+import { Link2, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
@@ -92,7 +92,7 @@ export function OptionMappingModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <Settings2 className="h-5 w-5 text-blue-600" />
+              <Link2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <DialogTitle>{isEdit ? '옵션 연결 수정' : '옵션 연결 추가'}</DialogTitle>

@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Clock, FileSpreadsheet, Loader2, Mail, RefreshCw, Settings2 } from 'lucide-react'
+import { CheckCircle2, Clock, FileSpreadsheet, Link2, Loader2, Mail, RefreshCw, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -321,7 +321,7 @@ export default function SendableOrdersPage() {
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
-              <AlertCircle className="h-5 w-5 text-rose-600" />
+              <XCircle className="h-5 w-5 text-rose-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">오류</p>
@@ -364,12 +364,12 @@ export default function SendableOrdersPage() {
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 shrink-0">
-                <Settings2 className="h-5 w-5 text-amber-600" />
+                <Link2 className="h-5 w-5 text-amber-600" />
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">발송 대상이 없어요</p>
                 <p className="mt-1 text-sm text-slate-600">
-                  업로드된 주문이 제조사와 매칭되지 않으면 여기에 표시되지 않아요.
+                  업로드된 주문이 제조사와 연결되지 않으면 여기에 표시되지 않아요.
                   <br />
                   상품/옵션 연결을 추가하면 기존 주문에도 자동으로 반영돼요.
                 </p>

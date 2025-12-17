@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload, X } from 'lucide-react'
+import { CheckCircle2, Download, FileSpreadsheet, Info, Upload, X, XCircle } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
@@ -250,13 +250,13 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                 </span>
                 {notFoundCount > 0 && (
                   <span className="flex items-center gap-1 text-amber-600">
-                    <AlertCircle className="h-4 w-4" />
+                    <Info className="h-4 w-4" />
                     제조사 미등록: {notFoundCount}건
                   </span>
                 )}
                 {errorCount > 0 && (
                   <span className="flex items-center gap-1 text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                    <XCircle className="h-4 w-4" />
                     오류: {errorCount}건
                   </span>
                 )}
@@ -303,12 +303,12 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                           ) : item.status === 'manufacturer_not_found' ? (
                             <div className="flex items-center gap-1 text-amber-600">
-                              <AlertCircle className="h-4 w-4" />
+                              <Info className="h-4 w-4" />
                               <span className="text-xs">미등록</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1 text-red-500">
-                              <AlertCircle className="h-4 w-4" />
+                              <XCircle className="h-4 w-4" />
                               <span className="text-xs">{item.message}</span>
                             </div>
                           )}

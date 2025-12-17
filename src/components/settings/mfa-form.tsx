@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  Check,
   CheckCircle2,
   Copy,
   Key,
@@ -600,7 +599,11 @@ export function MFAForm({ settings }: MFAFormProps) {
                       onClick={() => handleCopySecret(extractSecret(totpUri))}
                       type="button"
                     >
-                      {copiedSecret ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      {copiedSecret ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                   {copiedSecret && (
@@ -652,7 +655,7 @@ export function MFAForm({ settings }: MFAFormProps) {
               >
                 {copiedRecoveryCodes ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="text-emerald-500">복사 완료</span>
                   </>
                 ) : (
@@ -769,7 +772,7 @@ export function MFAForm({ settings }: MFAFormProps) {
               >
                 {copiedRecoveryCodes ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="text-emerald-500">복사 완료</span>
                   </>
                 ) : (

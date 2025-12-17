@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Clock, Loader2, ShoppingCart } from 'lucide-react'
+import { CheckCircle2, Clock, Loader2, ShoppingCart, XCircle } from 'lucide-react'
 
 import { ManufacturerChart } from '@/components/dashboard/manufacturer-chart'
 import { RecentUploads } from '@/components/dashboard/recent-uploads'
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         />
         <StatCard
           change={stats?.errorOrdersChange}
-          icon={AlertCircle}
+          icon={XCircle}
           iconBgColor="bg-rose-50"
           iconColor="text-rose-600"
           title="오류 건수"

@@ -51,7 +51,7 @@ export async function GET() {
     .groupBy(manufacturer.id, manufacturer.name)
     .orderBy(desc(sql<number>`count(${order.id})`.mapWith(Number)))
 
-  // 제조사 미매칭 주문(상품코드 기준 그룹)
+  // 제조사 미연결 주문(상품코드 기준 그룹)
   const unmatchedRows = await db
     .select({
       productCode: order.productCode,

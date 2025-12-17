@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy, Download, Loader2 } from 'lucide-react'
+import { CheckCircle2, Copy, Download, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -42,7 +42,7 @@ export function Step4BackupCodes({ backupCodes, isPending, onComplete }: Props) 
     <div className="mt-6 flex flex-col gap-6">
       <div className="text-center">
         <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-4">
-          <Check className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2 className="h-6 w-6 text-emerald-600" />
         </div>
         <h3 className="font-medium">2차 인증 설정 완료!</h3>
         <p className="text-sm text-muted-foreground mt-1">
@@ -64,7 +64,7 @@ export function Step4BackupCodes({ backupCodes, isPending, onComplete }: Props) 
         <Button className="flex-1" onClick={handleCopyCodes} variant="glass-outline">
           {codesCopied ? (
             <>
-              <Check className="mr-2 h-4 w-4" />
+              <CheckCircle2 className="mr-2 h-4 w-4" />
               복사됨
             </>
           ) : (

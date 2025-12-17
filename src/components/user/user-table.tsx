@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Clock, Loader2, RotateCcw, X } from 'lucide-react'
+import { Check, CheckCircle2, Clock, Loader2, RotateCcw, X, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -143,8 +143,8 @@ export function UserTable({ users, isLoading }: UserTableProps) {
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${config.className}`}
                     >
                       {user.status === 'pending' && <Clock className="h-3 w-3" />}
-                      {user.status === 'approved' && <Check className="h-3 w-3" />}
-                      {user.status === 'rejected' && <X className="h-3 w-3" />}
+                      {user.status === 'approved' && <CheckCircle2 className="h-3 w-3" />}
+                      {user.status === 'rejected' && <XCircle className="h-3 w-3" />}
                       {config.label}
                     </span>
                   </td>

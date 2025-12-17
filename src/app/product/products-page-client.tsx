@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Package, Upload } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, Loader2, Package, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -46,7 +46,7 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
       const res = await fetch('/api/orders/matching', { cache: 'no-store' })
       const json = (await res.json()) as MatchingSummaryResponse & { error?: string }
       if (!res.ok) {
-        throw new Error(json.error || '매칭 상태를 불러오지 못했어요')
+        throw new Error(json.error || '연결 상태를 불러오지 못했어요')
       }
       return json
     },
@@ -234,7 +234,7 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-              <AlertCircle className="h-5 w-5 text-amber-600" />
+              <Info className="h-5 w-5 text-amber-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">미연결</p>

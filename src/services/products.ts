@@ -38,7 +38,7 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
       })
     : null
 
-  // 기존 주문 중 제조사 미매칭 건에 자동 반영
+  // 기존 주문 중 제조사 미연결 건에 자동 반영
   if (data.manufacturerId) {
     await db
       .update(order)
@@ -109,7 +109,7 @@ export async function update(id: number, data: Partial<Product>): Promise<Produc
       })
     : null
 
-  // 기존 주문 중 제조사 미매칭 건에 자동 반영
+  // 기존 주문 중 제조사 미연결 건에 자동 반영
   if (updated.manufacturerId) {
     await db
       .update(order)

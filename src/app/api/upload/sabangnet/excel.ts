@@ -145,7 +145,7 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     // 상품 정보
     productName: str(rowData[1]), // A열: 상품명
     quantity: parseInt(str(rowData[2]), 10) || 1, // B열: 수량
-    optionName: str(rowData[19]), // S열: 옵션
+    optionName: normalizeOptionName(str(rowData[19])), // S열: 옵션
     productAbbr: str(rowData[22]), // V열: 상품약어
     productCode,
     mallProductNumber, // R열: 쇼핑몰상품번호
@@ -184,4 +184,11 @@ function mapRowToOrder(rowData: CellValue[], rowNumber: number) {
     // 시스템
     rowIndex: rowNumber,
   }
+}
+
+function normalizeOptionName(raw: string): string {
+  const value = raw.trim()
+  if (!value) return ''
+  // 옵션 텍스트 끝에 붙는 `[숫자]`는 수량 중복 표기라서 제거해요. (수량 컬럼은 별도로 있어요)
+  return value.replace(/\s*\[\d+\]\s*$/, '').trim()
 }

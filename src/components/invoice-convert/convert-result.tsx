@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, RefreshCw, XCircle } from 'lucide-react'
 
 import type { InvoiceConvertResultItem } from '@/services/invoice-convert'
 
@@ -67,10 +67,10 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
-              <AlertCircle className="h-5 w-5 text-rose-600" />
+              <XCircle className="h-5 w-5 text-rose-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">주문 미매칭</p>
+              <p className="text-sm text-slate-500">주문 미연결</p>
               <p className="text-xl font-semibold text-slate-900">{orderErrors.length}건</p>
             </div>
           </CardContent>
@@ -167,7 +167,7 @@ export function ConvertResult({ results, fileName, onDownload, onReset }: Conver
                           }
                           variant="secondary"
                         >
-                          {result.status === 'courier_error' ? '택배사 미등록' : '주문 미매칭'}
+                          {result.status === 'courier_error' ? '택배사 미등록' : '주문 미연결'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-amber-800">

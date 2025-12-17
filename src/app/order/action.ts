@@ -131,7 +131,8 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     }
 
     const orderIdsToSend = candidateOrders.map((o) => o.id)
-    const totalAmount = candidateOrders.reduce((sum, o) => sum + (o.paymentAmount ?? 0) * (o.quantity ?? 0), 0)
+    // 결제금액은 "수량 포함" 총액이에요.
+    const totalAmount = candidateOrders.reduce((sum, o) => sum + (o.paymentAmount ?? 0), 0)
     const orderCount = candidateOrders.length
 
     const excelResult = await generateOrderExcel({ manufacturerId: input.manufacturerId, orderIds: orderIdsToSend })
@@ -192,8 +193,14 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
             productName: o.productName || '',
             optionName: o.optionName || null,
             quantity: o.quantity ?? 0,
-            price: o.paymentAmount ?? 0,
-            cost: o.cost ?? 0,
+            price: (() => {
+              const quantity = o.quantity && o.quantity > 0 ? o.quantity : 1
+              return Math.round((o.paymentAmount ?? 0) / quantity)
+            })(),
+            cost: (() => {
+              const quantity = o.quantity && o.quantity > 0 ? o.quantity : 1
+              return Math.round((o.cost ?? 0) / quantity)
+            })(),
             shippingCost: o.shippingCost ?? 0,
             customerName: o.recipientName || '',
             address: o.address || null,

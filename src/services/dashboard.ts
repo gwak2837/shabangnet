@@ -40,7 +40,8 @@ export async function getChartData(): Promise<ChartDataItem[]> {
     .select({
       name: manufacturer.name,
       orders: sql<number>`count(${order.id})`.mapWith(Number),
-      amount: sql<number>`sum(${order.paymentAmount} * ${order.quantity})`.mapWith(Number),
+      // 결제금액은 "수량 포함" 총액이에요.
+      amount: sql<number>`sum(${order.paymentAmount})`.mapWith(Number),
     })
     .from(order)
     .leftJoin(manufacturer, eq(order.manufacturerId, manufacturer.id))

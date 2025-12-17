@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Banknote, Building2, Copy, Package, TrendingUp, XCircle } from 'lucide-react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -56,7 +56,7 @@ export function UploadResult({ data }: UploadResultProps) {
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
-              <AlertCircle className="h-5 w-5 text-rose-600" />
+              <XCircle className="h-5 w-5 text-rose-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">오류 건수</p>
@@ -229,7 +229,7 @@ export function UploadResult({ data }: UploadResultProps) {
         <Card className="border-rose-200 bg-rose-50/50 shadow-sm">
           <CardHeader className="pb-3 pt-4 px-4">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-rose-600" />
+              <XCircle className="h-5 w-5 text-rose-600" />
               <CardTitle className="text-base font-semibold text-rose-900">
                 오류 목록 ({data.errors.length}건)
               </CardTitle>

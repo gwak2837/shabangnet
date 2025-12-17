@@ -152,7 +152,7 @@ export default function ManufacturersPage() {
   return (
     <AppShell description="거래처 제조사 정보를 관리합니다" title="제조사 관리">
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">

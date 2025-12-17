@@ -20,11 +20,12 @@ export interface OptionManufacturerMapping {
 export async function create(
   data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>,
 ): Promise<OptionManufacturerMapping> {
+  const optionName = normalizeOptionName(data.optionName)
   const [newMapping] = await db
     .insert(optionMapping)
     .values({
       productCode: data.productCode,
-      optionName: data.optionName,
+      optionName,
       manufacturerId: data.manufacturerId,
     })
     .returning()
@@ -44,7 +45,7 @@ export async function create(
       and(
         isNull(order.excludedReason),
         sql`lower(${order.productCode}) = lower(${data.productCode})`,
-        sql`lower(${order.optionName}) = lower(${data.optionName})`,
+        sql`lower(${order.optionName}) = lower(${optionName})`,
         sql`${order.status} <> 'completed'`,
       ),
     )
@@ -83,11 +84,12 @@ export async function update(
   id: number,
   data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>>,
 ): Promise<OptionManufacturerMapping> {
+  const nextOptionName = typeof data.optionName === 'string' ? normalizeOptionName(data.optionName) : data.optionName
   const [updated] = await db
     .update(optionMapping)
     .set({
       productCode: data.productCode,
-      optionName: data.optionName,
+      optionName: nextOptionName,
       manufacturerId: data.manufacturerId,
       updatedAt: new Date(),
     })
@@ -113,7 +115,7 @@ export async function update(
       and(
         isNull(order.excludedReason),
         sql`lower(${order.productCode}) = lower(${updated.productCode})`,
-        sql`lower(${order.optionName}) = lower(${updated.optionName})`,
+        sql`lower(${order.optionName}) = lower(${normalizeOptionName(updated.optionName)})`,
         sql`${order.status} <> 'completed'`,
       ),
     )
@@ -135,4 +137,11 @@ function mapToOptionMapping(
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   }
+}
+
+function normalizeOptionName(raw: string): string {
+  const value = raw.trim()
+  if (!value) return ''
+  // 옵션 텍스트 끝에 붙는 `[숫자]`는 수량 중복 표기라서 제거해요. (수량 컬럼은 별도로 있어요)
+  return value.replace(/\s*\[\d+\]\s*$/, '').trim()
 }

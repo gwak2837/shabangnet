@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 
 import type { Transaction } from '@/db/client'
 import type { ParsedOrder } from '@/lib/excel'
@@ -24,10 +24,13 @@ interface AutoCreateManufacturersParams {
 
 interface AutoCreateProductsParams {
   orderValues: Array<{
+    cost: number
     manufacturerId: number | null
     optionName: string | null
+    paymentAmount: number
     productCode: string | null
     productName: string | null
+    quantity: number
   }>
   tx: Transaction
 }
@@ -84,7 +87,7 @@ export async function autoCreateManufacturers({
 export async function autoCreateProducts({ orderValues, tx }: AutoCreateProductsParams): Promise<void> {
   const productByCode = new Map<
     string,
-    { manufacturerId: number | null; optionName: string | null; productName: string }
+    { cost: number; manufacturerId: number | null; optionName: string | null; price: number; productName: string }
   >()
 
   for (const row of orderValues) {
@@ -97,13 +100,32 @@ export async function autoCreateProducts({ orderValues, tx }: AutoCreateProducts
       continue
     }
 
+    const quantity = Number.isFinite(row.quantity) && row.quantity > 0 ? row.quantity : 1
+    // 결제금액은 "수량 포함" 총액이라서 단가로 변환해요.
+    const price =
+      Number.isFinite(row.paymentAmount) && row.paymentAmount > 0 ? Math.round(row.paymentAmount / quantity) : 0
+    const cost = Number.isFinite(row.cost) && row.cost > 0 ? Math.round(row.cost / quantity) : 0
+
     if (!productByCode.has(code)) {
       productByCode.set(code, {
         manufacturerId: row.manufacturerId ?? null,
         productName: row.productName,
         optionName: row.optionName ?? null,
+        price,
+        cost,
       })
+      continue
     }
+
+    // 같은 상품코드가 여러 번 등장할 수 있어서, 값이 아직 없으면 채워요.
+    // (이미 값이 있으면 유지해요)
+    const prev = productByCode.get(code)
+    if (!prev) continue
+
+    if (!prev.manufacturerId && row.manufacturerId) prev.manufacturerId = row.manufacturerId
+    if ((!prev.optionName || prev.optionName.trim().length === 0) && row.optionName) prev.optionName = row.optionName
+    if (prev.price === 0 && price > 0) prev.price = price
+    if (prev.cost === 0 && cost > 0) prev.cost = cost
   }
 
   const productValues = [...productByCode.entries()].map(([code, v]) => ({
@@ -111,6 +133,8 @@ export async function autoCreateProducts({ orderValues, tx }: AutoCreateProducts
     productName: v.productName,
     optionName: v.optionName,
     manufacturerId: v.manufacturerId,
+    price: v.price,
+    cost: v.cost,
   }))
 
   if (productValues.length === 0) {
@@ -118,6 +142,33 @@ export async function autoCreateProducts({ orderValues, tx }: AutoCreateProducts
   }
 
   await tx.insert(product).values(productValues).onConflictDoNothing({ target: product.productCode })
+
+  // 업로드로 들어온 데이터로 price/cost를 채워요 (0인 값만)
+  const codes = [...productByCode.keys()]
+  const priceCases = [...productByCode.entries()]
+    .filter(([, v]) => v.price > 0)
+    .map(([code, v]) => sql`when ${product.productCode} = ${code} then ${v.price}`)
+  const costCases = [...productByCode.entries()]
+    .filter(([, v]) => v.cost > 0)
+    .map(([code, v]) => sql`when ${product.productCode} = ${code} then ${v.cost}`)
+
+  if (codes.length > 0 && (priceCases.length > 0 || costCases.length > 0)) {
+    const priceExpr =
+      priceCases.length > 0
+        ? sql`case ${sql.join(priceCases, sql` `)} else ${product.price} end`
+        : sql`${product.price}`
+    const costExpr =
+      costCases.length > 0 ? sql`case ${sql.join(costCases, sql` `)} else ${product.cost} end` : sql`${product.cost}`
+
+    await tx
+      .update(product)
+      .set({
+        price: sql`case when ${product.price} = 0 then ${priceExpr} else ${product.price} end`,
+        cost: sql`case when ${product.cost} = 0 then ${costExpr} else ${product.cost} end`,
+        updatedAt: new Date(),
+      })
+      .where(inArray(product.productCode, codes))
+  }
 
   for (const [code, v] of productByCode.entries()) {
     if (!v.manufacturerId) {
@@ -146,7 +197,8 @@ export function calculateManufacturerBreakdown(groupedOrders: Map<string, Parsed
   const breakdown: ManufacturerBreakdown[] = []
 
   groupedOrders.forEach((ordersGroup, mfr) => {
-    const totalAmount = ordersGroup.reduce((sum, o) => sum + o.paymentAmount * o.quantity, 0)
+    // 결제금액은 "수량 포함" 총액이에요.
+    const totalAmount = ordersGroup.reduce((sum, o) => sum + o.paymentAmount, 0)
     const totalQuantity = ordersGroup.reduce((sum, o) => sum + o.quantity, 0)
     const totalCost = ordersGroup.reduce((sum, o) => sum + o.cost, 0)
     const uniqueProducts = new Set(ordersGroup.map((o) => o.productCode || o.productName).filter(Boolean))
@@ -198,7 +250,7 @@ export function matchManufacturerId(order: ParsedOrder, lookupMaps: LookupMaps):
     }
   }
 
-  // 3) 파일 내 제조사명으로 매칭
+  // 3) 파일 내 제조사명으로 연결
   if (order.manufacturer) {
     const mfr = manufacturerMap.get(order.manufacturer.toLowerCase())
     if (mfr) {

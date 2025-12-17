@@ -1,6 +1,6 @@
 'use client'
 
-import { Building2, Loader2, Package, Settings2 } from 'lucide-react'
+import { Building2, Link2, Loader2, Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -115,7 +115,7 @@ export default function OptionMappingsPage() {
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <Settings2 className="h-5 w-5 text-blue-600" />
+              <Link2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">전체 연결</p>
@@ -152,7 +152,7 @@ export default function OptionMappingsPage() {
       {/* Info Banner */}
       <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
         <div className="flex gap-3">
-          <Settings2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <Link2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-800">
             <p className="font-medium mb-1">옵션 연결이란?</p>
             <p className="text-blue-700">

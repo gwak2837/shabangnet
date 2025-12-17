@@ -38,7 +38,7 @@ export interface ConvertInvoiceResult {
  * 송장 파일 변환 수행
  * 1. 송장 파일 파싱
  * 2. 택배사 코드 변환
- * 3. 주문 데이터와 매칭
+ * 3. 주문 데이터와 연결
  * 4. 주문 테이블 업데이트 (택배사/송장번호)
  * 5. 사방넷 양식 파일 생성
  */
@@ -67,7 +67,7 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
     const courierMappingList = await db.select().from(courierMapping)
     const courierLookup = buildCourierLookup(courierMappingList)
 
-    // 3. 해당 제조사의 주문 데이터 조회 (사방넷주문번호로 매칭)
+    // 3. 해당 제조사의 주문 데이터 조회 (사방넷주문번호로 연결)
     const sabangnetOrderNumbers = parseResult.invoices.map((inv) => inv.sabangnetOrderNumber)
     const existingOrders = await db
       .select({ id: order.id, sabangnetOrderNumber: order.sabangnetOrderNumber })
@@ -164,10 +164,10 @@ function buildCourierLookup(
   for (const mapping of mappings) {
     if (!mapping.enabled) continue
 
-    // 정확한 이름 매칭
+    // 정확한 이름 일치
     lookup.set(mapping.name.toLowerCase(), mapping.code)
 
-    // 별칭 매칭
+    // 별칭 일치
     if (mapping.aliases) {
       for (const alias of mapping.aliases) {
         lookup.set(alias.toLowerCase(), mapping.code)

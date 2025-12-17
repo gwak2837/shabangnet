@@ -1,6 +1,6 @@
 'use client'
 
-import { Ban, FileText, Link2, Mail } from 'lucide-react'
+import { Ban, History, Link2, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
@@ -32,7 +32,7 @@ const orderTabs = [
   {
     href: '/order/history',
     label: '발송 기록',
-    icon: FileText,
+    icon: History,
     description: '이메일 발송 이력을 확인해요',
     variant: 'slate',
   },
