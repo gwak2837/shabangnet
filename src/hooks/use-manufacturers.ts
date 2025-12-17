@@ -22,7 +22,7 @@ export function useManufacturers() {
 
 export function useOrderTemplate(manufacturerId: number | undefined) {
   return useQuery({
-    queryKey: ['orderTemplate', manufacturerId],
+    queryKey: queryKeys.orderTemplates.manufacturer(manufacturerId || 0),
     queryFn: () => (manufacturerId ? getOrderTemplateOrDefault(manufacturerId) : null),
     enabled: !!manufacturerId,
   })

@@ -5,6 +5,7 @@ import { Download, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -13,7 +14,7 @@ import { getCommonTemplateTestCandidates, getRecentOrderIdsForManufacturer } fro
 
 export function TestDownloadSection() {
   const { data: candidates, isLoading } = useQuery({
-    queryKey: ['common-template-test-candidates'],
+    queryKey: queryKeys.orderTemplates.commonTestCandidates,
     queryFn: getCommonTemplateTestCandidates,
   })
 

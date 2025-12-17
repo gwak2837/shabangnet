@@ -43,7 +43,7 @@ export default function ManufacturersPage() {
     ({ manufacturerId, template }: { manufacturerId: number; template: InvoiceTemplate }) =>
       updateInvoiceTemplate(manufacturerId, template),
     {
-      invalidateKeys: [['invoiceTemplate']],
+      invalidateKeys: [queryKeys.invoiceTemplates.all],
     },
   )
 
@@ -51,7 +51,7 @@ export default function ManufacturersPage() {
     ({ manufacturerId, template }: { manufacturerId: number; template: OrderTemplateDraft }) =>
       updateOrderTemplate(manufacturerId, template),
     {
-      invalidateKeys: [['orderTemplate']],
+      invalidateKeys: [queryKeys.orderTemplates.manufacturerAll],
     },
   )
 

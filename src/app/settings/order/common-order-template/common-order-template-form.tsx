@@ -250,7 +250,7 @@ function CommonOrderTemplateFormInner({
   }, [isDirty, onDirtyChange])
 
   const { data: storedAnalysisResult, isFetching: isFetchingStoredAnalysis } = useQuery({
-    queryKey: ['common-order-template-analysis', draft.templateFileName],
+    queryKey: queryKeys.orderTemplates.commonAnalysis(draft.templateFileName),
     queryFn: analyzeCurrentCommonOrderTemplate,
     enabled: hasExistingTemplate && !hasUploadedTemplate,
   })

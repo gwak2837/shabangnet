@@ -80,7 +80,7 @@ export function useExcludedOrderBatches() {
 
 export function useManufacturerOptions() {
   return useQuery({
-    queryKey: ['orders', 'manufacturers'],
+    queryKey: queryKeys.orders.manufacturers,
     queryFn: async (): Promise<ManufacturerOption[]> => {
       const response = await fetch('/api/orders/manufacturers')
       if (!response.ok) {
@@ -96,7 +96,7 @@ export function useOrderBatches(params: UseOrderBatchesParams = {}) {
   const { search, manufacturerId, status, dateFrom, dateTo } = filters ?? {}
 
   return useInfiniteQuery({
-    queryKey: ['orders', 'batches', { search, manufacturerId, status, dateFrom, dateTo }],
+    queryKey: queryKeys.orders.batchesList({ search, manufacturerId, status, dateFrom, dateTo }),
     queryFn: async ({ pageParam }): Promise<OrderBatchesResponse> => {
       const searchParams = new URLSearchParams()
 
@@ -138,7 +138,7 @@ export function useOrderBatchSummary(params: UseOrderBatchSummaryParams = {}) {
   const { search, manufacturerId, status, dateFrom, dateTo } = filters ?? {}
 
   return useQuery({
-    queryKey: ['orders', 'summary', { search, manufacturerId, status, dateFrom, dateTo }],
+    queryKey: queryKeys.orders.summary({ search, manufacturerId, status, dateFrom, dateTo }),
     queryFn: async (): Promise<OrderBatchSummary> => {
       const searchParams = new URLSearchParams()
       if (search) {

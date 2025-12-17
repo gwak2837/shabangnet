@@ -6,10 +6,10 @@ import { useState } from 'react'
 
 import { Dropzone } from '@/app/upload/dropzone'
 import { UploadResult } from '@/app/upload/upload-result'
-import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 
 import { UploadState } from '../common'
+import { invalidateCachesAfterUpload } from '../invalidate-after-upload'
 
 export default function SabangnetUploadPage() {
   const queryClient = useQueryClient()
@@ -35,7 +35,7 @@ export default function SabangnetUploadPage() {
       }
 
       setUploadState({ status: 'success', file, result: data })
-      queryClient.invalidateQueries({ queryKey: queryKeys.uploads.all })
+      await invalidateCachesAfterUpload(queryClient)
     } catch (err) {
       setUploadState({
         status: 'error',

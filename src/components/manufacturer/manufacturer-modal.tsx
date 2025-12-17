@@ -188,7 +188,7 @@ export function ManufacturerModal({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden grid grid-rows-[auto_minmax(0,1fr)]">
+      <DialogContent className="sm:max-w-lg h-[90dvh] max-h-[90dvh] overflow-hidden grid grid-rows-[auto_minmax(0,1fr)]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">

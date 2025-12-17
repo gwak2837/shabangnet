@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, CheckCircle2, Info, Package, Pencil } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, Pencil } from 'lucide-react'
 import { useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
@@ -152,12 +152,7 @@ export function ProductTable({
                       </TableCell>
                     )}
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100">
-                          <Package className="h-4 w-4 text-slate-500" />
-                        </div>
-                        <code className="text-sm font-mono text-slate-700">{product.productCode}</code>
-                      </div>
+                      <code className="text-sm font-mono text-slate-700">{product.productCode}</code>
                     </TableCell>
                     <TableCell>
                       <div className="min-w-0">

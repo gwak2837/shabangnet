@@ -15,7 +15,7 @@ export function useSendLog(id: number) {
 
 export function useSendLogs(filters?: LogFilters) {
   return useQuery({
-    queryKey: [...queryKeys.logs.all, filters],
+    queryKey: queryKeys.logs.list(filters),
     queryFn: () => (filters ? getFiltered(filters) : getAll()),
   })
 }
