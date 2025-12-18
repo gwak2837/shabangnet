@@ -117,17 +117,21 @@ export function ProductTable({
               )}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
                 판매가
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
                 원가
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
                 배송비
               </TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
-              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">수정일</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                제조사
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                수정일
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -228,7 +232,7 @@ export function ProductTable({
                         </div>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {isEditing ? (
                         <Select
                           defaultValue={product.manufacturerId?.toString() || 'none'}
@@ -260,7 +264,7 @@ export function ProductTable({
                         </Button>
                       ) : (
                         <div
-                          className="flex items-center gap-2 cursor-pointer group"
+                          className="flex items-center justify-center gap-2 cursor-pointer group"
                           onClick={() => setEditingProductId(product.id)}
                         >
                           <Badge className="bg-slate-100 text-slate-700 group-hover:bg-slate-200" variant="secondary">

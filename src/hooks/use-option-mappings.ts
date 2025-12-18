@@ -45,7 +45,7 @@ export function useOptionMappings(params: UseOptionMappingsParams = {}) {
         searchParams.set('manufacturer-id', String(manufacturerId))
       }
 
-      const response = await fetch(`/api/option-mappings?${searchParams.toString()}`, { cache: 'no-store' })
+      const response = await fetch(`/api/options?${searchParams.toString()}`, { cache: 'no-store' })
       if (!response.ok) {
         throw new Error('Failed to fetch option mappings')
       }

@@ -12,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/order',
     '/manufacturer',
     '/product',
-    '/option-mapping',
+    '/option',
     '/invoice-convert',
     '/settlement',
     '/log',

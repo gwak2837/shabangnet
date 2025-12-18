@@ -11,7 +11,7 @@ const UPDATED_OPTION_MAPPING = {
 
 test.describe('옵션 연결', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/option-mapping')
+    await page.goto('/option')
     await expect(page.getByRole('heading', { name: '옵션 연결' })).toBeVisible()
     // 페이지 로드 대기
     await expect(page.getByText('옵션 연결이란?')).toBeVisible({ timeout: 10000 })

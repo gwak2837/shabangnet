@@ -415,7 +415,7 @@ export default function SendableOrdersPage() {
                     <Link href="/product">상품 연결</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/option-mapping">옵션 연결</Link>
+                    <Link href="/option">옵션 연결</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href="/manufacturer">제조사 관리</Link>

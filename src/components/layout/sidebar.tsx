@@ -53,14 +53,14 @@ const managementNavItems = [
   },
   {
     title: '상품 연결',
-    description: '상품코드 → 제조사 기본 연결',
+    description: '상품코드 → 제조사 연결',
     href: '/product',
     icon: Package,
   },
   {
     title: '옵션 연결',
-    description: '상품코드, 옵션명 → 제조사 우선 연결',
-    href: '/option-mapping',
+    description: '상품코드, 옵션명 → 제조사 연결',
+    href: '/option',
     icon: Settings2,
   },
   {
