@@ -15,9 +15,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-import { CommonOrderTemplateForm } from './common-order-template-form'
+import { CommonOrderTemplateForm } from '../order/common-order-template/common-order-template-form'
 
-export default function CommonOrderTemplateSettingsPage() {
+export default function OrderCommonOrderTemplateSettingsPage() {
   const router = useRouter()
   const [isDirty, setIsDirty] = useState(false)
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false)
@@ -55,7 +55,7 @@ export default function CommonOrderTemplateSettingsPage() {
         type="button"
       >
         <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-        주문 처리 설정
+        주문 처리
       </button>
 
       <CommonOrderTemplateForm onDirtyChange={setIsDirty} />
@@ -75,3 +75,5 @@ export default function CommonOrderTemplateSettingsPage() {
     </div>
   )
 }
+
+
