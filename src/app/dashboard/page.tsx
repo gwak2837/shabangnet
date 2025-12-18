@@ -2,9 +2,9 @@
 
 import { CheckCircle2, Clock, Loader2, ShoppingCart, XCircle } from 'lucide-react'
 
-import { ManufacturerChart } from '@/components/dashboard/manufacturer-chart'
-import { RecentUploads } from '@/components/dashboard/recent-uploads'
-import { StatCard } from '@/components/dashboard/stat-card'
+import { ManufacturerChart } from '@/app/dashboard/manufacturer-chart'
+import { RecentUploads } from '@/app/dashboard/recent-uploads'
+import { StatCard } from '@/app/dashboard/stat-card'
 import { AppShell } from '@/components/layout/app-shell'
 import { useDashboardStats, useManufacturerChartData, useRecentUploads } from '@/hooks/use-dashboard'
 

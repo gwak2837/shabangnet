@@ -17,9 +17,7 @@ interface StatCardProps {
   value: number | string
 }
 
-type StatChange =
-  | { kind: 'absolute'; unit?: string; value: number }
-  | { kind: 'percent'; value: number }
+type StatChange = { kind: 'absolute'; unit?: string; value: number } | { kind: 'percent'; value: number }
 
 export function StatCard({
   title,
@@ -37,8 +35,7 @@ export function StatCard({
   const isDecrease = change !== undefined && changeValue < 0
   const isNeutralChange = change !== undefined && changeValue === 0
 
-  const isGood =
-    change !== undefined && changeValue !== 0 && (goodDirection === 'decrease' ? isDecrease : isIncrease)
+  const isGood = change !== undefined && changeValue !== 0 && (goodDirection === 'decrease' ? isDecrease : isIncrease)
   const isBad = change !== undefined && changeValue !== 0 && (goodDirection === 'decrease' ? isIncrease : isDecrease)
 
   const changeTextColor = isGood ? 'text-emerald-600' : isBad ? 'text-rose-600' : 'text-slate-500'
@@ -65,19 +62,19 @@ export function StatCard({
               <p className="text-xs text-slate-400">{secondaryText}</p>
             ) : (
               change !== undefined && (
-              <div className="flex items-center gap-1.5">
-                {(isIncrease || isDecrease) && (
-                  <span className={cn('flex items-center gap-0.5 text-xs font-medium', changeTextColor)}>
-                    {isIncrease && <ArrowUp className="h-3 w-3" />}
-                    {isDecrease && <ArrowDown className="h-3 w-3" />}
-                    {formatChangeText(change)}
-                  </span>
-                )}
-                {isNeutralChange && (
-                  <span className={cn('text-xs font-medium', changeTextColor)}>{formatChangeText(change)}</span>
-                )}
-                <span className="text-xs text-slate-400">{changeLabel}</span>
-              </div>
+                <div className="flex items-center gap-1.5">
+                  {(isIncrease || isDecrease) && (
+                    <span className={cn('flex items-center gap-0.5 text-xs font-medium', changeTextColor)}>
+                      {isIncrease && <ArrowUp className="h-3 w-3" />}
+                      {isDecrease && <ArrowDown className="h-3 w-3" />}
+                      {formatChangeText(change)}
+                    </span>
+                  )}
+                  {isNeutralChange && (
+                    <span className={cn('text-xs font-medium', changeTextColor)}>{formatChangeText(change)}</span>
+                  )}
+                  <span className="text-xs text-slate-400">{changeLabel}</span>
+                </div>
               )
             )}
           </div>
