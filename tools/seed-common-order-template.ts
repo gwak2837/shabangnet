@@ -52,8 +52,9 @@ const COLUMN_MAPPINGS = {
 
 // 필요 시 컬럼/필드 고정값을 추가하세요.
 // - 컬럼 단위: { "A": "다온에프앤씨" }
-// - 필드 단위 덮어쓰기: { "FIELD:orderName": "{{orderName || recipientName}}" }
-const FIXED_VALUES = {} satisfies Record<string, string>
+const FIXED_VALUES = {
+  D: '{{받는인}}(보내는 분: {{주문인}})',
+} satisfies Record<string, string>
 
 async function buildTemplateFile(): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook()
@@ -80,12 +81,10 @@ async function buildTemplateFile(): Promise<Buffer> {
 }
 
 async function seed() {
-  const databaseURL =
-    process.env.SUPABASE_POSTGRES_URL_NON_POOLING ?? process.env.SUPABASE_POSTGRES_URL ?? process.env.DATABASE_URL
+  const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+
   if (!databaseURL) {
-    console.error(
-      '❌ Database URL is not set (SUPABASE_POSTGRES_URL_NON_POOLING / SUPABASE_POSTGRES_URL / DATABASE_URL)',
-    )
+    console.error('❌ Database URL is not set (SUPABASE_POSTGRES_URL_NON_POOLING)')
     process.exit(1)
   }
 
