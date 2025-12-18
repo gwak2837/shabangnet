@@ -3,12 +3,14 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
+import type { OrderEmailTemplateVariables } from '@/common/constants/order-email-template'
+
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
+import { getOrderEmailTemplateOrThrow, renderOrderEmailFromTemplate } from '@/lib/email/order-email'
 import { getSMTPAccount, sendEmail } from '@/lib/email/send'
-import { renderManufacturerOrderEmail } from '@/services/manufacturer-email-template'
 import { orderIsIncludedSql } from '@/services/order-exclusion'
 import { checkDuplicate, generateOrderExcel } from '@/services/orders'
 import { getDuplicateCheckSettings } from '@/services/settings'
@@ -66,8 +68,6 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
         name: manufacturer.name,
         email: manufacturer.email,
         ccEmail: manufacturer.ccEmail,
-        emailSubjectTemplate: manufacturer.emailSubjectTemplate,
-        emailBodyTemplate: manufacturer.emailBodyTemplate,
       })
       .from(manufacturer)
       .where(eq(manufacturer.id, input.manufacturerId))
@@ -136,6 +136,17 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     const totalAmount = candidateOrders.reduce((sum, o) => sum + (o.paymentAmount ?? 0), 0)
     const orderCount = candidateOrders.length
 
+    let orderEmailTemplate: Awaited<ReturnType<typeof getOrderEmailTemplateOrThrow>>
+    try {
+      orderEmailTemplate = await getOrderEmailTemplateOrThrow()
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : '이메일 템플릿을 불러오지 못했어요. 설정 > 이메일 템플릿을 확인해 주세요.'
+      return { success: false, error: errorMessage }
+    }
+
     const excelResult = await generateOrderExcel({ manufacturerId: input.manufacturerId, orderIds: orderIdsToSend })
 
     if ('error' in excelResult) {
@@ -146,19 +157,57 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
 
     const fromName = smtpAccount.fromName || '(주)다온에프앤씨'
 
-    const { subject, html, text } = renderManufacturerOrderEmail(
-      {
-        emailSubjectTemplate: mfr.emailSubjectTemplate ?? null,
-        emailBodyTemplate: mfr.emailBodyTemplate ?? null,
-      },
-      {
-        manufacturerName: mfr.name,
-        senderName: fromName,
-        orderDate: formatDateKorean(now),
-        totalItems: orderCount,
-        date: now,
-      },
-    )
+    const variables: OrderEmailTemplateVariables = {
+      manufacturerName: mfr.name,
+      senderName: fromName,
+      senderEmail: smtpAccount.email,
+      toEmail,
+      ccEmail: mfr.ccEmail ?? null,
+      orderDate: formatDateKorean(now),
+      sentAt: now.toISOString(),
+      fileName: excelResult.fileName,
+      orderCount,
+      totalAmount,
+      totalAmountFormatted: formatCurrencyWon(totalAmount),
+      recipientAddressCount: uniqueRecipientAddresses.length,
+      mode,
+      reason: reason.length > 0 ? reason : null,
+      orders: candidateOrders.map((o) => {
+        const paymentAmount = o.paymentAmount ?? 0
+        return {
+          sabangnetOrderNumber: o.sabangnetOrderNumber,
+          mallOrderNumber: o.mallOrderNumber ?? null,
+          productName: o.productName ?? '',
+          optionName: o.optionName ?? null,
+          quantity: o.quantity ?? 0,
+          paymentAmount,
+          paymentAmountFormatted: formatCurrencyWon(paymentAmount),
+          cost: o.cost ?? 0,
+          shippingCost: o.shippingCost ?? 0,
+          recipientName: o.recipientName ?? '',
+          recipientPhone: o.recipientPhone ?? null,
+          recipientMobile: o.recipientMobile ?? null,
+          postalCode: o.postalCode ?? null,
+          address: o.address ?? null,
+          memo: o.memo ?? null,
+          shoppingMall: o.shoppingMall ?? null,
+          courier: o.courier ?? null,
+          trackingNumber: o.trackingNumber ?? null,
+        }
+      }),
+    }
+
+    let subject: string
+    let html: string
+    let text: string
+
+    try {
+      ;({ subject, html, text } = renderOrderEmailFromTemplate(orderEmailTemplate, variables))
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : '이메일 템플릿 렌더링에 실패했어요. 템플릿을 확인해 주세요.'
+      return { success: false, error: errorMessage }
+    }
 
     // 1) DB에 발송 기록(pending) + 항목 저장 + 주문 상태(processing) 반영 (트랜잭션)
     const emailLogId = await db.transaction(async (tx) => {
@@ -299,6 +348,11 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했어요.'
     return { success: false, error: errorMessage }
   }
+}
+
+function formatCurrencyWon(amount: number): string {
+  const safeAmount = Number.isFinite(amount) ? amount : 0
+  return `${new Intl.NumberFormat('ko-KR').format(safeAmount)}원`
 }
 
 // 한국어 날짜 포맷

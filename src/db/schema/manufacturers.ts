@@ -14,9 +14,6 @@ export const manufacturer = pgTable('manufacturer', {
   email: varchar('email', { length: 255 }),
   ccEmail: varchar('cc_email', { length: 255 }),
   phone: varchar('phone', { length: 50 }),
-  // 이메일 템플릿
-  emailSubjectTemplate: text('email_subject_template'),
-  emailBodyTemplate: text('email_body_template'),
   // 통계
   orderCount: integer('order_count').default(0),
   lastOrderDate: timestamp('last_order_date', { precision: 3, withTimezone: true }),

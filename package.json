@@ -16,6 +16,8 @@
     "seed:manufacturers": "pnpm tsx tools/seed-real-manufacturers.ts",
     "seed:products": "pnpm tsx tools/seed-product-mappings.ts",
     "seed:settings": "pnpm tsx tools/seed-settings.ts",
+    "seed:order-email-template": "pnpm tsx tools/seed-order-email-template.ts",
+    "seed:order-email-template:prod": "DB_ENV=production pnpm tsx tools/seed-order-email-template.ts",
     "seed:shopping-mall": "pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:shopping-mall:prod": "DB_ENV=production pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:common-order-template": "pnpm tsx tools/seed-common-order-template.ts",

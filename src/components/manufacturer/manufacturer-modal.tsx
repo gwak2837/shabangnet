@@ -718,8 +718,8 @@ function ManufacturerModalBody({
                       <AlertDialogHeader>
                         <AlertDialogTitle>제조사 템플릿을 삭제할까요?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          삭제하면 이 제조사는 공통 발주서 템플릿을 사용해요. 나중에 다시 파일을 업로드하면 제조사
-                          템플릿을 적용할 수 있어요.
+                          삭제하면 이 제조사는 발주서 템플릿을 사용해요. 나중에 다시 파일을 업로드하면 제조사 템플릿을
+                          적용할 수 있어요.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

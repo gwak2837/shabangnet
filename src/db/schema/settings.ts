@@ -85,12 +85,10 @@ export const smtpAccount = pgTable('smtp_account', {
 
 export const emailTemplate = pgTable('email_template', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  name: varchar('name', { length: 100 }).notNull(), // "발주서 기본"
   slug: varchar('slug', { length: 50 }).notNull().unique(), // "order-default"
   subject: text('subject').notNull(), // "{{manufacturer_name}} 발주서 - {{date}}"
   body: text('body').notNull(), // HTML 템플릿
   variables: jsonb('variables'), // 사용 가능한 변수 목록 { key: description }
-  enabled: boolean('enabled').default(true),
   createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true })
     .defaultNow()

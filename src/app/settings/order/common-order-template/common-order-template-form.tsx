@@ -107,7 +107,7 @@ export function CommonOrderTemplateForm({ onDirtyChange }: CommonOrderTemplateFo
           <div className="flex items-center gap-4">
             <SettingsIconBadge accent="blue" className="h-10 w-10" icon={FileSpreadsheet} />
             <div className="space-y-0.5">
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">공통 발주서 템플릿</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">발주서 템플릿</h2>
               <p className="text-sm text-muted-foreground">제조사 템플릿이 없을 때 이 템플릿으로 생성해요</p>
             </div>
           </div>
@@ -205,7 +205,7 @@ function CommonOrderTemplateFormInner({
     invalidateKeys: [queryKeys.orderTemplates.common],
     onSuccess: (result) => {
       if (result.success) {
-        toast.success('공통 발주서 템플릿이 저장됐어요')
+        toast.success('발주서 템플릿이 저장됐어요')
         setUploadedFile(null)
         const pending = pendingBaselineRef.current
         if (pending) {
@@ -342,7 +342,7 @@ function CommonOrderTemplateFormInner({
         <div className="flex items-center gap-4">
           <SettingsIconBadge accent="blue" className="h-10 w-10" icon={FileSpreadsheet} />
           <div className="space-y-0.5">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">공통 발주서 템플릿</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">발주서 템플릿</h2>
             <p className="text-sm text-muted-foreground">제조사 템플릿이 없을 때 이 템플릿으로 생성해요</p>
           </div>
         </div>

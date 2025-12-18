@@ -41,13 +41,13 @@ const settingsItems: SettingsItem[] = [
     keywords: ['쇼핑몰', '템플릿', '엑셀', '양식', '컬럼', '매핑', '사방넷'],
   },
   {
-    title: '공통 발주서 템플릿',
+    title: '발주서 템플릿',
     description: '제조사 템플릿이 없을 때 사용해요',
     href: '/settings/common-order-template',
     icon: FileSpreadsheet,
     accent: 'blue',
     trace: '템플릿',
-    keywords: ['공통', '발주서', '템플릿', '엑셀', '양식', '컬럼'],
+    keywords: ['발주서', '템플릿', '엑셀', '양식', '컬럼'],
   },
   {
     title: '이메일 템플릿',

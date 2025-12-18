@@ -50,7 +50,7 @@ export async function analyzeCurrentCommonOrderTemplate(): Promise<{
       .limit(1)
 
     if (!row) {
-      return { success: false, error: '공통 발주서 템플릿이 아직 없어요. 먼저 파일을 업로드해 주세요.' }
+      return { success: false, error: '발주서 템플릿이 아직 없어요. 먼저 파일을 업로드해 주세요.' }
     }
 
     const analysis = await analyzeTemplateStructure(toArrayBuffer(row.templateFile))

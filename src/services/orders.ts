@@ -298,14 +298,14 @@ async function resolveOrderTemplate(params: {
   })
 
   if (!common) {
-    return { error: '공통 발주서 템플릿이 설정되지 않았어요. 설정 > 발주 설정에서 템플릿을 업로드해 주세요.' }
+    return { error: '발주서 템플릿이 설정되지 않았어요. 설정 > 발주 설정에서 템플릿을 업로드해 주세요.' }
   }
 
   let columnMappings: Record<string, string> = {}
   try {
     columnMappings = JSON.parse(common.columnMappings) as Record<string, string>
   } catch {
-    return { error: '공통 발주서 템플릿 컬럼 연결이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
+    return { error: '발주서 템플릿 컬럼 연결이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
   }
 
   let fixedValues: Record<string, string> | undefined
@@ -313,13 +313,13 @@ async function resolveOrderTemplate(params: {
     try {
       fixedValues = JSON.parse(common.fixedValues) as Record<string, string>
     } catch {
-      return { error: '공통 발주서 템플릿 고정값이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
+      return { error: '발주서 템플릿 고정값이 올바르지 않아요. 설정에서 다시 저장해 주세요.' }
     }
   }
 
   const hasRowRules = Object.keys(columnMappings).length > 0 || hasRowFixedValues(fixedValues)
   if (!hasRowRules) {
-    return { error: '공통 발주서 템플릿 컬럼 설정이 비어있어요. 설정에서 컬럼을 연결하거나 직접 입력을 추가해 주세요.' }
+    return { error: '발주서 템플릿 컬럼 설정이 비어있어요. 설정에서 컬럼을 연결하거나 직접 입력을 추가해 주세요.' }
   }
 
   const config: OrderTemplateConfig = {

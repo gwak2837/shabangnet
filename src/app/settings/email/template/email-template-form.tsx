@@ -4,6 +4,7 @@ import { Eye, FileText, Loader2, Save } from 'lucide-react'
 import { type FormEvent, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+import { getSampleOrderEmailTemplateVariables, ORDER_EMAIL_TEMPLATE_VARIABLES } from '@/common/constants/order-email-template'
 import { queryKeys } from '@/common/constants/query-keys'
 import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
@@ -11,23 +12,32 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useServerAction } from '@/hooks/use-server-action'
 
-import { previewEmailTemplateAction, updateEmailTemplateAction } from './action'
+import {
+  createOrderEmailTemplateAction,
+  previewEmailTemplateAction,
+  updateOrderEmailTemplateAction,
+} from './action'
 import { useEmailTemplate } from './hook'
-
-const SAMPLE_VARIABLES = {
-  manufacturerName: '(주)테스트제조사',
-  senderName: '(주)다온에프앤씨',
-  orderDate: new Date().toLocaleDateString('ko-KR'),
-  totalItems: 5,
-  note: '빠른 배송 부탁드립니다.',
-}
 
 export function EmailTemplateForm() {
   const { data: template, isLoading } = useEmailTemplate()
 
-  const [isSaving, saveTemplate] = useServerAction(updateEmailTemplateAction, {
+  const [isCreating, createTemplate] = useServerAction(createOrderEmailTemplateAction, {
     invalidateKeys: [queryKeys.settings.emailTemplate],
-    onSuccess: () => toast.success('템플릿이 저장됐어요'),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('템플릿이 생성됐어요')
+      }
+    },
+  })
+
+  const [isUpdating, updateTemplate] = useServerAction(updateOrderEmailTemplateAction, {
+    invalidateKeys: [queryKeys.settings.emailTemplate],
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('템플릿이 저장됐어요')
+      }
+    },
   })
 
   const [isPreviewing, previewTemplate] = useServerAction(previewEmailTemplateAction, {
@@ -42,24 +52,23 @@ export function EmailTemplateForm() {
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
   const [previewSubject, setPreviewSubject] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const isSaving = isCreating || isUpdating
 
   function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    if (!template) {
-      return
-    }
-
     const data = new FormData(e.currentTarget)
 
-    saveTemplate({
-      id: template.id,
-      data: {
-        name: String(data.get('name')).trim(),
-        subject: String(data.get('subject')).trim(),
-        body: String(data.get('body')).trim(),
-      },
-    })
+    const payload = {
+      subject: String(data.get('subject')).trim(),
+      body: String(data.get('body')).trim(),
+    }
+
+    if (template) {
+      updateTemplate({ data: payload })
+    } else {
+      createTemplate({ data: payload })
+    }
   }
 
   function handlePreview() {
@@ -76,7 +85,7 @@ export function EmailTemplateForm() {
         subject,
         body,
       },
-      variables: SAMPLE_VARIABLES,
+      variables: getSampleOrderEmailTemplateVariables(),
     })
   }
 
@@ -87,7 +96,7 @@ export function EmailTemplateForm() {
           <div className="flex items-center gap-4">
             <SettingsIconBadge accent="violet" className="h-10 w-10" icon={FileText} />
             <div className="space-y-0.5">
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">발주서 이메일 템플릿</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">이메일 템플릿</h2>
               <p className="text-sm text-muted-foreground">제조사에게 발송되는 발주서 이메일의 양식을 설정합니다</p>
             </div>
           </div>
@@ -99,18 +108,11 @@ export function EmailTemplateForm() {
             </div>
           ) : (
             <form className="space-y-5" onSubmit={handleSave} ref={formRef}>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium" htmlFor="template-name">
-                  템플릿 이름
-                </Label>
-                <Input
-                  defaultValue={template?.name}
-                  id="template-name"
-                  name="name"
-                  placeholder="발주서 기본 템플릿"
-                  required
-                />
-              </div>
+              {!template && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-muted-foreground">
+                  아직 템플릿이 없어요. 아래 내용을 입력하고 저장하면 템플릿이 생성돼요.
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium" htmlFor="template-subject">
                   이메일 제목
@@ -140,7 +142,7 @@ export function EmailTemplateForm() {
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-medium mb-2">사용 가능한 변수</p>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(template?.variables || {}).map(([key, description]) => (
+                  {Object.entries(ORDER_EMAIL_TEMPLATE_VARIABLES).map(([key, description]) => (
                     <span
                       className="inline-flex items-center gap-1 text-xs bg-background border border-input rounded px-2 py-1"
                       key={key}
@@ -158,7 +160,7 @@ export function EmailTemplateForm() {
                 </Button>
                 <Button disabled={isSaving || isPreviewing} type="submit">
                   {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  템플릿 저장
+                  {template ? '템플릿 저장' : '템플릿 만들기'}
                 </Button>
               </div>
             </form>
