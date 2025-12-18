@@ -19,9 +19,43 @@ export default function DashboardPage() {
   const todayOrdersSecondaryText =
     todayOrders === 0
       ? yesterdayOrders > 0
-        ? `오늘은 아직 주문이 없어요 · 어제 ${yesterdayOrders.toLocaleString('ko-KR')}건`
+        ? `오늘은 아직 주문이 없어요 · 어제 이 시간 ${yesterdayOrders.toLocaleString('ko-KR')}건 있었어요`
         : '오늘은 아직 주문이 없어요'
       : undefined
+
+  const pendingOrders = stats?.pendingOrders ?? 0
+  const yesterdayPendingOrders = stats?.yesterdayPendingOrders ?? 0
+
+  const pendingOrdersSecondaryText =
+    pendingOrders === 0
+      ? yesterdayPendingOrders > 0
+        ? `지금은 처리 대기가 없어요 · 어제 이 시간 ${yesterdayPendingOrders.toLocaleString('ko-KR')}건 있었어요`
+        : '지금은 처리 대기가 없어요'
+      : undefined
+
+  const completedOrders = stats?.completedOrders ?? 0
+  const yesterdayCompletedOrders = stats?.yesterdayCompletedOrders ?? 0
+
+  const completedOrdersSecondaryText =
+    completedOrders === 0
+      ? yesterdayCompletedOrders > 0
+        ? `오늘은 아직 발송 완료가 없어요 · 어제 이 시간 ${yesterdayCompletedOrders.toLocaleString('ko-KR')}건 있었어요`
+        : '오늘은 아직 발송 완료가 없어요'
+      : undefined
+
+  const errorOrders = stats?.errorOrders ?? 0
+  const yesterdayErrorOrders = stats?.yesterdayErrorOrders ?? 0
+
+  const errorOrdersSecondaryText =
+    errorOrders === 0
+      ? yesterdayErrorOrders > 0
+        ? `오늘은 오류가 없어요 · 어제 이 시간 ${yesterdayErrorOrders.toLocaleString('ko-KR')}건 있었어요`
+        : '오늘은 오류가 없어요'
+      : undefined
+
+  function getPercentChange(today: number, yesterday: number): number {
+    return Math.round(((today - yesterday) / yesterday) * 100)
+  }
 
   if (isLoadingStats) {
     return (
@@ -37,7 +71,16 @@ export default function DashboardPage() {
     <AppShell description="오늘의 주문 현황과 발주 상태를 확인하세요" title="대시보드">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          change={todayOrdersSecondaryText ? undefined : stats?.todayOrdersChange}
+          change={
+            todayOrdersSecondaryText
+              ? undefined
+              : yesterdayOrders <= 0
+                ? todayOrders > 0
+                  ? { kind: 'absolute', unit: '건', value: todayOrders }
+                  : { kind: 'percent', value: 0 }
+                : { kind: 'percent', value: getPercentChange(todayOrders, yesterdayOrders) }
+          }
+          goodDirection="increase"
           icon={ShoppingCart}
           iconBgColor="bg-blue-50"
           iconColor="text-blue-600"
@@ -46,28 +89,58 @@ export default function DashboardPage() {
           value={todayOrders}
         />
         <StatCard
-          change={stats?.pendingOrdersChange}
+          change={
+            pendingOrdersSecondaryText
+              ? undefined
+              : yesterdayPendingOrders <= 0
+                ? pendingOrders > 0
+                  ? { kind: 'absolute', unit: '건', value: pendingOrders }
+                  : { kind: 'percent', value: 0 }
+                : { kind: 'percent', value: getPercentChange(pendingOrders, yesterdayPendingOrders) }
+          }
+          goodDirection="decrease"
           icon={Clock}
           iconBgColor="bg-amber-50"
           iconColor="text-amber-600"
+          secondaryText={pendingOrdersSecondaryText}
           title="처리 대기"
-          value={stats?.pendingOrders ?? 0}
+          value={pendingOrders}
         />
         <StatCard
-          change={stats?.completedOrdersChange}
+          change={
+            completedOrdersSecondaryText
+              ? undefined
+              : yesterdayCompletedOrders <= 0
+                ? completedOrders > 0
+                  ? { kind: 'absolute', unit: '건', value: completedOrders }
+                  : { kind: 'percent', value: 0 }
+                : { kind: 'percent', value: getPercentChange(completedOrders, yesterdayCompletedOrders) }
+          }
+          goodDirection="increase"
           icon={CheckCircle2}
           iconBgColor="bg-emerald-50"
           iconColor="text-emerald-600"
+          secondaryText={completedOrdersSecondaryText}
           title="발송 완료"
-          value={stats?.completedOrders ?? 0}
+          value={completedOrders}
         />
         <StatCard
-          change={stats?.errorOrdersChange}
+          change={
+            errorOrdersSecondaryText
+              ? undefined
+              : yesterdayErrorOrders <= 0
+                ? errorOrders > 0
+                  ? { kind: 'absolute', unit: '건', value: errorOrders }
+                  : { kind: 'percent', value: 0 }
+                : { kind: 'percent', value: getPercentChange(errorOrders, yesterdayErrorOrders) }
+          }
+          goodDirection="decrease"
           icon={XCircle}
           iconBgColor="bg-rose-50"
           iconColor="text-rose-600"
+          secondaryText={errorOrdersSecondaryText}
           title="오류 건수"
-          value={stats?.errorOrders ?? 0}
+          value={errorOrders}
         />
       </div>
 

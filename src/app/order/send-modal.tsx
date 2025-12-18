@@ -302,7 +302,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
                     </div>
                     <div className="mt-2 flex items-start gap-2 text-amber-700">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                      <div className="text-xs">
+                      <div className="flex-1 min-w-0 text-xs">
                         {log.recipientAddresses.slice(0, 2).map((addr, idx) => (
                           <p className="truncate" key={idx}>
                             {addr}

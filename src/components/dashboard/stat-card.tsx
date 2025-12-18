@@ -6,8 +6,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/utils/cn'
 
 interface StatCardProps {
-  change?: number
+  change?: StatChange
   changeLabel?: string
+  goodDirection?: 'decrease' | 'increase'
   icon: LucideIcon
   iconBgColor?: string
   iconColor?: string
@@ -16,18 +17,40 @@ interface StatCardProps {
   value: number | string
 }
 
+type StatChange =
+  | { kind: 'absolute'; unit?: string; value: number }
+  | { kind: 'percent'; value: number }
+
 export function StatCard({
   title,
   value,
   change,
-  changeLabel = '어제 대비',
+  changeLabel = '어제 같은 시간 대비',
+  goodDirection = 'increase',
   secondaryText,
   icon: Icon,
   iconColor = 'text-slate-600',
   iconBgColor = 'bg-slate-100',
 }: StatCardProps) {
-  const isPositive = change !== undefined && change > 0
-  const isNegative = change !== undefined && change < 0
+  const changeValue = change?.value ?? 0
+  const isIncrease = change !== undefined && changeValue > 0
+  const isDecrease = change !== undefined && changeValue < 0
+  const isNeutralChange = change !== undefined && changeValue === 0
+
+  const isGood =
+    change !== undefined && changeValue !== 0 && (goodDirection === 'decrease' ? isDecrease : isIncrease)
+  const isBad = change !== undefined && changeValue !== 0 && (goodDirection === 'decrease' ? isIncrease : isDecrease)
+
+  const changeTextColor = isGood ? 'text-emerald-600' : isBad ? 'text-rose-600' : 'text-slate-500'
+
+  function formatChangeText(c: StatChange): string {
+    if (c.kind === 'percent') return `${Math.abs(c.value)}%`
+
+    const unit = c.unit ?? '건'
+    const sign = c.value > 0 ? '+' : c.value < 0 ? '-' : ''
+    const absValue = Math.abs(c.value)
+    return `${sign}${absValue.toLocaleString('ko-KR')}${unit}`
+  }
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm transition-shadow hover:shadow-md">
@@ -43,19 +66,16 @@ export function StatCard({
             ) : (
               change !== undefined && (
               <div className="flex items-center gap-1.5">
-                {isPositive && (
-                  <span className="flex items-center gap-0.5 text-xs font-medium text-emerald-600">
-                    <ArrowUp className="h-3 w-3" />
-                    {Math.abs(change)}%
+                {(isIncrease || isDecrease) && (
+                  <span className={cn('flex items-center gap-0.5 text-xs font-medium', changeTextColor)}>
+                    {isIncrease && <ArrowUp className="h-3 w-3" />}
+                    {isDecrease && <ArrowDown className="h-3 w-3" />}
+                    {formatChangeText(change)}
                   </span>
                 )}
-                {isNegative && (
-                  <span className="flex items-center gap-0.5 text-xs font-medium text-rose-600">
-                    <ArrowDown className="h-3 w-3" />
-                    {Math.abs(change)}%
-                  </span>
+                {isNeutralChange && (
+                  <span className={cn('text-xs font-medium', changeTextColor)}>{formatChangeText(change)}</span>
                 )}
-                {change === 0 && <span className="text-xs font-medium text-slate-500">0%</span>}
                 <span className="text-xs text-slate-400">{changeLabel}</span>
               </div>
               )

@@ -29,7 +29,7 @@ export function StatusIndicator() {
 
   const total = stats.todayOrders || 0
   const completed = stats.completedOrders || 0
-  const pending = stats.pendingOrders || 0
+  const pending = stats.todayPendingOrders || 0
   const error = stats.errorOrders || 0
 
   // 진행률 계산

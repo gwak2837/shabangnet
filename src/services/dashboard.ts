@@ -1,10 +1,11 @@
 'use server'
 
 import { desc, eq, sql } from 'drizzle-orm'
+import ms from 'ms'
 
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
-import { order, upload } from '@/db/schema/orders'
+import { order, orderEmailLog, orderEmailLogItem, upload } from '@/db/schema/orders'
 
 // Dashboard types
 export interface ChartDataItem {
@@ -15,14 +16,14 @@ export interface ChartDataItem {
 
 export interface DashboardStats {
   completedOrders: number
-  completedOrdersChange?: number
   errorOrders: number
-  errorOrdersChange?: number
   pendingOrders: number
-  pendingOrdersChange?: number
   todayOrders: number
-  todayOrdersChange?: number
+  todayPendingOrders: number
+  yesterdayCompletedOrders: number
+  yesterdayErrorOrders: number
   yesterdayOrders: number
+  yesterdayPendingOrders: number
 }
 
 export interface Upload {
@@ -72,57 +73,83 @@ export async function getRecentUploads(): Promise<Upload[]> {
 }
 
 export async function getStats(): Promise<DashboardStats> {
-  const [stats] = await db
+  const now = new Date()
+
+  function getStartOfDayInKst(date: Date): Date {
+    const kstOffsetMs = ms('9h')
+    const kstDate = new Date(date.getTime() + kstOffsetMs)
+    const year = kstDate.getUTCFullYear()
+    const month = kstDate.getUTCMonth()
+    const day = kstDate.getUTCDate()
+    return new Date(Date.UTC(year, month, day) - kstOffsetMs)
+  }
+
+  const todayStart = getStartOfDayInKst(now)
+  const yesterdayStart = new Date(todayStart.getTime() - ms('24h'))
+  const yesterdayNow = new Date(now.getTime() - ms('24h'))
+
+  const [orderStats] = await db
     .select({
-      todayOrders: sql<number>`count(case when date(${order.createdAt}) = current_date then 1 end)`.mapWith(Number),
+      todayOrders:
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now})`.mapWith(
+          Number,
+        ),
       yesterdayOrders:
-        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') then 1 end)`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow})`.mapWith(
           Number,
         ),
-
-      pendingOrders:
-        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'pending' then 1 end)`.mapWith(
+      pendingOrders: sql<number>`count(*) filter (where ${order.status} = 'pending')`.mapWith(Number),
+      todayPendingOrders:
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'pending')`.mapWith(
           Number,
         ),
-      yesterdayPendingOrders:
-        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'pending' then 1 end)`.mapWith(
-          Number,
-        ),
-
       completedOrders:
-        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'completed' then 1 end)`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'completed')`.mapWith(
           Number,
         ),
       yesterdayCompletedOrders:
-        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'completed' then 1 end)`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow} and ${order.status} = 'completed')`.mapWith(
           Number,
         ),
-
       errorOrders:
-        sql<number>`count(case when date(${order.createdAt}) = current_date and ${order.status} = 'error' then 1 end)`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'error')`.mapWith(
           Number,
         ),
       yesterdayErrorOrders:
-        sql<number>`count(case when date(${order.createdAt}) = (current_date - interval '1 day') and ${order.status} = 'error' then 1 end)`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow} and ${order.status} = 'error')`.mapWith(
           Number,
         ),
+      totalOrdersBeforeYesterdayNow: sql<number>`count(*) filter (where ${order.createdAt} < ${yesterdayNow})`.mapWith(
+        Number,
+      ),
     })
     .from(order)
 
-  function getChange(today: number, yesterday: number): number | undefined {
-    if (yesterday <= 0) return undefined
-    return Math.round(((today - yesterday) / yesterday) * 100)
-  }
+  const logAt = sql<Date>`coalesce(${orderEmailLog.sentAt}, ${orderEmailLog.createdAt})`
+
+  const [logStats] = await db
+    .select({
+      processedOrdersBeforeYesterdayNow:
+        sql<number>`count(distinct ${orderEmailLogItem.sabangnetOrderNumber}) filter (where ${logAt} < ${yesterdayNow})`.mapWith(
+          Number,
+        ),
+    })
+    .from(orderEmailLogItem)
+    .innerJoin(orderEmailLog, eq(orderEmailLogItem.emailLogId, orderEmailLog.id))
+
+  const totalOrdersBeforeYesterdayNow = orderStats?.totalOrdersBeforeYesterdayNow ?? 0
+  const processedOrdersBeforeYesterdayNow = logStats?.processedOrdersBeforeYesterdayNow ?? 0
+  const yesterdayPendingOrders = Math.max(0, totalOrdersBeforeYesterdayNow - processedOrdersBeforeYesterdayNow)
 
   return {
-    todayOrders: stats.todayOrders,
-    todayOrdersChange: getChange(stats.todayOrders, stats.yesterdayOrders),
-    yesterdayOrders: stats.yesterdayOrders,
-    pendingOrders: stats.pendingOrders,
-    pendingOrdersChange: getChange(stats.pendingOrders, stats.yesterdayPendingOrders),
-    completedOrders: stats.completedOrders,
-    completedOrdersChange: getChange(stats.completedOrders, stats.yesterdayCompletedOrders),
-    errorOrders: stats.errorOrders,
-    errorOrdersChange: getChange(stats.errorOrders, stats.yesterdayErrorOrders),
+    todayOrders: orderStats?.todayOrders ?? 0,
+    yesterdayOrders: orderStats?.yesterdayOrders ?? 0,
+    pendingOrders: orderStats?.pendingOrders ?? 0,
+    yesterdayPendingOrders,
+    todayPendingOrders: orderStats?.todayPendingOrders ?? 0,
+    completedOrders: orderStats?.completedOrders ?? 0,
+    yesterdayCompletedOrders: orderStats?.yesterdayCompletedOrders ?? 0,
+    errorOrders: orderStats?.errorOrders ?? 0,
+    yesterdayErrorOrders: orderStats?.yesterdayErrorOrders ?? 0,
   }
 }

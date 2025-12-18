@@ -78,7 +78,7 @@ export function PreviewModal({ batch, open, onOpenChange }: PreviewModalProps) {
             {batch.orders.length === 0 ? (
               <p className="text-sm text-slate-500">주문이 없어요</p>
             ) : (
-              <div className="max-h-[50vh] overflow-y-auto rounded-md border border-slate-100 bg-slate-50">
+              <div className="rounded-md border border-slate-100 bg-slate-50">
                 <div className="divide-y divide-slate-100">
                   {batch.orders.map((order) => (
                     <div className="px-3 py-3 text-sm" key={order.id}>
