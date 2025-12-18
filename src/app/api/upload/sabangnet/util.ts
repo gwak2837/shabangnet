@@ -2,7 +2,7 @@ import type { ParsedOrder } from '@/lib/excel'
 
 import type { LookupMaps, ManufacturerBreakdown, UploadError, UploadSummary } from '../type'
 
-import { matchManufacturerId } from '../common'
+import { matchManufacturerId, normalizeManufacturerName } from '../common'
 
 export interface UploadResult {
   autoCreatedManufacturers?: string[]
@@ -22,8 +22,18 @@ interface PrepareOrderParams {
 }
 
 export function mapOrderValues({ orders, uploadId, lookupMaps }: PrepareOrderParams) {
+  const manufacturerNameById = new Map<number, string>()
+  for (const mfr of lookupMaps.manufacturerMap.values()) {
+    manufacturerNameById.set(mfr.id, mfr.name)
+  }
+
   return orders.map((o) => {
     const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
+    const rawManufacturerName = typeof o.manufacturer === 'string' ? normalizeManufacturerName(o.manufacturer) : null
+    const resolvedManufacturerName =
+      matchedManufacturerId != null
+        ? (manufacturerNameById.get(matchedManufacturerId) ?? rawManufacturerName)
+        : rawManufacturerName
 
     return {
       uploadId,
@@ -50,7 +60,7 @@ export function mapOrderValues({ orders, uploadId, lookupMaps }: PrepareOrderPar
       trackingNumber: o.trackingNumber || null,
       logisticsNote: o.logisticsNote || null,
       shoppingMall: o.shoppingMall || null,
-      manufacturerName: o.manufacturer || null,
+      manufacturerName: resolvedManufacturerName,
       manufacturerId: matchedManufacturerId,
       paymentAmount: o.paymentAmount || 0,
       cost: o.cost || 0,
@@ -64,7 +74,9 @@ export function mapOrderValues({ orders, uploadId, lookupMaps }: PrepareOrderPar
 }
 
 function parseDate(dateStr: string): Date | null {
-  if (!dateStr) return null
+  if (!dateStr) {
+    return null
+  }
 
   const digits = dateStr.replace(/\D/g, '')
 
@@ -81,7 +93,9 @@ function parseDate(dateStr: string): Date | null {
 }
 
 function parseDateTime(dateTimeStr: string): Date | null {
-  if (!dateTimeStr) return null
+  if (!dateTimeStr) {
+    return null
+  }
 
   const parsed = new Date(dateTimeStr)
   if (!isNaN(parsed.getTime())) {

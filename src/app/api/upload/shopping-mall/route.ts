@@ -19,6 +19,7 @@ import {
   buildLookupMaps,
   calculateManufacturerBreakdown,
   calculateSummary,
+  matchManufacturerId,
   VALID_EXTENSIONS,
 } from '../common'
 import { parseShoppingMallFile } from './excel'
@@ -186,7 +187,22 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
     })
 
     const duplicateCount = parseResult.orders.length - insertedCount
-    const groupedOrders = groupOrdersByManufacturer(parseResult.orders)
+    const manufacturerNameById = new Map<number, string>()
+
+    for (const mfr of lookupMaps.manufacturerMap.values()) {
+      manufacturerNameById.set(mfr.id, mfr.name)
+    }
+
+    const ordersForBreakdown = parseResult.orders.map((o) => {
+      const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
+      if (matchedManufacturerId == null) {
+        return o
+      }
+      const resolvedName = manufacturerNameById.get(matchedManufacturerId)
+      return resolvedName ? { ...o, manufacturer: resolvedName } : o
+    })
+
+    const groupedOrders = groupOrdersByManufacturer(ordersForBreakdown)
     const manufacturerBreakdown = calculateManufacturerBreakdown(groupedOrders)
     const summary = calculateSummary(manufacturerBreakdown)
 

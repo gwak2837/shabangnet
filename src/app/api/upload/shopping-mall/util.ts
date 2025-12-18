@@ -2,7 +2,7 @@ import type { ParsedOrder } from '@/lib/excel'
 
 import type { LookupMaps, ManufacturerBreakdown, UploadError, UploadSummary } from '../type'
 
-import { matchManufacturerId } from '../common'
+import { matchManufacturerId, normalizeManufacturerName } from '../common'
 
 export interface UploadResult {
   autoCreatedManufacturers?: string[]
@@ -25,8 +25,19 @@ interface PrepareOrderParams {
 }
 
 export function prepareOrderValues({ orders, uploadId, lookupMaps, displayName }: PrepareOrderParams) {
+  const manufacturerNameById = new Map<number, string>()
+
+  for (const mfr of lookupMaps.manufacturerMap.values()) {
+    manufacturerNameById.set(mfr.id, mfr.name)
+  }
+
   return orders.map((o) => {
     const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
+    const rawManufacturerName = typeof o.manufacturer === 'string' ? normalizeManufacturerName(o.manufacturer) : null
+    const resolvedManufacturerName =
+      matchedManufacturerId != null
+        ? (manufacturerNameById.get(matchedManufacturerId) ?? rawManufacturerName)
+        : rawManufacturerName
 
     return {
       uploadId,
@@ -53,7 +64,7 @@ export function prepareOrderValues({ orders, uploadId, lookupMaps, displayName }
       trackingNumber: o.trackingNumber || null,
       logisticsNote: o.logisticsNote || null,
       shoppingMall: displayName,
-      manufacturerName: o.manufacturer || null,
+      manufacturerName: resolvedManufacturerName,
       manufacturerId: matchedManufacturerId,
       paymentAmount: o.paymentAmount || 0,
       cost: o.cost || 0,
