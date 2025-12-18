@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-import { PRODUCT_CSV_HEADER } from '@/components/product/product-csv.types'
+import { PRODUCT_CSV_HEADER } from '@/app/product/product-csv.types'
 import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
 import { auth } from '@/lib/auth'
