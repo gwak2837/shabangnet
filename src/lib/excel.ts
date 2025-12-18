@@ -141,19 +141,6 @@ interface TemplateVariables {
   totalQuantity: number
 }
 
-// 발주서 기본 헤더
-const DEFAULT_HEADERS = [
-  { key: 'sabangnetOrderNumber', header: '사방넷주문번호', width: 20 },
-  { key: 'customerName', header: '수취인명', width: 15 },
-  { key: 'phone', header: '연락처', width: 18 },
-  { key: 'address', header: '배송지', width: 50 },
-  { key: 'productName', header: '상품명', width: 40 },
-  { key: 'optionName', header: '옵션', width: 20 },
-  { key: 'quantity', header: '수량', width: 10 },
-  { key: 'price', header: '금액', width: 15 },
-  { key: 'memo', header: '비고', width: 20 },
-]
-
 /**
  * 템플릿 파일 구조 분석
  */
@@ -342,24 +329,6 @@ export function formatDateForFileName(date: Date = new Date()): string {
 }
 
 /**
- * 수취인명 표기 형식화
- * 주문자와 수취인이 다르면 "수취인 (주문자 XXX)" 형식으로 표시
- */
-export function formatRecipientName(recipientName: string, orderName?: string): string {
-  if (!recipientName) {
-    return orderName || ''
-  }
-
-  // 주문자가 없거나, 수취인과 주문자가 동일하면 수취인명만 표시
-  if (!orderName || orderName.trim() === recipientName.trim()) {
-    return recipientName
-  }
-
-  // 다르면 "수취인 (주문자 XXX)" 형식으로 표시
-  return `${recipientName} (주문자 ${orderName})`
-}
-
-/**
  * 송장 업로드 파일명 생성
  */
 export function generateInvoiceFileName(manufacturerName: string, date: Date = new Date()): string {
@@ -371,127 +340,6 @@ export function generateInvoiceFileName(manufacturerName: string, date: Date = n
  */
 export function generateOrderFileName(manufacturerName: string, date: Date = new Date()): string {
   return `[다온에프앤씨 발주서]_${manufacturerName}_${formatDateForFileName(date)}.xlsx`
-}
-
-/**
- * 제조사별 발주서 엑셀 파일 생성
- * @param options 발주서 생성 옵션
- * @returns Excel 파일 Buffer
- */
-export async function generateOrderSheet(options: OrderSheetOptions): Promise<Buffer> {
-  const { manufacturerName, orders, date = new Date() } = options
-
-  const workbook = new ExcelJS.Workbook()
-  workbook.creator = '(주)다온에프앤씨'
-  workbook.created = date
-
-  const worksheet = workbook.addWorksheet('발주서')
-
-  // 헤더 스타일 설정
-  const headerStyle: Partial<ExcelJS.Style> = {
-    font: { bold: true, size: 11 },
-    alignment: { horizontal: 'center', vertical: 'middle' },
-    fill: {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    },
-    border: {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' },
-    },
-  }
-
-  // 데이터 셀 스타일
-  const dataStyle: Partial<ExcelJS.Style> = {
-    font: { size: 10 },
-    alignment: { vertical: 'middle' },
-    border: {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' },
-    },
-  }
-
-  // 타이틀 행 추가
-  const titleRow = worksheet.addRow([`[다온에프앤씨 발주서] ${manufacturerName} - ${formatDateForExcel(date)}`])
-  titleRow.font = { bold: true, size: 14 }
-  titleRow.height = 30
-  worksheet.mergeCells('A1:I1')
-  titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
-
-  // 빈 행 추가
-  worksheet.addRow([])
-
-  // 컬럼 설정
-  worksheet.columns = DEFAULT_HEADERS.map((h) => ({
-    key: h.key,
-    header: h.header,
-    width: h.width,
-  }))
-
-  // 헤더 행 추가 (3번째 행)
-  const headerRow = worksheet.addRow(DEFAULT_HEADERS.map((h) => h.header))
-  headerRow.eachCell((cell) => {
-    Object.assign(cell, { style: headerStyle })
-  })
-  headerRow.height = 25
-
-  // 데이터 행 추가
-  orders.forEach((order) => {
-    // 수취인명 표기: 주문자와 다르면 "수취인 (주문자 XXX)" 형식
-    const displayCustomerName = formatRecipientName(order.customerName, order.orderName)
-
-    const row = worksheet.addRow([
-      order.sabangnetOrderNumber,
-      displayCustomerName,
-      order.phone,
-      order.address,
-      formatProductNameWithOption(order.productName, order.optionName),
-      order.optionName || '',
-      order.quantity,
-      order.price,
-      order.memo || '',
-    ])
-
-    row.eachCell((cell, colNumber) => {
-      Object.assign(cell, { style: dataStyle })
-
-      // 수량, 금액은 오른쪽 정렬
-      if (colNumber === 7 || colNumber === 8) {
-        cell.alignment = { ...cell.alignment, horizontal: 'right' }
-      }
-
-      // 금액 포맷
-      if (colNumber === 8) {
-        cell.numFmt = '#,##0"원"'
-      }
-    })
-  })
-
-  // 합계 행 추가
-  const totalQuantity = orders.reduce((sum, o) => sum + o.quantity, 0)
-  const totalAmount = orders.reduce((sum, o) => sum + o.price * o.quantity, 0)
-
-  worksheet.addRow([])
-  const totalRow = worksheet.addRow(['', '', '', '', '', '합계', totalQuantity, totalAmount, ''])
-  totalRow.font = { bold: true }
-  totalRow.getCell(8).numFmt = '#,##0"원"'
-  totalRow.eachCell((cell, colNumber) => {
-    if (colNumber >= 6) {
-      cell.border = {
-        top: { style: 'double' },
-        bottom: { style: 'double' },
-      }
-    }
-  })
-
-  // Buffer로 변환
-  const buffer = await workbook.xlsx.writeBuffer()
-  return Buffer.from(buffer)
 }
 
 /**
@@ -546,20 +394,14 @@ export async function generateSabangnetInvoiceFile(results: InvoiceConvertResult
  */
 export async function generateTemplateBasedOrderSheet(
   orders: ParsedOrder[],
-  templateBuffer: ArrayBuffer | null,
+  templateBuffer: ArrayBuffer,
   config: OrderTemplateConfig,
   manufacturerName: string,
   date: Date = new Date(),
 ): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook()
 
-  // 템플릿이 있으면 로드, 없으면 새로 생성
-  if (templateBuffer) {
-    await workbook.xlsx.load(templateBuffer)
-  } else {
-    workbook.creator = '(주)다온에프앤씨'
-    workbook.created = date
-  }
+  await workbook.xlsx.load(templateBuffer)
 
   let worksheet = workbook.worksheets[0]
   if (!worksheet) {
@@ -589,56 +431,9 @@ export async function generateTemplateBasedOrderSheet(
     }
   }
 
-  // 템플릿이 없을 경우 헤더 행 생성
-  if (!templateBuffer) {
-    const headerRow = worksheet.getRow(config.headerRow)
-
-    // columnMappings를 기반으로 헤더 생성 (sabangnetKey를 한글 라벨로 변환)
-    const keyToLabel: Record<string, string> = {
-      sabangnetOrderNumber: '사방넷주문번호',
-      mallOrderNumber: '쇼핑몰주문번호',
-      subOrderNumber: '부주문번호',
-      productName: '상품명',
-      quantity: '수량',
-      optionName: '옵션',
-      productAbbr: '상품약어',
-      productCode: '상품코드',
-      mallProductNumber: '쇼핑몰상품번호',
-      modelNumber: '모델번호',
-      orderName: '주문인',
-      recipientName: '받는인',
-      orderPhone: '주문인연락처',
-      orderMobile: '주문인핸드폰',
-      recipientPhone: '받는인연락처',
-      recipientMobile: '받는인핸드폰',
-      postalCode: '우편번호',
-      address: '배송지',
-      memo: '전언',
-      courier: '택배사',
-      trackingNumber: '송장번호',
-      logisticsNote: '물류전달사항',
-      shoppingMall: '사이트',
-      manufacturer: '제조사',
-      paymentAmount: '결제금액',
-      cost: '원가',
-      shippingCost: '택배비',
-      fulfillmentType: '주문유형',
-      cjDate: '씨제이날짜',
-      collectedAt: '수집일시',
-    }
-
-    for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
-      const colIndex = columnLetterToIndex(column) + 1
-      const label = keyToLabel[sabangnetKey] || sabangnetKey
-      headerRow.getCell(colIndex).value = label
-    }
-
-    headerRow.commit()
-  }
-
   // 템플릿이 있으면 첫 데이터 행을 필요한 만큼 복제해서 서식/병합/수식을 유지합니다.
   // (rowCount가 부족할 때도 동일한 스타일을 유지하기 위함)
-  if (templateBuffer && orders.length > 1) {
+  if (orders.length > 1) {
     worksheet.duplicateRow(config.dataStartRow, orders.length - 1, true)
   }
 
@@ -846,25 +641,10 @@ function formatDateForExcel(date: Date): string {
 }
 
 /**
- * 상품명 + 옵션명 조합
- */
-function formatProductNameWithOption(productName: string, optionName?: string): string {
-  if (!optionName || isEmptyOption(optionName)) {
-    return productName
-  }
-  return `${productName} ${optionName}`
-}
-
-/**
  * ParsedOrder에서 특정 키의 값 가져오기
  */
 function getOrderValue(order: ParsedOrder, key: string): number | string {
   const orderRecord = order as unknown as Record<string, unknown>
-
-  // 수취인명은 주문자와 다르면 "수취인 (주문자 XXX)" 형식으로 표시
-  if (key === 'recipientName') {
-    return formatRecipientName(order.recipientName, order.orderName)
-  }
 
   const value = orderRecord[key]
 
@@ -882,16 +662,6 @@ function getOrderValue(order: ParsedOrder, key: string): number | string {
 // ============================================
 // 송장 변환 관련 함수들
 // ============================================
-
-/**
- * 빈 옵션 판별
- */
-function isEmptyOption(optionName: string | null | undefined): boolean {
-  if (!optionName) return true
-  const normalized = optionName.trim().toLowerCase()
-  const emptyPatterns = [/^없음$/, /^없음\s*\[.*\]$/, /^\d+\(없음\)\s*\[.*\]$/, /^none$/i, /^기본$/, /^-$/, /^$/]
-  return emptyPatterns.some((pattern) => pattern.test(normalized))
-}
 
 function normalizeHeaderForMapping(raw: string): string {
   return raw.trim().replace(/\s+/g, '')

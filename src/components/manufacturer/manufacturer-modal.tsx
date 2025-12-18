@@ -9,7 +9,11 @@ import type { TemplateTokenOption } from '@/app/settings/order/common-order-temp
 import type { TemplateAnalysis } from '@/lib/excel'
 import type { InvoiceTemplate, Manufacturer } from '@/services/manufacturers.types'
 
-import { analyzeCurrentManufacturerOrderTemplate, updateManufacturerBundle } from '@/app/manufacturer/actions'
+import {
+  analyzeCurrentManufacturerOrderTemplate,
+  deleteManufacturerOrderTemplate,
+  updateManufacturerBundle,
+} from '@/app/manufacturer/actions'
 import { analyzeOrderTemplateFile } from '@/app/settings/order/common-order-template/action'
 import {
   CommonOrderTemplateColumnEditor,
@@ -17,6 +21,17 @@ import {
   type CommonTemplateFieldOption,
 } from '@/app/settings/order/common-order-template/common-order-template-column-editor'
 import { queryKeys } from '@/common/constants/query-keys'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,7 +46,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
-import { getInvoiceTemplateOrDefault, getOrderTemplateOrDefault } from '@/services/manufacturers'
+import { getInvoiceTemplateOrDefault, getOrderTemplate } from '@/services/manufacturers'
 
 interface InvoiceTemplateDraft {
   courierColumn: string
@@ -55,7 +70,7 @@ interface ManufacturerModalProps {
   open: boolean
 }
 
-type OrderTemplateData = Awaited<ReturnType<typeof getOrderTemplateOrDefault>>
+type OrderTemplateData = Awaited<ReturnType<typeof getOrderTemplate>>
 
 interface OrderTemplateDraft {
   dataStartRow: number
@@ -155,7 +170,7 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer }: Manufact
 
   const { data: orderTemplate, isFetching: isFetchingOrderTemplate } = useQuery({
     queryKey: queryKeys.orderTemplates.manufacturer(manufacturerId),
-    queryFn: () => getOrderTemplateOrDefault(manufacturerId),
+    queryFn: () => getOrderTemplate(manufacturerId),
     enabled: canQuery,
   })
 
@@ -201,7 +216,7 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer }: Manufact
           <DialogDescription>기본 정보와 템플릿 설정을 수정해요. 제조사명은 변경할 수 없어요.</DialogDescription>
         </DialogHeader>
 
-        {isLoading || !invoiceTemplate || !orderTemplate ? (
+        {isLoading || !invoiceTemplate || typeof orderTemplate === 'undefined' ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
@@ -279,8 +294,8 @@ function ManufacturerModalBody({
   const [invoiceDraft, setInvoiceDraft] = useState<InvoiceTemplateDraft>(() => toInvoiceTemplateDraft(invoiceTemplate))
 
   const [orderDraft, setOrderDraft] = useState<OrderTemplateDraft>(() => ({
-    headerRow: orderTemplate.headerRow ?? 1,
-    dataStartRow: orderTemplate.dataStartRow ?? 2,
+    headerRow: orderTemplate?.headerRow ?? 1,
+    dataStartRow: orderTemplate?.dataStartRow ?? 2,
   }))
 
   const [columnRules, setColumnRules] = useState<Record<string, CommonTemplateColumnRule>>(() =>
@@ -297,8 +312,8 @@ function ManufacturerModalBody({
       } satisfies ManufacturerDraft,
       invoice: toInvoiceTemplateDraft(invoiceTemplate),
       order: {
-        headerRow: orderTemplate.headerRow ?? 1,
-        dataStartRow: orderTemplate.dataStartRow ?? 2,
+        headerRow: orderTemplate?.headerRow ?? 1,
+        dataStartRow: orderTemplate?.dataStartRow ?? 2,
       } satisfies OrderTemplateDraft,
       columnRulesKey: serializeColumnRules(parseInitialColumnRules(orderTemplate)),
     }
@@ -311,6 +326,19 @@ function ManufacturerModalBody({
   const [analysis, setAnalysis] = useState<TemplateAnalysis | null>(null)
 
   const effectiveAnalysis = uploadedOrderTemplateFile ? analysis : storedAnalysis
+
+  const [isDeletingOrderTemplate, deleteOrderTemplate] = useServerAction(deleteManufacturerOrderTemplate, {
+    invalidateKeys: [
+      queryKeys.orderTemplates.manufacturer(manufacturer.id),
+      queryKeys.orderTemplates.manufacturerAnalysis(manufacturer.id),
+      queryKeys.orders.all,
+    ],
+    onSuccess: (result) => {
+      if (!result.success) return
+      toast.success('제조사 템플릿이 삭제됐어요')
+      onClose()
+    },
+  })
 
   const [isAnalyzingUpload, analyzeUploadTemplate] = useServerAction(analyzeOrderTemplateFile, {
     onSuccess: (result) => {
@@ -419,6 +447,14 @@ function ManufacturerModalBody({
     }
 
     if (isOrderDirty) {
+      const hasStoredTemplateFile = Boolean(orderTemplate?.templateFileName)
+      const hasUploadedTemplateFile = Boolean(uploadedOrderTemplateFile)
+
+      if (!hasStoredTemplateFile && !hasUploadedTemplateFile) {
+        toast.error('발주서 템플릿 파일을 업로드해 주세요.')
+        return
+      }
+
       const { columnMappings, fixedValues, fieldRuleCount } = buildOrderTemplateConfig(columnRules)
       if (fieldRuleCount === 0) {
         toast.error('발주서 컬럼 연결이 비어있어요. 최소 1개 이상 연결해 주세요.')
@@ -624,7 +660,7 @@ function ManufacturerModalBody({
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground">템플릿 파일</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {uploadedOrderTemplateFile?.name || orderTemplate.templateFileName || '업로드된 파일이 없어요'}
+                    {uploadedOrderTemplateFile?.name || orderTemplate?.templateFileName || '업로드된 파일이 없어요'}
                   </p>
                 </div>
               </div>
@@ -663,6 +699,42 @@ function ManufacturerModalBody({
                     선택 해제
                   </Button>
                 )}
+
+                {orderTemplate ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        aria-disabled={isSaving || isDeletingOrderTemplate}
+                        disabled={isSaving || isDeletingOrderTemplate}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        {isDeletingOrderTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        템플릿 삭제
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>제조사 템플릿을 삭제할까요?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          삭제하면 이 제조사는 공통 발주서 템플릿을 사용해요. 나중에 다시 파일을 업로드하면 제조사
+                          템플릿을 적용할 수 있어요.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            deleteOrderTemplate({ manufacturerId: manufacturer.id })
+                          }}
+                        >
+                          삭제
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : null}
 
                 {(isAnalyzingUpload || isFetchingStoredAnalysis) && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -739,6 +811,10 @@ function normalizeToNullableString(raw: string): string | null {
 function parseInitialColumnRules(template: OrderTemplateData): Record<string, CommonTemplateColumnRule> {
   const columnRules: Record<string, CommonTemplateColumnRule> = {}
 
+  if (!template) {
+    return columnRules
+  }
+
   for (const [fieldKey, rawColumn] of Object.entries(template.columnMappings ?? {})) {
     const col = String(rawColumn ?? '')
       .trim()
@@ -783,6 +859,8 @@ function toInvoiceTemplateDraft(template: InvoiceTemplate): InvoiceTemplateDraft
 
 function toSafeInt(raw: string, fallback: number): number {
   const n = Number.parseInt(raw, 10)
-  if (Number.isFinite(n) && n > 0) return n
+  if (Number.isFinite(n) && n > 0) {
+    return n
+  }
   return fallback
 }

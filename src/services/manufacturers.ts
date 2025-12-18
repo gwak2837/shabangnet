@@ -56,22 +56,6 @@ const DEFAULT_INVOICE_TEMPLATE = {
   useColumnIndex: true,
 } as const
 
-const DEFAULT_ORDER_TEMPLATE = {
-  headerRow: 1,
-  dataStartRow: 2,
-  columnMappings: {
-    sabangnetOrderNumber: 'A',
-    recipientName: 'B',
-    recipientMobile: 'C',
-    address: 'D',
-    productName: 'E',
-    optionName: 'F',
-    quantity: 'G',
-    paymentAmount: 'H',
-    memo: 'I',
-  },
-} as const
-
 export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>): Promise<Manufacturer> {
   const [newManufacturer] = await db
     .insert(manufacturer)
@@ -144,19 +128,6 @@ export async function getOrderTemplate(manufacturerId: number): Promise<OrderTem
   if (!mfr) throw new Error('Manufacturer not found')
 
   return mapToOrderTemplate(template, mfr.name)
-}
-
-export async function getOrderTemplateOrDefault(manufacturerId: number): Promise<OrderTemplate> {
-  const customTemplate = await getOrderTemplate(manufacturerId)
-  if (customTemplate) return customTemplate
-
-  const mfr = await getById(manufacturerId)
-  return {
-    id: 0,
-    manufacturerId,
-    manufacturerName: mfr?.name || '알 수 없음',
-    ...DEFAULT_ORDER_TEMPLATE,
-  }
 }
 
 export async function remove(id: number): Promise<void> {

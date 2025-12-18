@@ -9,6 +9,11 @@ import { order, orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
 import { analyzeTemplateStructure, type TemplateAnalysis } from '@/lib/excel'
 
+interface DeleteManufacturerOrderTemplateResult {
+  error?: string
+  success: boolean
+}
+
 interface DeletePreviewResult {
   emailLogCount?: number
   emailLogItemCount?: number
@@ -84,6 +89,30 @@ export async function analyzeCurrentManufacturerOrderTemplate(manufacturerId: nu
   } catch (error) {
     console.error('analyzeCurrentManufacturerOrderTemplate', error)
     return { success: false, error: error instanceof Error ? error.message : '템플릿 분석에 실패했어요' }
+  }
+}
+
+export async function deleteManufacturerOrderTemplate(
+  input: {
+    manufacturerId: number
+  },
+): Promise<DeleteManufacturerOrderTemplateResult> {
+  const isAdmin = await checkAdminRole()
+  if (!isAdmin) {
+    return { success: false, error: '권한이 없어요.' }
+  }
+
+  const manufacturerId = Number(input.manufacturerId)
+  if (!Number.isFinite(manufacturerId) || manufacturerId <= 0) {
+    return { success: false, error: '제조사를 선택해 주세요.' }
+  }
+
+  try {
+    await db.delete(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
+    return { success: true }
+  } catch (error) {
+    console.error('deleteManufacturerOrderTemplate', error)
+    return { success: false, error: '삭제에 실패했어요. 다시 시도해 주세요.' }
   }
 }
 
