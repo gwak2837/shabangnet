@@ -122,7 +122,7 @@ export function LogTable({
                         title="엑셀 다운로드"
                         variant="ghost"
                       >
-                        <a href={`/api/orders/logs/${log.id}/download`}>
+                        <a href={`/api/order/history/${log.id}/download`}>
                           <FileSpreadsheet className="h-4 w-4" />
                         </a>
                       </Button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, Loader2, Mail, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Loader2, Mail, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { SendLog } from '@/services/logs'
@@ -9,6 +9,7 @@ import { DeleteSendLogsDialog } from '@/components/log/delete-send-logs-dialog'
 import { LogDetailModal } from '@/components/log/log-detail-modal'
 import { LogFilters } from '@/components/log/log-filters'
 import { LogTable } from '@/components/log/log-table'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useSendLogs } from '@/hooks/use-logs'
@@ -33,6 +34,9 @@ export function SendLogsView() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isLoadingLogs,
+    isError,
+    error,
+    refetch,
   } = useSendLogs({
     filters: {
       manufacturerId: manufacturer !== 'all' ? Number(manufacturer) : undefined,
@@ -92,6 +96,27 @@ export function SendLogsView() {
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
+    )
+  }
+
+  if (isError) {
+    const errorMessage = error instanceof Error ? error.message : '발송 기록을 불러오지 못했어요.'
+
+    return (
+      <Card className="border-slate-200 bg-card shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-slate-900">발송 기록을 불러오지 못했어요</p>
+              <p className="mt-1 text-sm text-slate-600 break-words">{errorMessage}</p>
+            </div>
+            <Button onClick={() => refetch()} size="sm" variant="outline">
+              다시 시도
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 

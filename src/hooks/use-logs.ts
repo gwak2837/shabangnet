@@ -53,11 +53,14 @@ export function useSendLogs(params: UseSendLogsParams = {}) {
         searchParams.set('end-date', endDate)
       }
 
-      const response = await fetch(`/api/logs?${searchParams.toString()}`, { cache: 'no-store' })
+      const response = await fetch(`/api/order/history?${searchParams.toString()}`, { cache: 'no-store' })
       if (!response.ok) {
-        throw new Error('Failed to fetch logs')
+        if (response.status === 401) {
+          throw new Error('로그인이 필요해요')
+        }
+        throw new Error(`발송 기록을 불러오지 못했어요. (${response.status})`)
       }
-      return response.json()
+      return (await response.json()) as LogListResponse
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: null as string | null,
