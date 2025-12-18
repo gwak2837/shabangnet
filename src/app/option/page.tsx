@@ -1,6 +1,6 @@
 'use client'
 
-import { Building2, Link2, Loader2, Package } from 'lucide-react'
+import { Building2, Download, Link2, Loader2, Package, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -8,11 +8,15 @@ import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
+import { DeleteOptionMappingsDialog } from '@/components/option-mapping/delete-option-mappings-dialog'
+import { OptionMappingCsvDialog } from '@/components/option-mapping/option-mapping-csv-dialog'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useOptionMappings } from '@/hooks/use-option-mappings'
 import { useServerAction } from '@/hooks/use-server-action'
+import { authClient } from '@/lib/auth-client'
 import { create, remove, update } from '@/services/option-mappings'
 
 import { OptionMappingFilters } from './option-mapping-filters'
@@ -23,7 +27,11 @@ export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedManufacturer, setSelectedManufacturer] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
   const [editingMapping, setEditingMapping] = useState<OptionManufacturerMapping | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const { data: session } = authClient.useSession()
+  const isAdmin = session?.user?.isAdmin ?? false
 
   const manufacturerId = selectedManufacturer === 'all' ? undefined : Number(selectedManufacturer)
   const {
@@ -42,7 +50,7 @@ export default function OptionMappingsPage() {
   const { data: manufacturers = [] } = useManufacturers()
 
   const [isCreating, createMapping] = useServerAction(create, {
-    invalidateKeys: [queryKeys.optionMappings.all],
+    invalidateKeys: [queryKeys.optionMappings.all, queryKeys.orders.batches],
     onSuccess: () => {
       toast.success('연결이 추가됐어요')
       setIsModalOpen(false)
@@ -54,7 +62,7 @@ export default function OptionMappingsPage() {
     ({ id, data }: { id: number; data: Partial<Omit<OptionManufacturerMapping, 'createdAt' | 'id'>> }) =>
       update(id, data),
     {
-      invalidateKeys: [queryKeys.optionMappings.all],
+      invalidateKeys: [queryKeys.optionMappings.all, queryKeys.orders.batches],
       onSuccess: () => {
         toast.success('연결이 수정됐어요')
         setIsModalOpen(false)
@@ -64,15 +72,10 @@ export default function OptionMappingsPage() {
   )
 
   const [, deleteMapping] = useServerAction(remove, {
-    invalidateKeys: [queryKeys.optionMappings.all],
+    invalidateKeys: [queryKeys.optionMappings.all, queryKeys.orders.batches],
     onSuccess: () => toast.success('연결이 삭제됐어요'),
     onError: (error) => toast.error(error),
   })
-
-  const handleAddNew = () => {
-    setEditingMapping(null)
-    setIsModalOpen(true)
-  }
 
   const handleEdit = (mapping: OptionManufacturerMapping) => {
     setEditingMapping(mapping)
@@ -92,6 +95,44 @@ export default function OptionMappingsPage() {
   }
 
   const isSaving = isCreating || isUpdating
+
+  const visibleIds = useMemo(() => mappings.map((m) => m.id), [mappings])
+
+  const visibleSelectedIds = useMemo(() => {
+    if (selectedIds.length === 0 || visibleIds.length === 0) {
+      return []
+    }
+
+    const visibleIdSet = new Set(visibleIds)
+    return selectedIds.filter((id) => visibleIdSet.has(id))
+  }, [selectedIds, visibleIds])
+
+  const selectionState = useMemo<'all' | 'mixed' | 'none'>(() => {
+    if (visibleIds.length === 0) return 'none'
+    const selectedCount = visibleSelectedIds.length
+    if (selectedCount === 0) return 'none'
+    if (selectedCount === visibleIds.length) return 'all'
+    return 'mixed'
+  }, [visibleIds.length, visibleSelectedIds.length])
+
+  function handleSelectAll(checked: boolean) {
+    setSelectedIds(checked ? visibleIds : [])
+  }
+
+  function handleSelectItem(id: number, checked: boolean) {
+    setSelectedIds((prev) => {
+      const visibleIdSet = new Set(visibleIds)
+      const prunedPrev = prev.filter((selectedId) => visibleIdSet.has(selectedId))
+      if (checked) {
+        return prunedPrev.includes(id) ? prunedPrev : [...prunedPrev, id]
+      }
+      return prunedPrev.filter((selectedId) => selectedId !== id)
+    })
+  }
+
+  function handleDeleteSuccess() {
+    setSelectedIds([])
+  }
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -170,19 +211,40 @@ export default function OptionMappingsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <OptionMappingFilters
           manufacturers={manufacturers}
-          onAddNew={handleAddNew}
           onManufacturerChange={setSelectedManufacturer}
           onSearchChange={setSearchQuery}
           searchQuery={searchQuery}
           selectedManufacturer={selectedManufacturer}
         />
+        <div className="flex items-center gap-2">
+          {isAdmin && <DeleteOptionMappingsDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
+          <Button asChild className="gap-2" variant="outline">
+            <a href="/api/options/csv">
+              <Download className="h-4 w-4" />
+              CSV 다운로드
+            </a>
+          </Button>
+          <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            CSV 업로드
+          </Button>
+        </div>
       </div>
 
       {/* Mapping Table */}
-      <OptionMappingTable mappings={mappings} onDelete={handleDelete} onEdit={handleEdit} />
+      <OptionMappingTable
+        isAdmin={isAdmin}
+        mappings={mappings}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+        onSelectAll={handleSelectAll}
+        onSelectItem={handleSelectItem}
+        selectedIds={visibleSelectedIds}
+        selectionState={selectionState}
+      />
 
       {isFetchingNextPage ? (
         <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
@@ -201,6 +263,8 @@ export default function OptionMappingsPage() {
         onSave={handleSave}
         open={isModalOpen}
       />
+
+      <OptionMappingCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
     </AppShell>
   )
 }

@@ -7,8 +7,8 @@ import type { SendLog } from '@/services/logs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
@@ -29,8 +29,12 @@ export function LogTable({
   onSelectAll,
   onSelectLog,
 }: LogTableProps) {
-  const isAllSelected = logs.length > 0 && selectedIds.length === logs.length
-  const isSomeSelected = selectedIds.length > 0 && !isAllSelected
+  const visibleIds = logs.map((log) => log.id)
+  const visibleIdSet = new Set(visibleIds)
+  const effectiveSelectedIds = selectedIds.filter((id) => visibleIdSet.has(id))
+  const effectiveSelectedIdSet = new Set(effectiveSelectedIds)
+  const isAllSelected = visibleIds.length > 0 && visibleIds.every((id) => effectiveSelectedIdSet.has(id))
+  const isSomeSelected = visibleIds.some((id) => effectiveSelectedIdSet.has(id)) && !isAllSelected
   const colSpan = isAdmin ? 8 : 7
 
   return (
@@ -40,14 +44,11 @@ export function LogTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               {isAdmin ? (
-                <TableHead className="w-10">
-                  <Checkbox
-                    aria-label="전체 선택"
-                    checked={isAllSelected}
-                    className={isSomeSelected ? 'opacity-50' : ''}
-                    onCheckedChange={(checked) => onSelectAll?.(checked as boolean)}
-                  />
-                </TableHead>
+                <TableSelectionHeadCell
+                  aria-label="전체 선택"
+                  checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => onSelectAll?.(checked)}
+                />
               ) : null}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발송 일시</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
@@ -65,18 +66,26 @@ export function LogTable({
           <TableBody>
             {logs.map((log) => (
               <TableRow
-                aria-selected={isAdmin ? selectedIds.includes(log.id) : undefined}
-                className="hover:bg-muted/50 transition-colors aria-selected:bg-blue-50"
+                aria-selected={isAdmin ? effectiveSelectedIdSet.has(log.id) : undefined}
+                className="hover:bg-muted/50 transition-colors aria-selected:bg-muted/50 data-[admin=true]:cursor-pointer"
+                data-admin={isAdmin}
                 key={log.id}
+                onClick={(e) => {
+                  if (!isAdmin) {
+                    return
+                  }
+                  if (!shouldToggleRowSelection(e)) {
+                    return
+                  }
+                  onSelectLog?.(log.id, !effectiveSelectedIdSet.has(log.id))
+                }}
               >
                 {isAdmin ? (
-                  <TableCell className="w-10">
-                    <Checkbox
-                      aria-label={`${log.manufacturerName} 발송 기록 선택`}
-                      checked={selectedIds.includes(log.id)}
-                      onCheckedChange={(checked) => onSelectLog?.(log.id, checked as boolean)}
-                    />
-                  </TableCell>
+                  <TableSelectionCell
+                    aria-label={`${log.manufacturerName} 발송 기록 선택`}
+                    checked={effectiveSelectedIdSet.has(log.id)}
+                    onCheckedChange={(checked) => onSelectLog?.(log.id, checked)}
+                  />
                 ) : null}
                 <TableCell className="text-sm text-slate-600" title={formatDateTime(log.sentAt)}>
                   {formatRelativeTime(log.sentAt)}

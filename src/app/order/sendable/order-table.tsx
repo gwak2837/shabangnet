@@ -5,10 +5,10 @@ import { Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime, getStatusColor, getStatusLabel } from '@/utils/format/number'
 
@@ -37,12 +37,19 @@ export function OrderTable({
   selectedManufacturerIds,
   onSelectedManufacturerIdsChange,
 }: OrderTableProps) {
-  const isAllSelected = batches.length > 0 && selectedManufacturerIds.length === batches.length
-  const isSomeSelected = selectedManufacturerIds.length > 0 && !isAllSelected
+  const visibleManufacturerIds = batches.map((b) => b.manufacturerId)
+  const visibleManufacturerIdSet = new Set(visibleManufacturerIds)
+  const effectiveSelectedManufacturerIds = selectedManufacturerIds.filter((id) => visibleManufacturerIdSet.has(id))
+  const effectiveSelectedManufacturerIdSet = new Set(effectiveSelectedManufacturerIds)
+  const isAllSelected =
+    visibleManufacturerIds.length > 0 &&
+    visibleManufacturerIds.every((id) => effectiveSelectedManufacturerIdSet.has(id))
+  const isSomeSelected =
+    visibleManufacturerIds.some((id) => effectiveSelectedManufacturerIdSet.has(id)) && !isAllSelected
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      onSelectedManufacturerIdsChange(batches.map((b) => b.manufacturerId))
+      onSelectedManufacturerIdsChange(visibleManufacturerIds)
     } else {
       onSelectedManufacturerIdsChange([])
     }
@@ -65,15 +72,11 @@ export function OrderTable({
         <Table className="min-w-max">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-12">
-                <Checkbox
-                  aria-label="전체 선택"
-                  checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
-                  onCheckedChange={(checked) => {
-                    handleSelectAll(checked === true)
-                  }}
-                />
-              </TableHead>
+              <TableSelectionHeadCell
+                aria-label="전체 선택"
+                checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                onCheckedChange={handleSelectAll}
+              />
               <TableHead className="min-w-[200px] text-xs font-medium text-slate-500 uppercase tracking-wider">
                 제조사
               </TableHead>
@@ -159,14 +162,21 @@ function OrderRow({
   const hasEmail = batch.email.trim().length > 0
 
   return (
-    <TableRow className="hover:bg-slate-50 transition">
-      <TableCell className="w-12">
-        <Checkbox
-          aria-label={`${batch.manufacturerName} 선택`}
-          checked={selected}
-          onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked === true)}
-        />
-      </TableCell>
+    <TableRow
+      aria-selected={selected}
+      className="hover:bg-slate-50 transition aria-selected:bg-muted/50 cursor-pointer"
+      onClick={(e) => {
+        if (!shouldToggleRowSelection(e)) {
+          return
+        }
+        onSelectBatch(batch.manufacturerId, !selected)
+      }}
+    >
+      <TableSelectionCell
+        aria-label={`${batch.manufacturerName} 선택`}
+        checked={selected}
+        onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked)}
+      />
 
       <TableCell className="min-w-[200px] whitespace-normal">
         <div className="flex items-center gap-2">

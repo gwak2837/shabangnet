@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Search, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
 
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface OptionMappingFiltersProps {
   manufacturers: Manufacturer[]
-  onAddNew: () => void
   onManufacturerChange: (value: string) => void
   onSearchChange: (value: string) => void
   searchQuery: string
@@ -23,7 +22,6 @@ export function OptionMappingFilters({
   onSearchChange,
   selectedManufacturer,
   onManufacturerChange,
-  onAddNew,
 }: OptionMappingFiltersProps) {
   const hasActiveFilters = searchQuery || selectedManufacturer !== 'all'
 
@@ -68,14 +66,6 @@ export function OptionMappingFilters({
           필터 초기화
         </Button>
       )}
-
-      {/* Add New Mapping Button */}
-      <div className="ml-auto">
-        <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={onAddNew}>
-          <Plus className="h-4 w-4" />
-          연결 추가
-        </Button>
-      </div>
     </div>
   )
 }

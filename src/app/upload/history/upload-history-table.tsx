@@ -8,9 +8,9 @@ import { downloadShoppingMallExcel } from '@/app/upload/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { authClient } from '@/lib/auth-client'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime, formatFileSize } from '@/utils/format/number'
@@ -44,12 +44,16 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useUploadHistory({ filters })
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
-  const isAllSelected = items.length > 0 && selectedIds.length === items.length
-  const isSomeSelected = selectedIds.length > 0 && !isAllSelected
+  const visibleIds = items.map((item) => item.id)
+  const visibleIdSet = new Set(visibleIds)
+  const effectiveSelectedIds = selectedIds.filter((id) => visibleIdSet.has(id))
+  const effectiveSelectedIdSet = new Set(effectiveSelectedIds)
+  const isAllSelected = visibleIds.length > 0 && visibleIds.every((id) => effectiveSelectedIdSet.has(id))
+  const isSomeSelected = visibleIds.some((id) => effectiveSelectedIdSet.has(id)) && !isAllSelected
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedIds(items.map((item) => item.id))
+      setSelectedIds(visibleIds)
     } else {
       setSelectedIds([])
     }
@@ -57,7 +61,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
   function handleSelectItem(id: number, checked: boolean) {
     if (checked) {
-      setSelectedIds((prev) => [...prev, id])
+      setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
     } else {
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
     }
@@ -145,9 +149,9 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
         </div>
 
         {/* Admin Delete Button */}
-        {isAdmin && selectedIds.length > 0 && (
+        {isAdmin && effectiveSelectedIds.length > 0 && (
           <div className="ml-auto flex items-center gap-3">
-            <DeleteUploadsDialog onSuccess={handleDeleteSuccess} selectedIds={selectedIds} />
+            <DeleteUploadsDialog onSuccess={handleDeleteSuccess} selectedIds={effectiveSelectedIds} />
           </div>
         )}
       </div>
@@ -159,14 +163,11 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 {isAdmin && (
-                  <TableHead className="w-10">
-                    <Checkbox
-                      aria-label="전체 선택"
-                      checked={isAllSelected}
-                      className={isSomeSelected ? 'opacity-50' : ''}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
+                  <TableSelectionHeadCell
+                    aria-label="전체 선택"
+                    checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                    onCheckedChange={handleSelectAll}
+                  />
                 )}
                 <TableHead className="w-14 text-xs font-medium text-slate-500 uppercase tracking-wider">유형</TableHead>
                 <SortableHeader
@@ -232,7 +233,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
                   {items.map((item) => (
                     <UploadHistoryRow
                       isAdmin={isAdmin}
-                      isSelected={selectedIds.includes(item.id)}
+                      isSelected={effectiveSelectedIdSet.has(item.id)}
                       item={item}
                       key={item.id}
                       onSelectItem={handleSelectItem}
@@ -335,15 +336,25 @@ function UploadHistoryRow({
   }
 
   return (
-    <TableRow aria-selected={isSelected} className="hover:bg-slate-50 transition aria-selected:bg-blue-50">
+    <TableRow
+      aria-selected={isSelected}
+      className={`hover:bg-slate-50 transition aria-selected:bg-muted/50 ${isAdmin ? 'cursor-pointer' : ''}`}
+      onClick={(e) => {
+        if (!isAdmin) {
+          return
+        }
+        if (!shouldToggleRowSelection(e)) {
+          return
+        }
+        onSelectItem(item.id, !isSelected)
+      }}
+    >
       {isAdmin && (
-        <TableCell className="w-10">
-          <Checkbox
-            aria-label={`${item.fileName} 선택`}
-            checked={isSelected}
-            onCheckedChange={(checked) => onSelectItem(item.id, checked as boolean)}
-          />
-        </TableCell>
+        <TableSelectionCell
+          aria-label={`${item.fileName} 선택`}
+          checked={isSelected}
+          onCheckedChange={(checked) => onSelectItem(item.id, checked)}
+        />
       )}
 
       <TableCell className="w-14">

@@ -18,23 +18,48 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
 
 interface OptionMappingTableProps {
+  isAdmin?: boolean
   mappings: OptionManufacturerMapping[]
   onDelete: (mappingId: number) => void
   onEdit: (mapping: OptionManufacturerMapping) => void
+  onSelectAll?: (checked: boolean) => void
+  onSelectItem?: (id: number, checked: boolean) => void
+  selectedIds?: number[]
+  selectionState?: 'all' | 'mixed' | 'none'
 }
 
-export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMappingTableProps) {
+export function OptionMappingTable({
+  mappings,
+  onEdit,
+  onDelete,
+  isAdmin = false,
+  onSelectAll,
+  onSelectItem,
+  selectedIds = [],
+  selectionState = 'none',
+}: OptionMappingTableProps) {
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
+              {isAdmin && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="전체 선택"
+                    checked={selectionState === 'all'}
+                    className={selectionState === 'mixed' ? 'opacity-50' : ''}
+                    onCheckedChange={(checked) => onSelectAll?.(checked === true)}
+                  />
+                </TableHead>
+              )}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션명</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
@@ -47,6 +72,15 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
           <TableBody>
             {mappings.map((mapping) => (
               <TableRow className="hover:bg-slate-50 transition-colors" key={mapping.id}>
+                {isAdmin && (
+                  <TableCell className="w-10">
+                    <Checkbox
+                      aria-label={`${mapping.productCode} / ${mapping.optionName} 선택`}
+                      checked={selectedIds.includes(mapping.id)}
+                      onCheckedChange={(checked) => onSelectItem?.(mapping.id, checked === true)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100">
@@ -105,7 +139,7 @@ export function OptionMappingTable({ mappings, onEdit, onDelete }: OptionMapping
             ))}
             {mappings.length === 0 && (
               <TableRow>
-                <TableCell className="h-32 text-center text-slate-500" colSpan={5}>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 6 : 5}>
                   옵션-제조사 연결이 없어요.
                 </TableCell>
               </TableRow>
