@@ -77,7 +77,8 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
               <TooltipProvider>
                 {orders.map((order) => (
                   <TableRow
-                    className={`hover:bg-slate-50 ${order.excludedFromEmail ? 'bg-amber-50/50' : ''}`}
+                    className="hover:bg-slate-50 data-[excluded=true]:bg-amber-50/50"
+                    data-excluded={order.excludedFromEmail}
                     key={order.id}
                   >
                     <TableCell className="font-mono text-sm text-slate-700">{order.sabangnetOrderNumber}</TableCell>

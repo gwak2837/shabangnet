@@ -290,7 +290,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
                   </TableHeader>
                   <TableBody>
                     {uploadedData.slice(0, 50).map((item, index) => (
-                      <TableRow className={item.status !== 'success' ? 'bg-amber-50/50' : ''} key={index}>
+                      <TableRow className="data-[status=error]:bg-amber-50/50 data-[status=manufacturer_not_found]:bg-amber-50/50" data-status={item.status} key={index}>
                         <TableCell className="font-mono text-sm">{item.productCode}</TableCell>
                         <TableCell className="text-sm">{item.productName || '-'}</TableCell>
                         <TableCell className="text-sm">{item.optionName || '-'}</TableCell>

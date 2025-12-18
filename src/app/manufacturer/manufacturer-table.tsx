@@ -134,7 +134,8 @@ export function ManufacturerTable({
               {manufacturers.map((manufacturer) => (
                 <TableRow
                   aria-selected={isAdmin ? effectiveSelectedIdSet.has(manufacturer.id) : undefined}
-                  className={`hover:bg-slate-50 transition-colors ${isAdmin ? 'cursor-pointer' : ''}`}
+                  className="hover:bg-slate-50 transition-colors aria-selected:bg-muted/50 data-[admin=true]:cursor-pointer"
+                  data-admin={isAdmin}
                   key={manufacturer.id}
                   onClick={(e) => {
                     if (!isAdmin) {

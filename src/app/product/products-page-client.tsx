@@ -240,9 +240,9 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         </Card>
 
         <Card
-          className={`border-slate-200 bg-card shadow-sm cursor-pointer transition-colors ${
-            showPriceErrorsOnly ? 'ring-2 ring-rose-500' : ''
-          } ${stats.priceErrorProducts > 0 ? 'hover:border-rose-200' : ''}`}
+          className="border-slate-200 bg-card shadow-sm cursor-pointer transition-colors data-[show-price-errors-only=true]:ring-2 data-[show-price-errors-only=true]:ring-rose-500 data-[has-price-errors=true]:hover:border-rose-200"
+          data-has-price-errors={stats.priceErrorProducts > 0}
+          data-show-price-errors-only={showPriceErrorsOnly}
           onClick={() => stats.priceErrorProducts > 0 && setShowPriceErrorsOnly(!showPriceErrorsOnly)}
         >
           <CardContent className="flex items-center gap-4 p-4">
@@ -252,7 +252,8 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
             <div>
               <p className="text-sm text-slate-500">원가 이상</p>
               <p
-                className={`text-xl font-semibold ${stats.priceErrorProducts > 0 ? 'text-rose-600' : 'text-slate-900'}`}
+                className="text-xl font-semibold data-[has-price-errors=true]:text-rose-600 data-[has-price-errors=false]:text-slate-900"
+                data-has-price-errors={stats.priceErrorProducts > 0}
               >
                 {stats.priceErrorProducts}개
               </p>

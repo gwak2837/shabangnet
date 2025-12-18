@@ -64,7 +64,7 @@ export function InvoiceDropzone({
   )
 
   return (
-    <Card className={cn('border-slate-200 bg-card shadow-sm py-6', disabled && 'opacity-60')}>
+    <Card aria-disabled={disabled} className="border-slate-200 bg-card shadow-sm py-6 aria-disabled:opacity-60">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
@@ -109,14 +109,9 @@ export function InvoiceDropzone({
           </div>
         ) : (
           <div
-            className={cn(
-              'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all',
-              disabled
-                ? 'border-slate-200 bg-slate-50 cursor-not-allowed'
-                : isDragging
-                  ? 'border-amber-400 bg-amber-50'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
-            )}
+            aria-disabled={disabled}
+            className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all aria-disabled:border-slate-200 aria-disabled:bg-slate-50 aria-disabled:cursor-not-allowed data-[dragging=true]:border-amber-400 data-[dragging=true]:bg-amber-50 data-[dragging=false]:border-slate-200 data-[dragging=false]:hover:border-slate-300 data-[dragging=false]:hover:bg-slate-50"
+            data-dragging={isDragging}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -131,20 +126,18 @@ export function InvoiceDropzone({
             )}
 
             <div
-              className={cn(
-                'flex h-14 w-14 items-center justify-center rounded-2xl transition-colors',
-                disabled ? 'bg-slate-100' : isDragging ? 'bg-amber-100' : 'bg-slate-100',
-              )}
+              aria-disabled={disabled}
+              className="flex h-14 w-14 items-center justify-center rounded-2xl transition-colors aria-disabled:bg-slate-100 data-[dragging=true]:bg-amber-100 data-[dragging=false]:bg-slate-100"
+              data-dragging={isDragging}
             >
               <Upload
-                className={cn(
-                  'h-7 w-7 transition-colors',
-                  disabled ? 'text-slate-300' : isDragging ? 'text-amber-600' : 'text-slate-400',
-                )}
+                aria-disabled={disabled}
+                className="h-7 w-7 transition-colors aria-disabled:text-slate-300 data-[dragging=true]:text-amber-600 data-[dragging=false]:text-slate-400"
+                data-dragging={isDragging}
               />
             </div>
 
-            <p className={cn('mt-4 text-base font-semibold', disabled ? 'text-slate-400' : 'text-slate-900')}>
+            <p aria-disabled={disabled} className="mt-4 text-base font-semibold aria-disabled:text-slate-400 data-[enabled=true]:text-slate-900" data-enabled={!disabled}>
               {disabled ? '먼저 발주 이력을 선택하세요' : '파일을 드래그하거나 클릭하여 업로드'}
             </p>
             <p className="mt-1 text-sm text-slate-500">거래처에서 받은 송장 파일 (.xlsx, .xls)</p>

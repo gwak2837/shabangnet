@@ -189,13 +189,15 @@ export default function InvoiceConvertPage() {
               <div className="flex items-center justify-center gap-4">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                      selectedLog ? 'bg-emerald-500 text-primary-foreground' : 'bg-blue-500 text-primary-foreground'
-                    }`}
+                    aria-selected={!!selectedLog}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold bg-blue-500 aria-selected:bg-emerald-500 text-primary-foreground"
                   >
                     {selectedLog ? <CheckCircle2 className="h-5 w-5" /> : '1'}
                   </div>
-                  <span className={`text-sm font-medium ${selectedLog ? 'text-emerald-600' : 'text-slate-900'}`}>
+                  <span
+                    aria-selected={!!selectedLog}
+                    className="text-sm font-medium text-slate-900 aria-selected:text-emerald-600"
+                  >
                     발주 선택
                   </span>
                 </div>
@@ -204,20 +206,16 @@ export default function InvoiceConvertPage() {
 
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                      selectedFile
-                        ? 'bg-emerald-500 text-primary-foreground'
-                        : selectedLog
-                          ? 'bg-blue-500 text-primary-foreground'
-                          : 'bg-slate-200 text-slate-500'
-                    }`}
+                    aria-selected={!!selectedFile}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold bg-slate-200 text-slate-500 data-[has-log=true]:bg-blue-500 data-[has-log=true]:text-primary-foreground aria-selected:bg-emerald-500 aria-selected:text-primary-foreground"
+                    data-has-log={!!selectedLog}
                   >
                     {selectedFile ? <CheckCircle2 className="h-5 w-5" /> : '2'}
                   </div>
                   <span
-                    className={`text-sm font-medium ${
-                      selectedFile ? 'text-emerald-600' : selectedLog ? 'text-slate-900' : 'text-slate-400'
-                    }`}
+                    aria-selected={!!selectedFile}
+                    className="text-sm font-medium text-slate-400 data-[has-log=true]:text-slate-900 aria-selected:text-emerald-600"
+                    data-has-log={!!selectedLog}
                   >
                     송장 업로드
                   </span>

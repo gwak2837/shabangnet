@@ -55,13 +55,13 @@ export function OptionMappingModal({
     const newErrors: Record<string, string> = {}
 
     if (!formData.productCode.trim()) {
-      newErrors.productCode = '상품코드를 입력하세요'
+      newErrors.productCode = '상품코드를 입력해 주세요'
     }
     if (!formData.optionName.trim()) {
-      newErrors.optionName = '옵션명을 입력하세요'
+      newErrors.optionName = '옵션명을 입력해 주세요'
     }
     if (!formData.manufacturerId) {
-      newErrors.manufacturerId = '제조사를 선택하세요'
+      newErrors.manufacturerId = '제조사를 선택해 주세요'
     }
 
     setErrors(newErrors)
@@ -109,7 +109,8 @@ export function OptionMappingModal({
               상품코드 <span className="text-rose-500">*</span>
             </Label>
             <Input
-              className={errors.productCode ? 'border-rose-500' : ''}
+              aria-invalid={!!errors.productCode}
+              className="aria-invalid:border-rose-500"
               id="productCode"
               onChange={(e) => setFormData({ ...formData, productCode: e.target.value })}
               placeholder="예: OL-001"
@@ -123,14 +124,15 @@ export function OptionMappingModal({
               옵션명 <span className="text-rose-500">*</span>
             </Label>
             <Input
-              className={errors.optionName ? 'border-rose-500' : ''}
+              aria-invalid={!!errors.optionName}
+              className="aria-invalid:border-rose-500"
               id="optionName"
               onChange={(e) => setFormData({ ...formData, optionName: e.target.value })}
               placeholder="예: 500ml x 2병"
               value={formData.optionName}
             />
             {errors.optionName && <p className="text-xs text-rose-500">{errors.optionName}</p>}
-            <p className="text-xs text-slate-500">사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력하세요</p>
+            <p className="text-xs text-slate-500">사방넷 엑셀의 옵션 열에 입력된 값과 동일하게 입력해 주세요</p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -141,7 +143,7 @@ export function OptionMappingModal({
               onValueChange={(v) => setFormData({ ...formData, manufacturerId: Number(v) })}
               value={formData.manufacturerId?.toString() ?? ''}
             >
-              <SelectTrigger className={errors.manufacturerId ? 'border-rose-500' : ''}>
+              <SelectTrigger aria-invalid={!!errors.manufacturerId} className="aria-invalid:border-rose-500">
                 <SelectValue placeholder="제조사 선택" />
               </SelectTrigger>
               <SelectContent>

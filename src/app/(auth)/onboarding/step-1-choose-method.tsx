@@ -27,7 +27,7 @@ export function Step1ChooseMethod({
       <div className="mt-6 flex flex-col gap-6">
         <div className="text-center flex flex-col gap-2">
           <div className="mx-auto inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20">
-            <Fingerprint className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            <Fingerprint className="h-6 w-6 text-emerald-600" />
           </div>
           <p className="text-sm text-muted-foreground">이미 패스키가 등록되어 있어요!</p>
         </div>

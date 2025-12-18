@@ -9,10 +9,10 @@ import type { Product } from '@/services/products'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
@@ -106,14 +106,11 @@ export function ProductTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               {isAdmin && (
-                <TableHead className="w-10">
-                  <Checkbox
-                    aria-label="전체 선택"
-                    checked={selectionState === 'all'}
-                    className={selectionState === 'mixed' ? 'opacity-50' : ''}
-                    onCheckedChange={(checked) => onSelectAll?.(checked === true)}
-                  />
-                </TableHead>
+                <TableSelectionHeadCell
+                  aria-label="전체 선택"
+                  checked={selectionState === 'all' ? true : selectionState === 'mixed' ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => onSelectAll?.(checked)}
+                />
               )}
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품코드</TableHead>
               <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
@@ -140,20 +137,32 @@ export function ProductTable({
                 const isUnmapped = !product.manufacturerId
                 const isEditing = editingProductId === product.id
                 const hasPriceError = hasPriceValidationError(product)
+                const isSelected = selectedIds.includes(product.id)
 
                 return (
                   <TableRow
-                    className={`hover:bg-slate-50 transition-colors ${isUnmapped ? 'bg-amber-50/50' : ''} ${hasPriceError ? 'bg-rose-50/50' : ''}`}
+                    aria-selected={isAdmin ? isSelected : undefined}
+                    className="hover:bg-slate-50 transition-colors aria-selected:[&_td:first-child]:bg-muted/50 data-[admin=true]:cursor-pointer data-[unmapped=true]:bg-amber-50/50 data-[price-error=true]:bg-rose-50/50"
+                    data-admin={isAdmin}
+                    data-price-error={hasPriceError}
+                    data-unmapped={isUnmapped}
                     key={product.id}
+                    onClick={(e) => {
+                      if (!isAdmin) {
+                        return
+                      }
+                      if (!shouldToggleRowSelection(e)) {
+                        return
+                      }
+                      onSelectItem?.(product.id, !isSelected)
+                    }}
                   >
                     {isAdmin && (
-                      <TableCell className="w-10">
-                        <Checkbox
-                          aria-label={`${product.productCode} 선택`}
-                          checked={selectedIds.includes(product.id)}
-                          onCheckedChange={(checked) => onSelectItem?.(product.id, checked === true)}
-                        />
-                      </TableCell>
+                      <TableSelectionCell
+                        aria-label={`${product.productCode} 선택`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => onSelectItem?.(product.id, checked)}
+                      />
                     )}
                     <TableCell>
                       <code className="text-sm font-mono text-slate-700">{product.productCode}</code>
@@ -183,6 +192,7 @@ export function ProductTable({
                       ) : (
                         <div
                           className="flex items-center justify-end gap-1 cursor-pointer group"
+                          data-row-select-ignore
                           onClick={() => handleCostEdit(product.id, product.cost)}
                         >
                           {hasPriceError && (
@@ -199,7 +209,9 @@ export function ProductTable({
                             </Tooltip>
                           )}
                           <span
-                            className={`font-medium tabular-nums ${hasPriceError ? 'text-rose-600' : product.cost > 0 ? 'text-slate-900' : 'text-slate-400'}`}
+                            className="font-medium tabular-nums data-[price-error=true]:text-rose-600 data-[has-cost=true]:text-slate-900 data-[has-cost=false]:text-slate-400"
+                            data-has-cost={product.cost > 0}
+                            data-price-error={hasPriceError}
                           >
                             {product.cost > 0 ? formatCurrency(product.cost) : '미등록'}
                           </span>
@@ -221,10 +233,12 @@ export function ProductTable({
                       ) : (
                         <div
                           className="flex items-center justify-end gap-1 cursor-pointer group"
+                          data-row-select-ignore
                           onClick={() => handleShippingFeeEdit(product.id, product.shippingFee)}
                         >
                           <span
-                            className={`font-medium tabular-nums ${product.shippingFee > 0 ? 'text-slate-900' : 'text-slate-400'}`}
+                            className="font-medium tabular-nums data-[has-shipping-fee=true]:text-slate-900 data-[has-shipping-fee=false]:text-slate-400"
+                            data-has-shipping-fee={product.shippingFee > 0}
                           >
                             {product.shippingFee > 0 ? formatCurrency(product.shippingFee) : '미등록'}
                           </span>
@@ -265,6 +279,7 @@ export function ProductTable({
                       ) : (
                         <div
                           className="flex items-center justify-center gap-2 cursor-pointer group"
+                          data-row-select-ignore
                           onClick={() => setEditingProductId(product.id)}
                         >
                           <Badge className="bg-slate-100 text-slate-700 group-hover:bg-slate-200" variant="secondary">

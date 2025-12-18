@@ -10,26 +10,26 @@ interface PasswordStrengthIndicatorProps {
 
 const strengthConfig: Record<PasswordStrength, { color: string; glow: string; width: string }> = {
   weak: {
-    color: 'bg-rose-400 dark:bg-rose-500',
+    color: 'bg-rose-400',
     glow: 'shadow-[0_0_8px_rgba(251,113,133,0.4)]',
     width: 'w-[33%]',
   },
   medium: {
-    color: 'bg-amber-400 dark:bg-amber-500',
+    color: 'bg-amber-400',
     glow: 'shadow-[0_0_8px_rgba(251,191,36,0.4)]',
     width: 'w-[66%]',
   },
   strong: {
-    color: 'bg-emerald-400 dark:bg-emerald-500',
+    color: 'bg-emerald-400',
     glow: 'shadow-[0_0_8px_rgba(52,211,153,0.4)]',
     width: 'w-full',
   },
 }
 
 const strengthTextColor: Record<PasswordStrength, string> = {
-  weak: 'text-rose-500 dark:text-rose-400',
-  medium: 'text-amber-600 dark:text-amber-400',
-  strong: 'text-emerald-600 dark:text-emerald-400',
+  weak: 'text-rose-500',
+  medium: 'text-amber-600',
+  strong: 'text-emerald-600',
 }
 
 export function PasswordStrengthIndicator({ password, errorMessage }: PasswordStrengthIndicatorProps) {
@@ -69,7 +69,7 @@ export function PasswordStrengthIndicator({ password, errorMessage }: PasswordSt
           />
         </div>
       </div>
-      {errorMessage && <p className="text-[13px] text-rose-500 dark:text-rose-400">{errorMessage}</p>}
+      {errorMessage && <p className="text-[13px] text-rose-500">{errorMessage}</p>}
     </div>
   )
 }

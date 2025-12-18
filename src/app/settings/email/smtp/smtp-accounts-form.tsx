@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, Lock, Package, Server, ShieldCheck } from 'lucid
 import { type FormEvent } from 'react'
 import { toast } from 'sonner'
 
+import { SettingsIconBadge } from '@/app/settings/settings-icon-badge'
 import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { useServerAction } from '@/hooks/use-server-action'
 import { authClient } from '@/lib/auth-client'
 
-import { SettingsIconBadge } from '../../../settings-icon-badge'
 import { testSMTPAccountConnectionAction, upsertSMTPAccountAction } from './action'
 import { useSMTPAccount } from './hook'
 

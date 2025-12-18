@@ -245,9 +245,9 @@ export function ColumnMappingEditor({
         ) : (
           <Table className="table-fixed">
             <colgroup>
-              <col className={showPreviewColumn ? 'w-[220px]' : 'w-[260px]'} />
+              <col className="data-[show-preview=true]:w-[220px] data-[show-preview=false]:w-[260px]" data-show-preview={showPreviewColumn} />
               {showPreviewColumn ? <col className="w-[220px]" /> : null}
-              <col className={showPreviewColumn ? 'w-[220px]' : 'w-[260px]'} />
+              <col className="data-[show-preview=true]:w-[220px] data-[show-preview=false]:w-[260px]" data-show-preview={showPreviewColumn} />
               <col className="w-[80px]" />
             </colgroup>
             <TableHeader className="bg-muted/40">

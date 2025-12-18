@@ -3,7 +3,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
+import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 
 // Option mapping types
@@ -76,7 +76,81 @@ export async function getById(id: number): Promise<OptionManufacturerMapping | u
 }
 
 export async function remove(id: number): Promise<void> {
-  await db.delete(optionMapping).where(eq(optionMapping.id, id))
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .select({
+        optionName: optionMapping.optionName,
+        productCode: optionMapping.productCode,
+      })
+      .from(optionMapping)
+      .where(eq(optionMapping.id, id))
+      .limit(1)
+
+    if (!row) {
+      return
+    }
+
+    await tx.delete(optionMapping).where(eq(optionMapping.id, id))
+
+    // 같은 키(상품코드+옵션명)로 다른 옵션 연결이 남아 있다면, 남아있는 값을 우선 적용해요.
+    const [remaining] = await tx
+      .select({ manufacturerId: optionMapping.manufacturerId })
+      .from(optionMapping)
+      .where(
+        and(
+          sql`lower(${optionMapping.productCode}) = lower(${row.productCode})`,
+          sql`lower(${optionMapping.optionName}) = lower(${row.optionName})`,
+        ),
+      )
+      .limit(1)
+
+    if (remaining) {
+      const mfr = await tx.query.manufacturer.findFirst({
+        where: eq(manufacturer.id, remaining.manufacturerId),
+      })
+
+      await tx
+        .update(order)
+        .set({
+          manufacturerId: remaining.manufacturerId,
+          manufacturerName: mfr?.name ?? null,
+        })
+        .where(
+          and(
+            sql`lower(${order.productCode}) = lower(${row.productCode})`,
+            sql`lower(${order.optionName}) = lower(${row.optionName})`,
+            sql`${order.status} <> 'completed'`,
+          ),
+        )
+
+      return
+    }
+
+    // 옵션 연결이 완전히 사라지면, 상품 연결(상품코드 기준)로 되돌려요.
+    const [fallback] = await tx
+      .select({
+        manufacturerId: product.manufacturerId,
+        manufacturerName: manufacturer.name,
+      })
+      .from(product)
+      .leftJoin(manufacturer, eq(product.manufacturerId, manufacturer.id))
+      .where(sql`lower(${product.productCode}) = lower(${row.productCode})`)
+      .limit(1)
+
+    await tx
+      .update(order)
+      .set({
+        manufacturerId: fallback?.manufacturerId ?? null,
+        manufacturerName: fallback?.manufacturerName ?? null,
+      })
+      .where(
+        and(
+          sql`lower(${order.productCode}) = lower(${row.productCode})`,
+          sql`lower(${order.optionName}) = lower(${row.optionName})`,
+          sql`${order.status} <> 'completed'`,
+        ),
+      )
+  })
 }
 
 export async function update(

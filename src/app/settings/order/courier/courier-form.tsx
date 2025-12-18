@@ -4,6 +4,7 @@ import { Loader2, Pencil, Plus, Trash2, Truck, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
+import { SettingsIconBadge } from '@/app/settings/settings-icon-badge'
 import { queryKeys } from '@/common/constants/query-keys'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,6 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 
-import { SettingsIconBadge } from '../../../settings-icon-badge'
 import { addCourierMapping, CourierMapping, removeCourierMapping, updateCourierMapping } from './action'
 import { useCourierMappings } from './hook'
 

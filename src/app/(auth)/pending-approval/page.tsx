@@ -12,7 +12,7 @@ export default function PendingApprovalPage() {
   return (
     <div className="flex flex-col gap-8 text-center">
       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/20">
-        <Clock className="h-10 w-10 text-amber-600 dark:text-amber-400" />
+        <Clock className="h-10 w-10 text-amber-600" />
       </div>
 
       <div className="flex flex-col gap-2">
