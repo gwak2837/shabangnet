@@ -91,7 +91,8 @@ export function Step4BackupCodes({ backupCodes, isPending, onComplete }: Props) 
         </Label>
       </div>
       <Button className="w-full" disabled={!codesConfirmed || isPending} onClick={onComplete} variant="glass">
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '완료'}
+        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        완료
       </Button>
     </div>
   )

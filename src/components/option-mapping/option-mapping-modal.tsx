@@ -169,16 +169,8 @@ export function OptionMappingModal({
               취소
             </Button>
             <Button className="bg-slate-900 hover:bg-slate-800" disabled={isSaving} type="submit">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : isEdit ? (
-                '수정'
-              ) : (
-                '추가'
-              )}
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEdit ? '수정' : '추가'}
             </Button>
           </DialogFooter>
         </form>

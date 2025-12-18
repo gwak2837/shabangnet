@@ -1,7 +1,6 @@
 'use client'
 
 import { Download, Eye, Loader2, Mail, MoreHorizontal } from 'lucide-react'
-import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,89 +19,59 @@ interface OrderTableProps {
   fetchNextPage?: () => void
   hasNextPage: boolean
   isFetchingNextPage?: boolean
-  onBatchSend?: (batches: OrderBatch[]) => void
   onDownload?: (batch: OrderBatch) => void
   onPreview: (batch: OrderBatch) => void
+  onSelectedManufacturerIdsChange: (manufacturerIds: number[]) => void
   onSendEmail: (batch: OrderBatch) => void
+  selectedManufacturerIds: number[]
 }
 
 export function OrderTable({
   batches,
   onSendEmail,
   onPreview,
-  onBatchSend,
   onDownload,
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
+  selectedManufacturerIds,
+  onSelectedManufacturerIdsChange,
 }: OrderTableProps) {
-  const [selectedBatches, setSelectedBatches] = useState<number[]>([])
-  const isAllSelected = batches.length > 0 && selectedBatches.length === batches.length
-  const isSomeSelected = selectedBatches.length > 0 && !isAllSelected
+  const isAllSelected = batches.length > 0 && selectedManufacturerIds.length === batches.length
+  const isSomeSelected = selectedManufacturerIds.length > 0 && !isAllSelected
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedBatches(batches.map((b) => b.manufacturerId))
+      onSelectedManufacturerIdsChange(batches.map((b) => b.manufacturerId))
     } else {
-      setSelectedBatches([])
+      onSelectedManufacturerIdsChange([])
     }
   }
 
   function handleSelectBatch(manufacturerId: number, checked: boolean) {
     if (checked) {
-      setSelectedBatches((prev) => [...prev, manufacturerId])
+      if (selectedManufacturerIds.includes(manufacturerId)) {
+        return
+      }
+      onSelectedManufacturerIdsChange([...selectedManufacturerIds, manufacturerId])
     } else {
-      setSelectedBatches((prev) => prev.filter((id) => id !== manufacturerId))
+      onSelectedManufacturerIdsChange(selectedManufacturerIds.filter((id) => id !== manufacturerId))
     }
   }
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
       <CardContent className="p-0">
-        {/* Bulk Actions */}
-        {selectedBatches.length > 0 && (
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
-            <span className="text-sm font-medium text-slate-700">{selectedBatches.length}개 선택됨</span>
-            <div className="flex items-center gap-2">
-              <Button
-                className="gap-2"
-                disabled={!onDownload}
-                onClick={() => {
-                  const selectedBatchData = batches.filter((b) => selectedBatches.includes(b.manufacturerId))
-                  for (const batch of selectedBatchData) {
-                    onDownload?.(batch)
-                  }
-                }}
-                size="sm"
-                variant="outline"
-              >
-                <Download className="h-4 w-4" />
-                일괄 다운로드
-              </Button>
-              <Button
-                className="gap-2 bg-blue-600 hover:bg-blue-700"
-                onClick={() => {
-                  const selectedBatchData = batches.filter((b) => selectedBatches.includes(b.manufacturerId))
-                  onBatchSend?.(selectedBatchData)
-                }}
-                size="sm"
-              >
-                <Mail className="h-4 w-4" />
-                일괄 발송
-              </Button>
-            </div>
-          </div>
-        )}
-
         <Table className="min-w-max">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-12">
                 <Checkbox
                   aria-label="전체 선택"
-                  checked={isAllSelected}
-                  className={isSomeSelected ? 'opacity-50' : ''}
-                  onCheckedChange={handleSelectAll}
+                  checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => {
+                    handleSelectAll(checked === true)
+                  }}
                 />
               </TableHead>
               <TableHead className="min-w-[200px] text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -135,7 +104,7 @@ export function OrderTable({
                     onPreview={onPreview}
                     onSelectBatch={handleSelectBatch}
                     onSendEmail={onSendEmail}
-                    selected={selectedBatches.includes(batch.manufacturerId)}
+                    selected={selectedManufacturerIds.includes(batch.manufacturerId)}
                   />
                 ))}
               </>
@@ -195,7 +164,7 @@ function OrderRow({
         <Checkbox
           aria-label={`${batch.manufacturerName} 선택`}
           checked={selected}
-          onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked as boolean)}
+          onCheckedChange={(checked) => onSelectBatch(batch.manufacturerId, checked === true)}
         />
       </TableCell>
 

@@ -378,7 +378,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-amber-500 font-medium">미설정</span>
                   <Button disabled={isLoading} onClick={() => setShowSetPasswordDialog(true)} size="sm">
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '설정'}
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    설정
                   </Button>
                 </div>
               </div>
@@ -420,7 +421,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                     size="sm"
                     title={settings?.hasPassword === false ? '비밀번호를 먼저 설정해주세요' : undefined}
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '설정'}
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    설정
                   </Button>
                 )}
               </div>
@@ -547,7 +549,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 취소
               </Button>
               <Button className="flex-1" disabled={isLoading || !totpSetupPassword} onClick={handleStartTOTPSetup}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                확인
               </Button>
             </div>
           </DialogFooter>
@@ -665,7 +668,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                     취소
                   </Button>
                   <Button className="flex-1" disabled={isLoading || totpCode.length !== 6} onClick={handleVerifyTOTP}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    확인
                   </Button>
                 </>
               ) : (
@@ -716,7 +720,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 취소
               </Button>
               <Button className="flex-1" disabled={isLoading} onClick={handleStartPasskeySetup}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '패스키 등록'}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                패스키 등록
               </Button>
             </div>
           </DialogFooter>
@@ -822,7 +827,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                     onClick={handleRegenerateRecoveryCodes}
                     variant="destructive"
                   >
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '새로 생성'}
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    새로 생성
                   </Button>
                 </>
               )}
@@ -865,7 +871,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 onClick={handleDisableTOTP}
                 variant="destructive"
               >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '비활성화'}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                비활성화
               </Button>
             </div>
           </DialogFooter>
@@ -899,7 +906,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 onClick={() => deletePasskeyId && handleDeletePasskey(deletePasskeyId)}
                 variant="destructive"
               >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '삭제'}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                삭제
               </Button>
             </div>
           </DialogFooter>
@@ -979,7 +987,8 @@ export function MFAForm({ settings }: MFAFormProps) {
                 disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
                 onClick={handleSetPassword}
               >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '비밀번호 설정'}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                비밀번호 설정
               </Button>
             </div>
           </DialogFooter>

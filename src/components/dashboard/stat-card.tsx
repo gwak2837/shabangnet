@@ -11,6 +11,7 @@ interface StatCardProps {
   icon: LucideIcon
   iconBgColor?: string
   iconColor?: string
+  secondaryText?: string
   title: string
   value: number | string
 }
@@ -20,12 +21,13 @@ export function StatCard({
   value,
   change,
   changeLabel = '어제 대비',
+  secondaryText,
   icon: Icon,
   iconColor = 'text-slate-600',
   iconBgColor = 'bg-slate-100',
 }: StatCardProps) {
-  const isPositive = change && change > 0
-  const isNegative = change && change < 0
+  const isPositive = change !== undefined && change > 0
+  const isNegative = change !== undefined && change < 0
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm transition-shadow hover:shadow-md">
@@ -36,7 +38,10 @@ export function StatCard({
             <p className="text-3xl font-semibold tracking-tight text-slate-900">
               {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}
             </p>
-            {change !== undefined && (
+            {secondaryText ? (
+              <p className="text-xs text-slate-400">{secondaryText}</p>
+            ) : (
+              change !== undefined && (
               <div className="flex items-center gap-1.5">
                 {isPositive && (
                   <span className="flex items-center gap-0.5 text-xs font-medium text-emerald-600">
@@ -53,6 +58,7 @@ export function StatCard({
                 {change === 0 && <span className="text-xs font-medium text-slate-500">0%</span>}
                 <span className="text-xs text-slate-400">{changeLabel}</span>
               </div>
+              )
             )}
           </div>
           <div className={cn('flex h-12 w-12 items-center justify-center rounded-xl', iconBgColor)}>

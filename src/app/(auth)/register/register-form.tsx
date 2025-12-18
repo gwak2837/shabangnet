@@ -155,7 +155,8 @@ export function RegisterForm() {
           </div>
         </div>
         <Button className="w-full" disabled={isPending || !validation.isValid} type="submit" variant="glass">
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '가입하기'}
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          가입하기
         </Button>
       </form>
       <div className="relative">

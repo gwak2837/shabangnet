@@ -236,7 +236,8 @@ export function ExclusionForm() {
                     취소
                   </Button>
                   <Button className="flex-1" disabled={isUpdating} type="submit">
-                    {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
+                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    저장
                   </Button>
                 </div>
               </DialogFooter>

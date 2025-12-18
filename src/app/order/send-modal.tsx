@@ -387,27 +387,14 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
             disabled={isSending || isCheckingDuplicate || !canSend}
             onClick={handleSend}
           >
-            {isSending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                발송 중...
-              </>
-            ) : isCheckingDuplicate ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                중복 체크 중...
-              </>
+            {isSending || isCheckingDuplicate ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : needsReason ? (
-              <>
-                <AlertTriangle className="h-4 w-4" />
-                {canSend ? (isResend ? '재발송하기' : '확인 후 발송') : '사유 입력 필요'}
-              </>
+              <AlertTriangle className="h-4 w-4" />
             ) : (
-              <>
-                <Send className="h-4 w-4" />
-                발송하기
-              </>
+              <Send className="h-4 w-4" />
             )}
+            {needsReason ? (canSend ? (isResend ? '재발송하기' : '확인 후 발송') : '사유 입력 필요') : '발송하기'}
           </Button>
         </DialogFooter>
       </DialogContent>

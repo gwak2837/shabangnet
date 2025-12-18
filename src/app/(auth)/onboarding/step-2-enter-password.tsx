@@ -56,7 +56,8 @@ export function Step2EnterPassword({ formRef, isPending, onBack, onSubmit }: Pro
           </div>
         </div>
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '다음'}
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          다음
         </Button>
       </form>
     </div>

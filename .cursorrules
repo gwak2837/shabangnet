@@ -20,9 +20,7 @@ Design with the principles of minimalist aesthetic, intuitive interfaces, and fu
 
 1. **Clarity** - Text is legible at every size, icons are precise and lucid, adornments are subtle and appropriate. Focus on functionality drives design.
 
-2. **Deference** - Fluid motion and crisp interface help users understand and interact with content while never competing with it.
-
-3. **Depth** - Visual layers and realistic motion convey hierarchy, impart vitality, and facilitate understanding.
+2. **Depth** - Visual layers convey hierarchy, impart vitality, and facilitate understanding.
 
 ### Visual Guidelines
 
@@ -89,6 +87,17 @@ toast.error('삭제에 실패했어요')
 
 ---
 
+## Loading & Feedback
+
+### Button Loading States
+
+- **Never replace a button label with `"..."` or `"~중..."` to indicate loading.** Keep the label stable so the user always knows what action they triggered.
+- **Icon + label button**: keep the label unchanged and **swap only the leading icon** to a spinner while loading.
+- **Label-only button**: keep the label unchanged and **prepend a spinner icon** to the left of the label while loading.
+- **Icon-only button**: swap the icon to a spinner while loading (keep the button size stable).
+
+---
+
 ## Code Style
 
 ### TypeScript
@@ -127,6 +136,7 @@ function process(data: unknown): string {
 - **Avoid `useCallback` by default.** Only use it when you need a stable function identity for dependency management (e.g. `useEffect` deps) or when an API _requires_ referential stability.
 - **For render performance, prefer component boundaries over hook memoization.** If a subtree is expensive, split it into a smaller component and optimize that component instead of sprinkling `useCallback`/`useMemo` in the parent.
 - **Avoid `React.memo` by default.** Prefer splitting components (boundaries) first; use `React.memo` only for measured bottlenecks or when wrapping non-compiled/3rd-party components where it materially reduces re-renders.
+- **For boolean conditions, prefer `&&` over ternary.** Use ternary only when you have a real “else” UI, not for `: null`.
 
 ```tsx
 // ❌ Bad - adding useCallback just "for performance"
@@ -138,6 +148,23 @@ return <BigList onItemClick={onClick} />
 
 // ✅ Good - split the component so only the expensive part re-renders when needed
 return <BigListContainer value={value} />
+```
+
+```tsx
+// ❌ Bad - ternary for boolean show/hide
+{
+  isOpen ? <Modal /> : null
+}
+
+// ✅ Good - boolean condition via &&
+{
+  isOpen && <Modal />
+}
+
+// ✅ OK - ternary when there is an else branch
+{
+  status === 'success' ? <Success /> : <Error />
+}
 ```
 
 ### Drizzle ORM – Query Style
@@ -554,6 +581,7 @@ function OrderForm() {
 'use client'
 
 import { useActionState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { createOrder } from '@/actions/orders'
 
 function OrderForm() {
@@ -563,8 +591,9 @@ function OrderForm() {
     <form action={formAction}>
       <input name="productId" />
       <input name="quantity" type="number" />
-      <button type="submit" disabled={isPending}>
-        {isPending ? '처리 중...' : '주문하기'}
+      <button className="inline-flex items-center gap-2" disabled={isPending} type="submit">
+        {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+        주문하기
       </button>
       {state?.error && <p className="text-red-500">{state.error}</p>}
     </form>
@@ -577,6 +606,7 @@ function OrderForm() {
 'use client'
 
 import { useTransition } from 'react'
+import { Loader2 } from 'lucide-react'
 import { deleteOrder } from '@/actions/orders'
 
 function DeleteOrderButton({ orderId }: { orderId: string }) {
@@ -592,8 +622,9 @@ function DeleteOrderButton({ orderId }: { orderId: string }) {
   }
 
   return (
-    <button onClick={handleDelete} disabled={isPending}>
-      {isPending ? '삭제 중...' : '삭제'}
+    <button className="inline-flex items-center gap-2" disabled={isPending} onClick={handleDelete}>
+      {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+      삭제
     </button>
   )
 }

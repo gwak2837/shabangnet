@@ -22,6 +22,7 @@ export interface DashboardStats {
   pendingOrdersChange?: number
   todayOrders: number
   todayOrdersChange?: number
+  yesterdayOrders: number
 }
 
 export interface Upload {
@@ -116,6 +117,7 @@ export async function getStats(): Promise<DashboardStats> {
   return {
     todayOrders: stats.todayOrders,
     todayOrdersChange: getChange(stats.todayOrders, stats.yesterdayOrders),
+    yesterdayOrders: stats.yesterdayOrders,
     pendingOrders: stats.pendingOrders,
     pendingOrdersChange: getChange(stats.pendingOrders, stats.yesterdayPendingOrders),
     completedOrders: stats.completedOrders,

@@ -32,7 +32,8 @@ export function Step1ChooseMethod({
           <p className="text-sm text-muted-foreground">이미 패스키가 등록되어 있어요!</p>
         </div>
         <Button className="w-full" disabled={isPending} onClick={onComplete} variant="glass">
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '설정 완료'}
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          설정 완료
         </Button>
       </div>
     )

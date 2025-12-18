@@ -137,14 +137,8 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
               닫기
             </Button>
             <Button className="bg-slate-900 hover:bg-slate-800" disabled={isPending} type="submit">
-              {isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                '업로드'
-              )}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              업로드
             </Button>
           </DialogFooter>
         </form>

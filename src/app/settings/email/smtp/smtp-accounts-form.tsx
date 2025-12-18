@@ -144,11 +144,11 @@ export function SMTPAccountCard() {
             variant="outline"
           >
             {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-            {isTesting ? '테스트 중...' : '연결 테스트'}
+            연결 테스트
           </Button>
           <Button disabled={isSavingAccount || isTesting} type="submit">
-            {isSavingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSavingAccount ? '저장 중...' : '저장'}
+            {isSavingAccount && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            저장
           </Button>
         </div>
       </form>

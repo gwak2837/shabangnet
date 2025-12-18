@@ -104,7 +104,8 @@ export function MFAChallenge() {
               </Label>
             </div>
             <Button className="w-full" disabled={isMFAChallengePending} type="submit" variant="glass">
-              {isMFAChallengePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
+              {isMFAChallengePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              확인
             </Button>
           </form>
         </div>
@@ -133,7 +134,8 @@ export function MFAChallenge() {
               />
             </div>
             <Button className="w-full" disabled={isMFAChallengePending} type="submit" variant="glass">
-              {isMFAChallengePending ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
+              {isMFAChallengePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              확인
             </Button>
           </form>
           <Button onClick={() => setSelectedMethod('totp')} variant="glass-outline">

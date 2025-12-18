@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Clock, FileSpreadsheet, Link2, Loader2, Mail, RefreshCw, XCircle } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,13 @@ export default function SendableOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [previewBatch, setPreviewBatch] = useState<OrderBatch | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<number[]>([])
+  const bulkCancelRef = useRef(false)
+  const [filters, setFilters] = useState<OrderFiltersType>({})
+  const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useOrderBatches({ filters })
+  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useOrderBatchSummary({ filters })
+  const hasSelection = selectedManufacturerIds.length > 0
+
   const [bulkSend, setBulkSend] = useState<BulkSendState>({
     isRunning: false,
     processed: 0,
@@ -44,15 +51,29 @@ export default function SendableOrdersPage() {
     skipped: 0,
     currentManufacturerName: undefined,
   })
-  const bulkCancelRef = useRef(false)
-  const [filters, setFilters] = useState<OrderFiltersType>({})
-  const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useOrderBatches({ filters })
-  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useOrderBatchSummary({ filters })
 
   const orderBatches = useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap((page) => page.items)
   }, [data])
+
+  const stats = useMemo(() => {
+    return (
+      summary ?? {
+        totalBatches: 0,
+        pendingBatchesCount: 0,
+        sentBatches: 0,
+        errorBatches: 0,
+        totalOrders: 0,
+      }
+    )
+  }, [summary])
+
+  const selectedBatches = useMemo(() => {
+    if (selectedManufacturerIds.length === 0) return []
+    const selectedSet = new Set(selectedManufacturerIds)
+    return orderBatches.filter((b) => selectedSet.has(b.manufacturerId))
+  }, [orderBatches, selectedManufacturerIds])
 
   function handleSendEmail(batch: OrderBatch) {
     setSelectedBatch(batch)
@@ -196,7 +217,7 @@ export default function SendableOrdersPage() {
     void runBulkSend(batches)
   }
 
-  const handleSendAllPending = async () => {
+  async function handleSendAllPending() {
     try {
       const pendingBatchesList = await fetchAllPendingBatches()
       await runBulkSend(pendingBatchesList)
@@ -205,23 +226,23 @@ export default function SendableOrdersPage() {
     }
   }
 
-  const handleModalClose = (open: boolean) => {
+  function handleModalClose(open: boolean) {
     setIsModalOpen(open)
     if (!open) {
       setSelectedBatch(null)
     }
   }
 
-  const handleCancelBulkSend = () => {
+  function handleCancelBulkSend() {
     bulkCancelRef.current = true
   }
 
-  const handlePreview = (batch: OrderBatch) => {
+  function handlePreview(batch: OrderBatch) {
     setPreviewBatch(batch)
     setIsPreviewOpen(true)
   }
 
-  const handleDownload = async (batch: OrderBatch) => {
+  async function handleDownload(batch: OrderBatch) {
     try {
       const orderIds = batch.orders.map((o) => o.id)
 
@@ -257,18 +278,15 @@ export default function SendableOrdersPage() {
     }
   }
 
-  // Calculate summary stats
-  const stats = useMemo(() => {
-    return (
-      summary ?? {
-        totalBatches: 0,
-        pendingBatchesCount: 0,
-        sentBatches: 0,
-        errorBatches: 0,
-        totalOrders: 0,
-      }
-    )
-  }, [summary])
+  async function handleSelectedDownload() {
+    for (const batch of selectedBatches) {
+      await handleDownload(batch)
+    }
+  }
+
+  useEffect(() => {
+    setSelectedManufacturerIds([])
+  }, [filters.dateFrom, filters.dateTo, filters.manufacturerId, filters.search, filters.status])
 
   if (isLoading || isLoadingSummary) {
     return (
@@ -348,13 +366,34 @@ export default function SendableOrdersPage() {
             새로고침
           </Button>
           <Button
+            className="gap-2"
+            disabled={selectedManufacturerIds.length === 0}
+            onClick={handleSelectedDownload}
+            size="sm"
+            variant="outline"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            선택 다운로드
+          </Button>
+          <Button
             className="gap-2 bg-blue-600 hover:bg-blue-700"
-            disabled={stats.pendingBatchesCount === 0 || bulkSend.isRunning}
-            onClick={handleSendAllPending}
+            disabled={
+              bulkSend.isRunning ||
+              (hasSelection ? selectedManufacturerIds.length === 0 : stats.pendingBatchesCount === 0)
+            }
+            onClick={() => {
+              if (hasSelection) {
+                handleBatchSend(selectedBatches)
+                return
+              }
+              void handleSendAllPending()
+            }}
             size="sm"
           >
-            <Mail className="h-4 w-4" />
-            {bulkSend.isRunning ? '발송 중...' : `전체 발송 (${stats.pendingBatchesCount})`}
+            {bulkSend.isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            {hasSelection
+              ? `선택 발송 (${selectedManufacturerIds.length})`
+              : `전체 발송 (${stats.pendingBatchesCount})`}
           </Button>
         </div>
       </div>
@@ -394,10 +433,11 @@ export default function SendableOrdersPage() {
         fetchNextPage={fetchNextPage}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
-        onBatchSend={handleBatchSend}
         onDownload={handleDownload}
         onPreview={handlePreview}
+        onSelectedManufacturerIdsChange={setSelectedManufacturerIds}
         onSendEmail={handleSendEmail}
+        selectedManufacturerIds={selectedManufacturerIds}
       />
 
       {/* Send Modal */}

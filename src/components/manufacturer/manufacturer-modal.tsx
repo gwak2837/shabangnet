@@ -723,17 +723,8 @@ function ManufacturerModalBody({
           취소
         </Button>
         <Button disabled={!canSave} type="submit">
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              저장 중...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              저장
-            </>
-          )}
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          저장
         </Button>
       </DialogFooter>
     </form>

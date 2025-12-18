@@ -253,7 +253,8 @@ export function UserTable({
               onClick={handleAction}
               variant={confirmDialog?.type === 'reject' ? 'destructive' : 'default'}
             >
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '확인'}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              확인
             </Button>
           </DialogFooter>
         </DialogContent>

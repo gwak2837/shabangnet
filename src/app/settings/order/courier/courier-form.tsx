@@ -221,7 +221,8 @@ export function CourierForm() {
                     취소
                   </Button>
                   <Button className="flex-1" disabled={isSaving} type="submit">
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '저장'}
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    저장
                   </Button>
                 </div>
               </DialogFooter>

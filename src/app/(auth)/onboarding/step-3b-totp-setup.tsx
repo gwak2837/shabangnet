@@ -93,7 +93,8 @@ export function Step3bTOTPSetup({ formRef, isPending, onBack, onSubmit, totpUri 
           />
         </div>
         <Button className="w-full" disabled={isPending} type="submit" variant="glass">
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : '확인'}
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          확인
         </Button>
       </form>
     </div>

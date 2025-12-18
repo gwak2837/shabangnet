@@ -573,7 +573,7 @@ export function ShoppingMallTemplate() {
                   className="flex-1 aria-disabled:opacity-50"
                   type="submit"
                 >
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   저장
                 </Button>
               </div>

@@ -13,6 +13,16 @@ export default function DashboardPage() {
   const { data: uploads, isLoading: isLoadingUploads } = useRecentUploads()
   const { data: chartData, isLoading: isLoadingChart } = useManufacturerChartData()
 
+  const todayOrders = stats?.todayOrders ?? 0
+  const yesterdayOrders = stats?.yesterdayOrders ?? 0
+
+  const todayOrdersSecondaryText =
+    todayOrders === 0
+      ? yesterdayOrders > 0
+        ? `오늘은 아직 주문이 없어요 · 어제 ${yesterdayOrders.toLocaleString('ko-KR')}건`
+        : '오늘은 아직 주문이 없어요'
+      : undefined
+
   if (isLoadingStats) {
     return (
       <AppShell description="오늘의 주문 현황과 발주 상태를 확인하세요" title="대시보드">
@@ -27,12 +37,13 @@ export default function DashboardPage() {
     <AppShell description="오늘의 주문 현황과 발주 상태를 확인하세요" title="대시보드">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          change={stats?.todayOrdersChange}
+          change={todayOrdersSecondaryText ? undefined : stats?.todayOrdersChange}
           icon={ShoppingCart}
           iconBgColor="bg-blue-50"
           iconColor="text-blue-600"
+          secondaryText={todayOrdersSecondaryText}
           title="오늘 주문"
-          value={stats?.todayOrders ?? 0}
+          value={todayOrders}
         />
         <StatCard
           change={stats?.pendingOrdersChange}
