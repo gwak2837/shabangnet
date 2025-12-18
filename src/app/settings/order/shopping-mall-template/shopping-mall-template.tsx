@@ -11,7 +11,6 @@ import type {
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
 import { queryKeys } from '@/common/constants/query-keys'
-import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +35,7 @@ import { Label } from '@/components/ui/label'
 import { useServerAction } from '@/hooks/use-server-action'
 import { useShoppingMallTemplates } from '@/hooks/use-settings'
 
+import { SettingsIconBadge } from '../../../settings-icon-badge'
 import {
   addShoppingMallTemplate,
   type AnalyzeResult,

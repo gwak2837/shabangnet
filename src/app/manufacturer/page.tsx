@@ -6,10 +6,11 @@ import { useMemo, useState } from 'react'
 import type { Manufacturer } from '@/services/manufacturers.types'
 
 import { AppShell } from '@/components/layout/app-shell'
-import { ManufacturerModal } from '@/components/manufacturer/manufacturer-modal'
-import { ManufacturerTable } from '@/components/manufacturer/manufacturer-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { useManufacturersList } from '@/hooks/use-manufacturers-list'
+
+import { ManufacturerModal } from './manufacturer-modal'
+import { ManufacturerTable } from './manufacturer-table'
 
 export default function ManufacturersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)

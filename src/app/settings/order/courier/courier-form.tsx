@@ -5,7 +5,6 @@ import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 
+import { SettingsIconBadge } from '../../../settings-icon-badge'
 import { addCourierMapping, CourierMapping, removeCourierMapping, updateCourierMapping } from './action'
 import { useCourierMappings } from './hook'
 

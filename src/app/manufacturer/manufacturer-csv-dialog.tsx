@@ -3,7 +3,10 @@
 import { AlertTriangle, Loader2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
+import type { ManufacturerCsvImportResult } from '@/components/manufacturer/manufacturer-csv.types'
+
 import { queryKeys } from '@/common/constants/query-keys'
+import { MANUFACTURER_CSV_HEADER } from '@/components/manufacturer/manufacturer-csv.types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,10 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useFormAction } from '@/hooks/use-server-action'
 
-import type { ManufacturerCsvImportResult } from './manufacturer-csv.types'
-
 import { importManufacturersCsv } from './csv-actions'
-import { MANUFACTURER_CSV_HEADER } from './manufacturer-csv.types'
 
 interface ManufacturerCsvDialogProps {
   onOpenChange: (open: boolean) => void

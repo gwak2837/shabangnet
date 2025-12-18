@@ -4,7 +4,6 @@ import { AlertTriangle, CheckCircle2, Copy, Key, KeyRound, Loader2, Shield, Smar
 import { useCallback, useEffect, useState } from 'react'
 
 import { PasswordStrengthIndicator } from '@/app/(auth)/password-strength'
-import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,6 +21,7 @@ import { formatDateTime } from '@/utils/format/number'
 import { getFirstPasswordError, validatePassword } from '@/utils/password'
 
 import { setPasswordAction } from './actions/mfa'
+import { SettingsIconBadge } from './settings-icon-badge'
 
 interface MFAFormProps {
   settings?: MFASettings

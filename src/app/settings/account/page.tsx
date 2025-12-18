@@ -2,9 +2,9 @@
 
 import { Loader2 } from 'lucide-react'
 
-import { MFAForm } from '@/components/settings/mfa-form'
 import { useMFASettings } from '@/hooks/use-settings'
 
+import { MFAForm } from '../mfa-form'
 import { SettingsDetailHeader } from '../settings-detail-header'
 
 export default function AccountSettingsPage() {

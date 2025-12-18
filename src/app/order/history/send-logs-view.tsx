@@ -5,16 +5,17 @@ import { useMemo, useState } from 'react'
 
 import type { SendLog } from '@/services/logs'
 
-import { DeleteSendLogsDialog } from '@/components/log/delete-send-logs-dialog'
-import { LogDetailModal } from '@/components/log/log-detail-modal'
-import { LogFilters } from '@/components/log/log-filters'
-import { LogTable } from '@/components/log/log-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useSendLogs } from '@/hooks/use-logs'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { authClient } from '@/lib/auth-client'
+
+import { DeleteSendLogsDialog } from './delete-send-logs-dialog'
+import { LogDetailModal } from './log-detail-modal'
+import { LogFilters } from './log-filters'
+import { LogTable } from './log-table'
 
 export function SendLogsView() {
   const { data: session } = authClient.useSession()

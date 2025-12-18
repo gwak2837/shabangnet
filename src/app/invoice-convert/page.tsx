@@ -6,9 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { InvoiceConvertResultItem } from '@/services/invoice-convert'
 import type { SendLog } from '@/services/logs'
 
-import { ConvertResult } from '@/components/invoice-convert/convert-result'
-import { InvoiceDropzone } from '@/components/invoice-convert/invoice-dropzone'
-import { OrderSelect } from '@/components/invoice-convert/order-select'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,6 +13,10 @@ import { useSendLogs } from '@/hooks/use-logs'
 import { convertInvoiceFile, generateInvoiceDownload } from '@/services/invoice-convert'
 import { getInvoiceTemplateOrDefault } from '@/services/manufacturers'
 import { defaultInvoiceTemplate, type InvoiceTemplate } from '@/services/manufacturers.types'
+
+import { ConvertResult } from './convert-result'
+import { InvoiceDropzone } from './invoice-dropzone'
+import { OrderSelect } from './order-select'
 
 type Step = 'result' | 'select' | 'upload'
 

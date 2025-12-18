@@ -4,9 +4,10 @@ import { useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
-import { UserTable } from '@/components/user/user-table'
 import { useUsers } from '@/hooks/use-users'
 import { type UserStatus } from '@/services/users'
+
+import { UserTable } from './user-table'
 
 type StatusFilter = 'all' | UserStatus
 

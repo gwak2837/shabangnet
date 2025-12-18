@@ -6,12 +6,12 @@ import { toast } from 'sonner'
 
 import { getSampleOrderEmailTemplateVariables, ORDER_EMAIL_TEMPLATE_VARIABLES } from '@/common/constants/order-email-template'
 import { queryKeys } from '@/common/constants/query-keys'
-import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useServerAction } from '@/hooks/use-server-action'
 
+import { SettingsIconBadge } from '../../settings-icon-badge'
 import {
   createOrderEmailTemplateAction,
   previewEmailTemplateAction,

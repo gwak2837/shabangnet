@@ -6,14 +6,15 @@ import { useState } from 'react'
 import type { SettlementFilters as SettlementFiltersType } from '@/services/settlement'
 
 import { AppShell } from '@/components/layout/app-shell'
-import { SettlementFilters } from '@/components/settlement/settlement-filters'
-import { SettlementSummary } from '@/components/settlement/settlement-summary'
-import { SettlementTable } from '@/components/settlement/settlement-table'
 import { Button } from '@/components/ui/button'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useSettlement } from '@/hooks/use-settlement'
 import { downloadExcel } from '@/lib/excel-client'
 import { getSettlementExcelData } from '@/services/settlement'
+
+import { SettlementFilters } from './settlement-filters'
+import { SettlementSummary } from './settlement-summary'
+import { SettlementTable } from './settlement-table'
 
 export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()

@@ -17,8 +17,9 @@ import {
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
-import { type SettingsAccent, SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Input } from '@/components/ui/input'
+
+import { type SettingsAccent, SettingsIconBadge } from './settings-icon-badge'
 
 interface SettingsItem {
   accent: SettingsAccent

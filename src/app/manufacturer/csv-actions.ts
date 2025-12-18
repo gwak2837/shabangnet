@@ -2,11 +2,11 @@
 
 import { eq } from 'drizzle-orm'
 
+import type { ManufacturerCsvImportResult, ManufacturerCsvRowError } from '@/components/manufacturer/manufacturer-csv.types'
+
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { parseCsv } from '@/utils/csv'
-
-import type { ManufacturerCsvImportResult, ManufacturerCsvRowError } from './manufacturer-csv.types'
 
 type CanonicalField = 'ccEmail' | 'contactName' | 'email' | 'name' | 'phone'
 

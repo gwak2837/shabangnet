@@ -7,7 +7,6 @@ import { toast } from 'sonner'
 import type { ExclusionPattern, ExclusionSettings } from '@/services/settings'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { SettingsIconBadge } from '@/components/settings/settings-icon-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +22,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useServerAction } from '@/hooks/use-server-action'
 
+import { SettingsIconBadge } from '../../../settings-icon-badge'
 import { addExclusionPattern, removeExclusionPattern, updateExclusionPattern, updateExclusionSettings } from './action'
 import { useExclusionSettings } from './hook'
 

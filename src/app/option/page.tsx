@@ -8,15 +8,16 @@ import type { OptionManufacturerMapping } from '@/services/option-mappings'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
-import { OptionMappingFilters } from '@/components/option-mapping/option-mapping-filters'
-import { OptionMappingModal } from '@/components/option-mapping/option-mapping-modal'
-import { OptionMappingTable } from '@/components/option-mapping/option-mapping-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useOptionMappings } from '@/hooks/use-option-mappings'
 import { useServerAction } from '@/hooks/use-server-action'
 import { create, remove, update } from '@/services/option-mappings'
+
+import { OptionMappingFilters } from './option-mapping-filters'
+import { OptionMappingModal } from './option-mapping-modal'
+import { OptionMappingTable } from './option-mapping-table'
 
 export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')

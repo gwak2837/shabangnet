@@ -5,18 +5,19 @@ import { useMemo, useState } from 'react'
 
 import type { Manufacturer } from '@/services/manufacturers.types'
 
-import { ManufacturerCsvDialog } from '@/components/manufacturer/manufacturer-csv-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { authClient } from '@/lib/auth-client'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
+
+import { ManufacturerCsvDialog } from './manufacturer-csv-dialog'
 
 interface ManufacturerTableProps {
   fetchNextPage?: () => void
@@ -111,14 +112,11 @@ export function ManufacturerTable({
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 {isAdmin && (
-                  <TableHead className="w-10">
-                    <Checkbox
-                      aria-label="전체 선택"
-                      checked={isAllSelected}
-                      className={isSomeSelected ? 'opacity-50' : ''}
-                      onCheckedChange={(checked) => handleSelectAll(checked === true)}
-                    />
-                  </TableHead>
+                  <TableSelectionHeadCell
+                    aria-label="전체 선택"
+                    checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                    onCheckedChange={handleSelectAll}
+                  />
                 )}
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">제조사</TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">담당자</TableHead>
@@ -134,15 +132,26 @@ export function ManufacturerTable({
             </TableHeader>
             <TableBody>
               {manufacturers.map((manufacturer) => (
-                <TableRow className="hover:bg-slate-50 transition-colors" key={manufacturer.id}>
+                <TableRow
+                  aria-selected={isAdmin ? effectiveSelectedIdSet.has(manufacturer.id) : undefined}
+                  className={`hover:bg-slate-50 transition-colors ${isAdmin ? 'cursor-pointer' : ''}`}
+                  key={manufacturer.id}
+                  onClick={(e) => {
+                    if (!isAdmin) {
+                      return
+                    }
+                    if (!shouldToggleRowSelection(e)) {
+                      return
+                    }
+                    handleSelectItem(manufacturer.id, !effectiveSelectedIdSet.has(manufacturer.id))
+                  }}
+                >
                   {isAdmin && (
-                    <TableCell className="w-10">
-                      <Checkbox
-                        aria-label={`${manufacturer.name} 선택`}
-                        checked={effectiveSelectedIdSet.has(manufacturer.id)}
-                        onCheckedChange={(checked) => handleSelectItem(manufacturer.id, checked === true)}
-                      />
-                    </TableCell>
+                    <TableSelectionCell
+                      aria-label={`${manufacturer.name} 선택`}
+                      checked={effectiveSelectedIdSet.has(manufacturer.id)}
+                      onCheckedChange={(checked) => handleSelectItem(manufacturer.id, checked)}
+                    />
                   )}
                   <TableCell>
                     <div className="flex items-center gap-3">

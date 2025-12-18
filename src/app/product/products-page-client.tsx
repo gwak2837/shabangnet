@@ -8,10 +8,6 @@ import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
-import { DeleteProductsDialog } from '@/components/product/delete-products-dialog'
-import { ProductCsvDialog } from '@/components/product/product-csv-dialog'
-import { ProductFilters } from '@/components/product/product-filters'
-import { ProductTable } from '@/components/product/product-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
@@ -21,6 +17,11 @@ import { useServerAction } from '@/hooks/use-server-action'
 import { authClient } from '@/lib/auth-client'
 import { saveProductManufacturerLink } from '@/services/product-manufacturer-links'
 import { update } from '@/services/products'
+
+import { DeleteProductsDialog } from './delete-products-dialog'
+import { ProductCsvDialog } from './product-csv-dialog'
+import { ProductFilters } from './product-filters'
+import { ProductTable } from './product-table'
 
 interface MatchingSummaryResponse {
   missingEmailManufacturers: unknown[]
