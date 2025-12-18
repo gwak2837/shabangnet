@@ -25,6 +25,7 @@ interface TableSelectionCellProps {
   'aria-label': string
   checked: boolean
   className?: string
+  hitAreaClassName?: string
   onCheckedChange?: (checked: boolean) => void
 }
 
@@ -32,6 +33,7 @@ interface TableSelectionHeadCellProps {
   'aria-label': string
   checked: CheckedState
   className?: string
+  hitAreaClassName?: string
   onCheckedChange?: (checked: boolean) => void
 }
 
@@ -62,20 +64,32 @@ export function shouldToggleRowSelection(event: MouseEvent<HTMLElement>): boolea
 }
 
 export function TableSelectionCell({ className, onCheckedChange, ...props }: TableSelectionCellProps) {
+  const { hitAreaClassName, ...checkboxProps } = props
+
   return (
     <TableCell className={cn('w-12 p-0', className)}>
-      <div className="mx-auto w-fit" data-row-select-ignore onClick={(e) => e.stopPropagation()}>
-        <Checkbox {...props} onCheckedChange={(checked) => onCheckedChange?.(checked === true)} />
+      <div
+        className={cn('mx-auto w-fit', hitAreaClassName)}
+        data-row-select-ignore
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox {...checkboxProps} onCheckedChange={(checked) => onCheckedChange?.(checked === true)} />
       </div>
     </TableCell>
   )
 }
 
 export function TableSelectionHeadCell({ className, onCheckedChange, ...props }: TableSelectionHeadCellProps) {
+  const { hitAreaClassName, ...checkboxProps } = props
+
   return (
     <TableHead className={cn('w-12 px-0', className)}>
-      <div className="mx-auto w-fit" data-row-select-ignore onClick={(e) => e.stopPropagation()}>
-        <Checkbox {...props} onCheckedChange={(checked) => onCheckedChange?.(checked === true)} />
+      <div
+        className={cn('mx-auto w-fit', hitAreaClassName)}
+        data-row-select-ignore
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox {...checkboxProps} onCheckedChange={(checked) => onCheckedChange?.(checked === true)} />
       </div>
     </TableHead>
   )

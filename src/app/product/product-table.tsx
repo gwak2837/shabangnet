@@ -109,6 +109,7 @@ export function ProductTable({
                 <TableSelectionHeadCell
                   aria-label="전체 선택"
                   checked={selectionState === 'all' ? true : selectionState === 'mixed' ? 'indeterminate' : false}
+                  hitAreaClassName="flex w-10 items-center justify-center"
                   onCheckedChange={(checked) => onSelectAll?.(checked)}
                 />
               )}
@@ -161,6 +162,7 @@ export function ProductTable({
                       <TableSelectionCell
                         aria-label={`${product.productCode} 선택`}
                         checked={isSelected}
+                        hitAreaClassName="flex w-10 items-center justify-center"
                         onCheckedChange={(checked) => onSelectItem?.(product.id, checked)}
                       />
                     )}
