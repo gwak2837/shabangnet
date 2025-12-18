@@ -5,6 +5,8 @@ import { Loader2 } from 'lucide-react'
 import { MFAForm } from '@/components/settings/mfa-form'
 import { useMFASettings } from '@/hooks/use-settings'
 
+import { SettingsDetailHeader } from '../settings-detail-header'
+
 export default function AccountSettingsPage() {
   const { data: mfaSettings, isLoading } = useMFASettings()
 
@@ -18,6 +20,7 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="max-w-3xl flex flex-col gap-6">
+      <SettingsDetailHeader backHref="/settings#security" backLabel="보안" />
       <MFAForm settings={mfaSettings} />
     </div>
   )

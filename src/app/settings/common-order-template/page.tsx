@@ -17,7 +17,7 @@ import {
 
 import { CommonOrderTemplateForm } from '../order/common-order-template/common-order-template-form'
 
-export default function OrderCommonOrderTemplateSettingsPage() {
+export default function CommonOrderTemplateSettingsPage() {
   const router = useRouter()
   const [isDirty, setIsDirty] = useState(false)
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false)
@@ -39,12 +39,12 @@ export default function OrderCommonOrderTemplateSettingsPage() {
       setIsLeaveConfirmOpen(true)
       return
     }
-    router.push('/settings/order')
+    router.push('/settings#templates')
   }
 
   function handleLeave() {
     setIsLeaveConfirmOpen(false)
-    router.push('/settings/order')
+    router.push('/settings#templates')
   }
 
   return (
@@ -55,7 +55,7 @@ export default function OrderCommonOrderTemplateSettingsPage() {
         type="button"
       >
         <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-        주문 처리
+        템플릿
       </button>
 
       <CommonOrderTemplateForm onDirtyChange={setIsDirty} />

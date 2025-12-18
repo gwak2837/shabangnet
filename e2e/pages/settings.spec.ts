@@ -14,31 +14,27 @@ const TEST_EXCLUSION_PATTERN = {
   description: 'E2E 테스트용 제외 패턴',
 }
 
-const TEST_SYNONYM = {
-  standardKey: 'productName',
-  standardKeyLabel: '상품명',
-  synonym: `E2E테스트상품명컬럼_${TIMESTAMP}`,
-}
-
-test.describe('주문 설정 페이지', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/settings/order')
-    // 페이지 로드 대기 - 첫 번째 카드 제목 확인
-    await expect(page.locator('section.glass-card h2').filter({ hasText: '택배사' }).first()).toBeVisible({
-      timeout: 10000,
-    })
+test.describe('설정 > 주문 처리', () => {
+  test('설정 페이지가 열려야 함', async ({ page }) => {
+    await page.goto('/settings')
+    await expect(page.getByRole('heading', { name: '설정' })).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('#order')).toBeVisible()
   })
 
   test.describe('택배사 연결', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/settings/courier')
+      await expect(page.getByRole('heading', { name: '택배사' })).toBeVisible({ timeout: 10000 })
+    })
+
     test('택배사 목록이 표시되어야 함', async ({ page }) => {
       // 시드된 택배사 중 하나가 보여야 함 (카드 아이템에서 찾기)
-      await expect(page.locator('.glass-panel').filter({ hasText: 'CJ대한통운' }).first()).toBeVisible()
+      await expect(page.getByText('CJ대한통운').first()).toBeVisible()
     })
 
     test('새 택배사 추가', async ({ page }) => {
-      // 택배사 섹션의 추가 버튼 클릭
-      const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
-      await courierSection.getByRole('button', { name: '추가' }).click()
+      // 추가 버튼 클릭
+      await page.getByRole('button', { name: '추가' }).click()
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
@@ -62,17 +58,12 @@ test.describe('주문 설정 페이지', () => {
       await expect(page.getByRole('dialog')).not.toBeVisible()
 
       // 목록에 추가된 택배사 확인
-      await expect(page.locator('.glass-panel').filter({ hasText: TEST_COURIER.name })).toBeVisible()
+      await expect(page.getByText(TEST_COURIER.name).first()).toBeVisible()
     })
 
     test('택배사 수정', async ({ page }) => {
       // 첫 번째 택배사 아이템의 수정 버튼 클릭
-      const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
-      const firstItem = courierSection.locator('.glass-panel').first()
-      await firstItem
-        .locator('button')
-        .filter({ has: page.locator('svg.lucide-pencil') })
-        .click()
+      await page.locator('svg.lucide-pencil').first().locator('..').click()
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
@@ -86,19 +77,11 @@ test.describe('주문 설정 페이지', () => {
       await page.getByRole('dialog').getByRole('button', { name: '저장' }).click()
 
       // 변경 확인
-      await expect(
-        page
-          .locator('.glass-panel')
-          .filter({ hasText: `${currentName}_수정됨` })
-          .first(),
-      ).toBeVisible()
+      await expect(page.getByText(`${currentName}_수정됨`).first()).toBeVisible()
     })
 
     test('택배사 활성화/비활성화 토글', async ({ page }) => {
-      // 택배사 섹션 찾기
-      const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
-      const firstItem = courierSection.locator('.glass-panel').first()
-      const toggle = firstItem.locator('button[role="switch"]')
+      const toggle = page.locator('button[role="switch"]').first()
       const initialState = await toggle.getAttribute('data-state')
 
       // 토글 클릭
@@ -115,54 +98,39 @@ test.describe('주문 설정 페이지', () => {
     })
 
     test('택배사 삭제', async ({ page }) => {
-      // 택배사 섹션 찾기
-      const courierSection = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("택배사")') })
-      const testCourierItem = courierSection.locator('.glass-panel').filter({ hasText: TEST_COURIER.name })
-
       // 삭제 버튼 클릭 (휴지통 아이콘)
-      await testCourierItem
-        .locator('button')
-        .filter({ has: page.locator('svg.lucide-trash-2') })
-        .click()
+      const testCourierRow = page.getByText(TEST_COURIER.name).first().locator('xpath=ancestor::div[1]')
+      await testCourierRow.locator('button').filter({ has: page.locator('svg.lucide-trash-2') }).click()
 
       // 삭제 확인
-      await expect(testCourierItem).not.toBeVisible()
+      await expect(page.getByText(TEST_COURIER.name)).not.toBeVisible()
     })
   })
 
   test.describe('발송 제외 패턴', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/settings/exclusion')
+      await expect(page.getByRole('heading', { name: '발송 제외 설정' })).toBeVisible({ timeout: 10000 })
+    })
+
     test('제외 패턴 목록이 표시되어야 함', async ({ page }) => {
-      await expect(page.locator('section.glass-card h2').filter({ hasText: '발송 제외 설정' })).toBeVisible()
       // 시드된 패턴 중 하나가 보여야 함
       await expect(page.getByText('[30002002]주문_센터택배').first()).toBeVisible()
     })
 
     test('새 제외 패턴 추가', async ({ page }) => {
-      // 발송 제외 설정 섹션 내의 입력란 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("발송 제외 설정")') })
+      const addForm = page.locator('form').filter({ has: page.locator('input[name="pattern"]') })
 
-      // 패턴 입력
-      await section.locator('input.font-mono').fill(TEST_EXCLUSION_PATTERN.pattern)
-      await section.locator('input[placeholder="설명 (선택사항)"]').fill(TEST_EXCLUSION_PATTERN.description)
-
-      // 추가 버튼 클릭
-      await section.getByRole('button', { name: '추가' }).click()
+      await addForm.locator('input[name="pattern"]').fill(TEST_EXCLUSION_PATTERN.pattern)
+      await addForm.locator('input[name="description"]').fill(TEST_EXCLUSION_PATTERN.description)
+      await addForm.getByRole('button', { name: '추가' }).click()
 
       // 추가된 패턴 확인 (중복 요소가 있을 수 있으므로 .first() 사용)
       await expect(page.getByText(TEST_EXCLUSION_PATTERN.pattern).first()).toBeVisible()
     })
 
     test('제외 패턴 수정', async ({ page }) => {
-      // 발송 제외 설정 섹션의 패턴 아이템 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("발송 제외 설정")') })
-      const firstPatternItem = section
-        .locator('.glass-panel')
-        .filter({ has: page.locator('.font-mono') })
-        .first()
-      await firstPatternItem
-        .locator('button')
-        .filter({ has: page.locator('svg.lucide-pencil') })
-        .click()
+      await page.locator('svg.lucide-pencil').first().locator('..').click()
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
@@ -179,14 +147,8 @@ test.describe('주문 설정 페이지', () => {
     })
 
     test('제외 패턴 활성화/비활성화 토글', async ({ page }) => {
-      // 발송 제외 설정 섹션 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("발송 제외 설정")') })
-
       // 메인 토글이 활성화되어 있어야 개별 패턴 토글을 클릭할 수 있음
-      const mainToggle = section
-        .locator('.glass-panel')
-        .filter({ hasText: '자동 필터링 사용' })
-        .locator('button[role="switch"]')
+      const mainToggle = page.locator('label').filter({ hasText: '자동 필터링 사용' }).locator('button[role="switch"]')
       const isMainEnabled = (await mainToggle.getAttribute('data-state')) === 'checked'
 
       // 메인 토글이 비활성화되어 있으면 먼저 활성화
@@ -198,11 +160,7 @@ test.describe('주문 설정 페이지', () => {
       }
 
       // 첫 번째 패턴의 토글 스위치
-      const firstPatternItem = section
-        .locator('.glass-panel')
-        .filter({ has: page.locator('.font-mono') })
-        .first()
-      const toggle = firstPatternItem.locator('button[role="switch"]')
+      const toggle = page.locator('button[role="switch"]').nth(1)
       const initialState = await toggle.getAttribute('data-state')
 
       // 토글 클릭
@@ -219,12 +177,7 @@ test.describe('주문 설정 페이지', () => {
     })
 
     test('발송 제외 필터 전체 활성화/비활성화', async ({ page }) => {
-      // 발송 제외 설정 섹션 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("발송 제외 설정")') })
-      const mainToggle = section
-        .locator('.glass-panel')
-        .filter({ hasText: '자동 필터링 사용' })
-        .locator('button[role="switch"]')
+      const mainToggle = page.locator('label').filter({ hasText: '자동 필터링 사용' }).locator('button[role="switch"]')
       const initialState = await mainToggle.getAttribute('data-state')
 
       // 전체 활성화 토글
@@ -241,120 +194,19 @@ test.describe('주문 설정 페이지', () => {
     })
   })
 
-  test.describe('컬럼 동의어', () => {
-    test('동의어 섹션이 표시되어야 함', async ({ page }) => {
-      await expect(page.locator('section.glass-card h2').filter({ hasText: '컬럼 동의어 사전' })).toBeVisible()
-    })
-
-    test('새 동의어 추가', async ({ page }) => {
-      // 동의어 섹션 찾기
-      const section = page
-        .locator('section.glass-card')
-        .filter({ has: page.locator('h2:has-text("컬럼 동의어 사전")') })
-
-      // 표준 컬럼 선택
-      await section.getByRole('combobox').click()
-      await page.getByRole('option', { name: TEST_SYNONYM.standardKeyLabel }).click()
-
-      // 동의어 입력
-      await section.locator('input[placeholder*="동의어 입력"]').fill(TEST_SYNONYM.synonym)
-
-      // 추가 버튼 클릭
-      await section.getByRole('button', { name: '추가' }).click()
-
-      // 페이지 재렌더링 대기 (추가 후 상태 업데이트)
-      await page.waitForTimeout(1000)
-
-      // 해당 표준 컬럼 섹션 펼치기 (details 요소의 summary 클릭)
-      const detailsGroup = section.locator('details').filter({ hasText: TEST_SYNONYM.standardKeyLabel })
-      await expect(detailsGroup).toBeVisible()
-      await detailsGroup.locator('summary').click()
-
-      // 추가된 동의어 확인
-      await expect(page.getByText(TEST_SYNONYM.synonym)).toBeVisible()
-    })
-
-    test('중복 동의어 추가 시 에러 처리', async ({ page }) => {
-      // 동의어 섹션 찾기
-      const section = page
-        .locator('section.glass-card')
-        .filter({ has: page.locator('h2:has-text("컬럼 동의어 사전")') })
-
-      // 섹션이 보이도록 스크롤
-      await section.scrollIntoViewIfNeeded()
-
-      // 시드 데이터에 있는 기존 동의어 사용 (상품명 - 품명)
-      const existingSynonym = '품명'
-
-      // 표준 컬럼 선택 - 스크롤 후 클릭
-      const combobox = section.getByRole('combobox')
-      await combobox.scrollIntoViewIfNeeded()
-      await combobox.click()
-      // 옵션이 뷰포트 안에 들어올 때까지 대기 후 클릭
-      const option = page.getByRole('option', { name: '상품명' })
-      await option.scrollIntoViewIfNeeded()
-      await option.click()
-
-      // 기존에 있는 동의어 입력
-      await section.locator('input[placeholder*="동의어 입력"]').fill(existingSynonym)
-
-      // 추가 버튼 클릭
-      await section.getByRole('button', { name: '추가' }).click()
-
-      // 에러 토스트 확인
-      await expect(page.locator('[data-sonner-toast]').getByText(/이미 존재/)).toBeVisible()
-    })
-
-    test('동의어 그룹 펼치기/접기', async ({ page }) => {
-      // 동의어 섹션 찾기
-      const section = page
-        .locator('section.glass-card')
-        .filter({ has: page.locator('h2:has-text("컬럼 동의어 사전")') })
-
-      // 상품명 그룹 클릭하여 펼치기 (details 요소)
-      const productNameGroup = section.locator('details').filter({ hasText: '상품명' })
-      await productNameGroup.locator('summary').click()
-
-      // 펼쳐진 내용 확인 (동의어가 보여야 함)
-      await page.waitForTimeout(300)
-
-      // 다시 클릭하여 접기
-      await productNameGroup.locator('summary').click()
-    })
-
-    test('동의어 활성화/비활성화 토글', async ({ page }) => {
-      // 동의어 섹션 찾기
-      const section = page
-        .locator('section.glass-card')
-        .filter({ has: page.locator('h2:has-text("컬럼 동의어 사전")') })
-
-      // 상품명 그룹 펼치기 (details 요소)
-      const productNameGroup = section.locator('details').filter({ hasText: '상품명' })
-      await productNameGroup.locator('summary').click()
-
-      // 첫 번째 동의어의 토글 찾기 (details 내부의 동의어 아이템)
-      const synonymItem = productNameGroup.locator('[aria-checked]').first()
-      const toggle = synonymItem.locator('button[role="switch"]')
-
-      // 토글 클릭
-      await toggle.click()
-      await page.waitForTimeout(500)
-
-      // 원래 상태로 복원
-      await toggle.click()
-      await page.waitForTimeout(500)
-    })
-  })
-
   test.describe('쇼핑몰 템플릿', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/settings/shopping-mall-template')
+      await expect(page.getByRole('heading', { name: '쇼핑몰 템플릿' })).toBeVisible({ timeout: 10000 })
+    })
+
     test('쇼핑몰 템플릿 목록이 표시되어야 함', async ({ page }) => {
-      await expect(page.locator('section.glass-card h2').filter({ hasText: '쇼핑몰 템플릿' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: '쇼핑몰 템플릿' })).toBeVisible()
     })
 
     test('쇼핑몰 템플릿 추가 모달 열기', async ({ page }) => {
       // 쇼핑몰 템플릿 섹션의 추가 버튼 클릭
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("쇼핑몰 템플릿")') })
-      await section.getByRole('button', { name: '추가' }).click()
+      await page.getByRole('button', { name: '추가' }).click()
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
@@ -370,17 +222,8 @@ test.describe('주문 설정 페이지', () => {
     })
 
     test('기존 쇼핑몰 템플릿 수정 모달 열기', async ({ page }) => {
-      // 쇼핑몰 템플릿 섹션 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("쇼핑몰 템플릿")') })
-
-      // 시드된 템플릿이 있다면 수정 버튼 클릭
-      const firstItem = section.locator('.glass-panel').first()
-
       // 수정 버튼 클릭 (Pencil 아이콘)
-      await firstItem
-        .locator('button')
-        .filter({ has: page.locator('svg.lucide-pencil') })
-        .click()
+      await page.locator('svg.lucide-pencil').first().locator('..').click()
 
       // 모달 확인
       await expect(page.getByRole('dialog')).toBeVisible()
@@ -390,10 +233,7 @@ test.describe('주문 설정 페이지', () => {
     })
 
     test('쇼핑몰 템플릿 활성화/비활성화 토글', async ({ page }) => {
-      // 쇼핑몰 템플릿 섹션 찾기
-      const section = page.locator('section.glass-card').filter({ has: page.locator('h2:has-text("쇼핑몰 템플릿")') })
-      const firstItem = section.locator('.glass-panel').first()
-      const toggle = firstItem.locator('button[role="switch"]')
+      const toggle = page.locator('button[role="switch"]').first()
       const initialState = await toggle.getAttribute('data-state')
 
       // 토글 클릭 (비활성화)

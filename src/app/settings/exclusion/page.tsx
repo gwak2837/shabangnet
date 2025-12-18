@@ -1,11 +1,13 @@
+import { ExclusionForm } from '../order/exclusion/exclusion-form'
 import { SettingsDetailHeader } from '../settings-detail-header'
-import { ExclusionForm } from './exclusion-form'
 
 export default function ExclusionSettingsPage() {
   return (
     <div className="max-w-3xl space-y-6">
-      <SettingsDetailHeader />
+      <SettingsDetailHeader backHref="/settings#validation" backLabel="검증" />
       <ExclusionForm />
     </div>
   )
 }
+
+
