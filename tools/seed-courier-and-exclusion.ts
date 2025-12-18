@@ -1,5 +1,6 @@
 import './server-only'
 
+import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -27,6 +28,7 @@ const DEFAULT_COURIER_MAPPINGS = [
 
 async function seed() {
   const databaseURL = process.env.SUPABASE_POSTGRES_URL_NON_POOLING
+
   if (!databaseURL) {
     console.error('❌ SUPABASE_POSTGRES_URL_NON_POOLING environment variable is not set')
     process.exit(1)
@@ -47,8 +49,8 @@ async function seed() {
   try {
     // 발송 제외 패턴 시드
     console.log('\n📋 Seeding exclusion patterns...')
-    let exclusionCreated = 0
-    let exclusionSkipped = 0
+    let exclusionUpserted = 0
+    let exclusionErrored = 0
 
     for (const pattern of DEFAULT_EXCLUSION_PATTERNS) {
       try {
@@ -59,45 +61,91 @@ async function seed() {
             description: pattern.description,
             enabled: true,
           })
-          .onConflictDoNothing()
+          .onConflictDoUpdate({
+            target: exclusionPattern.pattern,
+            set: {
+              description: sql`excluded.description`,
+              enabled: sql`excluded.enabled`,
+            },
+          })
 
-        exclusionCreated++
+        exclusionUpserted++
         console.log(`  ✅ ${pattern.pattern}`)
-      } catch {
-        exclusionSkipped++
-        console.log(`  ⏭️  ${pattern.pattern} (already exists or error)`)
+      } catch (error) {
+        exclusionErrored++
+        console.error(`  ❌ ${pattern.pattern}`, error)
       }
     }
 
     // 택배사 연결 시드
     console.log('\n📦 Seeding courier mappings...')
-    let courierCreated = 0
-    let courierSkipped = 0
+    let courierUpserted = 0
+    let courierErrored = 0
 
     for (const courier of DEFAULT_COURIER_MAPPINGS) {
       try {
-        await db
-          .insert(courierMapping)
-          .values({
-            name: courier.name,
-            code: courier.code,
-            aliases: courier.aliases,
-            enabled: true,
-          })
-          .onConflictDoNothing()
+        await db.transaction(async (tx) => {
+          const [byCode] = await tx
+            .select({ id: courierMapping.id, name: courierMapping.name, code: courierMapping.code })
+            .from(courierMapping)
+            .where(eq(courierMapping.code, courier.code))
 
-        courierCreated++
+          const [byName] = await tx
+            .select({ id: courierMapping.id, name: courierMapping.name, code: courierMapping.code })
+            .from(courierMapping)
+            .where(eq(courierMapping.name, courier.name))
+
+          // 데이터가 꼬여서 "같은 name과 같은 code가 서로 다른 row"에 있는 경우 병합
+          if (byCode && byName && byCode.id !== byName.id) {
+            await tx.delete(courierMapping).where(eq(courierMapping.id, byName.id))
+            await tx
+              .update(courierMapping)
+              .set({
+                name: courier.name,
+                aliases: courier.aliases,
+                enabled: true,
+              })
+              .where(eq(courierMapping.id, byCode.id))
+          } else if (byCode) {
+            await tx
+              .update(courierMapping)
+              .set({
+                name: courier.name,
+                aliases: courier.aliases,
+                enabled: true,
+              })
+              .where(eq(courierMapping.id, byCode.id))
+          } else if (byName) {
+            await tx
+              .update(courierMapping)
+              .set({
+                code: courier.code,
+                aliases: courier.aliases,
+                enabled: true,
+              })
+              .where(eq(courierMapping.id, byName.id))
+          } else {
+            await tx.insert(courierMapping).values({
+              name: courier.name,
+              code: courier.code,
+              aliases: courier.aliases,
+              enabled: true,
+            })
+          }
+        })
+
+        courierUpserted++
         console.log(`  ✅ ${courier.name} (${courier.code})`)
-      } catch {
-        courierSkipped++
-        console.log(`  ⏭️  ${courier.name} (already exists or error)`)
+      } catch (error) {
+        courierErrored++
+        console.error(`  ❌ ${courier.name} (${courier.code})`, error)
       }
     }
 
     // 결과 요약
     console.log('\n📊 Summary:')
-    console.log(`   Exclusion patterns: ${exclusionCreated} created, ${exclusionSkipped} skipped`)
-    console.log(`   Courier mappings: ${courierCreated} created, ${courierSkipped} skipped`)
+    console.log(`   Exclusion patterns: ${exclusionUpserted} upserted, ${exclusionErrored} errored`)
+    console.log(`   Courier mappings: ${courierUpserted} upserted, ${courierErrored} errored`)
 
     console.log('\n🎉 Seeding completed!')
   } catch (error) {
