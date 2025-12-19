@@ -1,23 +1,26 @@
 'use client'
 
-import { Download, FileSpreadsheet } from 'lucide-react'
-import { useState } from 'react'
-
-import type { SettlementFilters as SettlementFiltersType } from '@/services/settlement'
+import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
+import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
 import { useManufacturers } from '@/hooks/use-manufacturers'
 import { useSettlement } from '@/hooks/use-settlement'
-import { downloadExcel } from '@/lib/excel-client'
-import { getSettlementExcelData } from '@/services/settlement'
+import { authClient } from '@/lib/auth-client'
 
+import type { SettlementFilters as SettlementFiltersType } from './settlement.types'
+
+import { DeleteSettlementOrdersDialog } from './delete-settlement-orders-dialog'
 import { SettlementFilters } from './settlement-filters'
 import { SettlementSummary } from './settlement-summary'
 import { SettlementTable } from './settlement-table'
 
 export default function SettlementPage() {
   const { data: manufacturers = [] } = useManufacturers()
+  const { data: session } = authClient.useSession()
+  const isAdmin = session?.user?.isAdmin ?? false
 
   // Filter states
   const [selectedManufacturerId, setSelectedManufacturerId] = useState<number | null>(null)
@@ -31,6 +34,7 @@ export default function SettlementPage() {
 
   // Search trigger
   const [searchParams, setSearchParams] = useState<SettlementFiltersType | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   const handleSearch = () => {
     if (!selectedManufacturerId) return
@@ -41,13 +45,19 @@ export default function SettlementPage() {
       startDate,
       endDate,
     })
+    setSelectedIds([])
   }
 
-  // Use API hook
-  const { data: settlementData, isLoading } = useSettlement(searchParams)
+  const {
+    data: settlementData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useSettlement(searchParams, { limit: 50 })
 
-  const filteredOrders = settlementData?.orders || []
-  const summary = settlementData?.summary || {
+  const orders = useMemo(() => settlementData?.pages.flatMap((page) => page.items) ?? [], [settlementData])
+  const summary = settlementData?.pages[0]?.summary ?? {
     totalOrders: 0,
     totalQuantity: 0,
     totalCost: 0,
@@ -60,33 +70,63 @@ export default function SettlementPage() {
   // Get manufacturer name
   const selectedManufacturer = manufacturers.find((m) => m.id === searchParams?.manufacturerId)
 
-  // Download Excel
-  const handleDownload = async () => {
-    if (filteredOrders.length === 0 || !searchParams) return
+  const visibleIds = useMemo(() => orders.map((o) => o.id), [orders])
+  const visibleSelectedIds = useMemo(() => {
+    if (selectedIds.length === 0 || visibleIds.length === 0) {
+      return []
+    }
+    const visibleIdSet = new Set(visibleIds)
+    return selectedIds.filter((id) => visibleIdSet.has(id))
+  }, [selectedIds, visibleIds])
 
-    const { data, summary: downloadSummary } = await getSettlementExcelData(searchParams)
+  const selectionState = useMemo<'all' | 'mixed' | 'none'>(() => {
+    if (visibleIds.length === 0) return 'none'
+    const selectedCount = visibleSelectedIds.length
+    if (selectedCount === 0) return 'none'
+    if (selectedCount === visibleIds.length) return 'all'
+    return 'mixed'
+  }, [visibleIds.length, visibleSelectedIds.length])
 
-    // Add summary row
-    data.push({
-      주문번호: '',
-      발주일: '',
-      상품명: '',
-      옵션: '합계',
-      수량: downloadSummary.totalQuantity,
-      원가: '',
-      총원가: downloadSummary.totalCost,
-      택배비: downloadSummary.totalShippingCost,
-      고객명: '',
-      배송지: '',
-    } as Record<string, unknown>)
+  function handleSelectAll(checked: boolean) {
+    setSelectedIds(checked ? visibleIds : [])
+  }
 
-    const fileName = `정산서_${selectedManufacturer?.name}_${summary.period.replace(/[^0-9]/g, '')}.xlsx`
-    await downloadExcel(data, {
-      fileName,
-      sheetName: '정산내역',
-      columnWidths: [20, 12, 30, 15, 8, 12, 12, 12, 10, 40],
+  function handleSelectItem(id: number, checked: boolean) {
+    setSelectedIds((prev) => {
+      const visibleIdSet = new Set(visibleIds)
+      const prunedPrev = prev.filter((selectedId) => visibleIdSet.has(selectedId))
+      if (checked) {
+        return prunedPrev.includes(id) ? prunedPrev : [...prunedPrev, id]
+      }
+      return prunedPrev.filter((selectedId) => selectedId !== id)
     })
   }
+
+  function handleDeleteSuccess() {
+    setSelectedIds([])
+  }
+
+  const settlementCsvHref = useMemo(() => {
+    if (!searchParams) return ''
+    const sp = new URLSearchParams()
+    sp.set('manufacturer-id', String(searchParams.manufacturerId))
+    sp.set('period-type', searchParams.periodType)
+
+    if (searchParams.periodType === 'month' && searchParams.month) {
+      sp.set('month', searchParams.month)
+    }
+
+    if (searchParams.periodType === 'range') {
+      if (searchParams.startDate) {
+        sp.set('start-date', searchParams.startDate)
+      }
+      if (searchParams.endDate) {
+        sp.set('end-date', searchParams.endDate)
+      }
+    }
+
+    return `/api/settlement/csv?${sp.toString()}`
+  }, [searchParams])
 
   return (
     <AppShell description="제조사별 발주 내역을 조회하고 정산서를 다운로드합니다" title="정산 관리">
@@ -124,18 +164,36 @@ export default function SettlementPage() {
             />
           )}
 
-          {/* Download Button */}
-          {filteredOrders.length > 0 && !isLoading && (
-            <div className="flex justify-end">
-              <Button className="gap-2" onClick={handleDownload}>
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-2">
+            {isAdmin && <DeleteSettlementOrdersDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
+            <Button asChild className="gap-2" variant="outline">
+              <a href={settlementCsvHref}>
                 <Download className="h-4 w-4" />
-                엑셀 다운로드
-              </Button>
-            </div>
-          )}
+                CSV 다운로드
+              </a>
+            </Button>
+          </div>
 
           {/* Table */}
-          <SettlementTable isLoading={isLoading} orders={filteredOrders} />
+          <SettlementTable
+            isAdmin={isAdmin}
+            isLoading={isLoading}
+            onSelectAll={handleSelectAll}
+            onSelectItem={handleSelectItem}
+            orders={orders}
+            selectedIds={visibleSelectedIds}
+            selectionState={selectionState}
+          />
+
+          {isFetchingNextPage ? (
+            <div className="mt-2 flex items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              더 불러오는 중...
+            </div>
+          ) : null}
+
+          <InfiniteScrollSentinel hasMore={Boolean(hasNextPage)} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
         </div>
       )}
 

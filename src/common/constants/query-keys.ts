@@ -98,13 +98,14 @@ export const queryKeys = {
   settlement: {
     /** 정산 전체(부분 무효화용) */
     all: ['settlement'] as const,
-    data: (filters: {
-      manufacturerId: number
-      periodType: string
-      month?: string
-      startDate?: string
+    list: (filters: {
       endDate?: string
-    }) => ['settlement', filters] as const,
+      limit?: number
+      manufacturerId: number
+      month?: string
+      periodType: string
+      startDate?: string
+    }) => ['settlement', 'list', filters] as const,
   },
   shoppingMallTemplates: {
     all: ['shopping-mall-templates'] as const,

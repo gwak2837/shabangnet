@@ -52,9 +52,7 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
   const { startDate, endDate } = getDateRange(filters)
 
   // Get manufacturer info
-  const mfr = await db.query.manufacturer.findFirst({
-    where: eq(manufacturer.id, filters.manufacturerId),
-  })
+  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, filters.manufacturerId))
 
   if (!mfr) {
     return createEmptySettlement(filters)
@@ -91,7 +89,7 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
     const cost = o.cost ?? 0
     const shippingCost = o.shippingCost ?? 0
     const quantity = o.quantity || 1
-    const totalCost = cost * quantity + shippingCost
+    const totalCost = cost + shippingCost
     const excludedReason = typeof o.excludedReason === 'string' ? o.excludedReason.trim() : ''
     const excludedFromEmail = excludedReason.length > 0
 
@@ -115,7 +113,7 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
   // Calculate summary
   const totalOrders = settlementOrders.length
   const totalQuantity = settlementOrders.reduce((sum, o) => sum + o.quantity, 0)
-  const totalCost = settlementOrders.reduce((sum, o) => sum + o.cost * o.quantity, 0)
+  const totalCost = settlementOrders.reduce((sum, o) => sum + o.cost, 0)
   const totalShippingCost = settlementOrders.reduce((sum, o) => sum + o.shippingCost, 0)
   const excludedOrderCount = settlementOrders.filter((o) => o.excludedFromEmail).length
 

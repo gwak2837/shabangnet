@@ -5,32 +5,32 @@ import { Ban, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { shouldToggleRowSelection, TableSelectionCell, TableSelectionHeadCell } from '@/components/ui/table-selection'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatCurrency, formatDateTime } from '@/utils/format/number'
 
-export interface SettlementOrder {
-  address: string
-  cost: number
-  customerName: string
-  excludedFromEmail?: boolean
-  excludedReason?: string
-  id: number
-  optionName: string
-  productName: string
-  quantity: number
-  sabangnetOrderNumber: string
-  sentAt: string
-  shippingCost: number
-  totalCost: number
-}
+import type { SettlementOrder } from './settlement.types'
 
 interface SettlementTableProps {
+  isAdmin?: boolean
   isLoading?: boolean
+  onSelectAll?: (checked: boolean) => void
+  onSelectItem?: (id: number, checked: boolean) => void
   orders: SettlementOrder[]
+  selectedIds?: number[]
+  selectionState?: 'all' | 'mixed' | 'none'
 }
 
-export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
+export function SettlementTable({
+  orders,
+  isLoading,
+  isAdmin = false,
+  onSelectAll,
+  onSelectItem,
+  selectedIds = [],
+  selectionState = 'none',
+}: SettlementTableProps) {
   if (isLoading) {
     return (
       <Card className="border-slate-200 bg-card shadow-sm">
@@ -43,11 +43,18 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
 
   return (
     <Card className="border-slate-200 bg-card shadow-sm">
-      <CardContent className="p-0">
-        <div className="overflow-auto max-h-[500px] overflow-x-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-card z-10">
-              <TableRow className="hover:bg-transparent">
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {isAdmin && (
+                <TableSelectionHeadCell
+                  aria-label="전체 선택"
+                  checked={selectionState === 'all' ? true : selectionState === 'mixed' ? 'indeterminate' : false}
+                  hitAreaClassName="flex w-10 items-center justify-center"
+                  onCheckedChange={(checked) => onSelectAll?.(checked)}
+                />
+              )}
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                   사방넷주문번호
                 </TableHead>
@@ -73,17 +80,39 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              <TooltipProvider>
-                {orders.map((order) => (
+          <TableBody>
+            <TooltipProvider>
+              {orders.map((order) => {
+                const isSelected = selectedIds.includes(order.id)
+
+                return (
                   <TableRow
-                    className="hover:bg-slate-50 data-[excluded=true]:bg-amber-50/50"
+                    aria-selected={isAdmin ? isSelected : undefined}
+                    className="hover:bg-slate-50 transition-colors aria-selected:[&_td:first-child]:bg-muted/50 data-[admin=true]:cursor-pointer data-[excluded=true]:bg-amber-50/50"
+                    data-admin={isAdmin}
                     data-excluded={order.excludedFromEmail}
                     key={order.id}
+                    onClick={(e) => {
+                      if (!isAdmin) {
+                        return
+                      }
+                      if (!shouldToggleRowSelection(e)) {
+                        return
+                      }
+                      onSelectItem?.(order.id, !isSelected)
+                    }}
                   >
+                    {isAdmin && (
+                      <TableSelectionCell
+                        aria-label={`${order.sabangnetOrderNumber} 선택`}
+                        checked={isSelected}
+                        hitAreaClassName="flex w-10 items-center justify-center"
+                        onCheckedChange={(checked) => onSelectItem?.(order.id, checked)}
+                      />
+                    )}
                     <TableCell className="font-mono text-sm text-slate-700">{order.sabangnetOrderNumber}</TableCell>
-                    <TableCell className="text-sm text-slate-600" title={formatDateTime(order.sentAt)}>
-                      {formatRelativeTime(order.sentAt)}
+                    <TableCell className="text-sm text-slate-600" title={formatDateTime(order.createdAt)}>
+                      {formatRelativeTime(order.createdAt)}
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">{order.productName}</TableCell>
                     <TableCell className="text-slate-600">{order.optionName || '-'}</TableCell>
@@ -125,18 +154,18 @@ export function SettlementTable({ orders, isLoading }: SettlementTableProps) {
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
-              </TooltipProvider>
-              {orders.length === 0 && (
-                <TableRow>
-                  <TableCell className="h-32 text-center text-slate-500" colSpan={11}>
-                    조회된 발주 내역이 없습니다.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                )
+              })}
+            </TooltipProvider>
+            {orders.length === 0 && (
+              <TableRow>
+                <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 12 : 11}>
+                  조회된 발주 내역이 없습니다.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )
