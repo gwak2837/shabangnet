@@ -126,8 +126,8 @@ export function ExportMappingEditor({ availableColumns, value, onChange }: Expor
                 <TableHeader className="bg-muted/40">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="text-center text-xs font-medium text-muted-foreground">#</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">원본 컬럼</TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">다운로드 컬럼</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">쇼핑몰 파일 컬럼</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">다운로드 파일 컬럼</TableHead>
                     <TableHead className="text-center text-xs font-medium text-muted-foreground">고정값</TableHead>
                     <TableHead className="text-center text-xs font-medium text-muted-foreground">관리</TableHead>
                   </TableRow>
