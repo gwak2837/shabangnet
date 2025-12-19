@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
-import { decodeCursor, encodeCursor } from '@/app/api/_utils/cursor'
+import { decodeCursor, encodeCursor } from '@/app/api/util/cursor'
 import { db } from '@/db/client'
 import { user } from '@/db/schema/auth'
 

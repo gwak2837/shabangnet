@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { decodeCursor, encodeCursor } from '@/app/api/_utils/cursor'
+import { decodeCursor, encodeCursor } from '@/app/api/util/cursor'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { orderEmailLog } from '@/db/schema/orders'
