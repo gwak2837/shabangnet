@@ -95,8 +95,15 @@ export function OptionMappingTable({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge className="bg-slate-100 text-slate-700" variant="secondary">
-                    {mapping.manufacturerName}
+                  <Badge
+                    className={
+                      mapping.manufacturerId == null
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-slate-100 text-slate-700'
+                    }
+                    variant="secondary"
+                  >
+                    {mapping.manufacturerName ?? '미연결'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-slate-500" title={formatDateTime(mapping.updatedAt)}>

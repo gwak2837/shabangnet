@@ -60,5 +60,3 @@ function htmlToText(html: string): string {
 function wrapPlainTextAsHtml(text: string): string {
   return `<div style="white-space:pre-wrap; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;">${escapeHtml(text)}</div>`
 }
-
-

@@ -6,6 +6,7 @@ import { db } from '@/db/client'
 import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 import { parseCsv } from '@/utils/csv'
+import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 import type { OptionMappingCsvImportResult, OptionMappingCsvRowError } from './option-mapping-csv.types'
 
@@ -75,7 +76,7 @@ export async function importOptionMappingsCsv(
       .from(optionMapping)
 
     const existingIdsByKey = new Map<string, number[]>()
-    const existingManufacturerById = new Map<number, number>()
+    const existingManufacturerById = new Map<number, number | null>()
 
     for (const row of existingRows) {
       const key = buildKey(row.productCode, row.optionName)
@@ -85,7 +86,7 @@ export async function importOptionMappingsCsv(
       } else {
         existingIdsByKey.set(key, [row.id])
       }
-      existingManufacturerById.set(row.id, row.manufacturerId)
+      existingManufacturerById.set(row.id, row.manufacturerId ?? null)
     }
 
     const errors: OptionMappingCsvRowError[] = []
@@ -169,7 +170,9 @@ export async function importOptionMappingsCsv(
 
       const existingIds = existingIdsByKey.get(key)
       if (existingIds && existingIds.length > 0) {
-        const needsUpdate = existingIds.some((existingId) => existingManufacturerById.get(existingId) !== manufacturerId)
+        const needsUpdate = existingIds.some(
+          (existingId) => existingManufacturerById.get(existingId) !== manufacturerId,
+        )
         if (!needsUpdate) {
           skipped += 1
           continue
@@ -236,7 +239,10 @@ export async function importOptionMappingsCsv(
           FROM ${optionMapping}
           INNER JOIN ${manufacturer} ON ${manufacturer.id} = ${optionMapping.manufacturerId}
           WHERE
-            ${optionMapping.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})
+            ${optionMapping.id} IN (${sql.join(
+              ids.map((id) => sql`${id}`),
+              sql`, `,
+            )})
             AND lower(${order.productCode}) = lower(${optionMapping.productCode})
             AND lower(${order.optionName}) = lower(${optionMapping.optionName})
             AND ${order.status} <> 'completed'
@@ -306,14 +312,6 @@ function normalizeName(value: string): string {
   return value.trim().toLowerCase()
 }
 
-function normalizeOptionName(raw: string): string {
-  const value = raw.trim()
-  if (!value) return ''
-  return value.replace(/\s*\[\d+\]\s*$/, '').trim()
-}
-
 function normalizeRequiredCell(value: string): string {
   return value.trim()
 }
-
-

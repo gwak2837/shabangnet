@@ -100,7 +100,10 @@ test.describe('설정 > 주문 처리', () => {
     test('택배사 삭제', async ({ page }) => {
       // 삭제 버튼 클릭 (휴지통 아이콘)
       const testCourierRow = page.getByText(TEST_COURIER.name).first().locator('xpath=ancestor::div[1]')
-      await testCourierRow.locator('button').filter({ has: page.locator('svg.lucide-trash-2') }).click()
+      await testCourierRow
+        .locator('button')
+        .filter({ has: page.locator('svg.lucide-trash-2') })
+        .click()
 
       // 삭제 확인
       await expect(page.getByText(TEST_COURIER.name)).not.toBeVisible()

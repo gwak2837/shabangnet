@@ -9,6 +9,7 @@ import { queryKeys } from '@/common/constants/query-keys'
 interface OptionMappingListFilters {
   manufacturerId?: number
   search?: string
+  unmapped?: boolean
 }
 
 interface OptionMappingListResponse {
@@ -16,6 +17,7 @@ interface OptionMappingListResponse {
   nextCursor: string | null
   summary: {
     totalMappings: number
+    unmappedMappings: number
     uniqueManufacturers: number
     uniqueProductCodes: number
   }
@@ -28,10 +30,10 @@ interface UseOptionMappingsParams {
 
 export function useOptionMappings(params: UseOptionMappingsParams = {}) {
   const { filters, limit = 50 } = params
-  const { search, manufacturerId } = filters ?? {}
+  const { search, manufacturerId, unmapped } = filters ?? {}
 
   return useInfiniteQuery({
-    queryKey: queryKeys.optionMappings.list({ limit, search, manufacturerId }),
+    queryKey: queryKeys.optionMappings.list({ limit, search, manufacturerId, unmapped }),
     queryFn: async ({ pageParam }): Promise<OptionMappingListResponse> => {
       const searchParams = new URLSearchParams()
       searchParams.set('limit', String(limit))
@@ -43,6 +45,9 @@ export function useOptionMappings(params: UseOptionMappingsParams = {}) {
       }
       if (manufacturerId) {
         searchParams.set('manufacturer-id', String(manufacturerId))
+      }
+      if (unmapped) {
+        searchParams.set('unmapped', 'true')
       }
 
       const response = await fetch(`/api/options?${searchParams.toString()}`, { cache: 'no-store' })

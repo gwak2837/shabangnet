@@ -3,7 +3,8 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import type { Transaction } from '@/db/client'
 import type { ParsedOrder } from '@/lib/excel'
 
-import { product } from '@/db/schema/manufacturers'
+import { optionMapping, product } from '@/db/schema/manufacturers'
+import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 import type {
   LookupMaps,
@@ -32,6 +33,12 @@ interface AutoCreateProductsParams {
     productName: string | null
     quantity: number
   }>
+  tx: Transaction
+}
+
+interface AutoCreateUnmappedOptionCandidatesParams {
+  lookupMaps: LookupMaps
+  orders: ParsedOrder[]
   tx: Transaction
 }
 
@@ -169,6 +176,53 @@ export async function autoCreateProducts({ orderValues, tx }: AutoCreateProducts
   }
 }
 
+export async function autoCreateUnmappedOptionCandidates({
+  orders,
+  lookupMaps,
+  tx,
+}: AutoCreateUnmappedOptionCandidatesParams): Promise<void> {
+  const values: Array<{ manufacturerId: null; optionName: string; productCode: string }> = []
+  const seenKeys = new Set<string>()
+
+  for (const o of orders) {
+    const manufacturerName = typeof o.manufacturer === 'string' ? normalizeManufacturerName(o.manufacturer) : null
+    if (manufacturerName) {
+      continue
+    }
+
+    const productCode = typeof o.productCode === 'string' ? o.productCode.trim() : ''
+    if (!productCode) {
+      continue
+    }
+
+    const optionName = typeof o.optionName === 'string' ? normalizeOptionName(o.optionName) : ''
+    if (!optionName) {
+      continue
+    }
+
+    const key = `${productCode.toLowerCase()}_${optionName.toLowerCase()}`
+    if (seenKeys.has(key)) {
+      continue
+    }
+    seenKeys.add(key)
+
+    if (lookupMaps.optionMap.has(key)) {
+      continue
+    }
+
+    values.push({ productCode, optionName, manufacturerId: null })
+  }
+
+  if (values.length === 0) {
+    return
+  }
+
+  await tx
+    .insert(optionMapping)
+    .values(values)
+    .onConflictDoNothing({ target: [optionMapping.productCode, optionMapping.optionName] })
+}
+
 export function buildLookupMaps(
   manufacturers: ManufacturerInfo[],
   products: ProductInfo[],
@@ -177,7 +231,13 @@ export function buildLookupMaps(
   return {
     manufacturerMap: new Map(manufacturers.map((m) => [m.name.toLowerCase(), m])),
     productMap: new Map(products.map((p) => [p.productCode.toLowerCase(), p])),
-    optionMap: new Map(optionMappings.map((o) => [`${o.productCode.toLowerCase()}_${o.optionName.toLowerCase()}`, o])),
+    optionMap: new Map(
+      optionMappings.map((o) => {
+        const productCode = o.productCode.trim()
+        const optionName = normalizeOptionName(o.optionName)
+        return [`${productCode.toLowerCase()}_${optionName.toLowerCase()}`, { ...o, productCode, optionName }]
+      }),
+    ),
   }
 }
 
@@ -221,28 +281,35 @@ export function calculateSummary(breakdown: ManufacturerBreakdown[]): UploadSumm
 export function matchManufacturerId(order: ParsedOrder, lookupMaps: LookupMaps): number | null {
   const { manufacturerMap, productMap, optionMap } = lookupMaps
 
-  // 1) 옵션 연결 확인
-  if (order.productCode && order.optionName) {
-    const optionKey = `${order.productCode.toLowerCase()}_${order.optionName.toLowerCase()}`
-    const om = optionMap.get(optionKey)
-    if (om) {
-      return om.manufacturerId
-    }
-  }
-
-  // 2) 상품 연결 확인 (옵션 연결이 없는 경우)
-  if (order.productCode) {
-    const p = productMap.get(order.productCode.toLowerCase())
-    if (p?.manufacturerId) {
-      return p.manufacturerId
-    }
-  }
-
-  // 3) 파일 내 제조사명으로 연결
-  if (order.manufacturer) {
-    const mfr = manufacturerMap.get(order.manufacturer.toLowerCase())
+  // 1) 파일 내 제조사명으로 연결 (우선순위 가장 높아요)
+  const manufacturerName = typeof order.manufacturer === 'string' ? normalizeManufacturerName(order.manufacturer) : null
+  if (manufacturerName) {
+    const mfr = manufacturerMap.get(manufacturerName.toLowerCase())
     if (mfr) {
       return mfr.id
+    }
+  }
+
+  const productCode = typeof order.productCode === 'string' ? order.productCode.trim() : ''
+  const optionName = typeof order.optionName === 'string' ? normalizeOptionName(order.optionName) : ''
+
+  // 2) 옵션 연결 확인 (제조사가 확정된 연결만 적용해요)
+  if (productCode && optionName) {
+    const optionKey = `${productCode.toLowerCase()}_${optionName.toLowerCase()}`
+    const om = optionMap.get(optionKey)
+    if (om?.manufacturerId != null) {
+      return om.manufacturerId
+    }
+
+    // 옵션은 있는데 제조사가 없다면(미연결 후보 포함), 상품 기본 연결로 추정하지 않아요.
+    return null
+  }
+
+  // 3) 상품 연결 확인 (옵션이 없는 경우)
+  if (productCode) {
+    const p = productMap.get(productCode.toLowerCase())
+    if (p?.manufacturerId) {
+      return p.manufacturerId
     }
   }
 

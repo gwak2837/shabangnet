@@ -1,4 +1,14 @@
-import { bigint, boolean, customType, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import {
+  bigint,
+  boolean,
+  customType,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import 'server-only'
 
 const bytea = customType<{ data: Buffer }>({
@@ -37,16 +47,20 @@ export const product = pgTable('product', {
   updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
 }).enableRLS()
 
-export const optionMapping = pgTable('option_mapping', {
-  id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
-  productCode: varchar('product_code', { length: 255 }).notNull(), // "상품코드" (사이트+쇼핑몰상품번호 기반)
-  optionName: varchar('option_name', { length: 255 }).notNull(),
-  manufacturerId: bigint('manufacturer_id', { mode: 'number' })
-    .references(() => manufacturer.id, { onDelete: 'cascade' })
-    .notNull(),
-  createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
-}).enableRLS()
+export const optionMapping = pgTable(
+  'option_mapping',
+  {
+    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+    productCode: varchar('product_code', { length: 255 }).notNull(),
+    optionName: varchar('option_name', { length: 255 }).notNull(),
+    manufacturerId: bigint('manufacturer_id', { mode: 'number' }).references(() => manufacturer.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: timestamp('created_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { precision: 3, withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex('option_mapping_product_code_option_name_uq').on(table.productCode, table.optionName)],
+).enableRLS()
 
 export const orderTemplate = pgTable('order_template', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),

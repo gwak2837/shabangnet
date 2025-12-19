@@ -2,7 +2,10 @@
 
 import { eq } from 'drizzle-orm'
 
-import type { ManufacturerCsvImportResult, ManufacturerCsvRowError } from '@/components/manufacturer/manufacturer-csv.types'
+import type {
+  ManufacturerCsvImportResult,
+  ManufacturerCsvRowError,
+} from '@/components/manufacturer/manufacturer-csv.types'
 
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'

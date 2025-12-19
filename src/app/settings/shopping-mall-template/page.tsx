@@ -9,5 +9,3 @@ export default function ShoppingMallTemplateSettingsPage() {
     </div>
   )
 }
-
-

@@ -64,6 +64,3 @@ async function checkAdminRole(): Promise<boolean> {
   const session = await auth.api.getSession({ headers: await headers() })
   return Boolean(session?.user?.isAdmin)
 }
-
-
-

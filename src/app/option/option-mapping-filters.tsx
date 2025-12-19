@@ -51,6 +51,7 @@ export function OptionMappingFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">전체 제조사</SelectItem>
+          <SelectItem value="unmapped">미연결</SelectItem>
           {manufacturers.map((m) => (
             <SelectItem key={m.id} value={m.id.toString()}>
               {m.name}

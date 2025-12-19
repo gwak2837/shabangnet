@@ -92,11 +92,9 @@ export async function analyzeCurrentManufacturerOrderTemplate(manufacturerId: nu
   }
 }
 
-export async function deleteManufacturerOrderTemplate(
-  input: {
-    manufacturerId: number
-  },
-): Promise<DeleteManufacturerOrderTemplateResult> {
+export async function deleteManufacturerOrderTemplate(input: {
+  manufacturerId: number
+}): Promise<DeleteManufacturerOrderTemplateResult> {
   const isAdmin = await checkAdminRole()
   if (!isAdmin) {
     return { success: false, error: '권한이 없어요.' }

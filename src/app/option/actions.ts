@@ -46,14 +46,20 @@ export async function deleteOptionMappings(mappingIds: number[]): Promise<Delete
         LEFT JOIN ${product} ON lower(${product.productCode}) = lower(${order.productCode})
         LEFT JOIN ${manufacturer} ON ${manufacturer.id} = ${product.manufacturerId}
         WHERE
-          ${optionMapping.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})
+          ${optionMapping.id} IN (${sql.join(
+            ids.map((id) => sql`${id}`),
+            sql`, `,
+          )})
           AND lower(${order.productCode}) = lower(${optionMapping.productCode})
           AND lower(${order.optionName}) = lower(${optionMapping.optionName})
           AND ${order.status} <> 'completed'
       `)
 
       // 2) 옵션 연결 삭제
-      const deleted = await tx.delete(optionMapping).where(inArray(optionMapping.id, ids)).returning({ id: optionMapping.id })
+      const deleted = await tx
+        .delete(optionMapping)
+        .where(inArray(optionMapping.id, ids))
+        .returning({ id: optionMapping.id })
       return deleted.length
     })
 
@@ -106,5 +112,3 @@ async function checkAdminRole(): Promise<boolean> {
   const session = await auth.api.getSession({ headers: await headers() })
   return Boolean(session?.user?.isAdmin)
 }
-
-

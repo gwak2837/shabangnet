@@ -4,7 +4,10 @@ import { Eye, FileText, Loader2, Save } from 'lucide-react'
 import { type FormEvent, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { getSampleOrderEmailTemplateVariables, ORDER_EMAIL_TEMPLATE_VARIABLES } from '@/common/constants/order-email-template'
+import {
+  getSampleOrderEmailTemplateVariables,
+  ORDER_EMAIL_TEMPLATE_VARIABLES,
+} from '@/common/constants/order-email-template'
 import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,11 +15,7 @@ import { Label } from '@/components/ui/label'
 import { useServerAction } from '@/hooks/use-server-action'
 
 import { SettingsIconBadge } from '../../settings-icon-badge'
-import {
-  createOrderEmailTemplateAction,
-  previewEmailTemplateAction,
-  updateOrderEmailTemplateAction,
-} from './action'
+import { createOrderEmailTemplateAction, previewEmailTemplateAction, updateOrderEmailTemplateAction } from './action'
 import { useEmailTemplate } from './hook'
 
 export function EmailTemplateForm() {

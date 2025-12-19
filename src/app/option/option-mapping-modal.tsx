@@ -160,8 +160,9 @@ export function OptionMappingModal({
           <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
             <p className="font-medium mb-1">💡 연결 우선순위</p>
             <ol className="list-decimal list-inside flex flex-col gap-0.5 text-xs">
+              <li>파일 제조사 (제조사 열이 있으면)</li>
               <li>옵션 연결 (상품코드 + 옵션 조합)</li>
-              <li>상품 연결 (상품코드 기준)</li>
+              <li>상품 연결 (옵션이 없으면)</li>
               <li>미연결 처리</li>
             </ol>
           </div>

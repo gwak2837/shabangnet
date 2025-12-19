@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -12,8 +12,8 @@ import { createCacheControl } from '@/utils/cache-control'
 interface OptionMappingListItem {
   createdAt: string
   id: number
-  manufacturerId: number
-  manufacturerName: string
+  manufacturerId: number | null
+  manufacturerName: string | null
   optionName: string
   productCode: string
   updatedAt: string
@@ -29,6 +29,7 @@ interface OptionMappingListSummary {
   totalMappings: number
   uniqueManufacturers: number
   uniqueProductCodes: number
+  unmappedMappings: number
 }
 
 const queryParamsSchema = z.object({
@@ -36,6 +37,11 @@ const queryParamsSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50),
   search: z.string().max(100).optional(),
   manufacturerId: z.coerce.number().positive().optional(),
+  unmapped: z.preprocess((value) => {
+    if (value === '1' || value === 'true') return true
+    if (value === '0' || value === 'false') return false
+    return undefined
+  }, z.boolean().optional()),
 })
 
 export async function GET(request: NextRequest) {
@@ -51,6 +57,7 @@ export async function GET(request: NextRequest) {
     limit: searchParams.get('limit') || 50,
     search: searchParams.get('search') || undefined,
     manufacturerId: searchParams.get('manufacturer-id') || undefined,
+    unmapped: searchParams.get('unmapped') || undefined,
   })
 
   if (!validation.success) {
@@ -69,9 +76,16 @@ export async function GET(request: NextRequest) {
 }
 
 async function getOptionMappings(params: z.infer<typeof queryParamsSchema>): Promise<OptionMappingListResponse> {
-  const { cursor, limit, search, manufacturerId } = params
+  const { cursor, limit, search, manufacturerId, unmapped } = params
 
   const conditions = []
+
+  // 기본은 "연결된 항목만" 보여줘요. 미연결 후보는 `unmapped=true`로 조회해요.
+  if (unmapped === true) {
+    conditions.push(isNull(optionMapping.manufacturerId))
+  } else {
+    conditions.push(isNotNull(optionMapping.manufacturerId))
+  }
 
   if (search) {
     conditions.push(
@@ -90,7 +104,7 @@ async function getOptionMappings(params: z.infer<typeof queryParamsSchema>): Pro
     const decoded = decodeCursor(
       cursor,
       z.object({
-        createdAt: z.string().datetime(),
+        createdAt: z.iso.datetime(),
         id: z.number().int().positive(),
       }),
     )
@@ -130,7 +144,7 @@ async function getOptionMappings(params: z.infer<typeof queryParamsSchema>): Pro
     productCode: m.productCode,
     optionName: m.optionName,
     manufacturerId: m.manufacturerId,
-    manufacturerName: m.manufacturerName ?? 'Unknown',
+    manufacturerName: m.manufacturerName ?? null,
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   }))
@@ -146,13 +160,14 @@ async function getOptionMappings(params: z.infer<typeof queryParamsSchema>): Pro
 }
 
 async function getOptionMappingSummary(): Promise<OptionMappingListSummary> {
-  const [{ totalMappings, uniqueProductCodes, uniqueManufacturers }] = await db
+  const [{ totalMappings, unmappedMappings, uniqueProductCodes, uniqueManufacturers }] = await db
     .select({
-      totalMappings: sql<number>`count(*)::int`,
-      uniqueProductCodes: sql<number>`count(distinct ${optionMapping.productCode})::int`,
+      totalMappings: sql<number>`count(*) filter (where ${optionMapping.manufacturerId} is not null)::int`,
+      unmappedMappings: sql<number>`count(*) filter (where ${optionMapping.manufacturerId} is null)::int`,
+      uniqueProductCodes: sql<number>`count(distinct ${optionMapping.productCode}) filter (where ${optionMapping.manufacturerId} is not null)::int`,
       uniqueManufacturers: sql<number>`count(distinct ${optionMapping.manufacturerId})::int`,
     })
     .from(optionMapping)
 
-  return { totalMappings, uniqueProductCodes, uniqueManufacturers }
+  return { totalMappings, uniqueManufacturers, uniqueProductCodes, unmappedMappings }
 }

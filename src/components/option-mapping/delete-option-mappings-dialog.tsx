@@ -148,5 +148,3 @@ export function DeleteOptionMappingsDialog({ selectedIds, onSuccess }: DeleteOpt
     </AlertDialog>
   )
 }
-
-

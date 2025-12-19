@@ -4,6 +4,7 @@ import type { ParseError } from '@/lib/excel'
 
 import { getCellValue } from '@/lib/excel/util'
 import { parseLooseNumber } from '@/utils/coerce'
+import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 export interface ShoppingMallConfig {
   columnMappings: Record<string, string>
@@ -154,7 +155,7 @@ function mapRowToOrder(
     subOrderNumber: str('subOrderNumber'),
     productName: str('productName'),
     quantity: parseInt(str('quantity'), 10) || 1,
-    optionName: str('optionName'),
+    optionName: normalizeOptionName(str('optionName')),
     productAbbr: str('productAbbr'),
     productCode: productKey,
     mallProductNumber,

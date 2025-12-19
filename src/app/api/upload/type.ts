@@ -20,7 +20,7 @@ export interface ManufacturerInfo {
 }
 
 export interface OptionMappingInfo {
-  manufacturerId: number
+  manufacturerId: number | null
   optionName: string
   productCode: string
 }

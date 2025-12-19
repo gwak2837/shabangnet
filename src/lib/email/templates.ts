@@ -100,10 +100,7 @@ export async function getEmailTemplates(): Promise<EmailTemplate[]> {
   }))
 }
 
-export function renderTemplate(
-  template: { subject: string; body: string },
-  variables: object,
-): TemplateRenderResult {
+export function renderTemplate(template: { subject: string; body: string }, variables: object): TemplateRenderResult {
   const subjectTemplate = Handlebars.compile<object>(template.subject)
   const bodyTemplate = Handlebars.compile<object>(template.body)
 

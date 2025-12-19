@@ -5,7 +5,14 @@ import { toast } from 'sonner'
 
 import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useFormAction } from '@/hooks/use-server-action'
 
@@ -119,7 +126,9 @@ export function OptionMappingCsvDialog({ open, onOpenChange }: OptionMappingCsvD
                       </li>
                     ))}
                   </ul>
-                  {state.errors.length > 50 && <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>}
+                  {state.errors.length > 50 && (
+                    <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -139,5 +148,3 @@ export function OptionMappingCsvDialog({ open, onOpenChange }: OptionMappingCsvD
     </Dialog>
   )
 }
-
-

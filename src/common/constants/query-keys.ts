@@ -76,7 +76,7 @@ export const queryKeys = {
   },
   optionMappings: {
     all: ['option-mappings'] as const,
-    list: (filters: { limit?: number; manufacturerId?: number; search?: string }) =>
+    list: (filters: { limit?: number; manufacturerId?: number; search?: string; unmapped?: boolean }) =>
       ['option-mappings', 'list', filters] as const,
   },
   dashboard: {

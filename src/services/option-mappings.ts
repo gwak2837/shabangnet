@@ -1,17 +1,18 @@
 'use server'
 
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
+import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 // Option mapping types
 export interface OptionManufacturerMapping {
   createdAt: string
   id: number
-  manufacturerId: number
-  manufacturerName: string
+  manufacturerId: number | null
+  manufacturerName: string | null
   optionName: string
   productCode: string
   updatedAt: string
@@ -20,21 +21,37 @@ export interface OptionManufacturerMapping {
 export async function create(
   data: Omit<OptionManufacturerMapping, 'createdAt' | 'id' | 'updatedAt'>,
 ): Promise<OptionManufacturerMapping> {
+  if (data.manufacturerId == null) {
+    throw new Error('제조사를 선택해 주세요')
+  }
+
+  const productCode = data.productCode.trim()
+  if (!productCode) {
+    throw new Error('상품코드가 비어 있어요')
+  }
+
   const optionName = normalizeOptionName(data.optionName)
+  if (!optionName) {
+    throw new Error('옵션명이 비어 있어요')
+  }
+
+  const now = new Date()
   const [newMapping] = await db
     .insert(optionMapping)
     .values({
-      productCode: data.productCode,
+      productCode,
       optionName,
       manufacturerId: data.manufacturerId,
     })
+    .onConflictDoUpdate({
+      target: [optionMapping.productCode, optionMapping.optionName],
+      set: { manufacturerId: data.manufacturerId, updatedAt: now },
+    })
     .returning()
 
-  const mfr = await db.query.manufacturer.findFirst({
-    where: eq(manufacturer.id, data.manufacturerId),
-  })
+  const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, data.manufacturerId))
 
-  // 옵션 연결은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
+  // 제조사가 없는 주문에만 채워요. (파일에 제조사가 있는 주문은 덮어쓰지 않아요)
   await db
     .update(order)
     .set({
@@ -43,8 +60,9 @@ export async function create(
     })
     .where(
       and(
-        sql`lower(${order.productCode}) = lower(${data.productCode})`,
+        sql`lower(${order.productCode}) = lower(${productCode})`,
         sql`lower(${order.optionName}) = lower(${optionName})`,
+        isNull(order.manufacturerId),
         sql`${order.status} <> 'completed'`,
       ),
     )
@@ -100,14 +118,17 @@ export async function remove(id: number): Promise<void> {
         and(
           sql`lower(${optionMapping.productCode}) = lower(${row.productCode})`,
           sql`lower(${optionMapping.optionName}) = lower(${row.optionName})`,
+          isNotNull(optionMapping.manufacturerId),
         ),
       )
       .limit(1)
 
     if (remaining) {
-      const mfr = await tx.query.manufacturer.findFirst({
-        where: eq(manufacturer.id, remaining.manufacturerId),
-      })
+      if (remaining.manufacturerId == null) {
+        return
+      }
+
+      const [mfr] = await tx.select().from(manufacturer).where(eq(manufacturer.id, remaining.manufacturerId))
 
       await tx
         .update(order)
@@ -119,6 +140,7 @@ export async function remove(id: number): Promise<void> {
           and(
             sql`lower(${order.productCode}) = lower(${row.productCode})`,
             sql`lower(${order.optionName}) = lower(${row.optionName})`,
+            isNull(order.manufacturerId),
             sql`${order.status} <> 'completed'`,
           ),
         )
@@ -147,6 +169,7 @@ export async function remove(id: number): Promise<void> {
         and(
           sql`lower(${order.productCode}) = lower(${row.productCode})`,
           sql`lower(${order.optionName}) = lower(${row.optionName})`,
+          isNull(order.manufacturerId),
           sql`${order.status} <> 'completed'`,
         ),
       )
@@ -171,26 +194,28 @@ export async function update(
 
   if (!updated) throw new Error('Mapping not found')
 
-  const mfr = updated.manufacturerId
-    ? await db.query.manufacturer.findFirst({
-        where: eq(manufacturer.id, updated.manufacturerId),
-      })
-    : null
+  const [mfr] =
+    updated.manufacturerId != null
+      ? await db.select().from(manufacturer).where(eq(manufacturer.id, updated.manufacturerId))
+      : [null]
 
-  // 옵션 연결은 우선순위가 높아서 기존 주문에도 즉시 반영(완료된 주문 제외)
-  await db
-    .update(order)
-    .set({
-      manufacturerId: updated.manufacturerId,
-      manufacturerName: mfr?.name ?? null,
-    })
-    .where(
-      and(
-        sql`lower(${order.productCode}) = lower(${updated.productCode})`,
-        sql`lower(${order.optionName}) = lower(${normalizeOptionName(updated.optionName)})`,
-        sql`${order.status} <> 'completed'`,
-      ),
-    )
+  if (updated.manufacturerId != null) {
+    // 제조사가 없는 주문에만 채워요. (파일에 제조사가 있는 주문은 덮어쓰지 않아요)
+    await db
+      .update(order)
+      .set({
+        manufacturerId: updated.manufacturerId,
+        manufacturerName: mfr?.name ?? null,
+      })
+      .where(
+        and(
+          sql`lower(${order.productCode}) = lower(${updated.productCode})`,
+          sql`lower(${order.optionName}) = lower(${normalizeOptionName(updated.optionName)})`,
+          isNull(order.manufacturerId),
+          sql`${order.status} <> 'completed'`,
+        ),
+      )
+  }
 
   return mapToOptionMapping({ ...updated, manufacturer: mfr })
 }
@@ -205,15 +230,8 @@ function mapToOptionMapping(
     productCode: m.productCode,
     optionName: m.optionName,
     manufacturerId: m.manufacturerId,
-    manufacturerName: m.manufacturer?.name || 'Unknown',
+    manufacturerName: m.manufacturer?.name ?? null,
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   }
-}
-
-function normalizeOptionName(raw: string): string {
-  const value = raw.trim()
-  if (!value) return ''
-  // 옵션 텍스트 끝에 붙는 `[숫자]`는 수량 중복 표기라서 제거해요. (수량 컬럼은 별도로 있어요)
-  return value.replace(/\s*\[\d+\]\s*$/, '').trim()
 }

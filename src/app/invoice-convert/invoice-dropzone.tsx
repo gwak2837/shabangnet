@@ -137,7 +137,11 @@ export function InvoiceDropzone({
               />
             </div>
 
-            <p aria-disabled={disabled} className="mt-4 text-base font-semibold aria-disabled:text-slate-400 data-[enabled=true]:text-slate-900" data-enabled={!disabled}>
+            <p
+              aria-disabled={disabled}
+              className="mt-4 text-base font-semibold aria-disabled:text-slate-400 data-[enabled=true]:text-slate-900"
+              data-enabled={!disabled}
+            >
               {disabled ? '먼저 발주 이력을 선택하세요' : '파일을 드래그하거나 클릭하여 업로드'}
             </p>
             <p className="mt-1 text-sm text-slate-500">거래처에서 받은 송장 파일 (.xlsx, .xls)</p>
@@ -160,4 +164,3 @@ export function InvoiceDropzone({
     </Card>
   )
 }
-

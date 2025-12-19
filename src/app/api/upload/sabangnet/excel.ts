@@ -4,6 +4,7 @@ import type { ParseError } from '@/lib/excel'
 
 import { SABANGNET_COLUMNS } from '@/common/constants'
 import { parseLooseNumber, toTrimmedString } from '@/utils/coerce'
+import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 export async function parseSabangnetFile(buffer: ArrayBuffer) {
   const workbook = new ExcelJS.Workbook()
@@ -140,11 +141,4 @@ function mapExcelRowToOrderTable(rowData: CellValue[], rowNumber: number) {
     // 시스템
     rowIndex: rowNumber,
   }
-}
-
-function normalizeOptionName(raw: string): string {
-  const value = raw.trim()
-  if (!value) return ''
-  // 옵션 텍스트 끝에 붙는 `[숫자]`는 수량 중복 표기라서 제거해요. (수량 컬럼은 별도로 있어요)
-  return value.replace(/\s*\[\d+\]\s*$/, '').trim()
 }

@@ -16,6 +16,7 @@ import type { UploadError } from '../type'
 import {
   autoCreateManufacturers,
   autoCreateProducts,
+  autoCreateUnmappedOptionCandidates,
   buildLookupMaps,
   calculateManufacturerBreakdown,
   calculateSummary,
@@ -155,6 +156,12 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         .returning()
 
       const createdManufacturerNames = await autoCreateManufacturers({
+        orders: parseResult.orders,
+        lookupMaps,
+        tx,
+      })
+
+      await autoCreateUnmappedOptionCandidates({
         orders: parseResult.orders,
         lookupMaps,
         tx,

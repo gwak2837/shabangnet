@@ -33,7 +33,8 @@ export default function OptionMappingsPage() {
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
 
-  const manufacturerId = selectedManufacturer === 'all' ? undefined : Number(selectedManufacturer)
+  const isUnmapped = selectedManufacturer === 'unmapped'
+  const manufacturerId = selectedManufacturer === 'all' || isUnmapped ? undefined : Number(selectedManufacturer)
   const {
     data,
     fetchNextPage,
@@ -43,6 +44,7 @@ export default function OptionMappingsPage() {
   } = useOptionMappings({
     filters: {
       manufacturerId,
+      unmapped: isUnmapped ? true : undefined,
       search: searchQuery.trim().length > 0 ? searchQuery : undefined,
     },
   })
@@ -139,6 +141,7 @@ export default function OptionMappingsPage() {
     const summary = data?.pages[0]?.summary
     return {
       totalMappings: summary?.totalMappings ?? 0,
+      unmappedMappings: summary?.unmappedMappings ?? 0,
       uniqueProductCodes: summary?.uniqueProductCodes ?? 0,
       uniqueManufacturers: summary?.uniqueManufacturers ?? 0,
     }
@@ -157,7 +160,7 @@ export default function OptionMappingsPage() {
   return (
     <AppShell description="상품코드 + 옵션 조합으로 제조사를 연결해요" title="옵션 연결">
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+      <div className="grid gap-4 md:grid-cols-4 mb-8">
         <Card className="border-slate-200 bg-card shadow-sm">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -166,6 +169,18 @@ export default function OptionMappingsPage() {
             <div>
               <p className="text-sm text-slate-500">전체 연결</p>
               <p className="text-xl font-semibold text-slate-900">{stats.totalMappings}개</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200 bg-card shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
+              <Link2 className="h-5 w-5 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">미연결</p>
+              <p className="text-xl font-semibold text-slate-900">{stats.unmappedMappings}개</p>
             </div>
           </CardContent>
         </Card>
@@ -204,7 +219,8 @@ export default function OptionMappingsPage() {
             <p className="text-blue-700">
               같은 상품코드라도 옵션에 따라 다른 제조사에서 공급되는 경우가 있어요. 옵션별로 제조사를 연결할 수 있어요.
               <br />
-              발주 생성 시 옵션 연결이 우선 적용되고, 연결이 없으면 기본 상품-제조사 연결이 적용돼요.
+              주문 파일에 제조사가 있으면 그 값이 먼저 적용돼요. 제조사가 비어 있으면 옵션 연결이 적용되고, 옵션이
+              없으면 상품 연결이 적용돼요.
             </p>
           </div>
         </div>
