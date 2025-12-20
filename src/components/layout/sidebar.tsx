@@ -59,7 +59,7 @@ const managementNavItems = [
   },
   {
     title: '옵션 연결',
-    description: '상품코드, 옵션명 → 제조사 연결',
+    description: '상품코드, 옵션 → 제조사 연결',
     href: '/option',
     icon: Settings2,
   },

@@ -64,7 +64,9 @@ export function StatCard({
               change !== undefined && (
                 <div className="flex items-center gap-1.5">
                   {(isIncrease || isDecrease) && (
-                    <span className={cn('flex items-center gap-0.5 text-xs font-medium', changeTextColor)}>
+                    <span
+                      className={cn('flex items-center gap-0.5 text-xs font-medium whitespace-nowrap', changeTextColor)}
+                    >
                       {isIncrease && <ArrowUp className="h-3 w-3" />}
                       {isDecrease && <ArrowDown className="h-3 w-3" />}
                       {formatChangeText(change)}

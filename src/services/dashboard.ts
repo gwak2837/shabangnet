@@ -88,40 +88,46 @@ export async function getStats(): Promise<DashboardStats> {
   const yesterdayStart = new Date(todayStart.getTime() - ms('24h'))
   const yesterdayNow = new Date(now.getTime() - ms('24h'))
 
+  // NOTE: postgres-js가 일부 환경에서 Date 파라미터를 직렬화하다가 실패할 수 있어요.
+  // 안전하게 ISO 문자열로 넘기고 timestamptz로 캐스팅합니다.
+  const nowIso = now.toISOString()
+  const todayStartIso = todayStart.toISOString()
+  const yesterdayStartIso = yesterdayStart.toISOString()
+  const yesterdayNowIso = yesterdayNow.toISOString()
+
   const [orderStats] = await db
     .select({
       todayOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now})`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStartIso}::timestamptz and ${order.createdAt} < ${nowIso}::timestamptz)`.mapWith(
           Number,
         ),
       yesterdayOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow})`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStartIso}::timestamptz and ${order.createdAt} < ${yesterdayNowIso}::timestamptz)`.mapWith(
           Number,
         ),
       pendingOrders: sql<number>`count(*) filter (where ${order.status} = 'pending')`.mapWith(Number),
       todayPendingOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'pending')`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStartIso}::timestamptz and ${order.createdAt} < ${nowIso}::timestamptz and ${order.status} = 'pending')`.mapWith(
           Number,
         ),
       completedOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'completed')`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStartIso}::timestamptz and ${order.createdAt} < ${nowIso}::timestamptz and ${order.status} = 'completed')`.mapWith(
           Number,
         ),
       yesterdayCompletedOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow} and ${order.status} = 'completed')`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStartIso}::timestamptz and ${order.createdAt} < ${yesterdayNowIso}::timestamptz and ${order.status} = 'completed')`.mapWith(
           Number,
         ),
       errorOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStart} and ${order.createdAt} < ${now} and ${order.status} = 'error')`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${todayStartIso}::timestamptz and ${order.createdAt} < ${nowIso}::timestamptz and ${order.status} = 'error')`.mapWith(
           Number,
         ),
       yesterdayErrorOrders:
-        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStart} and ${order.createdAt} < ${yesterdayNow} and ${order.status} = 'error')`.mapWith(
+        sql<number>`count(*) filter (where ${order.createdAt} >= ${yesterdayStartIso}::timestamptz and ${order.createdAt} < ${yesterdayNowIso}::timestamptz and ${order.status} = 'error')`.mapWith(
           Number,
         ),
-      totalOrdersBeforeYesterdayNow: sql<number>`count(*) filter (where ${order.createdAt} < ${yesterdayNow})`.mapWith(
-        Number,
-      ),
+      totalOrdersBeforeYesterdayNow:
+        sql<number>`count(*) filter (where ${order.createdAt} < ${yesterdayNowIso}::timestamptz)`.mapWith(Number),
     })
     .from(order)
 
@@ -130,7 +136,7 @@ export async function getStats(): Promise<DashboardStats> {
   const [logStats] = await db
     .select({
       processedOrdersBeforeYesterdayNow:
-        sql<number>`count(distinct ${orderEmailLogItem.sabangnetOrderNumber}) filter (where ${logAt} < ${yesterdayNow})`.mapWith(
+        sql<number>`count(distinct ${orderEmailLogItem.sabangnetOrderNumber}) filter (where ${logAt} < ${yesterdayNowIso}::timestamptz)`.mapWith(
           Number,
         ),
     })

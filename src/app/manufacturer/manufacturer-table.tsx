@@ -187,8 +187,15 @@ export function ManufacturerTable({
                       {manufacturer.orderCount.toLocaleString()}건
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500" title={formatDateTime(manufacturer.lastOrderDate)}>
-                    {formatRelativeTime(manufacturer.lastOrderDate)}
+                  <TableCell
+                    className="text-sm text-slate-500"
+                    title={manufacturer.lastOrderDate.trim().length > 0 ? formatDateTime(manufacturer.lastOrderDate) : undefined}
+                  >
+                    {manufacturer.lastOrderDate.trim().length > 0 ? (
+                      formatRelativeTime(manufacturer.lastOrderDate)
+                    ) : (
+                      <span className="text-slate-400">발주 이력이 없어요</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
