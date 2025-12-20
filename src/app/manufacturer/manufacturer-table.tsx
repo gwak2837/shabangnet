@@ -189,7 +189,11 @@ export function ManufacturerTable({
                   </TableCell>
                   <TableCell
                     className="text-sm text-slate-500"
-                    title={manufacturer.lastOrderDate.trim().length > 0 ? formatDateTime(manufacturer.lastOrderDate) : undefined}
+                    title={
+                      manufacturer.lastOrderDate.trim().length > 0
+                        ? formatDateTime(manufacturer.lastOrderDate)
+                        : undefined
+                    }
                   >
                     {manufacturer.lastOrderDate.trim().length > 0 ? (
                       formatRelativeTime(manufacturer.lastOrderDate)
