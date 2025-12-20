@@ -1,11 +1,10 @@
 'use client'
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
 import type { Product } from '@/services/products'
 
 import { queryKeys } from '@/common/constants/query-keys'
-import { getById } from '@/services/products'
 
 interface ProductListFilters {
   priceError?: boolean
@@ -16,25 +15,11 @@ interface ProductListFilters {
 interface ProductListResponse {
   items: Product[]
   nextCursor: string | null
-  summary: {
-    mappedProducts: number
-    priceErrorProducts: number
-    totalProducts: number
-    unmappedProducts: number
-  }
 }
 
 interface UseProductsParams {
   filters?: ProductListFilters
   limit?: number
-}
-
-export function useProduct(id: number) {
-  return useQuery({
-    queryKey: queryKeys.products.detail(id),
-    queryFn: () => getById(id),
-    enabled: !!id,
-  })
 }
 
 export function useProducts(params: UseProductsParams = {}) {
@@ -59,13 +44,13 @@ export function useProducts(params: UseProductsParams = {}) {
         searchParams.set('price-error', 'true')
       }
 
-      const response = await fetch(`/api/products?${searchParams.toString()}`, { cache: 'no-store' })
+      const response = await fetch(`/api/products?${searchParams}`)
       if (!response.ok) {
         throw new Error('Failed to fetch products')
       }
       return response.json()
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: null as string | null,
+    initialPageParam: '',
   })
 }

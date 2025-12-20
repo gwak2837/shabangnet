@@ -26,14 +26,6 @@ interface ProductListItem {
 interface ProductListResponse {
   items: ProductListItem[]
   nextCursor: string | null
-  summary: ProductListSummary
-}
-
-interface ProductListSummary {
-  mappedProducts: number
-  priceErrorProducts: number
-  totalProducts: number
-  unmappedProducts: number
 }
 
 const booleanString = z
@@ -158,33 +150,9 @@ async function getProducts(params: z.infer<typeof queryParamsSchema>): Promise<P
     updatedAt: p.updatedAt.toISOString(),
   }))
 
-  const summary = await getProductSummary()
-
   return {
     items,
     nextCursor:
       hasMore && lastItem ? encodeCursor({ createdAt: lastItem.createdAt.toISOString(), id: lastItem.id }) : null,
-    summary,
-  }
-}
-
-async function getProductSummary(): Promise<ProductListSummary> {
-  const [{ totalProducts }] = await db.select({ totalProducts: sql<number>`count(*)::int` }).from(product)
-  const [{ unmappedProducts }] = await db
-    .select({ unmappedProducts: sql<number>`count(*)::int` })
-    .from(product)
-    .where(isNull(product.manufacturerId))
-  const [{ priceErrorProducts }] = await db
-    .select({ priceErrorProducts: sql<number>`count(*)::int` })
-    .from(product)
-    .where(
-      sql`coalesce(${product.cost}, 0) > 0 AND coalesce(${product.price}, 0) > 0 AND coalesce(${product.cost}, 0) > coalesce(${product.price}, 0)`,
-    )
-
-  return {
-    totalProducts,
-    unmappedProducts,
-    mappedProducts: Math.max(0, totalProducts - unmappedProducts),
-    priceErrorProducts,
   }
 }

@@ -1,8 +1,9 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Download, Info, Loader2, Package, Upload } from 'lucide-react'
+import { Download, Loader2, Upload } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -16,27 +17,25 @@ import { useProducts } from '@/hooks/use-products'
 import { useServerAction } from '@/hooks/use-server-action'
 import { authClient } from '@/lib/auth-client'
 import { saveProductManufacturerLink } from '@/services/product-manufacturer-links'
-import { update } from '@/services/products'
 
+import { updateProductAction } from './action'
 import { DeleteProductsDialog } from './delete-products-dialog'
 import { ProductCsvDialog } from './product-csv-dialog'
 import { ProductFilters } from './product-filters'
 import { ProductTable } from './product-table'
+import { ProductStats } from './stats/product-stats'
 
 interface MatchingSummaryResponse {
   missingEmailManufacturers: unknown[]
   unmatchedProductCodes: unknown[]
 }
 
-interface ProductsPageClientProps {
-  initialSearchQuery: string
-  initialShowUnmappedOnly: boolean
-}
-
-export default function ProductsPageClient({ initialSearchQuery, initialShowUnmappedOnly }: ProductsPageClientProps) {
-  const [searchQuery, setSearchQuery] = useState(() => initialSearchQuery)
-  const [showUnmappedOnly, setShowUnmappedOnly] = useState(() => initialShowUnmappedOnly)
-  const [showPriceErrorsOnly, setShowPriceErrorsOnly] = useState(false)
+export default function ProductsPageClient() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const searchQuery = (searchParams.get('q') ?? '').trim()
+  const showUnmappedOnly = searchParams.get('unlinked') === '1'
+  const showPriceErrorsOnly = searchParams.get('price-error') === '1'
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
@@ -48,12 +47,14 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     isLoading: isLoadingProducts,
   } = useProducts({
     filters: {
-      search: searchQuery.trim().length > 0 ? searchQuery : undefined,
+      search: searchQuery,
       unmapped: showUnmappedOnly,
       priceError: showPriceErrorsOnly,
     },
   })
+
   const products = useMemo(() => productsData?.pages.flatMap((page) => page.items) ?? [], [productsData])
+  const visibleIds = useMemo(() => products.map((p) => p.id), [products])
   const { data: manufacturers = [] } = useManufacturers()
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
@@ -91,15 +92,9 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
         toast.success('제조사 연결이 저장됐어요')
       }
     },
-    onError: (error) => toast.error(error),
   })
 
-  const [, updateProduct] = useServerAction(update, {
-    invalidateKeys: [queryKeys.products.all],
-    onError: (error) => toast.error(error),
-  })
-
-  const visibleIds = useMemo(() => products.map((p) => p.id), [products])
+  const [, updateProduct] = useServerAction(updateProductAction, { invalidateKeys: [queryKeys.products.all] })
 
   const visibleSelectedIds = useMemo(() => {
     if (selectedIds.length === 0 || visibleIds.length === 0) {
@@ -137,9 +132,11 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     setSelectedIds([])
   }
 
-  const handleUpdateManufacturer = (productId: number, manufacturerId: number | null) => {
+  function handleUpdateManufacturer(productId: number, manufacturerId: number | null) {
     const target = products.find((p) => p.id === productId)
-    if (!target) return
+    if (!target) {
+      return
+    }
 
     saveLink({
       manufacturerId,
@@ -148,30 +145,47 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
     })
   }
 
-  const handleUpdateCost = (productId: number, cost: number) => {
+  function handleUpdateCost(productId: number, cost: number) {
     updateProduct({
       id: productId,
       data: { cost },
     })
   }
 
-  const handleUpdateShippingFee = (productId: number, shippingFee: number) => {
+  function handleUpdateShippingFee(productId: number, shippingFee: number) {
     updateProduct({
       id: productId,
       data: { shippingFee },
     })
   }
 
-  // Calculate stats
-  const stats = useMemo(() => {
-    const summary = productsData?.pages[0]?.summary
-    return {
-      totalProducts: summary?.totalProducts ?? 0,
-      unmappedProducts: summary?.unmappedProducts ?? 0,
-      mappedProducts: summary?.mappedProducts ?? 0,
-      priceErrorProducts: summary?.priceErrorProducts ?? 0,
+  function replaceUrl(nextParams: URLSearchParams) {
+    const currentSearch = window.location.search
+    const nextSearch = nextParams.toString()
+
+    if (nextSearch === currentSearch) {
+      return
     }
-  }, [productsData?.pages])
+
+    router.replace(nextSearch ? `?${nextSearch}` : '/product')
+  }
+
+  function updateUrl(updater: (params: URLSearchParams) => void) {
+    const nextParams = new URLSearchParams(searchParams)
+    updater(nextParams)
+    replaceUrl(nextParams)
+  }
+
+  function handleTogglePriceErrorsOnly() {
+    setSelectedIds([])
+    updateUrl((sp) => {
+      if (showPriceErrorsOnly) {
+        sp.delete('price-error')
+      } else {
+        sp.set('price-error', '1')
+      }
+    })
+  }
 
   if (isLoadingProducts) {
     return (
@@ -202,71 +216,32 @@ export default function ProductsPageClient({ initialSearchQuery, initialShowUnma
       )}
 
       {/* Summary Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="border-slate-200 bg-card shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <Package className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">전체 상품</p>
-              <p className="text-xl font-semibold text-slate-900">{stats.totalProducts}개</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 bg-card shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">연결 완료</p>
-              <p className="text-xl font-semibold text-slate-900">{stats.mappedProducts}개</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 bg-card shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-              <Info className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">미연결</p>
-              <p className="text-xl font-semibold text-slate-900">{stats.unmappedProducts}개</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="border-slate-200 bg-card shadow-sm cursor-pointer transition-colors data-[show-price-errors-only=true]:ring-2 data-[show-price-errors-only=true]:ring-rose-500 data-[has-price-errors=true]:hover:border-rose-200"
-          data-has-price-errors={stats.priceErrorProducts > 0}
-          data-show-price-errors-only={showPriceErrorsOnly}
-          onClick={() => stats.priceErrorProducts > 0 && setShowPriceErrorsOnly(!showPriceErrorsOnly)}
-        >
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50">
-              <AlertTriangle className="h-5 w-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">원가 이상</p>
-              <p
-                className="text-xl font-semibold data-[has-price-errors=true]:text-rose-600 data-[has-price-errors=false]:text-slate-900"
-                data-has-price-errors={stats.priceErrorProducts > 0}
-              >
-                {stats.priceErrorProducts}개
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ProductStats onTogglePriceErrorsOnly={handleTogglePriceErrorsOnly} showPriceErrorsOnly={showPriceErrorsOnly} />
 
       {/* Filters */}
       <div className="mb-6 flex items-center justify-between">
         <ProductFilters
-          onSearchChange={setSearchQuery}
-          onShowUnmappedChange={setShowUnmappedOnly}
+          onSearchChange={(value) => {
+            setSelectedIds([])
+            updateUrl((sp) => {
+              const nextQ = value.trim()
+              if (nextQ.length > 0) {
+                sp.set('q', nextQ)
+              } else {
+                sp.delete('q')
+              }
+            })
+          }}
+          onShowUnmappedChange={(value) => {
+            setSelectedIds([])
+            updateUrl((sp) => {
+              if (value) {
+                sp.set('unlinked', '1')
+              } else {
+                sp.delete('unlinked')
+              }
+            })
+          }}
           searchQuery={searchQuery}
           showUnmappedOnly={showUnmappedOnly}
         />

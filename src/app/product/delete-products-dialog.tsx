@@ -5,7 +5,7 @@ import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { deleteProducts, getProductDeletePreview } from '@/app/product/actions'
+import { deleteProducts, getProductDeletePreview } from '@/app/product/action'
 import { queryKeys } from '@/common/constants/query-keys'
 import {
   AlertDialog,

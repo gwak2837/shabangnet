@@ -87,50 +87,6 @@ export async function remove(id: number): Promise<void> {
   await db.delete(product).where(eq(product.id, id))
 }
 
-export async function update({ id, data }: { id: number; data: Partial<Product> }): Promise<Product> {
-  const [updated] = await db
-    .update(product)
-    .set({
-      productCode: data.productCode,
-      productName: data.productName,
-      optionName: data.optionName,
-      manufacturerId: data.manufacturerId,
-      price: data.price,
-      cost: data.cost,
-      shippingFee: data.shippingFee,
-      updatedAt: new Date(),
-    })
-    .where(eq(product.id, id))
-    .returning()
-
-  if (!updated) throw new Error('Product not found')
-
-  const mfr = updated.manufacturerId
-    ? await db.query.manufacturer.findFirst({
-        where: eq(manufacturer.id, updated.manufacturerId),
-      })
-    : null
-
-  // 기존 주문 중 제조사 미연결 건에 자동 반영
-  if (updated.manufacturerId) {
-    await db
-      .update(order)
-      .set({
-        manufacturerId: updated.manufacturerId,
-        manufacturerName: mfr?.name ?? null,
-      })
-      .where(
-        and(
-          isNull(order.manufacturerId),
-          sql`lower(trim(${order.productCode})) = lower(trim(${updated.productCode}))`,
-          sql`${order.status} <> 'completed'`,
-        ),
-      )
-  }
-
-  return mapToProduct({ ...updated, manufacturer: mfr })
-}
-
 function mapToProduct(
   p: typeof product.$inferSelect & {
     manufacturer?: typeof manufacturer.$inferSelect | null

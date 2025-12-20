@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull, not, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 import { db } from '@/db/client'
@@ -55,10 +55,13 @@ export async function saveProductManufacturerLink(
     }
   }
 
-  const mfr = await db.query.manufacturer.findFirst({
-    where: eq(manufacturer.id, input.manufacturerId),
-    columns: { id: true, name: true },
-  })
+  const [mfr] = await db
+    .select({
+      id: manufacturer.id,
+      name: manufacturer.name,
+    })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, input.manufacturerId))
 
   if (!mfr) {
     return { success: false, error: '제조사를 찾을 수 없어요.' }
@@ -103,7 +106,7 @@ export async function saveProductManufacturerLink(
           and(
             isNull(order.manufacturerId),
             sql`lower(trim(${order.productCode})) = lower(trim(${productCode}))`,
-            sql`${order.status} <> 'completed'`,
+            not(eq(order.status, 'completed')),
           ),
         )
         .returning({ id: order.id })

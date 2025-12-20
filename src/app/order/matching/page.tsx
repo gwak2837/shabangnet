@@ -45,7 +45,6 @@ export default function OrderMatchingPage() {
   const unmappedProducts = data?.unmappedProducts ?? []
 
   const [selectionByProductCode, setSelectionByProductCode] = useState<Record<string, string>>({})
-
   const manufacturerOptions = manufacturers.map((m) => ({ id: m.id, name: m.name }))
 
   const [isSaving, saveLink] = useServerAction(saveProductManufacturerLink, {

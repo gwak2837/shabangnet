@@ -25,6 +25,7 @@ export const queryKeys = {
   },
   products: {
     all: ['products'] as const,
+    summary: ['products', 'summary'] as const,
     detail: (id: number) => ['products', id] as const,
     list: (filters: { limit?: number; priceError?: boolean; search?: string; unmapped?: boolean }) =>
       ['products', 'list', filters] as const,
