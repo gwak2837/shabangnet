@@ -55,31 +55,31 @@ export function SettlementTable({
                   onCheckedChange={(checked) => onSelectAll?.(checked)}
                 />
               )}
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  사방넷주문번호
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발주일</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                  수량
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                  원가
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                  총원가
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                  택배비
-                </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">고객명</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">배송지</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
-                  발송상태
-                </TableHead>
-              </TableRow>
-            </TableHeader>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                사방넷주문번호
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">발주일</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">상품명</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">옵션</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                수량
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                원가
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                총원가
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
+                택배비
+              </TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">고객명</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider">배송지</TableHead>
+              <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
+                발송상태
+              </TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             <TooltipProvider>
               {orders.map((order) => {

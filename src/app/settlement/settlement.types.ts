@@ -50,5 +50,3 @@ export interface SettlementSummary {
   totalQuantity: number
   totalShippingCost: number
 }
-
-

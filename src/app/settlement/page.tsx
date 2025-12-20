@@ -166,7 +166,9 @@ export default function SettlementPage() {
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-2">
-            {isAdmin && <DeleteSettlementOrdersDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
+            {isAdmin && (
+              <DeleteSettlementOrdersDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />
+            )}
             <Button asChild className="gap-2" variant="outline">
               <a href={settlementCsvHref}>
                 <Download className="h-4 w-4" />
@@ -188,12 +190,15 @@ export default function SettlementPage() {
 
           {isFetchingNextPage ? (
             <div className="mt-2 flex items-center justify-center gap-2 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-              더 불러오는 중...
+              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />더 불러오는 중...
             </div>
           ) : null}
 
-          <InfiniteScrollSentinel hasMore={Boolean(hasNextPage)} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
+          <InfiniteScrollSentinel
+            hasMore={Boolean(hasNextPage)}
+            isLoading={isFetchingNextPage}
+            onLoadMore={() => fetchNextPage()}
+          />
         </div>
       )}
 

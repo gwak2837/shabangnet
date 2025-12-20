@@ -52,7 +52,10 @@ export async function getSettlementData(filters: SettlementFilters): Promise<Set
   const { startDate, endDate } = getDateRange(filters)
 
   // Get manufacturer info
-  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, filters.manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, filters.manufacturerId))
 
   if (!mfr) {
     return createEmptySettlement(filters)

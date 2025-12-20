@@ -113,7 +113,11 @@ export async function GET(request: NextRequest) {
   const { startAt, endAt } = getDateRange({ periodType, month, startDate, endDate })
   const period = formatPeriod({ periodType, month, startDate, endDate })
 
-  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, manufacturerId))
+
   if (!mfr) {
     return NextResponse.json({ error: '제조사를 찾을 수 없어요.' }, { status: 400 })
   }
@@ -300,7 +304,12 @@ function buildSummaryRow(params: {
   ]
 }
 
-function formatPeriod(filters: { endDate?: string; month?: string; periodType: 'month' | 'range'; startDate?: string }): string {
+function formatPeriod(filters: {
+  endDate?: string
+  month?: string
+  periodType: 'month' | 'range'
+  startDate?: string
+}): string {
   if (filters.periodType === 'month' && filters.month) {
     const [year, month] = filters.month.split('-')
     return `${year}년 ${month}월`
@@ -365,5 +374,3 @@ async function getSettlementSummary(params: { endAt: Date; manufacturerId: numbe
 function toIsoDate(date: Date): string {
   return date.toISOString().split('T')[0] ?? ''
 }
-
-

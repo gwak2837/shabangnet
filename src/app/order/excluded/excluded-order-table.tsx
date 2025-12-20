@@ -65,7 +65,7 @@ export function ExcludedOrderTable() {
                         <div className="min-w-0 space-y-1">
                           <p className="truncate font-medium text-slate-900">{batch.reason}</p>
                           {sampleOrders.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-1.5 items-center">
                               {sampleOrders.map((o) => (
                                 <Badge
                                   className="bg-slate-100 text-slate-600 text-xs font-mono max-w-[220px] truncate"

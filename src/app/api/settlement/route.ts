@@ -129,7 +129,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function createEmptySummary(filters: { endDate?: string; month?: string; periodType: 'month' | 'range'; startDate?: string }) {
+function createEmptySummary(filters: {
+  endDate?: string
+  month?: string
+  periodType: 'month' | 'range'
+  startDate?: string
+}) {
   return {
     totalOrders: 0,
     totalQuantity: 0,
@@ -141,7 +146,12 @@ function createEmptySummary(filters: { endDate?: string; month?: string; periodT
   } satisfies SettlementSummary
 }
 
-function formatPeriod(filters: { endDate?: string; month?: string; periodType: 'month' | 'range'; startDate?: string }): string {
+function formatPeriod(filters: {
+  endDate?: string
+  month?: string
+  periodType: 'month' | 'range'
+  startDate?: string
+}): string {
   if (filters.periodType === 'month' && filters.month) {
     const [year, month] = filters.month.split('-')
     return `${year}년 ${month}월`
@@ -173,7 +183,11 @@ async function getSettlementOrders(params: z.infer<typeof queryParamsSchema>): P
   const { cursor, limit, manufacturerId, periodType, month, startDate, endDate } = params
   const { startAt, endAt } = getDateRange({ periodType, month, startDate, endDate })
 
-  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, manufacturerId))
+
   if (!mfr) {
     return { items: [], nextCursor: null, summary: createEmptySummary({ periodType, month, startDate, endDate }) }
   }
@@ -330,5 +344,3 @@ async function getSettlementSummary(params: {
     period: params.period,
   }
 }
-
-

@@ -174,5 +174,3 @@ export function DeleteSettlementOrdersDialog({ selectedIds, onSuccess }: DeleteS
     </AlertDialog>
   )
 }
-
-
