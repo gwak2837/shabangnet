@@ -116,13 +116,14 @@ export function DeleteOptionMappingsDialog({ selectedIds, onSuccess }: DeleteOpt
                     </li>
                   </ul>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                    <p className="font-medium text-slate-900">미완료 주문에는 이렇게 반영돼요:</p>
+                    <p className="font-medium text-slate-900">기존 주문은 변경되지 않아요</p>
                     <ul className="mt-2 list-disc list-inside space-y-1">
                       <li>
-                        영향 받는 주문 <strong className="text-slate-900">{preview.affectedOrdersCount}건</strong>
+                        참고: 같은 상품/옵션인 미완료 주문이 <strong className="text-slate-900">{preview.affectedOrdersCount}건</strong>{' '}
+                        있어요.
                       </li>
-                      <li>옵션 연결이 제거되고, 상품 연결(상품코드 기준)이 있으면 그 값으로 돌아가요.</li>
-                      <li>상품 연결도 없으면 미연결 상태로 돌아가요.</li>
+                      <li>삭제해도 이미 업로드된 주문 데이터는 그대로 유지돼요.</li>
+                      <li>앞으로 업로드되는 주문부터 이 옵션 연결이 적용되지 않아요.</li>
                     </ul>
                   </div>
                   <p className="font-medium text-red-600">이 작업은 되돌릴 수 없어요.</p>

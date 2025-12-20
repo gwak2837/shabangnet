@@ -1,10 +1,9 @@
 'use server'
 
-import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
-import { order } from '@/db/schema/orders'
+import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
 import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 // Option mapping types
@@ -51,22 +50,6 @@ export async function create(
 
   const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, data.manufacturerId))
 
-  // 제조사가 없는 주문에만 채워요. (파일에 제조사가 있는 주문은 덮어쓰지 않아요)
-  await db
-    .update(order)
-    .set({
-      manufacturerId: data.manufacturerId,
-      manufacturerName: mfr?.name ?? null,
-    })
-    .where(
-      and(
-        sql`lower(${order.productCode}) = lower(${productCode})`,
-        sql`lower(${order.optionName}) = lower(${optionName})`,
-        isNull(order.manufacturerId),
-        sql`${order.status} <> 'completed'`,
-      ),
-    )
-
   return mapToOptionMapping({ ...newMapping, manufacturer: mfr })
 }
 
@@ -94,86 +77,9 @@ export async function getById(id: number): Promise<OptionManufacturerMapping | u
 }
 
 export async function remove(id: number): Promise<void> {
-  await db.transaction(async (tx) => {
-    const [row] = await tx
-      .select({
-        optionName: optionMapping.optionName,
-        productCode: optionMapping.productCode,
-      })
-      .from(optionMapping)
-      .where(eq(optionMapping.id, id))
-      .limit(1)
-
-    if (!row) {
-      return
-    }
-
-    await tx.delete(optionMapping).where(eq(optionMapping.id, id))
-
-    // 같은 키(상품코드+옵션명)로 다른 옵션 연결이 남아 있다면, 남아있는 값을 우선 적용해요.
-    const [remaining] = await tx
-      .select({ manufacturerId: optionMapping.manufacturerId })
-      .from(optionMapping)
-      .where(
-        and(
-          sql`lower(${optionMapping.productCode}) = lower(${row.productCode})`,
-          sql`lower(${optionMapping.optionName}) = lower(${row.optionName})`,
-          isNotNull(optionMapping.manufacturerId),
-        ),
-      )
-      .limit(1)
-
-    if (remaining) {
-      if (remaining.manufacturerId == null) {
-        return
-      }
-
-      const [mfr] = await tx.select().from(manufacturer).where(eq(manufacturer.id, remaining.manufacturerId))
-
-      await tx
-        .update(order)
-        .set({
-          manufacturerId: remaining.manufacturerId,
-          manufacturerName: mfr?.name ?? null,
-        })
-        .where(
-          and(
-            sql`lower(${order.productCode}) = lower(${row.productCode})`,
-            sql`lower(${order.optionName}) = lower(${row.optionName})`,
-            isNull(order.manufacturerId),
-            sql`${order.status} <> 'completed'`,
-          ),
-        )
-
-      return
-    }
-
-    // 옵션 연결이 완전히 사라지면, 상품 연결(상품코드 기준)로 되돌려요.
-    const [fallback] = await tx
-      .select({
-        manufacturerId: product.manufacturerId,
-        manufacturerName: manufacturer.name,
-      })
-      .from(product)
-      .leftJoin(manufacturer, eq(product.manufacturerId, manufacturer.id))
-      .where(sql`lower(${product.productCode}) = lower(${row.productCode})`)
-      .limit(1)
-
-    await tx
-      .update(order)
-      .set({
-        manufacturerId: fallback?.manufacturerId ?? null,
-        manufacturerName: fallback?.manufacturerName ?? null,
-      })
-      .where(
-        and(
-          sql`lower(${order.productCode}) = lower(${row.productCode})`,
-          sql`lower(${order.optionName}) = lower(${row.optionName})`,
-          isNull(order.manufacturerId),
-          sql`${order.status} <> 'completed'`,
-        ),
-      )
-  })
+  // 정책: 옵션 연결은 "업로드 시점"에만 적용해요.
+  // 삭제해도 기존 주문 데이터는 변경하지 않아요. (앞으로 업로드되는 주문부터 반영돼요)
+  await db.delete(optionMapping).where(eq(optionMapping.id, id))
 }
 
 export async function update(
@@ -198,24 +104,6 @@ export async function update(
     updated.manufacturerId != null
       ? await db.select().from(manufacturer).where(eq(manufacturer.id, updated.manufacturerId))
       : [null]
-
-  if (updated.manufacturerId != null) {
-    // 제조사가 없는 주문에만 채워요. (파일에 제조사가 있는 주문은 덮어쓰지 않아요)
-    await db
-      .update(order)
-      .set({
-        manufacturerId: updated.manufacturerId,
-        manufacturerName: mfr?.name ?? null,
-      })
-      .where(
-        and(
-          sql`lower(${order.productCode}) = lower(${updated.productCode})`,
-          sql`lower(${order.optionName}) = lower(${normalizeOptionName(updated.optionName)})`,
-          isNull(order.manufacturerId),
-          sql`${order.status} <> 'completed'`,
-        ),
-      )
-  }
 
   return mapToOptionMapping({ ...updated, manufacturer: mfr })
 }
