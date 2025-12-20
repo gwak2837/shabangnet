@@ -210,22 +210,6 @@ export default function OptionMappingsPage() {
         </Card>
       </div>
 
-      {/* Info Banner */}
-      <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
-        <div className="flex gap-3">
-          <Link2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">옵션 연결이란?</p>
-            <p className="text-blue-700">
-              같은 상품코드라도 옵션에 따라 다른 제조사에서 공급되는 경우가 있어요. 옵션별로 제조사를 연결할 수 있어요.
-              <br />
-              주문 파일에 제조사가 있으면 그 값이 먼저 적용돼요. 제조사가 비어 있으면 옵션 연결이 적용되고, 옵션이
-              없으면 상품 연결이 적용돼요.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <OptionMappingFilters
