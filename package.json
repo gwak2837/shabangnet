@@ -13,8 +13,6 @@
     "db:push": "NODE_OPTIONS='--conditions=react-server' drizzle-kit push",
     "db:push:prod": "DB_ENV=production pnpm db:push",
     "seed:all": "pnpm tsx tools/seed-all.ts",
-    "seed:manufacturers": "pnpm tsx tools/seed-real-manufacturers.ts",
-    "seed:products": "pnpm tsx tools/seed-product-mappings.ts",
     "seed:settings": "pnpm tsx tools/seed-courier-and-exclusion.ts && pnpm tsx tools/seed-order-email-template.ts && pnpm tsx tools/seed-common-order-template.ts && pnpm tsx tools/seed-shopping-mall-templates.ts",
     "seed:settings:prod": "DB_ENV=production pnpm seed:settings",
     "seed:test-user": "pnpm tsx tools/seed-test-user.ts",
@@ -24,6 +22,7 @@
     "test:e2e": "E2E_DEV=true pnpm playwright test",
     "test:e2e:prod": "pnpm playwright test",
     "test:e2e:all": "pnpm test:db:down && pnpm test:db:up && lsof -ti:3010 | xargs kill -9 2>/dev/null || true && pnpm playwright test && pnpm test:db:down",
+    "test:e2e:update-golden": "E2E_DEV=true E2E_UPDATE_GOLDEN=true pnpm playwright test --project authenticated",
     "test:e2e:ui": "E2E_DEV=true pnpm playwright test --ui",
     "test:e2e:debug": "E2E_DEV=true pnpm playwright test --debug"
   },

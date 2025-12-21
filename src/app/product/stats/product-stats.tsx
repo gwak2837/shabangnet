@@ -18,14 +18,18 @@ interface ProductSummary {
   unmappedProducts: number
 }
 
+interface StatValueProps {
+  isLoading: boolean
+  suffix: string
+  value: number | null | undefined
+}
+
 export function ProductStats({ showPriceErrorsOnly, onTogglePriceErrorsOnly }: ProductStatsProps) {
   const { data, isLoading, isError } = useProductSummary()
-
-  const totalProducts = !isError ? data?.totalProducts : undefined
-  const unmappedProducts = !isError ? data?.unmappedProducts : undefined
-  const mappedProducts = !isError ? data?.mappedProducts : undefined
-  const priceErrorProducts = !isError ? data?.priceErrorProducts : undefined
-
+  const totalProducts = !isError ? data?.totalProducts : null
+  const unmappedProducts = !isError ? data?.unmappedProducts : null
+  const mappedProducts = !isError ? data?.mappedProducts : null
+  const priceErrorProducts = !isError ? data?.priceErrorProducts : null
   const hasPriceErrors = (priceErrorProducts ?? 0) > 0
   const canTogglePriceErrorsOnly = !isLoading && hasPriceErrors
 
@@ -101,7 +105,7 @@ export function ProductStats({ showPriceErrorsOnly, onTogglePriceErrorsOnly }: P
   )
 }
 
-function StatValue({ isLoading, suffix, value }: { isLoading: boolean; suffix: string; value: number | undefined }) {
+function StatValue({ isLoading, suffix, value }: StatValueProps) {
   if (isLoading) {
     return <div className="h-7 w-16 rounded bg-slate-200/80 animate-pulse" />
   }

@@ -384,15 +384,28 @@ export async function flexibleCompareExcelFiles(
 
   if (opts.ignoreRowOrder && opts.keyColumn) {
     // 키 컬럼 기준 매칭
-    const actualByKey = new Map<string, { row: RowData; index: number }>()
+    // NOTE: key가 유니크하지 않을 수 있어요(동일 주문번호로 여러 행). 그래서 "1개 매칭"이 아니라 "멀티셋 매칭"으로 처리해요.
+    const actualByKey = new Map<string, { row: RowData; index: number }[]>()
     actualData.forEach((row, index) => {
       const key = normalizeFlexibleValue(row[opts.keyColumn!] ?? '', opts)
-      if (key) {
-        actualByKey.set(key, { row, index })
-      }
+      if (!key) return
+      const list = actualByKey.get(key) ?? []
+      list.push({ row, index })
+      actualByKey.set(key, list)
     })
 
     const matchedActualIndices = new Set<number>()
+
+    function isRowMatch(expectedRow: RowData, actualRow: RowData): boolean {
+      for (const col of columnsToCompare) {
+        const expectedValue = normalizeFlexibleValue(expectedRow[col] ?? '', opts)
+        const actualValue = normalizeFlexibleValue(actualRow[col] ?? '', opts)
+        if (!flexibleValuesAreEqual(expectedValue, actualValue, opts)) {
+          return false
+        }
+      }
+      return true
+    }
 
     for (let i = 0; i < expectedData.length; i++) {
       const expectedRow = expectedData[i]
@@ -400,20 +413,26 @@ export async function flexibleCompareExcelFiles(
 
       if (!key) continue
 
-      const actualMatch = actualByKey.get(key)
+      const candidates = actualByKey.get(key) ?? []
+      const unused = candidates.filter((c) => !matchedActualIndices.has(c.index))
 
-      if (!actualMatch) {
+      if (unused.length === 0) {
         missingRows.push(expectedRow)
         continue
       }
 
-      matchedActualIndices.add(actualMatch.index)
+      const best =
+        unused.find((c) => isRowMatch(expectedRow, c.row)) ??
+        // 완전 일치가 없으면(동일 key, 값 불일치) 첫 후보를 선택하고 차이점을 기록해요.
+        unused[0]!
+
+      matchedActualIndices.add(best.index)
       matchedRows++
 
       // 핵심 컬럼 비교
       for (const col of columnsToCompare) {
         const expectedValue = normalizeFlexibleValue(expectedRow[col] ?? '', opts)
-        const actualValue = normalizeFlexibleValue(actualMatch.row[col] ?? '', opts)
+        const actualValue = normalizeFlexibleValue(best.row[col] ?? '', opts)
 
         if (!flexibleValuesAreEqual(expectedValue, actualValue, opts)) {
           differences.push({

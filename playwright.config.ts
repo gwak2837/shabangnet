@@ -76,6 +76,8 @@ export default defineConfig({
     // 3. 나머지 테스트 (저장된 세션 재사용)
     {
       name: 'authenticated',
+      // 페이지 단위 e2e (인증이 필요한 영역)
+      testMatch: /pages\/.*\.spec\.ts/,
       testIgnore: [/auth\.setup\.ts/, /pages\/auth\.spec\.ts/],
       dependencies: ['setup'],
       use: {

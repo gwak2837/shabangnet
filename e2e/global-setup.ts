@@ -5,23 +5,17 @@ import path from 'path'
 dotenv.config({ path: path.join(__dirname, '../.env.test.local'), quiet: true })
 
 async function globalSetup() {
-  console.log('📦 테스트 DB 컨테이너 확인 중...')
+  const repoRoot = path.join(__dirname, '..')
+
+  console.log('📦 테스트 DB 컨테이너 초기화 중...')
   try {
-    const containerStatus = execSync('docker ps --filter "name=daonfnc-test" --format "{{.Status}}"', {
-      encoding: 'utf-8',
-    }).trim()
+    // ✅ 매 E2E 실행마다 깨끗한 DB를 보장하기 위해 컨테이너를 항상 재생성해요.
+    // (테스트 케이스마다 재시작하지는 않아요)
+    execSync('docker compose rm -sf db-test', { cwd: repoRoot, stdio: 'inherit' })
+    execSync('docker compose up -d db-test', { cwd: repoRoot, stdio: 'inherit' })
 
-    if (!containerStatus) {
-      console.log('   테스트 DB 컨테이너가 실행 중이 아닙니다. 시작합니다...')
-      execSync('docker compose up -d db-test', {
-        cwd: path.join(__dirname, '..'),
-        stdio: 'inherit',
-      })
-
-      // 컨테이너가 준비될 때까지 대기
-      console.log('   컨테이너 준비 대기 중...')
-      await waitForDatabase()
-    }
+    console.log('   컨테이너 준비 대기 중...')
+    await waitForDatabase()
   } catch (error) {
     console.error('❌ Docker 확인 실패. Docker가 실행 중인지 확인하세요.')
     throw error
@@ -48,30 +42,24 @@ async function globalSetup() {
   console.log('\n🌱 시드 데이터 적용 중...')
 
   // 각 시드 스크립트 실행
-  // 순서 중요: 제조사 → 템플릿 → 상품 연결 (의존성 순서)
+  // 순서 중요: 기본 설정 → 템플릿 → 테스트 계정
   const seedScripts = [
-    'seed-settings.ts',
+    'seed-courier-and-exclusion.ts',
+    'seed-order-email-template.ts',
     'seed-common-order-template.ts',
     'seed-shopping-mall-templates.ts',
-    'seed-real-manufacturers.ts',
-    'seed-order-templates.ts',
-    'seed-product-mappings.ts',
     'seed-test-user.ts',
   ]
 
   for (const script of seedScripts) {
     console.log(`   ${script}`)
-    try {
-      const output = execSync(`pnpm tsx tools/${script}`, {
-        cwd: path.join(__dirname, '..'),
-        encoding: 'utf-8',
-        env: { ...process.env, DB_ENV: 'test' },
-      })
-      const lines = output.trim().split('\n').slice(0, 1)
-      if (lines.length > 0) console.log(`   ${lines.join('\n   ')}`)
-    } catch {
-      // 이미 존재하는 데이터는 에러로 처리하지 않음
-    }
+    const output = execSync(`pnpm tsx tools/${script}`, {
+      cwd: repoRoot,
+      encoding: 'utf-8',
+      env: { ...process.env, DB_ENV: 'test' },
+    })
+    const lines = output.trim().split('\n').slice(0, 1)
+    if (lines.length > 0) console.log(`   ${lines.join('\n   ')}`)
   }
 
   console.log('\n✅ E2E 테스트 전역 설정 완료!\n')

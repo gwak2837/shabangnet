@@ -45,18 +45,17 @@ interface AutoCreateUnmappedOptionCandidatesParams {
 export async function autoCreateManufacturers({ orders, lookupMaps, tx }: AutoCreateManufacturersParams) {
   const createdNames: string[] = []
 
-  const manufacturerNames = [
-    ...new Set(
-      orders
-        .map((o) => (typeof o.manufacturer === 'string' ? normalizeManufacturerName(o.manufacturer) : null))
-        .filter((name): name is string => !!name),
-    ),
-  ]
+  const duplicatedManufacturerNames = orders
+    .map((o) => (typeof o.manufacturer === 'string' ? normalizeManufacturerName(o.manufacturer) : null))
+    .filter((name): name is string => !!name)
+
+  const manufacturerNames = [...new Set(duplicatedManufacturerNames)]
 
   for (const rawName of manufacturerNames) {
     const name = rawName.trim()
+    const nameKey = name.toLowerCase()
 
-    if (lookupMaps.manufacturerMap.has(name)) {
+    if (lookupMaps.manufacturerMap.has(nameKey)) {
       continue
     }
 
@@ -69,7 +68,7 @@ export async function autoCreateManufacturers({ orders, lookupMaps, tx }: AutoCr
     `)
 
     if (record) {
-      lookupMaps.manufacturerMap.set(record.name, { id: record.id, name: record.name })
+      lookupMaps.manufacturerMap.set(record.name.toLowerCase(), { id: record.id, name: record.name })
       if (record.isNew) {
         createdNames.push(record.name)
       }
