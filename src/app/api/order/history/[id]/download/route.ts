@@ -26,13 +26,13 @@ export async function GET(_request: NextRequest, context: { params: { id: string
 
   const logId = validation.data.id
 
-  const row = await db.query.orderEmailLog.findFirst({
-    where: eq(orderEmailLog.id, logId),
-    columns: {
-      fileName: true,
-      attachmentFile: true,
-    },
-  })
+  const [row] = await db
+    .select({
+      fileName: orderEmailLog.fileName,
+      attachmentFile: orderEmailLog.attachmentFile,
+    })
+    .from(orderEmailLog)
+    .where(eq(orderEmailLog.id, logId))
 
   if (!row?.attachmentFile) {
     return NextResponse.json({ error: '다운로드할 파일이 없어요' }, { status: 404 })

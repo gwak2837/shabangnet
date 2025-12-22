@@ -69,10 +69,7 @@ export async function saveProductManufacturerLink(
 
   try {
     const updatedOrders = await db.transaction(async (tx) => {
-      const existingProduct = await tx.query.product.findFirst({
-        where: eq(product.productCode, productCode),
-        columns: { id: true },
-      })
+      const [existingProduct] = await tx.select({ id: product.id }).from(product).where(eq(product.productCode, productCode))
 
       if (existingProduct) {
         await tx

@@ -3,7 +3,7 @@
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 
 import { db } from '@/db/client'
-import { orderEmailLog } from '@/db/schema/orders'
+import { orderEmailLog, orderEmailLogItem } from '@/db/schema/orders'
 
 export interface LogFilters {
   endDate?: string
@@ -87,34 +87,48 @@ export async function getAll(): Promise<SendLog[]> {
 }
 
 export async function getById(id: number): Promise<SendLog | undefined> {
-  const result = await db.query.orderEmailLog.findFirst({
-    where: eq(orderEmailLog.id, id),
-    columns: {
-      id: true,
-      manufacturerId: true,
-      manufacturerName: true,
-      email: true,
-      subject: true,
-      fileName: true,
-      attachmentFileSize: true,
-      orderCount: true,
-      totalAmount: true,
-      status: true,
-      errorMessage: true,
-      recipientAddresses: true,
-      duplicateReason: true,
-      sentAt: true,
-      sentBy: true,
-    },
-    with: {
-      items: true,
-    },
-  })
+  const [result] = await db
+    .select({
+      id: orderEmailLog.id,
+      manufacturerId: orderEmailLog.manufacturerId,
+      manufacturerName: orderEmailLog.manufacturerName,
+      email: orderEmailLog.email,
+      subject: orderEmailLog.subject,
+      fileName: orderEmailLog.fileName,
+      attachmentFileSize: orderEmailLog.attachmentFileSize,
+      orderCount: orderEmailLog.orderCount,
+      totalAmount: orderEmailLog.totalAmount,
+      status: orderEmailLog.status,
+      errorMessage: orderEmailLog.errorMessage,
+      recipientAddresses: orderEmailLog.recipientAddresses,
+      duplicateReason: orderEmailLog.duplicateReason,
+      sentAt: orderEmailLog.sentAt,
+      sentBy: orderEmailLog.sentBy,
+    })
+    .from(orderEmailLog)
+    .where(eq(orderEmailLog.id, id))
 
-  if (!result) return undefined
+  if (!result) {
+    return undefined
+  }
+
+  const items = await db
+    .select({
+      address: orderEmailLogItem.address,
+      cost: orderEmailLogItem.cost,
+      customerName: orderEmailLogItem.customerName,
+      optionName: orderEmailLogItem.optionName,
+      price: orderEmailLogItem.price,
+      productName: orderEmailLogItem.productName,
+      quantity: orderEmailLogItem.quantity,
+      sabangnetOrderNumber: orderEmailLogItem.sabangnetOrderNumber,
+      shippingCost: orderEmailLogItem.shippingCost,
+    })
+    .from(orderEmailLogItem)
+    .where(eq(orderEmailLogItem.emailLogId, id))
 
   const mapped = mapToSendLog(result)
-  mapped.orders = result.items.map((o) => ({
+  mapped.orders = items.map((o) => ({
     address: o.address || '',
     cost: o.cost ?? 0,
     customerName: o.customerName || '',

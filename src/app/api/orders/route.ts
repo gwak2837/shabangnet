@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { decodeCursor, encodeCursor } from '@/app/api/util/cursor'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
-import { orderEmailLog } from '@/db/schema/orders'
+import { order, orderEmailLog } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
 import { orderIsIncludedSql } from '@/services/order-exclusion'
 import { createCacheControl } from '@/utils/cache-control'
@@ -113,16 +113,16 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
   // 검색/기간 조건
   const searchCondition = search
     ? sql`(
-        sabangnet_order_number ILIKE ${`%${search}%`} OR
-        mall_order_number ILIKE ${`%${search}%`} OR
-        product_name ILIKE ${`%${search}%`} OR
-        recipient_name ILIKE ${`%${search}%`} OR
-        manufacturer_name ILIKE ${`%${search}%`}
+        ${order.sabangnetOrderNumber} ILIKE ${`%${search}%`} OR
+        ${order.mallOrderNumber} ILIKE ${`%${search}%`} OR
+        ${order.productName} ILIKE ${`%${search}%`} OR
+        ${order.recipientName} ILIKE ${`%${search}%`} OR
+        ${order.manufacturerName} ILIKE ${`%${search}%`}
       )`
     : undefined
 
-  const dateFromCondition = dateFrom ? sql`created_at >= ${dateFrom}::timestamp` : undefined
-  const dateToCondition = dateTo ? sql`created_at <= ${dateTo}::timestamp + interval '1 day'` : undefined
+  const dateFromCondition = dateFrom ? sql`${order.createdAt} >= ${dateFrom}::timestamp` : undefined
+  const dateToCondition = dateTo ? sql`${order.createdAt} <= ${dateTo}::timestamp + interval '1 day'` : undefined
 
   // 제조사 0건은 숨기되, 페이지가 빈 배열로 내려오지 않도록 내부에서 더 스캔
   const items: OrderBatch[] = []
@@ -169,17 +169,38 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
     const scanEndId = manufacturersToProcess[manufacturersToProcess.length - 1]!.id
 
     // 주문 조회 (발송 대상만: fulfillmentType + exclusion patterns로 제외되지 않은 주문)
-    const allOrders = await db.query.order.findMany({
-      where: (o, { and: andOp, inArray: inArrayOp }) =>
-        andOp(
-          isNotNull(o.manufacturerId),
-          inArrayOp(o.manufacturerId, manufacturerIds),
-          orderIsIncludedSql(o.fulfillmentType),
+    const allOrders = await db
+      .select({
+        id: order.id,
+        sabangnetOrderNumber: order.sabangnetOrderNumber,
+        recipientName: order.recipientName,
+        recipientPhone: order.recipientPhone,
+        recipientMobile: order.recipientMobile,
+        address: order.address,
+        productCode: order.productCode,
+        productName: order.productName,
+        optionName: order.optionName,
+        quantity: order.quantity,
+        paymentAmount: order.paymentAmount,
+        manufacturerId: order.manufacturerId,
+        manufacturerName: order.manufacturerName,
+        status: order.status,
+        createdAt: order.createdAt,
+        fulfillmentType: order.fulfillmentType,
+        shoppingMall: order.shoppingMall,
+        orderName: order.orderName,
+      })
+      .from(order)
+      .where(
+        and(
+          isNotNull(order.manufacturerId),
+          inArray(order.manufacturerId, manufacturerIds),
+          orderIsIncludedSql(order.fulfillmentType),
           searchCondition,
           dateFromCondition,
           dateToCondition,
         ),
-    })
+      )
 
     // 제조사별 마지막 발송 시간(성공 로그 기준)
     const lastSentRows = await db

@@ -51,7 +51,18 @@ export async function deleteEmailTemplate(id: number): Promise<void> {
 }
 
 export async function getEmailTemplateById(id: number): Promise<EmailTemplate | null> {
-  const [template] = await db.select().from(emailTemplate).where(eq(emailTemplate.id, id))
+  const [template] = await db
+    .select({
+      id: emailTemplate.id,
+      slug: emailTemplate.slug,
+      subject: emailTemplate.subject,
+      body: emailTemplate.body,
+      variables: emailTemplate.variables,
+      createdAt: emailTemplate.createdAt,
+      updatedAt: emailTemplate.updatedAt,
+    })
+    .from(emailTemplate)
+    .where(eq(emailTemplate.id, id))
 
   if (!template) {
     return null
@@ -69,7 +80,18 @@ export async function getEmailTemplateById(id: number): Promise<EmailTemplate | 
 }
 
 export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplate | null> {
-  const [template] = await db.select().from(emailTemplate).where(eq(emailTemplate.slug, slug))
+  const [template] = await db
+    .select({
+      id: emailTemplate.id,
+      slug: emailTemplate.slug,
+      subject: emailTemplate.subject,
+      body: emailTemplate.body,
+      variables: emailTemplate.variables,
+      createdAt: emailTemplate.createdAt,
+      updatedAt: emailTemplate.updatedAt,
+    })
+    .from(emailTemplate)
+    .where(eq(emailTemplate.slug, slug))
 
   if (!template) {
     return null
@@ -87,7 +109,18 @@ export async function getEmailTemplateBySlug(slug: string): Promise<EmailTemplat
 }
 
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
-  const templates = await db.select().from(emailTemplate).orderBy(emailTemplate.createdAt)
+  const templates = await db
+    .select({
+      id: emailTemplate.id,
+      slug: emailTemplate.slug,
+      subject: emailTemplate.subject,
+      body: emailTemplate.body,
+      variables: emailTemplate.variables,
+      createdAt: emailTemplate.createdAt,
+      updatedAt: emailTemplate.updatedAt,
+    })
+    .from(emailTemplate)
+    .orderBy(emailTemplate.createdAt)
 
   return templates.map((t) => ({
     id: t.id,

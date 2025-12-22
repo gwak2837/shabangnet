@@ -1,6 +1,6 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
@@ -48,32 +48,49 @@ export async function create(
     })
     .returning()
 
-  const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, data.manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, data.manufacturerId))
 
-  return mapToOptionMapping({ ...newMapping, manufacturer: mfr })
+  return mapToOptionMappingRow({ ...newMapping, manufacturerName: mfr?.name ?? null })
 }
 
 export async function getAll(): Promise<OptionManufacturerMapping[]> {
-  const result = await db.query.optionMapping.findMany({
-    with: {
-      manufacturer: true,
-    },
-    orderBy: (optionMapping, { desc }) => [desc(optionMapping.createdAt)],
-  })
+  const rows = await db
+    .select({
+      id: optionMapping.id,
+      productCode: optionMapping.productCode,
+      optionName: optionMapping.optionName,
+      manufacturerId: optionMapping.manufacturerId,
+      manufacturerName: manufacturer.name,
+      createdAt: optionMapping.createdAt,
+      updatedAt: optionMapping.updatedAt,
+    })
+    .from(optionMapping)
+    .leftJoin(manufacturer, eq(optionMapping.manufacturerId, manufacturer.id))
+    .orderBy(desc(optionMapping.createdAt))
 
-  return result.map(mapToOptionMapping)
+  return rows.map(mapToOptionMappingRow)
 }
 
 export async function getById(id: number): Promise<OptionManufacturerMapping | undefined> {
-  const result = await db.query.optionMapping.findFirst({
-    where: eq(optionMapping.id, id),
-    with: {
-      manufacturer: true,
-    },
-  })
+  const [row] = await db
+    .select({
+      id: optionMapping.id,
+      productCode: optionMapping.productCode,
+      optionName: optionMapping.optionName,
+      manufacturerId: optionMapping.manufacturerId,
+      manufacturerName: manufacturer.name,
+      createdAt: optionMapping.createdAt,
+      updatedAt: optionMapping.updatedAt,
+    })
+    .from(optionMapping)
+    .leftJoin(manufacturer, eq(optionMapping.manufacturerId, manufacturer.id))
+    .where(eq(optionMapping.id, id))
 
-  if (!result) return undefined
-  return mapToOptionMapping(result)
+  if (!row) return undefined
+  return mapToOptionMappingRow(row)
 }
 
 export async function remove(id: number): Promise<void> {
@@ -102,23 +119,30 @@ export async function update(
 
   const [mfr] =
     updated.manufacturerId != null
-      ? await db.select().from(manufacturer).where(eq(manufacturer.id, updated.manufacturerId))
+      ? await db
+          .select({ name: manufacturer.name })
+          .from(manufacturer)
+          .where(eq(manufacturer.id, updated.manufacturerId))
       : [null]
 
-  return mapToOptionMapping({ ...updated, manufacturer: mfr })
+  return mapToOptionMappingRow({ ...updated, manufacturerName: mfr?.name ?? null })
 }
 
-function mapToOptionMapping(
-  m: typeof optionMapping.$inferSelect & {
-    manufacturer?: typeof manufacturer.$inferSelect | null
-  },
-): OptionManufacturerMapping {
+function mapToOptionMappingRow(m: {
+  createdAt: Date
+  id: number
+  manufacturerId: number | null
+  manufacturerName: string | null
+  optionName: string
+  productCode: string
+  updatedAt: Date
+}): OptionManufacturerMapping {
   return {
     id: m.id,
     productCode: m.productCode,
     optionName: m.optionName,
     manufacturerId: m.manufacturerId,
-    manufacturerName: m.manufacturer?.name ?? null,
+    manufacturerName: m.manufacturerName ?? null,
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   }

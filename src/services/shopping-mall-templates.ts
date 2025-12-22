@@ -56,14 +56,42 @@ export interface UpdateTemplateData {
 
 // Read operations
 export async function getShoppingMallTemplate(id: number): Promise<ShoppingMallTemplate | null> {
-  const [result] = await db.select().from(shoppingMallTemplate).where(eq(shoppingMallTemplate.id, id))
+  const [result] = await db
+    .select({
+      id: shoppingMallTemplate.id,
+      mallName: shoppingMallTemplate.mallName,
+      displayName: shoppingMallTemplate.displayName,
+      columnMappings: shoppingMallTemplate.columnMappings,
+      exportConfig: shoppingMallTemplate.exportConfig,
+      headerRow: shoppingMallTemplate.headerRow,
+      dataStartRow: shoppingMallTemplate.dataStartRow,
+      enabled: shoppingMallTemplate.enabled,
+      createdAt: shoppingMallTemplate.createdAt,
+      updatedAt: shoppingMallTemplate.updatedAt,
+    })
+    .from(shoppingMallTemplate)
+    .where(eq(shoppingMallTemplate.id, id))
 
   if (!result) return null
   return mapToShoppingMallTemplate(result)
 }
 
 export async function getShoppingMallTemplates(): Promise<ShoppingMallTemplate[]> {
-  const result = await db.select().from(shoppingMallTemplate).orderBy(shoppingMallTemplate.displayName)
+  const result = await db
+    .select({
+      id: shoppingMallTemplate.id,
+      mallName: shoppingMallTemplate.mallName,
+      displayName: shoppingMallTemplate.displayName,
+      columnMappings: shoppingMallTemplate.columnMappings,
+      exportConfig: shoppingMallTemplate.exportConfig,
+      headerRow: shoppingMallTemplate.headerRow,
+      dataStartRow: shoppingMallTemplate.dataStartRow,
+      enabled: shoppingMallTemplate.enabled,
+      createdAt: shoppingMallTemplate.createdAt,
+      updatedAt: shoppingMallTemplate.updatedAt,
+    })
+    .from(shoppingMallTemplate)
+    .orderBy(shoppingMallTemplate.displayName)
   return result.map(mapToShoppingMallTemplate)
 }
 

@@ -58,7 +58,20 @@ export async function getChartData(): Promise<ChartDataItem[]> {
 }
 
 export async function getRecentUploads(): Promise<Upload[]> {
-  const result = await db.select().from(upload).orderBy(desc(upload.uploadedAt)).limit(5)
+  const result = await db
+    .select({
+      id: upload.id,
+      fileName: upload.fileName,
+      fileSize: upload.fileSize,
+      totalOrders: upload.totalOrders,
+      processedOrders: upload.processedOrders,
+      errorOrders: upload.errorOrders,
+      status: upload.status,
+      uploadedAt: upload.uploadedAt,
+    })
+    .from(upload)
+    .orderBy(desc(upload.uploadedAt))
+    .limit(5)
 
   return result.map((u) => ({
     id: u.id,

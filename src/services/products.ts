@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
@@ -34,11 +34,10 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
     })
     .returning()
 
-  const mfr = data.manufacturerId
-    ? await db.query.manufacturer.findFirst({
-        where: eq(manufacturer.id, data.manufacturerId),
-      })
-    : null
+  const [mfr] =
+    data.manufacturerId != null
+      ? await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, data.manufacturerId))
+      : [null]
 
   // 기존 주문 중 제조사 미연결 건에 자동 반영
   if (data.manufacturerId) {
@@ -57,48 +56,78 @@ export async function create(data: Omit<Product, 'createdAt' | 'id' | 'updatedAt
       )
   }
 
-  return mapToProduct({ ...newProduct, manufacturer: mfr })
+  return mapToProductRow({ ...newProduct, manufacturerName: mfr?.name ?? null })
 }
 
 export async function getAll(): Promise<Product[]> {
-  const result = await db.query.product.findMany({
-    with: {
-      manufacturer: true,
-    },
-    orderBy: (product, { desc }) => [desc(product.createdAt)],
-  })
+  const rows = await db
+    .select({
+      id: product.id,
+      productCode: product.productCode,
+      productName: product.productName,
+      optionName: product.optionName,
+      manufacturerId: product.manufacturerId,
+      manufacturerName: manufacturer.name,
+      price: product.price,
+      cost: product.cost,
+      shippingFee: product.shippingFee,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+    })
+    .from(product)
+    .leftJoin(manufacturer, eq(product.manufacturerId, manufacturer.id))
+    .orderBy(desc(product.createdAt))
 
-  return result.map(mapToProduct)
+  return rows.map(mapToProductRow)
 }
 
 export async function getById(id: number): Promise<Product | undefined> {
-  const result = await db.query.product.findFirst({
-    where: eq(product.id, id),
-    with: {
-      manufacturer: true,
-    },
-  })
+  const [row] = await db
+    .select({
+      id: product.id,
+      productCode: product.productCode,
+      productName: product.productName,
+      optionName: product.optionName,
+      manufacturerId: product.manufacturerId,
+      manufacturerName: manufacturer.name,
+      price: product.price,
+      cost: product.cost,
+      shippingFee: product.shippingFee,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+    })
+    .from(product)
+    .leftJoin(manufacturer, eq(product.manufacturerId, manufacturer.id))
+    .where(eq(product.id, id))
 
-  if (!result) return undefined
-  return mapToProduct(result)
+  if (!row) return undefined
+  return mapToProductRow(row)
 }
 
 export async function remove(id: number): Promise<void> {
   await db.delete(product).where(eq(product.id, id))
 }
 
-function mapToProduct(
-  p: typeof product.$inferSelect & {
-    manufacturer?: typeof manufacturer.$inferSelect | null
-  },
-): Product {
+function mapToProductRow(p: {
+  cost: number | null
+  createdAt: Date
+  id: number
+  manufacturerId: number | null
+  manufacturerName: string | null
+  optionName: string | null
+  price: number | null
+  productCode: string
+  productName: string
+  shippingFee: number | null
+  updatedAt: Date
+}): Product {
   return {
     id: p.id,
     productCode: p.productCode,
     productName: p.productName,
     optionName: p.optionName || '',
     manufacturerId: p.manufacturerId,
-    manufacturerName: p.manufacturer?.name || null,
+    manufacturerName: p.manufacturerName ?? null,
     price: p.price ?? 0,
     cost: p.cost ?? 0,
     shippingFee: p.shippingFee ?? 0,

@@ -83,11 +83,13 @@ export async function updateProductAction({ id, data }: { id: number; data: Part
     throw new Error('Product not found')
   }
 
-  const mfr = updated.manufacturerId
-    ? await db.query.manufacturer.findFirst({
-        where: eq(manufacturer.id, updated.manufacturerId),
-      })
-    : null
+  const [mfr] =
+    updated.manufacturerId != null
+      ? await db
+          .select({ name: manufacturer.name })
+          .from(manufacturer)
+          .where(eq(manufacturer.id, updated.manufacturerId))
+      : [null]
 
   // 기존 주문 중 제조사 미연결 건에 자동 반영
   if (updated.manufacturerId) {
@@ -106,7 +108,7 @@ export async function updateProductAction({ id, data }: { id: number; data: Part
       )
   }
 
-  return mapToProduct({ ...updated, manufacturer: mfr })
+  return mapToProductRow({ ...updated, manufacturerName: mfr?.name ?? null })
 }
 
 async function checkAdminRole(): Promise<boolean> {
@@ -114,18 +116,26 @@ async function checkAdminRole(): Promise<boolean> {
   return Boolean(session?.user?.isAdmin)
 }
 
-function mapToProduct(
-  p: typeof product.$inferSelect & {
-    manufacturer?: typeof manufacturer.$inferSelect | null
-  },
-): Product {
+function mapToProductRow(p: {
+  cost: number | null
+  createdAt: Date
+  id: number
+  manufacturerId: number | null
+  manufacturerName: string | null
+  optionName: string | null
+  price: number | null
+  productCode: string
+  productName: string
+  shippingFee: number | null
+  updatedAt: Date
+}): Product {
   return {
     id: p.id,
     productCode: p.productCode,
     productName: p.productName,
     optionName: p.optionName || '',
     manufacturerId: p.manufacturerId,
-    manufacturerName: p.manufacturer?.name || null,
+    manufacturerName: p.manufacturerName ?? null,
     price: p.price ?? 0,
     cost: p.cost ?? 0,
     shippingFee: p.shippingFee ?? 0,

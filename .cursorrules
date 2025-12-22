@@ -171,12 +171,25 @@ return <BigListContainer value={value} />
 
 - **Prefer `db.select().from(...).where(...)`** over `db.query.*.findMany()` for clarity and explicit query shape.
 - Use `findMany` only when it materially simplifies relation-heavy queries; otherwise keep queries in `select/from/where` form.
+- **Select only the columns you actually use.** Prefer `db.select({ ... })` projections over `db.select()` to avoid overfetching and accidental reads of large fields (e.g. `bytea`, big `text/json` blobs).
+- **If you intentionally need _all_ columns from a single table**, it’s OK to use `db.select().from(table)` to keep the code readable.
+  - Use this only for **single-table reads** and **non-blob** tables.
+  - If the table includes `bytea`/large text/json fields (e.g. attachments), keep using `select({ ... })` projections.
 - **Avoid redundant `.limit(1)`** when filtering by a **unique/PK column** (e.g. `where(eq(table.id, ...))`). It adds noise without changing behavior.
   - If the filter is **not unique** but you only need one row, using `.limit(1)` is fine.
 
 ```ts
 // ✅ Preferred
 const rows = await db.select().from(orderEmailLog).where(eq(orderEmailLog.status, 'success'))
+
+// ✅ Also preferred (project only what you need)
+const rows2 = await db
+  .select({ id: orderEmailLog.id, sentAt: orderEmailLog.sentAt })
+  .from(orderEmailLog)
+  .where(eq(orderEmailLog.status, 'success'))
+
+// ✅ OK when you truly need the whole row (single-table, non-blob)
+const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, id))
 
 // ⚠️ Avoid by default (use when relations ergonomics are worth it)
 // const rows = await db.query.orderEmailLog.findMany({ where: ... })

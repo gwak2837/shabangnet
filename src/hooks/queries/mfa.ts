@@ -72,7 +72,10 @@ export async function getMFASettings(): Promise<MFASettingsResult> {
       .where(eq(passkey.userId, userId))
 
     // Two-factor 테이블에서 백업 코드 확인
-    const [twoFactorData] = await db.select().from(twoFactor).where(eq(twoFactor.userId, userId))
+    const [twoFactorData] = await db
+      .select({ backupCodes: twoFactor.backupCodes })
+      .from(twoFactor)
+      .where(eq(twoFactor.userId, userId))
 
     // 백업 코드 개수 계산 (JSON 문자열에서)
     let recoveryCodesRemaining = 0

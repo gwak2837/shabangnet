@@ -85,18 +85,54 @@ export async function deleteOrderTemplate(manufacturerId: number): Promise<void>
 }
 
 export async function getAll(): Promise<Manufacturer[]> {
-  const result = await db.select().from(manufacturer).orderBy(manufacturer.name)
+  const result = await db
+    .select({
+      id: manufacturer.id,
+      name: manufacturer.name,
+      contactName: manufacturer.contactName,
+      email: manufacturer.email,
+      ccEmail: manufacturer.ccEmail,
+      phone: manufacturer.phone,
+      orderCount: manufacturer.orderCount,
+      lastOrderDate: manufacturer.lastOrderDate,
+    })
+    .from(manufacturer)
+    .orderBy(manufacturer.name)
   return result.map(mapToManufacturer)
 }
 
 export async function getById(id: number): Promise<Manufacturer | undefined> {
-  const [result] = await db.select().from(manufacturer).where(eq(manufacturer.id, id))
+  const [result] = await db
+    .select({
+      id: manufacturer.id,
+      name: manufacturer.name,
+      contactName: manufacturer.contactName,
+      email: manufacturer.email,
+      ccEmail: manufacturer.ccEmail,
+      phone: manufacturer.phone,
+      orderCount: manufacturer.orderCount,
+      lastOrderDate: manufacturer.lastOrderDate,
+    })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, id))
   if (!result) return undefined
   return mapToManufacturer(result)
 }
 
 export async function getInvoiceTemplate(manufacturerId: number): Promise<InvoiceTemplate | null> {
-  const [template] = await db.select().from(invoiceTemplate).where(eq(invoiceTemplate.manufacturerId, manufacturerId))
+  const [template] = await db
+    .select({
+      id: invoiceTemplate.id,
+      manufacturerId: invoiceTemplate.manufacturerId,
+      orderNumberColumn: invoiceTemplate.orderNumberColumn,
+      courierColumn: invoiceTemplate.courierColumn,
+      trackingNumberColumn: invoiceTemplate.trackingNumberColumn,
+      headerRow: invoiceTemplate.headerRow,
+      dataStartRow: invoiceTemplate.dataStartRow,
+      useColumnIndex: invoiceTemplate.useColumnIndex,
+    })
+    .from(invoiceTemplate)
+    .where(eq(invoiceTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
 
@@ -120,7 +156,18 @@ export async function getInvoiceTemplateOrDefault(manufacturerId: number): Promi
 }
 
 export async function getOrderTemplate(manufacturerId: number): Promise<OrderTemplate | null> {
-  const [template] = await db.select().from(orderTemplate).where(eq(orderTemplate.manufacturerId, manufacturerId))
+  const [template] = await db
+    .select({
+      id: orderTemplate.id,
+      manufacturerId: orderTemplate.manufacturerId,
+      templateFileName: orderTemplate.templateFileName,
+      headerRow: orderTemplate.headerRow,
+      dataStartRow: orderTemplate.dataStartRow,
+      columnMappings: orderTemplate.columnMappings,
+      fixedValues: orderTemplate.fixedValues,
+    })
+    .from(orderTemplate)
+    .where(eq(orderTemplate.manufacturerId, manufacturerId))
 
   if (!template) return null
 

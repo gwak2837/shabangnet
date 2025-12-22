@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm'
 
 import type { TemplateAnalysis } from '@/lib/excel'
 
@@ -47,7 +47,6 @@ export async function analyzeCurrentCommonOrderTemplate(): Promise<{
       .select({ templateFile: commonOrderTemplate.templateFile })
       .from(commonOrderTemplate)
       .where(eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY))
-      .limit(1)
 
     if (!row) {
       return { success: false, error: '발주서 템플릿이 아직 없어요. 먼저 파일을 업로드해 주세요.' }
@@ -77,10 +76,16 @@ export async function analyzeOrderTemplateFile(fileBuffer: ArrayBuffer): Promise
 
 export async function getCommonOrderTemplate(): Promise<CommonOrderTemplate | null> {
   const [row] = await db
-    .select()
+    .select({
+      key: commonOrderTemplate.key,
+      templateFileName: commonOrderTemplate.templateFileName,
+      headerRow: commonOrderTemplate.headerRow,
+      dataStartRow: commonOrderTemplate.dataStartRow,
+      columnMappings: commonOrderTemplate.columnMappings,
+      fixedValues: commonOrderTemplate.fixedValues,
+    })
     .from(commonOrderTemplate)
     .where(eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY))
-    .limit(1)
 
   if (!row) return null
 
@@ -124,7 +129,7 @@ export async function getCommonTemplateTestCandidates(): Promise<CommonTemplateT
   const templates = await db
     .select({
       manufacturerId: orderTemplate.manufacturerId,
-      templateFile: orderTemplate.templateFile,
+      templateFileName: orderTemplate.templateFileName,
       columnMappings: orderTemplate.columnMappings,
     })
     .from(orderTemplate)
@@ -132,7 +137,7 @@ export async function getCommonTemplateTestCandidates(): Promise<CommonTemplateT
   const validTemplateManufacturerIds = new Set<number>()
   for (const t of templates) {
     if (!t.manufacturerId) continue
-    if (t.templateFile && hasValidColumnMappings(t.columnMappings)) {
+    if (t.templateFileName && hasValidColumnMappings(t.columnMappings)) {
       validTemplateManufacturerIds.add(t.manufacturerId)
     }
   }
@@ -175,13 +180,12 @@ export async function getCommonTemplateTestCandidates(): Promise<CommonTemplateT
 export async function getRecentOrderIdsForManufacturer(manufacturerId: number, limit: number = 50): Promise<number[]> {
   const safeLimit = Math.min(200, Math.max(1, Math.floor(limit)))
 
-  const rows = await db.query.order.findMany({
-    columns: { id: true },
-    where: (o, { and: andOp, eq: eqOp }) =>
-      andOp(eqOp(o.manufacturerId, manufacturerId), orderIsIncludedSql(o.fulfillmentType)),
-    orderBy: (o, { desc: descOp }) => [descOp(o.createdAt)],
-    limit: safeLimit,
-  })
+  const rows = await db
+    .select({ id: order.id })
+    .from(order)
+    .where(and(eq(order.manufacturerId, manufacturerId), orderIsIncludedSql(order.fulfillmentType)))
+    .orderBy(desc(order.createdAt))
+    .limit(safeLimit)
 
   return rows.map((r) => r.id)
 }
@@ -204,7 +208,6 @@ export async function upsertCommonOrderTemplate(
     .select({ key: commonOrderTemplate.key })
     .from(commonOrderTemplate)
     .where(eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY))
-    .limit(1)
 
   const fixedValuesJson = Object.keys(fixedValues).length > 0 ? JSON.stringify(fixedValues) : null
   const columnMappingsJson = JSON.stringify(columnMappings)

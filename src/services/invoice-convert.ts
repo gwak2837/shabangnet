@@ -64,7 +64,14 @@ export async function convertInvoiceFile(params: ConvertInvoiceParams): Promise<
     }
 
     // 2. 택배사 연결 조회
-    const courierMappingList = await db.select().from(courierMapping)
+    const courierMappingList = await db
+      .select({
+        name: courierMapping.name,
+        code: courierMapping.code,
+        aliases: courierMapping.aliases,
+        enabled: courierMapping.enabled,
+      })
+      .from(courierMapping)
     const courierLookup = buildCourierLookup(courierMappingList)
 
     // 3. 해당 제조사의 주문 데이터 조회 (사방넷주문번호로 연결)

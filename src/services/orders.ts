@@ -1,10 +1,10 @@
 'use server'
 
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
-import { order } from '@/db/schema/orders'
+import { order, orderEmailLog } from '@/db/schema/orders'
 import { commonOrderTemplate } from '@/db/schema/settings'
 import {
   generateOrderFileName,
@@ -91,18 +91,23 @@ export async function checkDuplicate(
   const now = new Date()
   const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000)
 
-  const recentLogs = await db.query.orderEmailLog.findMany({
-    columns: {
-      id: true,
-      manufacturerName: true,
-      orderCount: true,
-      recipientAddresses: true,
-      sentAt: true,
-      totalAmount: true,
-    },
-    where: (logs, { and, eq, gte }) =>
-      and(eq(logs.manufacturerId, manufacturerId), eq(logs.status, 'success'), gte(logs.sentAt, periodStart)),
-  })
+  const recentLogs = await db
+    .select({
+      id: orderEmailLog.id,
+      manufacturerName: orderEmailLog.manufacturerName,
+      orderCount: orderEmailLog.orderCount,
+      recipientAddresses: orderEmailLog.recipientAddresses,
+      sentAt: orderEmailLog.sentAt,
+      totalAmount: orderEmailLog.totalAmount,
+    })
+    .from(orderEmailLog)
+    .where(
+      and(
+        eq(orderEmailLog.manufacturerId, manufacturerId),
+        eq(orderEmailLog.status, 'success'),
+        gte(orderEmailLog.sentAt, periodStart),
+      ),
+    )
 
   const matchedAddresses: string[] = []
   const duplicateLogs: SendLogSummary[] = []
@@ -167,10 +172,12 @@ export async function generateOrderExcel(params: {
     return { error: '제조사를 찾을 수 없어요' }
   }
 
-  const ordersToExport = await db.query.order.findMany({
-    where: (o, { and: andOp, eq: eqOp, inArray: inArrayOp }) =>
-      andOp(eqOp(o.manufacturerId, params.manufacturerId), inArrayOp(o.id, params.orderIds)),
-  })
+  // NOTE: 발주서 생성은 주문의 "대부분 컬럼"을 사용해요.
+  // 이 경우 select({ ... })는 지나치게 장황해져서, 의도적으로 전체 컬럼을 조회합니다.
+  const ordersToExport = await db
+    .select()
+    .from(order)
+    .where(and(eq(order.manufacturerId, params.manufacturerId), inArray(order.id, params.orderIds)))
 
   if (ordersToExport.length === 0) {
     return { error: '내보낼 주문이 없어요' }
@@ -180,7 +187,13 @@ export async function generateOrderExcel(params: {
 
   // 제조사별 발주서 템플릿 조회
   const [template] = await db
-    .select()
+    .select({
+      templateFile: orderTemplate.templateFile,
+      headerRow: orderTemplate.headerRow,
+      dataStartRow: orderTemplate.dataStartRow,
+      columnMappings: orderTemplate.columnMappings,
+      fixedValues: orderTemplate.fixedValues,
+    })
     .from(orderTemplate)
     .where(eq(orderTemplate.manufacturerId, params.manufacturerId))
 
@@ -260,7 +273,10 @@ export async function generateOrderExcelForDownload(params: {
   search?: string
   status?: 'all' | 'error' | 'pending' | 'sent'
 }): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
-  const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, params.manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, params.manufacturerId))
 
   if (!mfr) {
     return { error: '제조사를 찾을 수 없어요' }
@@ -285,7 +301,40 @@ export async function generateOrderExcelForDownload(params: {
   const safeLimit = typeof params.limit === 'number' ? Math.min(2000, Math.max(1, Math.floor(params.limit))) : undefined
 
   const baseQuery = db
-    .select()
+    .select({
+      id: order.id,
+      status: order.status,
+      createdAt: order.createdAt,
+      sabangnetOrderNumber: order.sabangnetOrderNumber,
+      mallOrderNumber: order.mallOrderNumber,
+      subOrderNumber: order.subOrderNumber,
+      productName: order.productName,
+      quantity: order.quantity,
+      optionName: order.optionName,
+      productAbbr: order.productAbbr,
+      productCode: order.productCode,
+      mallProductNumber: order.mallProductNumber,
+      modelNumber: order.modelNumber,
+      orderName: order.orderName,
+      recipientName: order.recipientName,
+      orderPhone: order.orderPhone,
+      orderMobile: order.orderMobile,
+      recipientPhone: order.recipientPhone,
+      recipientMobile: order.recipientMobile,
+      postalCode: order.postalCode,
+      address: order.address,
+      memo: order.memo,
+      courier: order.courier,
+      trackingNumber: order.trackingNumber,
+      logisticsNote: order.logisticsNote,
+      shoppingMall: order.shoppingMall,
+      paymentAmount: order.paymentAmount,
+      cost: order.cost,
+      shippingCost: order.shippingCost,
+      fulfillmentType: order.fulfillmentType,
+      cjDate: order.cjDate,
+      collectedAt: order.collectedAt,
+    })
     .from(order)
     .where(
       and(
@@ -317,7 +366,13 @@ export async function generateOrderExcelForDownload(params: {
 
   // 제조사별 발주서 템플릿 조회
   const [template] = await db
-    .select()
+    .select({
+      templateFile: orderTemplate.templateFile,
+      headerRow: orderTemplate.headerRow,
+      dataStartRow: orderTemplate.dataStartRow,
+      columnMappings: orderTemplate.columnMappings,
+      fixedValues: orderTemplate.fixedValues,
+    })
     .from(orderTemplate)
     .where(eq(orderTemplate.manufacturerId, params.manufacturerId))
 
@@ -415,7 +470,12 @@ function normalizeAddress(address: string): string {
 
 async function resolveOrderTemplate(params: {
   manufacturerId: number
-  manufacturerTemplate: typeof orderTemplate.$inferSelect | undefined
+  manufacturerTemplate:
+    | Pick<
+        typeof orderTemplate.$inferSelect,
+        'columnMappings' | 'dataStartRow' | 'fixedValues' | 'headerRow' | 'templateFile'
+      >
+    | undefined
 }): Promise<{ config: OrderTemplateConfig; templateBuffer: ArrayBuffer } | { error: string }> {
   // 1) 제조사 템플릿(파일 + 연결)이 유효하면 최우선
   const mfrTemplate = params.manufacturerTemplate
@@ -434,9 +494,16 @@ async function resolveOrderTemplate(params: {
   }
 
   // 2) 공통 템플릿(전사 1개) 사용
-  const common = await db.query.commonOrderTemplate.findFirst({
-    where: eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY),
-  })
+  const [common] = await db
+    .select({
+      templateFile: commonOrderTemplate.templateFile,
+      headerRow: commonOrderTemplate.headerRow,
+      dataStartRow: commonOrderTemplate.dataStartRow,
+      columnMappings: commonOrderTemplate.columnMappings,
+      fixedValues: commonOrderTemplate.fixedValues,
+    })
+    .from(commonOrderTemplate)
+    .where(eq(commonOrderTemplate.key, COMMON_ORDER_TEMPLATE_KEY))
 
   if (!common) {
     return { error: '발주서 템플릿이 설정되지 않았어요. 설정 > 발주 설정에서 템플릿을 업로드해 주세요.' }

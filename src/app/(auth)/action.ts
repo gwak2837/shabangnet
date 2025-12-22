@@ -16,7 +16,11 @@ export async function completeOnboarding(): Promise<{ success: boolean; error?: 
     }
 
     const hasTOTP = session.user.twoFactorEnabled === true
-    const userPasskeys = await db.select().from(passkey).where(eq(passkey.userId, session.user.id))
+    const userPasskeys = await db
+      .select({ id: passkey.id })
+      .from(passkey)
+      .where(eq(passkey.userId, session.user.id))
+      .limit(1)
     const hasPasskey = userPasskeys.length > 0
 
     if (!hasTOTP && !hasPasskey) {

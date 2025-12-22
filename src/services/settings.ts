@@ -56,7 +56,17 @@ export async function getCourierCode(courierName: string): Promise<string | null
 }
 
 export async function getCourierMappings(): Promise<CourierMapping[]> {
-  const result = await db.select().from(courierMapping).orderBy(courierMapping.name)
+  const result = await db
+    .select({
+      id: courierMapping.id,
+      name: courierMapping.name,
+      code: courierMapping.code,
+      aliases: courierMapping.aliases,
+      enabled: courierMapping.enabled,
+    })
+    .from(courierMapping)
+    .orderBy(courierMapping.name)
+
   return result.map((m) => ({
     id: m.id,
     name: m.name,
@@ -73,7 +83,7 @@ export async function getDuplicateCheckSettings(): Promise<DuplicateCheckSetting
 
 // Helper to get generic setting
 async function getSetting<T>(key: string, defaultValue: T): Promise<T> {
-  const [record] = await db.select().from(settings).where(eq(settings.key, key))
+  const [record] = await db.select({ value: settings.value }).from(settings).where(eq(settings.key, key))
   if (!record || !record.value) return defaultValue
   try {
     return JSON.parse(record.value) as T
