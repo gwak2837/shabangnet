@@ -56,6 +56,31 @@ const DEFAULT_INVOICE_TEMPLATE = {
   useColumnIndex: true,
 } as const
 
+// Helper to convert DB invoice template to App InvoiceTemplate
+type InvoiceTemplateRow = Pick<
+  typeof invoiceTemplate.$inferSelect,
+  | 'courierColumn'
+  | 'dataStartRow'
+  | 'headerRow'
+  | 'id'
+  | 'manufacturerId'
+  | 'orderNumberColumn'
+  | 'trackingNumberColumn'
+  | 'useColumnIndex'
+>
+
+// Helper to convert DB manufacturer to App Manufacturer
+type ManufacturerRow = Pick<
+  typeof manufacturer.$inferSelect,
+  'ccEmail' | 'contactName' | 'email' | 'id' | 'lastOrderDate' | 'name' | 'orderCount' | 'phone'
+>
+
+// Helper to convert DB order template to App OrderTemplate
+type OrderTemplateRow = Pick<
+  typeof orderTemplate.$inferSelect,
+  'columnMappings' | 'dataStartRow' | 'fixedValues' | 'headerRow' | 'id' | 'manufacturerId' | 'templateFileName'
+>
+
 export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | 'orderCount'>): Promise<Manufacturer> {
   const [newManufacturer] = await db
     .insert(manufacturer)
@@ -293,8 +318,7 @@ export async function updateOrderTemplate(
   }
 }
 
-// Helper to convert DB invoice template to App InvoiceTemplate
-function mapToInvoiceTemplate(t: typeof invoiceTemplate.$inferSelect, manufacturerName: string): InvoiceTemplate {
+function mapToInvoiceTemplate(t: InvoiceTemplateRow, manufacturerName: string): InvoiceTemplate {
   return {
     id: t.id,
     manufacturerId: t.manufacturerId,
@@ -308,12 +332,7 @@ function mapToInvoiceTemplate(t: typeof invoiceTemplate.$inferSelect, manufactur
   }
 }
 
-// Helper to convert DB manufacturer to App Manufacturer
-function mapToManufacturer(
-  m: typeof manufacturer.$inferSelect & {
-    invoiceTemplate?: typeof invoiceTemplate.$inferSelect
-  },
-): Manufacturer {
+function mapToManufacturer(m: ManufacturerRow): Manufacturer {
   return {
     id: m.id,
     name: m.name,
@@ -326,8 +345,7 @@ function mapToManufacturer(
   }
 }
 
-// Helper to convert DB order template to App OrderTemplate
-function mapToOrderTemplate(t: typeof orderTemplate.$inferSelect, manufacturerName: string): OrderTemplate {
+function mapToOrderTemplate(t: OrderTemplateRow, manufacturerName: string): OrderTemplate {
   let columnMappings: Record<string, string> = {}
   let fixedValues: Record<string, string> | undefined
 
