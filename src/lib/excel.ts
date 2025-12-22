@@ -410,7 +410,71 @@ export async function generateTemplateBasedOrderSheet(
     worksheet = workbook.addWorksheet('다온발주서')
   }
 
-  const variables = buildTemplateVariables(orders, manufacturerName, date)
+  function normalizeBundleText(raw: string): string {
+    return raw.trim().replace(/\s+/g, '').replace(/[-,]/g, '').toLowerCase()
+  }
+
+  function findColumnIndexByHeaderAliases(aliases: string[]): number | null {
+    const header = worksheet.getRow(config.headerRow)
+    const aliasSet = new Set(aliases.map(normalizeBundleText))
+    const maxCol = Math.max(1, worksheet.columnCount || 1)
+    for (let col = 1; col <= maxCol; col++) {
+      const headerValue = normalizeBundleText(getCellValue(header.getCell(col)))
+      if (!headerValue) {
+        continue
+      }
+      if (aliasSet.has(headerValue)) {
+        return col
+      }
+    }
+    return null
+  }
+
+  function getBundleManufacturer(order: ParsedOrder): string {
+    return order.manufacturer.trim().length > 0 ? order.manufacturer : manufacturerName
+  }
+
+  function buildBundleKey(order: ParsedOrder): string | null {
+    const mfr = normalizeBundleText(getBundleManufacturer(order))
+    const postal = normalizeBundleText(order.postalCode)
+    const addr = normalizeBundleText(order.address)
+    if (!mfr || !postal || !addr) {
+      return null
+    }
+    return `${mfr}::${postal}::${addr}`
+  }
+
+  function safeColumnIndex(raw: string | undefined): number | null {
+    const letter = (raw ?? '').trim().toUpperCase()
+    if (!letter || !/^[A-Z]+$/.test(letter)) {
+      return null
+    }
+    return columnLetterToIndex(letter) + 1
+  }
+
+  // 주소(우편번호 포함) 기준으로 정렬해서 "합포장 가능" 그룹이 붙어서 보이게 해요.
+  const preparedOrders: ParsedOrder[] = [...orders]
+    .sort((a, b) => {
+      const aM = normalizeBundleText(getBundleManufacturer(a))
+      const bM = normalizeBundleText(getBundleManufacturer(b))
+      if (aM !== bM) return aM.localeCompare(bM, 'ko')
+
+      const aPostal = normalizeBundleText(a.postalCode)
+      const bPostal = normalizeBundleText(b.postalCode)
+      const aAddr = normalizeBundleText(a.address)
+      const bAddr = normalizeBundleText(b.address)
+
+      const aHasKey = aPostal.length > 0 && aAddr.length > 0
+      const bHasKey = bPostal.length > 0 && bAddr.length > 0
+      if (aHasKey !== bHasKey) return aHasKey ? -1 : 1
+
+      if (aPostal !== bPostal) return aPostal.localeCompare(bPostal, 'ko')
+      if (aAddr !== bAddr) return aAddr.localeCompare(bAddr, 'ko')
+      return a.sabangnetOrderNumber.localeCompare(b.sabangnetOrderNumber, 'ko')
+    })
+    .map((o, idx) => ({ ...o, rowIndex: idx + 1 }))
+
+  const variables = buildTemplateVariables(preparedOrders, manufacturerName, date)
 
   const fixedByColumnLetter = new Map<string, string>()
   const fixedByFieldKey = new Map<string, string>()
@@ -435,19 +499,59 @@ export async function generateTemplateBasedOrderSheet(
 
   // 템플릿이 있으면 첫 데이터 행을 필요한 만큼 복제해서 서식/병합/수식을 유지합니다.
   // (rowCount가 부족할 때도 동일한 스타일을 유지하기 위함)
-  if (orders.length > 1) {
-    worksheet.duplicateRow(config.dataStartRow, orders.length - 1, true)
+  if (preparedOrders.length > 1) {
+    worksheet.duplicateRow(config.dataStartRow, preparedOrders.length - 1, true)
   }
+
+  // 합포장 하이라이트: (제조사 + 우편번호 + 배송지) 동일 그룹(2건 이상)에만 적용해요.
+  const highlightOrderNameColIndex =
+    safeColumnIndex(config.columnMappings.orderName) ?? findColumnIndexByHeaderAliases(['주문인', '주문자'])
+  const highlightRecipientNameColIndex =
+    safeColumnIndex(config.columnMappings.recipientName) ?? findColumnIndexByHeaderAliases(['받는인', '수취인'])
+  const highlightAddressColIndex =
+    safeColumnIndex(config.columnMappings.address) ?? findColumnIndexByHeaderAliases(['배송지', '주소'])
+
+  const bundleKeyCounts = new Map<string, number>()
+  for (const o of preparedOrders) {
+    const key = buildBundleKey(o)
+    if (!key) {
+      continue
+    }
+    bundleKeyCounts.set(key, (bundleKeyCounts.get(key) ?? 0) + 1)
+  }
+
+  const bundleGroupIndexByKey = new Map<string, number>()
+  let nextBundleGroupIndex = 0
+  for (const o of preparedOrders) {
+    const key = buildBundleKey(o)
+    if (!key) {
+      continue
+    }
+    if ((bundleKeyCounts.get(key) ?? 0) < 2) {
+      continue
+    }
+    if (bundleGroupIndexByKey.has(key)) {
+      continue
+    }
+    bundleGroupIndexByKey.set(key, nextBundleGroupIndex)
+    nextBundleGroupIndex += 1
+  }
+
+  const bundleHighlightColors = ['FF00E5FF', 'FFFFFF00'] as const // 형광 파랑 / 형광 노랑
 
   // 데이터 시작 행부터 주문 데이터 입력
   let currentRow = config.dataStartRow
 
-  for (const order of orders) {
+  for (const order of preparedOrders) {
     const row = worksheet.getRow(currentRow)
 
     // 컬럼 연결에 따라 데이터 입력
     for (const [sabangnetKey, column] of Object.entries(config.columnMappings)) {
-      const colIndex = columnLetterToIndex(column) + 1
+      const normalizedColumn = column.trim().toUpperCase()
+      if (!/^[A-Z]+$/.test(normalizedColumn)) {
+        continue
+      }
+      const colIndex = columnLetterToIndex(normalizedColumn) + 1
       const value = getOrderValue(order, sabangnetKey)
       row.getCell(colIndex).value = value
     }
@@ -463,9 +567,48 @@ export async function generateTemplateBasedOrderSheet(
     // 예: { "field:orderName": "{{orderName || recipientName}}" }
     for (const [sabangnetKey, rawValue] of fixedByFieldKey.entries()) {
       const column = config.columnMappings[sabangnetKey]
-      if (!column) continue
-      const colIndex = columnLetterToIndex(column) + 1
+      if (!column) {
+        continue
+      }
+      const normalizedColumn = column.trim().toUpperCase()
+      if (!/^[A-Z]+$/.test(normalizedColumn)) {
+        continue
+      }
+      const colIndex = columnLetterToIndex(normalizedColumn) + 1
       row.getCell(colIndex).value = resolveTemplateValue(rawValue, variables, order)
+    }
+
+    const bundleKey = buildBundleKey(order)
+    const bundleGroupIndex = bundleKey ? bundleGroupIndexByKey.get(bundleKey) : undefined
+    if (bundleGroupIndex !== undefined) {
+      const color = bundleHighlightColors[bundleGroupIndex % bundleHighlightColors.length]
+      const fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: color },
+      } as const
+
+      if (highlightOrderNameColIndex) {
+        const cell = row.getCell(highlightOrderNameColIndex)
+        cell.fill = fill
+        if (cell.isMerged) {
+          cell.master.fill = fill
+        }
+      }
+      if (highlightRecipientNameColIndex) {
+        const cell = row.getCell(highlightRecipientNameColIndex)
+        cell.fill = fill
+        if (cell.isMerged) {
+          cell.master.fill = fill
+        }
+      }
+      if (highlightAddressColIndex) {
+        const cell = row.getCell(highlightAddressColIndex)
+        cell.fill = fill
+        if (cell.isMerged) {
+          cell.master.fill = fill
+        }
+      }
     }
 
     row.commit()
