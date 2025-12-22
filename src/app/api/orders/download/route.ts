@@ -3,22 +3,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { auth } from '@/lib/auth'
-import { generateOrderExcel } from '@/services/orders'
+import { generateOrderExcelForDownload } from '@/services/orders'
 
 const querySchema = z.object({
   manufacturerId: z.coerce.number().positive(),
-  orderIds: z
-    .string()
-    .min(1)
-    .transform((value) => [
-      ...new Set(
-        value
-          .split(',')
-          .map((v) => Number(v.trim()))
-          .filter((n) => Number.isFinite(n) && n > 0),
-      ),
-    ])
-    .refine((ids) => ids.length > 0, { message: 'order-ids가 필요해요' }),
+  search: z.string().max(100).optional(),
+  status: z.enum(['all', 'pending', 'sent', 'error']).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  limit: z.coerce.number().min(1).max(2000).optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -31,15 +24,19 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const validation = querySchema.safeParse({
     manufacturerId: searchParams.get('manufacturer-id'),
-    orderIds: searchParams.get('order-ids'),
+    search: searchParams.get('search') || undefined,
+    status: searchParams.get('status') || undefined,
+    dateFrom: searchParams.get('date-from') || undefined,
+    dateTo: searchParams.get('date-to') || undefined,
+    limit: searchParams.get('limit') || undefined,
   })
 
   if (!validation.success) {
     return NextResponse.json({ error: validation.error.message }, { status: 400 })
   }
 
-  const { manufacturerId, orderIds } = validation.data
-  const excelResult = await generateOrderExcel({ manufacturerId, orderIds })
+  const { manufacturerId, search, status, dateFrom, dateTo, limit } = validation.data
+  const excelResult = await generateOrderExcelForDownload({ manufacturerId, search, status, dateFrom, dateTo, limit })
 
   if ('error' in excelResult) {
     return NextResponse.json({ error: excelResult.error }, { status: 400 })

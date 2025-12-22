@@ -30,12 +30,9 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
   const prevFiltersSearchRef = useRef(filters.search)
   const isInternalUpdateRef = useRef(false)
 
+  const effectiveStatus = filters.status ?? 'all'
   const hasActiveFilters =
-    filters.manufacturerId ||
-    (filters.status && filters.status !== 'all') ||
-    filters.dateFrom ||
-    filters.dateTo ||
-    filters.search
+    filters.manufacturerId || effectiveStatus !== 'pending' || filters.dateFrom || filters.dateTo || filters.search
 
   // Sync controlled search with local state when changed externally
   useEffect(() => {
@@ -85,7 +82,7 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
 
   function handleClearFilters() {
     setLocalSearch('')
-    onFiltersChange({})
+    onFiltersChange({ status: 'pending' })
   }
 
   return (

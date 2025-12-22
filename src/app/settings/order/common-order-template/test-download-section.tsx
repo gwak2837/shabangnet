@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { getCommonTemplateTestCandidates, getRecentOrderIdsForManufacturer } from './action'
+import { getCommonTemplateTestCandidates } from './action'
 
 export function TestDownloadSection() {
   const { data: candidates, isLoading } = useQuery({
@@ -32,15 +32,9 @@ export function TestDownloadSection() {
 
     setIsDownloading(true)
     try {
-      const orderIds = await getRecentOrderIdsForManufacturer(id, 50)
-      if (orderIds.length === 0) {
-        toast.error('테스트할 주문이 없어요')
-        return
-      }
-
       const searchParams = new URLSearchParams()
       searchParams.set('manufacturer-id', String(id))
-      searchParams.set('order-ids', orderIds.join(','))
+      searchParams.set('limit', '50')
 
       const response = await fetch(`/api/orders/download?${searchParams.toString()}`)
       if (!response.ok) {

@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { db } from '@/db/client'
 import { manufacturer, orderTemplate } from '@/db/schema/manufacturers'
@@ -12,6 +12,7 @@ import {
   type OrderTemplateConfig,
   type ParsedOrder,
 } from '@/lib/excel'
+import { orderIsIncludedSql } from '@/services/order-exclusion'
 
 const COMMON_ORDER_TEMPLATE_KEY = 'default'
 
@@ -157,16 +158,18 @@ export async function generateOrderExcel(params: {
   manufacturerId: number
   orderIds: number[]
 }): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
-  const mfr = await db.query.manufacturer.findFirst({
-    where: eq(manufacturer.id, params.manufacturerId),
-  })
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, params.manufacturerId))
 
   if (!mfr) {
     return { error: '제조사를 찾을 수 없어요' }
   }
 
   const ordersToExport = await db.query.order.findMany({
-    where: inArray(order.id, params.orderIds),
+    where: (o, { and: andOp, eq: eqOp, inArray: inArrayOp }) =>
+      andOp(eqOp(o.manufacturerId, params.manufacturerId), inArrayOp(o.id, params.orderIds)),
   })
 
   if (ordersToExport.length === 0) {
@@ -176,9 +179,147 @@ export async function generateOrderExcel(params: {
   const date = new Date()
 
   // 제조사별 발주서 템플릿 조회
-  const template = await db.query.orderTemplate.findFirst({
-    where: eq(orderTemplate.manufacturerId, params.manufacturerId),
+  const [template] = await db
+    .select()
+    .from(orderTemplate)
+    .where(eq(orderTemplate.manufacturerId, params.manufacturerId))
+
+  const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
+    // 주문 식별자
+    sabangnetOrderNumber: o.sabangnetOrderNumber,
+    mallOrderNumber: o.mallOrderNumber || '',
+    subOrderNumber: o.subOrderNumber || '',
+    // 상품 정보
+    productName: o.productName || '',
+    quantity: o.quantity || 1,
+    optionName: o.optionName || '',
+    productAbbr: o.productAbbr || '',
+    productCode: o.productCode || '',
+    mallProductNumber: o.mallProductNumber || '',
+    modelNumber: o.modelNumber || '',
+    // 주문자/수취인
+    orderName: o.orderName || '',
+    recipientName: o.recipientName || '',
+    orderPhone: o.orderPhone || '',
+    orderMobile: o.orderMobile || '',
+    recipientPhone: o.recipientPhone || '',
+    recipientMobile: o.recipientMobile || '',
+    // 배송 정보
+    postalCode: o.postalCode || '',
+    address: o.address || '',
+    memo: o.memo || '',
+    courier: o.courier || '',
+    trackingNumber: o.trackingNumber || '',
+    logisticsNote: o.logisticsNote || '',
+    // 소스/제조사
+    shoppingMall: o.shoppingMall || '',
+    manufacturer: mfr.name,
+    // 금액
+    paymentAmount: o.paymentAmount ?? 0,
+    cost: o.cost ?? 0,
+    shippingCost: o.shippingCost ?? 0,
+    // 주문 메타
+    fulfillmentType: o.fulfillmentType || '',
+    cjDate: o.cjDate?.toISOString().split('T')[0] || '',
+    collectedAt: o.collectedAt?.toISOString() || '',
+    // 시스템
+    rowIndex: idx + 1,
+  }))
+
+  const resolvedTemplate = await resolveOrderTemplate({
+    manufacturerTemplate: template,
+    manufacturerId: params.manufacturerId,
   })
+
+  if ('error' in resolvedTemplate) {
+    return { error: resolvedTemplate.error }
+  }
+
+  const excelBuffer = await generateTemplateBasedOrderSheet(
+    parsedOrders,
+    resolvedTemplate.templateBuffer,
+    resolvedTemplate.config,
+    mfr.name,
+    date,
+  )
+
+  const fileName = generateOrderFileName(mfr.name, date)
+
+  return { buffer: excelBuffer, fileName }
+}
+
+/**
+ * 발주서 엑셀 파일 생성 (다운로드용)
+ * - order-ids 없이, 현재 필터 조건으로 DB에서 주문을 조회해요.
+ */
+export async function generateOrderExcelForDownload(params: {
+  dateFrom?: string
+  dateTo?: string
+  limit?: number
+  manufacturerId: number
+  search?: string
+  status?: 'all' | 'error' | 'pending' | 'sent'
+}): Promise<{ buffer: Buffer; fileName: string } | { error: string }> {
+  const [mfr] = await db.select().from(manufacturer).where(eq(manufacturer.id, params.manufacturerId))
+
+  if (!mfr) {
+    return { error: '제조사를 찾을 수 없어요' }
+  }
+
+  const searchValue = params.search?.trim()
+  const searchCondition = searchValue
+    ? sql`(
+        ${order.sabangnetOrderNumber} ILIKE ${`%${searchValue}%`} OR
+        ${order.mallOrderNumber} ILIKE ${`%${searchValue}%`} OR
+        ${order.productName} ILIKE ${`%${searchValue}%`} OR
+        ${order.recipientName} ILIKE ${`%${searchValue}%`} OR
+        ${order.manufacturerName} ILIKE ${`%${searchValue}%`}
+      )`
+    : undefined
+
+  const dateFromCondition = params.dateFrom ? sql`${order.createdAt} >= ${params.dateFrom}::timestamp` : undefined
+  const dateToCondition = params.dateTo
+    ? sql`${order.createdAt} <= ${params.dateTo}::timestamp + interval '1 day'`
+    : undefined
+
+  const safeLimit = typeof params.limit === 'number' ? Math.min(2000, Math.max(1, Math.floor(params.limit))) : undefined
+
+  const baseQuery = db
+    .select()
+    .from(order)
+    .where(
+      and(
+        eq(order.manufacturerId, params.manufacturerId),
+        orderIsIncludedSql(order.fulfillmentType),
+        searchCondition,
+        dateFromCondition,
+        dateToCondition,
+      ),
+    )
+    .orderBy(desc(order.createdAt), desc(order.id))
+
+  const ordersToExport = safeLimit ? await baseQuery.limit(safeLimit) : await baseQuery
+
+  if (ordersToExport.length === 0) {
+    return { error: '내보낼 주문이 없어요' }
+  }
+
+  // /api/orders 의 배치 상태 계산과 동일하게 동작하게 해요.
+  const hasError = ordersToExport.some((o) => o.status === 'error')
+  const allCompleted = ordersToExport.every((o) => o.status === 'completed')
+  const batchStatus: 'error' | 'pending' | 'sent' = hasError ? 'error' : allCompleted ? 'sent' : 'pending'
+
+  if (params.status && params.status !== 'all' && params.status !== batchStatus) {
+    return { error: '현재 필터에 맞는 발주서가 없어요' }
+  }
+
+  const date = new Date()
+
+  // 제조사별 발주서 템플릿 조회
+  const [template] = await db
+    .select()
+    .from(orderTemplate)
+    .where(eq(orderTemplate.manufacturerId, params.manufacturerId))
 
   const parsedOrders: ParsedOrder[] = ordersToExport.map((o, idx) => ({
     // 주문 식별자

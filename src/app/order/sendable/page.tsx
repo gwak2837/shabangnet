@@ -37,7 +37,7 @@ export default function SendableOrdersPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<number[]>([])
   const bulkCancelRef = useRef(false)
-  const [filters, setFilters] = useState<OrderFiltersType>({})
+  const [filters, setFilters] = useState<OrderFiltersType>({ status: 'pending' })
   const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useOrderBatches({ filters })
   const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useOrderBatchSummary({ filters })
   const hasSelection = selectedManufacturerIds.length > 0
@@ -244,16 +244,20 @@ export default function SendableOrdersPage() {
 
   async function handleDownload(batch: OrderBatch) {
     try {
-      const orderIds = batch.orders.map((o) => o.id)
-
-      if (orderIds.length === 0) {
-        toast.error('다운로드할 주문이 없어요')
-        return
-      }
-
       const searchParams = new URLSearchParams()
       searchParams.set('manufacturer-id', String(batch.manufacturerId))
-      searchParams.set('order-ids', orderIds.join(','))
+      if (filters.search) {
+        searchParams.set('search', filters.search)
+      }
+      if (filters.status && filters.status !== 'all') {
+        searchParams.set('status', filters.status)
+      }
+      if (filters.dateFrom) {
+        searchParams.set('date-from', filters.dateFrom)
+      }
+      if (filters.dateTo) {
+        searchParams.set('date-to', filters.dateTo)
+      }
 
       const response = await fetch(`/api/orders/download?${searchParams.toString()}`)
 
