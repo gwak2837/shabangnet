@@ -6,10 +6,6 @@ import type { InvoiceTemplate } from '../services/manufacturers.types'
 
 import { getCellValue } from './excel/util'
 
-// ============================================
-// 타입 정의
-// ============================================
-
 // 송장 변환 결과 (개별 건)
 export interface InvoiceConvertResultItem {
   courierCode: string // 변환된 택배사 코드
@@ -539,6 +535,19 @@ export async function generateTemplateBasedOrderSheet(
 
   const bundleHighlightColors = ['FF00E5FF', 'FFFFFF00'] as const // 형광 파랑 / 형광 노랑
 
+  // NOTE: ExcelJS의 duplicateRow(..., true)는 셀 style 객체를 공유할 수 있어요.
+  // 그래서 fill을 바로 수정하면 다른 행/셀에도 동일하게 퍼질 수 있어서,
+  // fill을 적용하기 전에 style을 얕게 복사해서 참조 공유를 끊습니다.
+  function applyRowHighlightFill(row: ExcelJS.Row, colIndex: number | null, fill: object) {
+    if (!colIndex) {
+      return
+    }
+    const cell = row.getCell(colIndex)
+    const target = cell.isMerged ? cell.master : cell
+    target.style = { ...target.style }
+    target.fill = fill as never
+  }
+
   // 데이터 시작 행부터 주문 데이터 입력
   let currentRow = config.dataStartRow
 
@@ -588,27 +597,9 @@ export async function generateTemplateBasedOrderSheet(
         fgColor: { argb: color },
       } as const
 
-      if (highlightOrderNameColIndex) {
-        const cell = row.getCell(highlightOrderNameColIndex)
-        cell.fill = fill
-        if (cell.isMerged) {
-          cell.master.fill = fill
-        }
-      }
-      if (highlightRecipientNameColIndex) {
-        const cell = row.getCell(highlightRecipientNameColIndex)
-        cell.fill = fill
-        if (cell.isMerged) {
-          cell.master.fill = fill
-        }
-      }
-      if (highlightAddressColIndex) {
-        const cell = row.getCell(highlightAddressColIndex)
-        cell.fill = fill
-        if (cell.isMerged) {
-          cell.master.fill = fill
-        }
-      }
+      applyRowHighlightFill(row, highlightOrderNameColIndex, fill)
+      applyRowHighlightFill(row, highlightRecipientNameColIndex, fill)
+      applyRowHighlightFill(row, highlightAddressColIndex, fill)
     }
 
     row.commit()
