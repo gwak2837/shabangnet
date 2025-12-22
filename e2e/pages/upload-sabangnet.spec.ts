@@ -23,5 +23,3 @@ test.describe('주문 업로드 / 사방넷', () => {
     await expect(page.locator('table')).toBeVisible()
   })
 })
-
-

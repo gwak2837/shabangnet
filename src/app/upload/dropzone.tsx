@@ -99,7 +99,7 @@ export function Dropzone({
                 <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
                 <span className="font-medium">파일을 분석하고 있어요</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">보통 수 초 정도 걸려요.</p>
+              <p className="mt-1 text-xs text-slate-500">파일 크기에 따라 최대 1분 정도 걸릴 수 있어요.</p>
             </div>
           )}
         </CardContent>

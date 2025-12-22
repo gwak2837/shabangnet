@@ -22,7 +22,6 @@ export interface UploadResultData {
     productCount?: number
     marginRate?: number | null
   }[]
-  orderNumbers?: string[]
   processedOrders: number
   summary?: {
     totalAmount: number

@@ -10,7 +10,9 @@ const UPDATE_GOLDEN = process.env.E2E_UPDATE_GOLDEN === 'true'
 
 function pickHistoryCase() {
   const cases = getShoppingMallGoldenCases()
-  const preferred = cases.find((c) => c.fileName.normalize('NFC').includes('sk스토아') && c.fileName.includes('20251126'))
+  const preferred = cases.find(
+    (c) => c.fileName.normalize('NFC').includes('sk스토아') && c.fileName.includes('20251126'),
+  )
   return preferred ?? cases[0]!
 }
 
@@ -49,7 +51,9 @@ test.describe('업로드 기록', () => {
     })
     await page.goto('/upload/history')
     await initialHistoryResponsePromise
-    await expect(page.getByText('업로드 기록이 없어요.')).not.toBeVisible().catch(() => {})
+    await expect(page.getByText('업로드 기록이 없어요.'))
+      .not.toBeVisible()
+      .catch(() => {})
 
     const filteredHistoryResponsePromise = page.waitForResponse((res) => {
       return res.url().includes('/api/upload/history') && res.url().includes('file-type=shopping_mall')
@@ -57,7 +61,10 @@ test.describe('업로드 기록', () => {
     await page.getByLabel('파일 유형').selectOption('shopping_mall')
     await filteredHistoryResponsePromise
 
-    const row = page.getByRole('row').filter({ has: page.getByText(testCase.fileName, { exact: true }) }).first()
+    const row = page
+      .getByRole('row')
+      .filter({ has: page.getByText(testCase.fileName, { exact: true }) })
+      .first()
     await expect(row).toBeVisible({ timeout: 30_000 })
 
     // 3) 해당 row의 다운로드 버튼 클릭 → 다운로드 저장
@@ -83,8 +90,9 @@ test.describe('업로드 기록', () => {
       console.log(formatFlexibleCompareResult(compareResult))
     }
 
-    expect(compareResult.isMatch, `업로드 기록 다운로드 Golden 불일치: ${testCase.fileName}\n${compareResult.summary}`).toBe(true)
+    expect(
+      compareResult.isMatch,
+      `업로드 기록 다운로드 Golden 불일치: ${testCase.fileName}\n${compareResult.summary}`,
+    ).toBe(true)
   })
 })
-
-

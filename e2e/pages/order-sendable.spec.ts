@@ -112,7 +112,11 @@ test.describe('발주 생성 / 발송 대상', () => {
         throw new Error(`기대 파일이 없어요: ${expectedPath}`)
       }
 
-      const compareResult = await flexibleCompareExcelFiles(expectedPath, actualPath, FLEXIBLE_COMPARE_OPTIONS_ORDER_BASE)
+      const compareResult = await flexibleCompareExcelFiles(
+        expectedPath,
+        actualPath,
+        FLEXIBLE_COMPARE_OPTIONS_ORDER_BASE,
+      )
 
       if (!compareResult.isMatch) {
         console.log(`\n[${manufacturerName}] Golden 불일치`)
@@ -141,7 +145,10 @@ test.describe('발주 생성 / 발송 대상', () => {
     await page.goto('/order/sendable')
     await expect(page.locator('table')).toBeVisible({ timeout: 30_000 })
 
-    const firstRow = page.locator('tbody tr').filter({ has: page.locator('button[title="작업 메뉴"]') }).first()
+    const firstRow = page
+      .locator('tbody tr')
+      .filter({ has: page.locator('button[title="작업 메뉴"]') })
+      .first()
     await expect(firstRow).toBeVisible()
 
     const manufacturerName = (await firstRow.locator('span.text-sm.font-medium').first().innerText()).trim()
@@ -257,7 +264,8 @@ async function loadAllOrderBatches(page: Page): Promise<void> {
   for (let i = 0; i < 10; i++) {
     const nextPageResponsePromise = page
       .waitForResponse(
-        (res) => res.url().includes('/api/orders?') && res.url().includes('cursor=') && res.request().method() === 'GET',
+        (res) =>
+          res.url().includes('/api/orders?') && res.url().includes('cursor=') && res.request().method() === 'GET',
         { timeout: 3_000 },
       )
       .catch(() => null)
@@ -297,5 +305,3 @@ async function uploadSabangnet(page: Page): Promise<void> {
 
   await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 60_000 })
 }
-
-

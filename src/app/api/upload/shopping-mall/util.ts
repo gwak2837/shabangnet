@@ -11,7 +11,6 @@ export interface UploadResult {
   errors: UploadError[]
   mallName: string
   manufacturerBreakdown: ManufacturerBreakdown[]
-  orderNumbers: string[]
   processedOrders: number
   summary: UploadSummary
   uploadId: number

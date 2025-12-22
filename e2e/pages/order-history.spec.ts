@@ -39,7 +39,11 @@ test.describe('발송 기록', () => {
 
     // Status filter: 성공 선택 → status=success 요청 발생
     const statusSuccessResponsePromise = page.waitForResponse((res) => {
-      return res.url().includes('/api/order/history?') && res.url().includes('status=success') && res.request().method() === 'GET'
+      return (
+        res.url().includes('/api/order/history?') &&
+        res.url().includes('status=success') &&
+        res.request().method() === 'GET'
+      )
     })
 
     const statusTrigger = page.locator('[data-slot="select-trigger"]').first()
@@ -53,5 +57,3 @@ test.describe('발송 기록', () => {
     await expect(page.getByRole('button', { name: '필터 초기화' })).toBeVisible()
   })
 })
-
-

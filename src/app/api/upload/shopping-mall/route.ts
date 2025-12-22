@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -25,6 +25,8 @@ import {
 } from '../common'
 import { parseShoppingMallFile } from './excel'
 import { prepareOrderValues, type UploadResult } from './util'
+
+export const maxDuration = 60
 
 const uploadFormSchema = z.object({
   file: z
@@ -149,9 +151,9 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
           shoppingMallId: mallId,
           sourceSnapshot: sourceSnapshot ? JSON.stringify(sourceSnapshot) : null,
           totalOrders: parseResult.totalRows - mallConfig.headerRow,
-          processedOrders: parseResult.orders.length,
           errorOrders: parseResult.errors.length,
-          status: 'completed',
+          processedOrders: 0,
+          status: 'processing',
         })
         .returning()
 
@@ -175,19 +177,32 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       })
 
       if (orderValues.length === 0) {
+        await tx.update(upload).set({ status: 'completed', processedOrders: 0 }).where(eq(upload.id, uploadRecord.id))
         return { insertedCount: 0, uploadId: uploadRecord.id, autoCreatedManufacturers: createdManufacturerNames }
       }
 
       await autoCreateProducts({ orderValues, tx })
 
-      const insertResult = await tx
-        .insert(order)
-        .values(orderValues)
-        .onConflictDoNothing({ target: order.sabangnetOrderNumber })
-        .returning({ id: order.id })
+      // NOTE: 대량 업로드에서 Drizzle 단일 INSERT 쿼리 생성이 스택오버/파라미터 제한에 걸릴 수 있어요.
+      // 그래서 안전한 크기로 쪼개서 INSERT 해요.
+      const CHUNK_SIZE = 1_800
+      for (let start = 0; start < orderValues.length; start += CHUNK_SIZE) {
+        const chunk = orderValues.slice(start, start + CHUNK_SIZE)
+        await tx.insert(order).values(chunk).onConflictDoNothing({ target: order.sabangnetOrderNumber })
+      }
+
+      const [{ insertedCount }] = await tx
+        .select({ insertedCount: count() })
+        .from(order)
+        .where(eq(order.uploadId, uploadRecord.id))
+
+      await tx
+        .update(upload)
+        .set({ status: 'completed', processedOrders: insertedCount })
+        .where(eq(upload.id, uploadRecord.id))
 
       return {
-        insertedCount: insertResult.length,
+        insertedCount,
         uploadId: uploadRecord.id,
         autoCreatedManufacturers: createdManufacturerNames,
       }
@@ -228,7 +243,6 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       errorOrders: parseResult.errors.length,
       manufacturerBreakdown,
       errors,
-      orderNumbers: parseResult.orders.map((o) => o.sabangnetOrderNumber),
       summary,
       autoCreatedManufacturers,
     }

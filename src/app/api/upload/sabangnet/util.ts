@@ -10,7 +10,6 @@ export interface UploadResult {
   errorOrders: number
   errors: UploadError[]
   manufacturerBreakdown: ManufacturerBreakdown[]
-  orderNumbers: string[]
   processedOrders: number
   summary: UploadSummary
 }

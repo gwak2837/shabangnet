@@ -119,8 +119,8 @@ export function DeleteOptionMappingsDialog({ selectedIds, onSuccess }: DeleteOpt
                     <p className="font-medium text-slate-900">기존 주문은 변경되지 않아요</p>
                     <ul className="mt-2 list-disc list-inside space-y-1">
                       <li>
-                        참고: 같은 상품/옵션인 미완료 주문이 <strong className="text-slate-900">{preview.affectedOrdersCount}건</strong>{' '}
-                        있어요.
+                        참고: 같은 상품/옵션인 미완료 주문이{' '}
+                        <strong className="text-slate-900">{preview.affectedOrdersCount}건</strong> 있어요.
                       </li>
                       <li>삭제해도 이미 업로드된 주문 데이터는 그대로 유지돼요.</li>
                       <li>앞으로 업로드되는 주문부터 이 옵션 연결이 적용되지 않아요.</li>
