@@ -4,6 +4,7 @@ import type { Transaction } from '@/db/client'
 import type { ParsedOrder } from '@/lib/excel'
 
 import { optionMapping, product } from '@/db/schema/manufacturers'
+import { normalizeManufacturerName } from '@/utils/normalize-manufacturer-name'
 import { normalizeOptionName } from '@/utils/normalize-option-name'
 
 import type {
@@ -313,18 +314,4 @@ export function matchManufacturerId(order: ParsedOrder, lookupMaps: LookupMaps):
   }
 
   return null
-}
-
-export function normalizeManufacturerName(raw: string): string | null {
-  const name = raw.trim().replace(/\s+/g, ' ')
-  if (!name) {
-    return null
-  }
-
-  const lower = name.toLowerCase()
-  if (lower === '미지정' || lower === '미등록' || lower === '없음' || lower === 'n/a' || lower === 'na') {
-    return null
-  }
-
-  return name
 }

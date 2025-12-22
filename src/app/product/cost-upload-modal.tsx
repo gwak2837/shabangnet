@@ -40,7 +40,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
   const findManufacturerId = useCallback(
     (manufacturerName: string): { id: number | null; status: CostUploadData['status'] } => {
       if (!manufacturerName || manufacturerName.trim() === '') {
-        return { id: null, status: 'success' } // 제조사명이 비어있으면 미지정으로 처리
+        return { id: null, status: 'success' } // 제조사명이 비어있으면 제조사 연결 없이 성공으로 처리해요
       }
 
       const manufacturer = manufacturers.find(

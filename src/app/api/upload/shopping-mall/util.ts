@@ -1,8 +1,10 @@
 import type { ParsedOrder } from '@/lib/excel'
 
+import { normalizeManufacturerName } from '@/utils/normalize-manufacturer-name'
+
 import type { LookupMaps, ManufacturerBreakdown, UploadError, UploadSummary } from '../type'
 
-import { matchManufacturerId, normalizeManufacturerName } from '../common'
+import { matchManufacturerId } from '../common'
 
 export interface UploadResult {
   autoCreatedManufacturers?: string[]

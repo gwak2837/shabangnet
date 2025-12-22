@@ -259,7 +259,7 @@ export function ProductTable({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">
-                              <span className="text-slate-500">미지정</span>
+                              <span className="text-slate-500">선택 안 함</span>
                             </SelectItem>
                             {manufacturers.map((m) => (
                               <SelectItem key={m.id} value={m.id.toString()}>

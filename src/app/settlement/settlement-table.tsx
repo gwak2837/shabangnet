@@ -140,7 +140,7 @@ export function SettlementTable({
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="text-xs">제외 사유: {order.excludedReason || '미지정'}</p>
+                            <p className="text-xs">제외 사유: {order.excludedReason || '입력된 사유가 없어요'}</p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (

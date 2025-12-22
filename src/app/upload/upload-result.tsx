@@ -181,9 +181,21 @@ export function UploadResult({ data }: UploadResultProps) {
               </TableHeader>
               <TableBody>
                 {data.manufacturerBreakdown.map((m, index) => (
-                  <TableRow className="hover:bg-slate-50 transition-colors" key={m.name}>
+                  <TableRow
+                    className="hover:bg-slate-50 transition-colors data-[unassigned=true]:bg-amber-50/50 data-[unassigned=true]:hover:bg-amber-50/70"
+                    data-unassigned={!m.name ? 'true' : undefined}
+                    key={m.name}
+                  >
                     <TableCell className="text-slate-400 tabular-nums">{index + 1}</TableCell>
-                    <TableCell className="font-medium text-slate-900">{m.name || '미지정'}</TableCell>
+                    <TableCell className="font-medium text-slate-900">
+                      {!m.name ? (
+                        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100" variant="secondary">
+                          제조사 연결 필요
+                        </Badge>
+                      ) : (
+                        m.name
+                      )}
+                    </TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">{m.orders}건</TableCell>
                     <TableCell className="text-right text-slate-700 tabular-nums">
                       {m.totalQuantity ?? m.orders}개

@@ -1,5 +1,7 @@
 import ExcelJS from 'exceljs'
 
+import { normalizeManufacturerName } from '@/utils/normalize-manufacturer-name'
+
 import type { InvoiceTemplate } from '../services/manufacturers.types'
 
 import { getCellValue } from './excel/util'
@@ -485,10 +487,11 @@ export function groupOrdersByManufacturer(orders: ParsedOrder[]): Map<string, Pa
   const grouped = new Map<string, ParsedOrder[]>()
 
   for (const order of orders) {
-    const raw = order.manufacturer?.trim() ?? ''
-    const isPlaceholder =
-      !raw || /^[-–—]+$/.test(raw) || raw === '미지정' || raw === '미등록' || raw === '없음' || raw === 'N/A'
-    const manufacturer = isPlaceholder ? '미지정' : raw
+    const raw = order.manufacturer ?? ''
+
+    // NOTE: placeholder(미지정/---/N/A 등)는 null로 정규화돼요.
+    // UI에서 "연결 필요" 같은 별도 라벨로 보여주기 위해 빈 값으로 내려요.
+    const manufacturer = normalizeManufacturerName(raw) ?? ''
     const existing = grouped.get(manufacturer) || []
     existing.push(order)
     grouped.set(manufacturer, existing)
