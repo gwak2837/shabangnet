@@ -8,6 +8,7 @@ import { queryKeys } from '@/common/constants/query-keys'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogCardContent,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -228,7 +229,7 @@ export function UserTable({
 
       {/* Confirm Dialog */}
       <Dialog onOpenChange={() => setConfirmDialog(null)} open={!!confirmDialog}>
-        <DialogContent>
+        <DialogCardContent>
           <DialogHeader>
             <DialogTitle>
               {confirmDialog?.type === 'approve' && '사용자 승인'}
@@ -257,7 +258,7 @@ export function UserTable({
               확인
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogCardContent>
       </Dialog>
     </>
   )

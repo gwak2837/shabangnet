@@ -195,7 +195,7 @@ export function ExclusionForm() {
         </div>
       </section>
       <Dialog onOpenChange={(open) => !open && setEditingPattern(null)} open={editingPattern !== null}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">패턴 편집</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">

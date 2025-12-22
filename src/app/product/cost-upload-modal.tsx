@@ -174,7 +174,7 @@ export function CostUploadModal({ open, onOpenChange, onUpload, manufacturers }:
 
   return (
     <Dialog onOpenChange={handleClose} open={open}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-4xl sm:max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />

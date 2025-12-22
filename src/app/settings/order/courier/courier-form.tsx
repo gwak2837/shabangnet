@@ -152,7 +152,7 @@ export function CourierForm() {
         </div>
       </section>
       <Dialog onOpenChange={(open) => !open && setEditingCourier(null)} open={isModalOpen}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <form id="alias-form" onSubmit={handleAddAlias} />
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">

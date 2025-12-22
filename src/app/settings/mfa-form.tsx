@@ -516,7 +516,7 @@ export function MFAForm({ settings }: MFAFormProps) {
         }}
         open={showTOTPPasswordDialog}
       >
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">비밀번호 확인</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -558,7 +558,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       <Dialog onOpenChange={(open) => !open && setShowTOTPSetup(false)} open={showTOTPSetup}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">인증 앱 설정</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -693,7 +693,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       <Dialog onOpenChange={(open) => !open && setShowPasskeySetup(false)} open={showPasskeySetup}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">패스키 추가</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -738,7 +738,7 @@ export function MFAForm({ settings }: MFAFormProps) {
         }}
         open={showRecoveryCodes}
       >
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">복구 코드</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -838,7 +838,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       <Dialog onOpenChange={(open) => !open && setShowDisableTOTPDialog(false)} open={showDisableTOTPDialog}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">TOTP 비활성화</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -880,7 +880,7 @@ export function MFAForm({ settings }: MFAFormProps) {
       </Dialog>
 
       <Dialog onOpenChange={(open) => !open && setDeletePasskeyId(null)} open={!!deletePasskeyId}>
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">패스키 삭제</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -926,7 +926,7 @@ export function MFAForm({ settings }: MFAFormProps) {
         }}
         open={showSetPasswordDialog}
       >
-        <DialogContent className="sm:max-w-md max-h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md sm:max-h-[85dvh] flex flex-col gap-0 px-0 sm:p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-lg font-semibold tracking-tight">비밀번호 설정</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">

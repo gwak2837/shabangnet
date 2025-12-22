@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogCardContent,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -158,7 +159,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
   if (isSent) {
     return (
       <Dialog onOpenChange={handleOpenChange} open={open}>
-        <DialogContent className="sm:max-w-md">
+        <DialogCardContent className="sm:max-w-md">
           <div className="flex flex-col items-center justify-center py-8">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle2 className="h-8 w-8 text-emerald-600" />
@@ -170,14 +171,14 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
               성공적으로 발송됐어요.
             </p>
           </div>
-        </DialogContent>
+        </DialogCardContent>
       </Dialog>
     )
   }
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-lg sm:max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-slate-600" />

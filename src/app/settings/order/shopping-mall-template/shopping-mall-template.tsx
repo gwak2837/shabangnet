@@ -362,7 +362,7 @@ export function ShoppingMallTemplate() {
       </section>
 
       <Dialog onOpenChange={(open) => !open && closeModal()} open={Boolean(modalState)}>
-        <DialogContent className="flex max-h-[85dvh] p-0 flex-col overflow-hidden sm:max-w-2xl">
+        <DialogContent className="flex sm:max-h-[85dvh] px-0 sm:p-0 flex-col overflow-hidden sm:max-w-2xl">
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <DialogHeader className="shrink-0 px-6 pb-4 pt-6">
               <DialogTitle className="text-lg font-semibold tracking-tight">

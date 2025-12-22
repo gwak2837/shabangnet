@@ -210,7 +210,7 @@ export function ManufacturerModal({ open, onOpenChange, manufacturer }: Manufact
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-3xl sm:max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
           <DialogTitle>제조사 정보 수정</DialogTitle>
           <DialogDescription>기본 정보와 템플릿 설정을 수정해요. 제조사명은 변경할 수 없어요.</DialogDescription>

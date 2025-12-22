@@ -151,3 +151,4 @@ testExclusionPatterns().catch((error) => {
   console.error('❌ 테스트 실패:', error)
   process.exit(1)
 })
+
