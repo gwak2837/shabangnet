@@ -20,4 +20,3 @@ export interface OptionMappingCsvRowError {
   productCode?: string
   row: number
 }
-

@@ -49,7 +49,7 @@ export const TEST_USER = {
 
 export interface ShoppingMallGoldenCase {
   /** UI 선택에 사용할 쇼핑몰 표시명 */
-  dropdownOption: 'SK스토아' | '삼성복지몰' | '삼성카드몰'
+  dropdownOption: 'SK스토아' | '삼성복지몰' | '삼성카드몰' | '웰프라자'
   /** expected(output) 파일 절대 경로 */
   expectedFile: string
   /** 파일명 (input/output 동일) */
@@ -87,6 +87,7 @@ function inferShoppingMallDropdownOption(fileName: string): ShoppingMallGoldenCa
   if (normalized.includes('sk스토아')) return 'SK스토아'
   if (normalized.includes('삼성복지몰')) return '삼성복지몰'
   if (normalized.includes('삼성카드몰')) return '삼성카드몰'
+  if (normalized.includes('웰프라자')) return '웰프라자'
 
   throw new Error(`쇼핑몰 파일명을 해석할 수 없어요: ${fileName}`)
 }
