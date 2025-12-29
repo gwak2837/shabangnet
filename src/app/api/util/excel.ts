@@ -7,7 +7,7 @@ export async function createSimpleXlsxBuffer(params: {
   header: string[]
   rows: CellValue[][]
   sheetName: string
-}): Promise<Uint8Array> {
+}): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook()
   workbook.created = new Date()
 
@@ -49,7 +49,10 @@ export async function createSimpleXlsxBuffer(params: {
   }
 
   const buffer = await workbook.xlsx.writeBuffer()
-  return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
+  const out = new Uint8Array(bytes.byteLength)
+  out.set(bytes)
+  return out.buffer
 }
 
 export function sanitizeFileNamePart(value: string): string {
