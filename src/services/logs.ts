@@ -14,7 +14,7 @@ export interface LogFilters {
 
 export interface SendLog {
   duplicateReason?: string
-  email: string
+  emails: string[]
   errorMessage?: string
   fileName: string
   hasAttachment: boolean
@@ -47,7 +47,7 @@ type SendLogRow = Pick<
   typeof orderEmailLog.$inferSelect,
   | 'attachmentFileSize'
   | 'duplicateReason'
-  | 'email'
+  | 'emails'
   | 'errorMessage'
   | 'fileName'
   | 'id'
@@ -68,7 +68,7 @@ export async function getAll(): Promise<SendLog[]> {
       id: orderEmailLog.id,
       manufacturerId: orderEmailLog.manufacturerId,
       manufacturerName: orderEmailLog.manufacturerName,
-      email: orderEmailLog.email,
+      emails: orderEmailLog.emails,
       subject: orderEmailLog.subject,
       fileName: orderEmailLog.fileName,
       attachmentFileSize: orderEmailLog.attachmentFileSize,
@@ -92,7 +92,7 @@ export async function getById(id: number): Promise<SendLog | undefined> {
       id: orderEmailLog.id,
       manufacturerId: orderEmailLog.manufacturerId,
       manufacturerName: orderEmailLog.manufacturerName,
-      email: orderEmailLog.email,
+      emails: orderEmailLog.emails,
       subject: orderEmailLog.subject,
       fileName: orderEmailLog.fileName,
       attachmentFileSize: orderEmailLog.attachmentFileSize,
@@ -168,7 +168,7 @@ export async function getFiltered(filters: LogFilters): Promise<SendLog[]> {
       id: orderEmailLog.id,
       manufacturerId: orderEmailLog.manufacturerId,
       manufacturerName: orderEmailLog.manufacturerName,
-      email: orderEmailLog.email,
+      emails: orderEmailLog.emails,
       subject: orderEmailLog.subject,
       fileName: orderEmailLog.fileName,
       attachmentFileSize: orderEmailLog.attachmentFileSize,
@@ -193,7 +193,7 @@ function mapToSendLog(log: SendLogRow): SendLog {
     id: log.id,
     manufacturerId: log.manufacturerId ?? null,
     manufacturerName: log.manufacturerName,
-    email: log.email,
+    emails: Array.isArray(log.emails) ? log.emails : [],
     subject: log.subject,
     fileName: log.fileName || '',
     hasAttachment: (log.attachmentFileSize ?? 0) > 0,

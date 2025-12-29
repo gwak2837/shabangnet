@@ -34,7 +34,7 @@ const mainNavItems = [
   },
   {
     title: '발주 생성',
-    href: '/order',
+    href: '/order/sendable',
     icon: FileSpreadsheet,
   },
   {

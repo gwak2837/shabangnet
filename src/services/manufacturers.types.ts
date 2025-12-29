@@ -14,9 +14,8 @@ export interface InvoiceTemplate {
 }
 
 export interface Manufacturer {
-  ccEmail?: string
   contactName: string
-  email: string | null
+  emails: string[]
   id: number
   lastOrderDate: string
   name: string

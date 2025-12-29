@@ -58,9 +58,8 @@ interface InvoiceTemplateDraft {
 }
 
 interface ManufacturerDraft {
-  ccEmail: string
   contactName: string
-  email: string
+  emails: string[]
   phone: string
 }
 
@@ -272,6 +271,11 @@ function buildOrderTemplateConfig(columnRules: Record<string, CommonTemplateColu
   }
 }
 
+function isEmail(value: string): boolean {
+  // 간단한 검증(브라우저 공통): 공백 없이 local@domain.tld 형태만 확인해요.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 function ManufacturerModalBody({
   invoiceTemplate,
   isFetchingStoredAnalysis,
@@ -286,10 +290,10 @@ function ManufacturerModalBody({
 
   const [manufacturerDraft, setManufacturerDraft] = useState<ManufacturerDraft>(() => ({
     contactName: manufacturer.contactName,
-    email: manufacturer.email ?? '',
-    ccEmail: manufacturer.ccEmail ?? '',
+    emails: manufacturer.emails,
     phone: manufacturer.phone,
   }))
+  const [emailInput, setEmailInput] = useState('')
 
   const [invoiceDraft, setInvoiceDraft] = useState<InvoiceTemplateDraft>(() => toInvoiceTemplateDraft(invoiceTemplate))
 
@@ -303,13 +307,14 @@ function ManufacturerModalBody({
   )
 
   const [baseline] = useState(() => {
+    const emailsKey = serializeEmailList(manufacturer.emails)
     return {
       manufacturer: {
         contactName: manufacturer.contactName,
-        email: manufacturer.email ?? '',
-        ccEmail: manufacturer.ccEmail ?? '',
+        emails: manufacturer.emails,
         phone: manufacturer.phone,
       } satisfies ManufacturerDraft,
+      emailsKey,
       invoice: toInvoiceTemplateDraft(invoiceTemplate),
       order: {
         headerRow: orderTemplate?.headerRow ?? 1,
@@ -357,8 +362,7 @@ function ManufacturerModalBody({
 
   const isManufacturerDirty =
     manufacturerDraft.contactName !== baseline.manufacturer.contactName ||
-    manufacturerDraft.email !== baseline.manufacturer.email ||
-    manufacturerDraft.ccEmail !== baseline.manufacturer.ccEmail ||
+    serializeEmailList(manufacturerDraft.emails) !== baseline.emailsKey ||
     manufacturerDraft.phone !== baseline.manufacturer.phone
 
   const isInvoiceDirty =
@@ -429,8 +433,7 @@ function ManufacturerModalBody({
     if (isManufacturerDirty) {
       input.manufacturer = {
         contactName: normalizeToNullableString(manufacturerDraft.contactName),
-        email: normalizeToNullableString(manufacturerDraft.email),
-        ccEmail: normalizeToNullableString(manufacturerDraft.ccEmail),
+        emails: manufacturerDraft.emails,
         phone: normalizeToNullableString(manufacturerDraft.phone),
       }
     }
@@ -503,36 +506,80 @@ function ManufacturerModalBody({
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="manufacturer-email">이메일</Label>
-              <Input
-                autoCapitalize="none"
-                autoCorrect="off"
-                id="manufacturer-email"
-                onChange={(e) => {
-                  const value = e.currentTarget.value
-                  setManufacturerDraft((prev) => ({ ...prev, email: value }))
-                }}
-                placeholder="예: orders@example.com"
-                type="email"
-                value={manufacturerDraft.email}
-              />
-            </div>
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label htmlFor="manufacturer-email-input">이메일</Label>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="manufacturer-cc-email">CC 이메일</Label>
-              <Input
-                autoCapitalize="none"
-                autoCorrect="off"
-                id="manufacturer-cc-email"
-                onChange={(e) => {
-                  const value = e.currentTarget.value
-                  setManufacturerDraft((prev) => ({ ...prev, ccEmail: value }))
-                }}
-                placeholder="예: a@example.com, b@example.com"
-                value={manufacturerDraft.ccEmail}
-              />
-              <p className="text-xs text-muted-foreground">여러 개면 쉼표(,)로 구분해요.</p>
+              {manufacturerDraft.emails.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {manufacturerDraft.emails.map((email) => (
+                    <span
+                      className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1 text-xs"
+                      key={email}
+                    >
+                      <span className="font-mono text-foreground">{email}</span>
+                      <button
+                        aria-label={`${email} 삭제`}
+                        className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                        onClick={() => {
+                          setManufacturerDraft((prev) => ({
+                            ...prev,
+                            emails: prev.emails.filter((v) => v !== email),
+                          }))
+                        }}
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">등록된 이메일이 없어요.</p>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  id="manufacturer-email-input"
+                  onChange={(e) => setEmailInput(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return
+                    if (emailInput.trim().length === 0) return
+                    e.preventDefault()
+
+                    const parsed = parseEmailInput(emailInput)
+                    if (parsed.invalid) {
+                      toast.error('이메일 형식을 확인해 주세요.')
+                      return
+                    }
+
+                    setManufacturerDraft((prev) => ({ ...prev, emails: mergeEmailLists(prev.emails, parsed.emails) }))
+                    setEmailInput('')
+                  }}
+                  placeholder="예: orders@example.com"
+                  value={emailInput}
+                />
+                <Button
+                  disabled={emailInput.trim().length === 0}
+                  onClick={() => {
+                    const parsed = parseEmailInput(emailInput)
+                    if (parsed.invalid) {
+                      toast.error('이메일 형식을 확인해 주세요.')
+                      return
+                    }
+
+                    setManufacturerDraft((prev) => ({ ...prev, emails: mergeEmailLists(prev.emails, parsed.emails) }))
+                    setEmailInput('')
+                  }}
+                  type="button"
+                  variant="outline"
+                >
+                  추가
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">쉼표(,)나 줄바꿈으로 여러 개를 한 번에 입력할 수 있어요.</p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -803,9 +850,46 @@ function ManufacturerModalBody({
   )
 }
 
+function mergeEmailLists(existing: string[], next: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const item of [...existing, ...next]) {
+    const normalized = String(item ?? '').trim().toLowerCase()
+    if (normalized.length === 0) continue
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    out.push(normalized)
+  }
+
+  return out
+}
+
 function normalizeToNullableString(raw: string): string | null {
   const v = raw.trim()
   return v.length > 0 ? v : null
+}
+
+function parseEmailInput(raw: string): { emails: string[]; invalid?: string } {
+  const parts = raw
+    .split(/[,;\n]+/g)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+
+  const emails: string[] = []
+  const seen = new Set<string>()
+
+  for (const part of parts) {
+    const normalized = part.toLowerCase()
+    if (!isEmail(normalized)) {
+      return { emails: [], invalid: part }
+    }
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    emails.push(normalized)
+  }
+
+  return { emails }
 }
 
 function parseInitialColumnRules(template: OrderTemplateData): Record<string, CommonTemplateColumnRule> {
@@ -844,6 +928,10 @@ function serializeColumnRules(columnRules: Record<string, CommonTemplateColumnRu
       return [key, 'template', rule.template.trim()]
     }),
   )
+}
+
+function serializeEmailList(emails: string[]): string {
+  return JSON.stringify(mergeEmailLists([], emails))
 }
 
 function toInvoiceTemplateDraft(template: InvoiceTemplate): InvoiceTemplateDraft {

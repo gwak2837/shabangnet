@@ -19,8 +19,7 @@ export async function GET() {
       .select({
         name: manufacturer.name,
         contactName: manufacturer.contactName,
-        email: manufacturer.email,
-        ccEmail: manufacturer.ccEmail,
+        emails: manufacturer.emails,
         phone: manufacturer.phone,
       })
       .from(manufacturer)
@@ -28,7 +27,7 @@ export async function GET() {
 
     const csvRows = [
       MANUFACTURER_CSV_HEADER,
-      ...rows.map((r) => [r.name, r.contactName ?? '', r.email ?? '', r.ccEmail ?? '', r.phone ?? '']),
+      ...rows.map((r) => [r.name, r.contactName ?? '', r.emails.join(', '), r.phone ?? '']),
     ] as const
 
     const csvText = stringifyCsv(csvRows, { bom: true })

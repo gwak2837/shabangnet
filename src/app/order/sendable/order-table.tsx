@@ -159,7 +159,7 @@ function OrderRow({
   onDownload?: (batch: OrderBatch) => void
   onSendEmail: (batch: OrderBatch) => void
 }) {
-  const hasEmail = batch.email.trim().length > 0
+  const hasEmail = batch.emails.length > 0
 
   return (
     <TableRow
@@ -194,7 +194,7 @@ function OrderRow({
 
       <TableCell className="min-w-[200px]">
         {hasEmail ? (
-          <span className="text-sm text-slate-600">{batch.email}</span>
+          <span className="text-sm text-slate-600">{batch.emails.join(', ')}</span>
         ) : (
           <span className="text-sm text-amber-700">이메일 미설정</span>
         )}

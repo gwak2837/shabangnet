@@ -104,7 +104,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
   const duplicate = duplicateCheck
   const hasDuplicate = duplicate?.hasDuplicate ?? false
   const needsReason = isResend || hasDuplicate
-  const hasEmail = batch.email.trim().length > 0
+  const hasEmail = batch.emails.length > 0
   const canSend = hasEmail && (!needsReason || duplicateReason.trim().length > 0)
 
   const ordersToSend = isResend ? batch.orders : batch.orders.filter((o) => o.status !== 'completed')
@@ -196,8 +196,7 @@ export function SendModal({ open, onOpenChange, batch, onSent }: SendModalProps)
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">{batch.manufacturerName}</p>
-                <p className="text-sm text-slate-500">{hasEmail ? batch.email : '이메일 미설정'}</p>
-                {batch.ccEmail && <p className="text-xs text-slate-400">CC: {batch.ccEmail}</p>}
+                <p className="text-sm text-slate-500">{hasEmail ? batch.emails.join(', ') : '이메일 미설정'}</p>
               </div>
               <Badge className="bg-blue-100 text-blue-700" variant="secondary">
                 수신

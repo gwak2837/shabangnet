@@ -68,6 +68,7 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
           <ul className="list-disc pl-5 space-y-1">
             <li>빈 칸은 기존 값을 그대로 유지해요.</li>
             <li>잘못된 행은 건너뛰고, 나머지만 반영해요.</li>
+            <li>이메일은 여러 개면 쉼표(,)로 구분해 주세요.</li>
             <li className="break-all">
               헤더 예시: <span className="font-mono">{MANUFACTURER_CSV_HEADER.join(',')}</span>
             </li>

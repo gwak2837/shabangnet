@@ -5,8 +5,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/common/constants/query-keys'
 
 export interface OrderBatch {
-  ccEmail?: string
-  email: string
+  emails: string[]
   lastSentAt?: string
   manufacturerId: number
   manufacturerName: string

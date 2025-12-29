@@ -90,7 +90,7 @@ export function LogDetailModal({ open, onOpenChange, log }: LogDetailModalProps)
             <span className="text-sm text-slate-500">수신자</span>
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-slate-400" />
-              <span className="text-slate-700">{log.email}</span>
+              <span className="text-slate-700">{log.emails.join(', ')}</span>
             </div>
           </div>
 

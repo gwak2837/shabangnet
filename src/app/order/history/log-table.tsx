@@ -101,7 +101,7 @@ export function LogTable({
                 <TableCell>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Mail className="h-3.5 w-3.5 text-slate-400" />
-                    {log.email}
+                    {log.emails.join(', ')}
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-medium text-slate-900 tabular-nums">{log.orderCount}건</TableCell>

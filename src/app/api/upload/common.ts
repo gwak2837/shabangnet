@@ -62,8 +62,8 @@ export async function autoCreateManufacturers({ orders, lookupMaps, tx }: AutoCr
 
     // NOTE: xmax 떄문에 sql 사용함
     const [record] = await tx.execute<{ id: number; name: string; isNew: boolean }>(sql`
-      INSERT INTO manufacturer (name, email, order_count)
-      VALUES (${name}, null, 0)
+      INSERT INTO manufacturer (name, order_count)
+      VALUES (${name}, 0)
       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
       RETURNING id, name, (xmax = 0) AS is_new
     `)

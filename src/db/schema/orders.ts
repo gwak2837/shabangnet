@@ -131,7 +131,7 @@ export const orderEmailLog = pgTable('order_email_log', {
     onDelete: 'set null',
   }),
   manufacturerName: varchar('manufacturer_name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull(),
+  emails: text('emails').array().notNull(),
   subject: text('subject').notNull(),
   fileName: varchar('file_name', { length: 500 }),
   attachmentFile: bytea('attachment_file'), // 발송 시점에 생성된 발주서 XLSX(원본) 저장

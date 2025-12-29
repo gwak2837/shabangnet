@@ -4,8 +4,7 @@ export const ORDER_EMAIL_TEMPLATE_VARIABLES = {
   manufacturerName: '제조사명',
   senderName: '발신자명',
   senderEmail: '발신자 이메일',
-  toEmail: '수신자 이메일',
-  ccEmail: '참조(CC) 이메일',
+  toEmail: '수신자 이메일(여러 개면 쉼표로 구분)',
   orderDate: '발주일자(표시용)',
   sentAt: '발송 시각(ISO)',
   fileName: '첨부파일명(xlsx)',
@@ -40,7 +39,6 @@ export interface OrderEmailTemplateOrderItem {
 }
 
 export interface OrderEmailTemplateVariables {
-  ccEmail: string | null
   fileName: string
   manufacturerName: string
   mode: 'resend' | 'send'
@@ -66,8 +64,7 @@ export function getSampleOrderEmailTemplateVariables(): OrderEmailTemplateVariab
     manufacturerName: '(주)테스트제조사',
     senderName: '(주)다온에프앤씨',
     senderEmail: 'sender@example.com',
-    toEmail: 'manufacturer@example.com',
-    ccEmail: 'cc@example.com',
+    toEmail: 'manufacturer@example.com, orders@example.com',
     orderDate: now.toLocaleDateString('ko-KR'),
     sentAt: now.toISOString(),
     fileName: '발주서_20251218.xlsx',

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   bigint,
   boolean,
@@ -21,8 +22,10 @@ export const manufacturer = pgTable('manufacturer', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   contactName: varchar('contact_name', { length: 255 }),
-  email: varchar('email', { length: 255 }),
-  ccEmail: varchar('cc_email', { length: 255 }),
+  emails: text('emails')
+    .array()
+    .notNull()
+    .default(sql`ARRAY[]::text[]`),
   phone: varchar('phone', { length: 50 }),
   // 통계
   orderCount: integer('order_count').default(0),

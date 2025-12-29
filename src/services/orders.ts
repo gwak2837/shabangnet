@@ -52,7 +52,7 @@ export interface Order {
 }
 
 export interface OrderBatch {
-  email: string
+  emails: string[]
   lastSentAt?: string
   manufacturerId: number
   manufacturerName: string

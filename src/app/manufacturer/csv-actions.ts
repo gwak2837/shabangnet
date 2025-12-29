@@ -11,7 +11,7 @@ import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { parseCsv } from '@/utils/csv'
 
-type CanonicalField = 'ccEmail' | 'contactName' | 'email' | 'name' | 'phone'
+type CanonicalField = 'contactName' | 'emails' | 'name' | 'phone'
 
 export async function importManufacturersCsv(
   _prevState: ManufacturerCsvImportResult | null,
@@ -98,19 +98,17 @@ export async function importManufacturersCsv(
       seenInputNames.add(name)
 
       const contactName = normalizeOptionalCell(getCell(row, indexByField.get('contactName')))
-      const email = normalizeOptionalCell(getCell(row, indexByField.get('email')))
-      const ccEmail = normalizeOptionalCell(getCell(row, indexByField.get('ccEmail')))
+      const emailsRaw = normalizeOptionalCell(getCell(row, indexByField.get('emails')))
+      const emails = parseEmails(emailsRaw)
       const phone = normalizeOptionalCell(getCell(row, indexByField.get('phone')))
 
-      if (email && !isValidEmail(email)) {
-        skipped += 1
-        errors.push({ row: rowNumber, name, message: '이메일 형식이 올바르지 않아요.' })
-        continue
-      }
-      if (ccEmail && !isValidEmail(ccEmail)) {
-        skipped += 1
-        errors.push({ row: rowNumber, name, message: 'CC이메일 형식이 올바르지 않아요.' })
-        continue
+      if (emails) {
+        const hasInvalid = emails.some((email) => !isValidEmail(email))
+        if (hasInvalid) {
+          skipped += 1
+          errors.push({ row: rowNumber, name, message: '이메일 형식이 올바르지 않아요.' })
+          continue
+        }
       }
 
       const existingId = existingByName.get(name)
@@ -122,8 +120,7 @@ export async function importManufacturersCsv(
 
         // 빈 칸은 기존 값 유지: 값이 있을 때만 업데이트해요.
         if (contactName) set.contactName = contactName
-        if (email) set.email = email
-        if (ccEmail) set.ccEmail = ccEmail
+        if (emails) set.emails = emails
         if (phone) set.phone = phone
 
         const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
@@ -143,8 +140,7 @@ export async function importManufacturersCsv(
           .values({
             name,
             contactName: contactName ?? '',
-            email: email ?? null,
-            ccEmail: ccEmail ?? null,
+            emails: emails ?? [],
             phone: phone ?? '',
             orderCount: 0,
           })
@@ -172,8 +168,7 @@ export async function importManufacturersCsv(
           updatedAt: new Date(),
         }
         if (contactName) set.contactName = contactName
-        if (email) set.email = email
-        if (ccEmail) set.ccEmail = ccEmail
+        if (emails) set.emails = emails
         if (phone) set.phone = phone
 
         const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
@@ -213,14 +208,7 @@ function headerToCanonicalField(header: string): CanonicalField | null {
 
   if (hNoSpace === '제조사명' || hNoSpace === '제조사' || normalized === 'name') return 'name'
   if (hNoSpace === '담당자명' || hNoSpace === '담당자' || normalized === 'contactname') return 'contactName'
-  if (hNoSpace === '이메일' || normalized === 'email') return 'email'
-  if (
-    normalized === 'cc이메일' ||
-    normalized === '참조이메일' ||
-    normalized === '참조이메일(cc)' ||
-    normalized === 'ccemail'
-  )
-    return 'ccEmail'
+  if (hNoSpace === '이메일' || normalized === 'email' || normalized === 'emails') return 'emails'
   if (hNoSpace === '휴대전화번호' || hNoSpace === '전화번호' || normalized === 'phone' || normalized === 'mobile')
     return 'phone'
 
@@ -251,4 +239,26 @@ function normalizeName(value: string): string {
 function normalizeOptionalCell(value: string): string | undefined {
   const trimmed = value.trim()
   return trimmed ? trimmed : undefined
+}
+
+function parseEmails(value: string | undefined): string[] | undefined {
+  if (!value) return undefined
+
+  const parts = value
+    .split(/[,;\n]+/g)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+
+  if (parts.length === 0) return undefined
+
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const part of parts) {
+    const normalized = part.toLowerCase()
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    out.push(normalized)
+  }
+
+  return out
 }

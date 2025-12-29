@@ -42,9 +42,8 @@ interface UpdateManufacturerBundleInput {
     useColumnIndex: boolean
   }
   manufacturer?: {
-    ccEmail?: string | null
     contactName?: string | null
-    email?: string | null
+    emails?: string[] | null
     phone?: string | null
   }
   manufacturerId: number
@@ -232,20 +231,17 @@ export async function updateManufacturerBundle(
 
       if (input.manufacturer) {
         const contactName = normalizeNullableText(input.manufacturer.contactName)
-        const email = normalizeNullableText(input.manufacturer.email)
-        const ccEmail = normalizeNullableText(input.manufacturer.ccEmail)
+        const emails = normalizeEmails(input.manufacturer.emails)
         const phone = normalizeNullableText(input.manufacturer.phone)
 
-        validateSingleEmail(email, '이메일')
-        validateEmailList(ccEmail, 'CC 이메일')
+        validateEmails(emails, '이메일')
         validatePhone(phone)
 
         await tx
           .update(manufacturer)
           .set({
             contactName,
-            email,
-            ccEmail,
+            emails,
             phone,
             updatedAt: new Date(),
           })
@@ -386,6 +382,23 @@ function normalizeColumnSelector(raw: string, useColumnIndex: boolean, label: st
   return upper
 }
 
+function normalizeEmails(raw: string[] | null | undefined): string[] {
+  if (!raw) return []
+
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const item of raw) {
+    const trimmed = String(item ?? '').trim().toLowerCase()
+    if (trimmed.length === 0) continue
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
+    out.push(trimmed)
+  }
+
+  return out
+}
+
 function normalizeFixedValues(input: Record<string, string> | undefined): Record<string, string> | undefined {
   if (!input) return undefined
   const out: Record<string, string> = {}
@@ -518,14 +531,8 @@ function toSafePositiveInt(value: number, fallback: number): number {
   return Number.isFinite(int) && int > 0 ? int : fallback
 }
 
-function validateEmailList(raw: string | null, label: string) {
-  if (!raw) return
-  const parts = raw
-    .split(/[,;]+/g)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
-
-  for (const email of parts) {
+function validateEmails(emails: string[], label: string) {
+  for (const email of emails) {
     if (!isEmail(email)) {
       throw new Error(`${label} 형식을 확인해 주세요.`)
     }
@@ -536,15 +543,5 @@ function validatePhone(phone: string | null) {
   if (!phone) return
   if (!/^[0-9+\-()\s]+$/.test(phone)) {
     throw new Error('전화번호 형식을 확인해 주세요.')
-  }
-}
-
-function validateSingleEmail(email: string | null, label: string) {
-  if (!email) return
-  if (email.includes(',') || email.includes(';')) {
-    throw new Error(`${label}은 1개만 입력할 수 있어요.`)
-  }
-  if (!isEmail(email)) {
-    throw new Error(`${label} 형식을 확인해 주세요.`)
   }
 }

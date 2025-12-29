@@ -40,8 +40,7 @@ export function PreviewModal({ batch, open, onOpenChange }: PreviewModalProps) {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">{batch.manufacturerName}</p>
-                <p className="text-sm text-slate-500">{batch.email}</p>
-                {batch.ccEmail && <p className="text-xs text-slate-400">CC: {batch.ccEmail}</p>}
+                <p className="text-sm text-slate-500">{batch.emails.join(', ')}</p>
               </div>
               <Badge className="bg-slate-100 text-slate-700" variant="secondary">
                 총 {batch.totalOrders}건

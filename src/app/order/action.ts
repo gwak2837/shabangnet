@@ -66,8 +66,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       .select({
         id: manufacturer.id,
         name: manufacturer.name,
-        email: manufacturer.email,
-        ccEmail: manufacturer.ccEmail,
+        emails: manufacturer.emails,
       })
       .from(manufacturer)
       .where(eq(manufacturer.id, input.manufacturerId))
@@ -76,9 +75,9 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       return { success: false, error: '제조사를 찾을 수 없어요.' }
     }
 
-    const toEmail = mfr.email?.trim() ?? ''
+    const toEmails = normalizeEmails(mfr.emails)
 
-    if (!toEmail) {
+    if (toEmails.length === 0) {
       return {
         success: false,
         requiresEmailSetup: true,
@@ -161,8 +160,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
       manufacturerName: mfr.name,
       senderName: fromName,
       senderEmail: smtpAccount.email,
-      toEmail,
-      ccEmail: mfr.ccEmail ?? null,
+      toEmail: toEmails.join(', '),
       orderDate: formatDateKorean(now),
       sentAt: now.toISOString(),
       fileName: excelResult.fileName,
@@ -216,7 +214,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
         .values({
           manufacturerId: mfr.id,
           manufacturerName: mfr.name,
-          email: toEmail,
+          emails: toEmails,
           subject,
           fileName: excelResult.fileName,
           attachmentFile: excelResult.buffer,
@@ -274,8 +272,7 @@ export async function sendOrderBatch(input: SendOrderBatchInput): Promise<SendOr
     let result: Awaited<ReturnType<typeof sendEmail>> | null = null
     try {
       result = await sendEmail({
-        to: toEmail,
-        cc: mfr.ccEmail || undefined,
+        to: toEmails,
         subject,
         text,
         html,
@@ -362,4 +359,19 @@ function formatDateKorean(date: Date): string {
     month: 'long',
     day: 'numeric',
   })
+}
+
+function normalizeEmails(raw: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const item of raw) {
+    const trimmed = String(item ?? '').trim().toLowerCase()
+    if (trimmed.length === 0) continue
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
+    out.push(trimmed)
+  }
+
+  return out
 }

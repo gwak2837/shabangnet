@@ -46,7 +46,7 @@ export async function GET() {
       and(
         orderIsIncludedSql(order.fulfillmentType),
         isNotNull(order.manufacturerId),
-        sql`trim(coalesce(${manufacturer.email}, '')) = ''`,
+        sql`coalesce(array_length(${manufacturer.emails}, 1), 0) = 0`,
       ),
     )
     .groupBy(manufacturer.id, manufacturer.name)

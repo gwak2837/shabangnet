@@ -31,8 +31,7 @@ interface Order {
 }
 
 interface OrderBatch {
-  ccEmail?: string
-  email: string
+  emails: string[]
   lastSentAt?: string
   manufacturerId: number
   manufacturerName: string
@@ -144,8 +143,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
       .select({
         id: manufacturer.id,
         name: manufacturer.name,
-        email: manufacturer.email,
-        ccEmail: manufacturer.ccEmail,
+        emails: manufacturer.emails,
       })
       .from(manufacturer)
       .where(manufacturerConditions.length > 0 ? and(...manufacturerConditions) : undefined)
@@ -235,8 +233,7 @@ async function getOrderBatches(params: GetOrderBatchesParams): Promise<OrderBatc
       batchesMap.set(m.id, {
         manufacturerId: m.id,
         manufacturerName: m.name,
-        email: m.email ?? '',
-        ccEmail: m.ccEmail || undefined,
+        emails: Array.isArray(m.emails) ? m.emails : [],
         orders: [],
         status: 'pending',
         totalAmount: 0,

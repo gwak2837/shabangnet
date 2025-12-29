@@ -22,9 +22,8 @@ interface InvoiceTemplate {
 }
 
 interface Manufacturer {
-  ccEmail?: string
   contactName: string
-  email: string | null
+  emails: string[]
   id: number
   lastOrderDate: string
   name: string
@@ -43,9 +42,6 @@ interface OrderTemplate {
   manufacturerName: string
   templateFileName?: string
 }
-
-// Export the type separately
-export type { OrderTemplate }
 
 const DEFAULT_INVOICE_TEMPLATE = {
   orderNumberColumn: 'A',
@@ -72,7 +68,7 @@ type InvoiceTemplateRow = Pick<
 // Helper to convert DB manufacturer to App Manufacturer
 type ManufacturerRow = Pick<
   typeof manufacturer.$inferSelect,
-  'ccEmail' | 'contactName' | 'email' | 'id' | 'lastOrderDate' | 'name' | 'orderCount' | 'phone'
+  'contactName' | 'emails' | 'id' | 'lastOrderDate' | 'name' | 'orderCount' | 'phone'
 >
 
 // Helper to convert DB order template to App OrderTemplate
@@ -87,8 +83,7 @@ export async function create(data: Omit<Manufacturer, 'id' | 'lastOrderDate' | '
     .values({
       name: data.name,
       contactName: data.contactName,
-      email: data.email,
-      ccEmail: data.ccEmail,
+      emails: data.emails,
       phone: data.phone,
       orderCount: 0,
     })
@@ -115,8 +110,7 @@ export async function getAll(): Promise<Manufacturer[]> {
       id: manufacturer.id,
       name: manufacturer.name,
       contactName: manufacturer.contactName,
-      email: manufacturer.email,
-      ccEmail: manufacturer.ccEmail,
+      emails: manufacturer.emails,
       phone: manufacturer.phone,
       orderCount: manufacturer.orderCount,
       lastOrderDate: manufacturer.lastOrderDate,
@@ -132,8 +126,7 @@ export async function getById(id: number): Promise<Manufacturer | undefined> {
       id: manufacturer.id,
       name: manufacturer.name,
       contactName: manufacturer.contactName,
-      email: manufacturer.email,
-      ccEmail: manufacturer.ccEmail,
+      emails: manufacturer.emails,
       phone: manufacturer.phone,
       orderCount: manufacturer.orderCount,
       lastOrderDate: manufacturer.lastOrderDate,
@@ -212,8 +205,7 @@ export async function update(id: number, data: Partial<Manufacturer>): Promise<M
     .set({
       name: data.name,
       contactName: data.contactName,
-      email: data.email,
-      ccEmail: data.ccEmail,
+      emails: data.emails,
       phone: data.phone,
       updatedAt: new Date(),
     })
@@ -337,8 +329,7 @@ function mapToManufacturer(m: ManufacturerRow): Manufacturer {
     id: m.id,
     name: m.name,
     contactName: m.contactName || '',
-    email: m.email ?? null,
-    ccEmail: m.ccEmail || undefined,
+    emails: Array.isArray(m.emails) ? m.emails : [],
     phone: m.phone || '',
     orderCount: m.orderCount || 0,
     lastOrderDate: m.lastOrderDate ? m.lastOrderDate.toISOString().split('T')[0] : '',

@@ -11,7 +11,7 @@ import { createCacheControl } from '@/utils/cache-control'
 
 interface LogListItem {
   duplicateReason?: string
-  email: string
+  emails: string[]
   errorMessage?: string
   fileName: string
   hasAttachment: boolean
@@ -130,7 +130,7 @@ async function getLogs(params: z.infer<typeof queryParamsSchema>): Promise<LogLi
       id: orderEmailLog.id,
       manufacturerId: orderEmailLog.manufacturerId,
       manufacturerName: orderEmailLog.manufacturerName,
-      email: orderEmailLog.email,
+      emails: orderEmailLog.emails,
       subject: orderEmailLog.subject,
       fileName: orderEmailLog.fileName,
       attachmentFileSize: orderEmailLog.attachmentFileSize,
@@ -160,7 +160,7 @@ async function getLogs(params: z.infer<typeof queryParamsSchema>): Promise<LogLi
       id: log.id,
       manufacturerId: log.manufacturerId ?? null,
       manufacturerName: log.manufacturerName,
-      email: log.email,
+      emails: Array.isArray(log.emails) ? log.emails : [],
       subject: log.subject,
       fileName: log.fileName || '',
       hasAttachment: (log.attachmentFileSize ?? 0) > 0,

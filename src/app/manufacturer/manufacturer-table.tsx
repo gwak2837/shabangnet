@@ -161,7 +161,6 @@ export function ManufacturerTable({
                       </div>
                       <div>
                         <p className="font-medium text-slate-900">{manufacturer.name}</p>
-                        {manufacturer.ccEmail && <p className="text-xs text-slate-500">CC: {manufacturer.ccEmail}</p>}
                       </div>
                     </div>
                   </TableCell>
@@ -170,8 +169,8 @@ export function ManufacturerTable({
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Mail className="h-3.5 w-3.5 text-slate-400" />
-                        {manufacturer.email ? (
-                          manufacturer.email
+                        {manufacturer.emails.length > 0 ? (
+                          manufacturer.emails.join(', ')
                         ) : (
                           <span className="text-amber-700">이메일 미설정</span>
                         )}

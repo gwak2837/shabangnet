@@ -10,9 +10,8 @@ import { auth } from '@/lib/auth'
 import { createCacheControl } from '@/utils/cache-control'
 
 interface ManufacturerListItem {
-  ccEmail?: string
   contactName: string
-  email: string | null
+  emails: string[]
   id: number
   lastOrderDate: string
   name: string
@@ -76,7 +75,7 @@ async function getManufacturers(params: z.infer<typeof queryParamsSchema>): Prom
       sql`(
         ${manufacturer.name} ILIKE ${`%${search}%`} OR
         coalesce(${manufacturer.contactName}, '') ILIKE ${`%${search}%`} OR
-        coalesce(${manufacturer.email}, '') ILIKE ${`%${search}%`}
+        coalesce(array_to_string(${manufacturer.emails}, ','), '') ILIKE ${`%${search}%`}
       )`,
     )
   }
@@ -105,8 +104,7 @@ async function getManufacturers(params: z.infer<typeof queryParamsSchema>): Prom
       id: manufacturer.id,
       name: manufacturer.name,
       contactName: manufacturer.contactName,
-      email: manufacturer.email,
-      ccEmail: manufacturer.ccEmail,
+      emails: manufacturer.emails,
       phone: manufacturer.phone,
       orderCount: manufacturer.orderCount,
       lastOrderDate: manufacturer.lastOrderDate,
@@ -125,8 +123,7 @@ async function getManufacturers(params: z.infer<typeof queryParamsSchema>): Prom
     id: m.id,
     name: m.name,
     contactName: m.contactName || '',
-    email: m.email ?? null,
-    ccEmail: m.ccEmail || undefined,
+    emails: Array.isArray(m.emails) ? m.emails : [],
     phone: m.phone || '',
     orderCount: m.orderCount || 0,
     lastOrderDate: m.lastOrderDate ? m.lastOrderDate.toISOString().split('T')[0] : '',
