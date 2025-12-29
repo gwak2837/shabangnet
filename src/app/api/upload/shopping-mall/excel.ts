@@ -32,6 +32,15 @@ export async function parseShoppingMallFile(buffer: ArrayBuffer, config: Shoppin
     }
   }
 
+  return parseShoppingMallWorksheet(worksheet, config)
+}
+
+/**
+ * 쇼핑몰 주문 워크시트 파싱
+ * - `parseShoppingMallFile`은 IO(워크북 로드)까지 포함한 래퍼예요.
+ * - route에서 이미 워크북을 로드했다면 이 함수를 쓰면 돼요.
+ */
+export function parseShoppingMallWorksheet(worksheet: ExcelJS.Worksheet, config: ShoppingMallConfig) {
   const orders = []
   const errors: ParseError[] = []
   const totalRows = worksheet.rowCount

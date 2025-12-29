@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, customType, date, index, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, customType, date, index, integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import 'server-only'
 
 import { emailStatusEnum, orderStatusEnum, uploadTypeEnum } from './enums'
@@ -25,7 +25,7 @@ export const upload = pgTable('upload', {
   fileSize: integer('file_size').default(0),
   fileType: uploadTypeEnum('file_type').default('sabangnet'), // 파일 유형
   shoppingMallId: bigint('shopping_mall_id', { mode: 'number' }).references(() => shoppingMallTemplate.id), // 쇼핑몰 템플릿
-  sourceSnapshot: text('source_snapshot'), // JSON: 업로드 당시 원본 엑셀 데이터 스냅샷(재다운로드용)
+  meta: jsonb('meta'), // JSON: 업로드 결과 메타(요약/오류 샘플 등). 원본/산출물 파일은 저장하지 않아요.
   totalOrders: integer('total_orders').default(0),
   processedOrders: integer('processed_orders').default(0),
   errorOrders: integer('error_orders').default(0),

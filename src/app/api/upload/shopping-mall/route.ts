@@ -1,30 +1,28 @@
-import { count, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
 import { NextResponse } from 'next/server'
+import { PassThrough, Readable } from 'node:stream'
 import { z } from 'zod'
 
 import { db } from '@/db/client'
 import { manufacturer, optionMapping, product } from '@/db/schema/manufacturers'
-import { order, upload } from '@/db/schema/orders'
+import { upload } from '@/db/schema/orders'
 import { shoppingMallTemplate } from '@/db/schema/settings'
-import { groupOrdersByManufacturer } from '@/lib/excel'
+import { formatDateForFileName, type ParsedOrder, type ParseError } from '@/lib/excel'
 import { getCellValue } from '@/lib/excel/util'
 import { parseShoppingMallTemplateColumnConfig } from '@/services/shopping-mall-template-config'
 
-import type { UploadError } from '../type'
+import type { UploadError, UploadSummary } from '../type'
 
 import {
   autoCreateManufacturers,
   autoCreateProducts,
   autoCreateUnmappedOptionCandidates,
   buildLookupMaps,
-  calculateManufacturerBreakdown,
-  calculateSummary,
-  matchManufacturerId,
   VALID_EXTENSIONS,
 } from '../common'
-import { parseShoppingMallFile } from './excel'
-import { prepareOrderValues, type UploadResult } from './util'
+import { parseShoppingMallWorksheet } from './excel'
+import { prepareOrderValues } from './util'
 
 export const maxDuration = 60
 
@@ -37,16 +35,33 @@ const uploadFormSchema = z.object({
   mallId: z.coerce.number({ message: '쇼핑몰을 선택해주세요' }).min(1, '쇼핑몰을 선택해주세요'),
 })
 
-interface ShoppingMallUploadSourceSnapshot {
-  columnCount: number
-  dataRows: Array<{ cells: string[]; rowNumber: number }>
-  dataStartRow: number
-  headerCells: string[]
-  headerRow: number
-  prefixRows: string[][]
-  sheetName: string
-  totalRows: number
+const exportConfigSchema = z.object({
+  copyPrefixRows: z.boolean().optional(),
+  columns: z
+    .array(
+      z.object({
+        header: z.string().optional(),
+        source: z.discriminatedUnion('type', [
+          z.object({ type: z.literal('input'), columnIndex: z.number().int().min(1) }),
+          z.object({ type: z.literal('const'), value: z.string() }),
+        ]),
+      }),
+    )
+    .min(1),
+})
+
+type ExportConfig = z.infer<typeof exportConfigSchema>
+
+interface ShoppingMallUploadMetaV1 {
+  autoCreatedManufacturers: string[]
+  errorSamples: UploadError[]
+  kind: 'shopping_mall_upload_meta'
+  mallName: string
+  summary: UploadSummary
+  v: 1
 }
+
+const ERROR_SAMPLE_LIMIT = 50
 
 export async function GET(): Promise<NextResponse> {
   const templates = await db
@@ -62,7 +77,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ malls: templates })
 }
 
-export async function POST(request: Request): Promise<NextResponse<UploadResult | { error: string }>> {
+export async function POST(request: Request): Promise<Response> {
   try {
     const formData = await request.formData()
 
@@ -84,6 +99,7 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         headerRow: shoppingMallTemplate.headerRow,
         dataStartRow: shoppingMallTemplate.dataStartRow,
         columnMappings: shoppingMallTemplate.columnMappings,
+        exportConfig: shoppingMallTemplate.exportConfig,
       })
       .from(shoppingMallTemplate)
       .where(eq(shoppingMallTemplate.id, mallId))
@@ -110,22 +126,85 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
       fixedValues: parsedColumnConfig.fixedValues,
     }
 
-    const buffer = await file.arrayBuffer()
-    const parseResult = await parseShoppingMallFile(buffer, mallConfig)
-
-    if (parseResult.orders.length === 0 && parseResult.errors.length > 0) {
-      return NextResponse.json({ error: parseResult.errors[0].message }, { status: 400 })
+    if (!dbTemplate.exportConfig) {
+      return NextResponse.json({ error: '다운로드 템플릿이 등록되지 않았어요' }, { status: 400 })
     }
 
-    const sourceSnapshot =
-      parseResult.orders.length > 0
-        ? await createSourceSnapshot({
-            buffer,
-            headerRow: mallConfig.headerRow,
-            dataStartRow: mallConfig.dataStartRow,
-            validRowNumbers: parseResult.orders.map((o) => o.rowIndex),
-          })
-        : null
+    const exportConfig = (() => {
+      try {
+        const json: unknown = JSON.parse(dbTemplate.exportConfig)
+        const parsed = exportConfigSchema.safeParse(json)
+        if (!parsed.success) {
+          return null
+        }
+        return parsed.data
+      } catch {
+        return null
+      }
+    })()
+
+    if (!exportConfig) {
+      return NextResponse.json({ error: '다운로드 템플릿 형식이 올바르지 않아요' }, { status: 500 })
+    }
+
+    const buffer = await file.arrayBuffer()
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(buffer)
+    const worksheet = workbook.worksheets[0]
+
+    if (!worksheet) {
+      await db.insert(upload).values({
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: 'shopping_mall',
+        shoppingMallId: mallId,
+        totalOrders: 0,
+        processedOrders: 0,
+        errorOrders: 1,
+        status: 'error',
+        meta: {
+          v: 1,
+          kind: 'shopping_mall_upload_meta',
+          mallName: mallConfig.displayName,
+          summary: { totalAmount: 0, totalCost: 0, estimatedMargin: null },
+          errorSamples: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
+          autoCreatedManufacturers: [],
+        } satisfies ShoppingMallUploadMetaV1,
+      })
+
+      return NextResponse.json({ error: '워크시트를 찾을 수 없어요' }, { status: 400 })
+    }
+
+    const parseResult = parseShoppingMallWorksheet(worksheet, mallConfig)
+
+    const fatalError = parseResult.errors.find((err) => err.row === 0)
+    if (fatalError) {
+      await db.insert(upload).values({
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: 'shopping_mall',
+        shoppingMallId: mallId,
+        totalOrders: 0,
+        processedOrders: 0,
+        errorOrders: 1,
+        status: 'error',
+        meta: {
+          v: 1,
+          kind: 'shopping_mall_upload_meta',
+          mallName: mallConfig.displayName,
+          summary: { totalAmount: 0, totalCost: 0, estimatedMargin: null },
+          errorSamples: [{ row: 0, message: fatalError.message }],
+          autoCreatedManufacturers: [],
+        } satisfies ShoppingMallUploadMetaV1,
+      })
+
+      return NextResponse.json({ error: fatalError.message }, { status: 400 })
+    }
+
+    const rowErrors = parseResult.errors.filter((err) => err.row > 0)
+    const processedOrders = parseResult.orders.length
+    const errorOrders = rowErrors.length
+    const totalOrders = processedOrders + errorOrders
 
     const [allManufacturers, allProducts, allOptionMappings] = await Promise.all([
       db.select({ id: manufacturer.id, name: manufacturer.name }).from(manufacturer),
@@ -141,7 +220,10 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
 
     const lookupMaps = buildLookupMaps(allManufacturers, allProducts, allOptionMappings)
 
-    const { insertedCount, uploadId, autoCreatedManufacturers } = await db.transaction(async (tx) => {
+    const summary = calculateUploadSummary(parseResult.orders)
+    const errorSamples = toUploadErrorSamples(rowErrors)
+
+    const { uploadRecord } = await db.transaction(async (tx) => {
       const [uploadRecord] = await tx
         .insert(upload)
         .values({
@@ -149,11 +231,11 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
           fileSize: file.size,
           fileType: 'shopping_mall',
           shoppingMallId: mallId,
-          sourceSnapshot: sourceSnapshot ? JSON.stringify(sourceSnapshot) : null,
-          totalOrders: parseResult.totalRows - mallConfig.headerRow,
-          errorOrders: parseResult.errors.length,
+          totalOrders,
           processedOrders: 0,
+          errorOrders: 0,
           status: 'processing',
+          meta: null,
         })
         .returning()
 
@@ -176,78 +258,56 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
         displayName: mallConfig.displayName,
       })
 
-      if (orderValues.length === 0) {
-        await tx.update(upload).set({ status: 'completed', processedOrders: 0 }).where(eq(upload.id, uploadRecord.id))
-        return { insertedCount: 0, uploadId: uploadRecord.id, autoCreatedManufacturers: createdManufacturerNames }
+      if (orderValues.length > 0) {
+        await autoCreateProducts({ orderValues, tx })
       }
 
-      await autoCreateProducts({ orderValues, tx })
-
-      // NOTE: 대량 업로드에서 Drizzle 단일 INSERT 쿼리 생성이 스택오버/파라미터 제한에 걸릴 수 있어요.
-      // 그래서 안전한 크기로 쪼개서 INSERT 해요.
-      const CHUNK_SIZE = 1_800
-      for (let start = 0; start < orderValues.length; start += CHUNK_SIZE) {
-        const chunk = orderValues.slice(start, start + CHUNK_SIZE)
-        await tx.insert(order).values(chunk).onConflictDoNothing({ target: order.sabangnetOrderNumber })
+      const meta: ShoppingMallUploadMetaV1 = {
+        v: 1,
+        kind: 'shopping_mall_upload_meta',
+        mallName: mallConfig.displayName,
+        summary,
+        errorSamples,
+        autoCreatedManufacturers: createdManufacturerNames,
       }
-
-      const [{ insertedCount }] = await tx
-        .select({ insertedCount: count() })
-        .from(order)
-        .where(eq(order.uploadId, uploadRecord.id))
 
       await tx
         .update(upload)
-        .set({ status: 'completed', processedOrders: insertedCount })
+        .set({
+          status: 'completed',
+          processedOrders,
+          errorOrders,
+          meta,
+        })
         .where(eq(upload.id, uploadRecord.id))
 
-      return {
-        insertedCount,
-        uploadId: uploadRecord.id,
-        autoCreatedManufacturers: createdManufacturerNames,
-      }
+      return { uploadRecord }
     })
 
-    const duplicateCount = parseResult.orders.length - insertedCount
-    const manufacturerNameById = new Map<number, string>()
+    const downloadName = encodeURIComponent(
+      `${mallConfig.displayName}_${formatDateForFileName(uploadRecord.uploadedAt)}.xlsx`,
+    )
 
-    for (const mfr of lookupMaps.manufacturerMap.values()) {
-      manufacturerNameById.set(mfr.id, mfr.name)
-    }
-
-    const ordersForBreakdown = parseResult.orders.map((o) => {
-      const matchedManufacturerId = matchManufacturerId(o, lookupMaps)
-      if (matchedManufacturerId == null) {
-        return o
-      }
-      const resolvedName = manufacturerNameById.get(matchedManufacturerId)
-      return resolvedName ? { ...o, manufacturer: resolvedName } : o
+    const stream = new PassThrough()
+    const response = new Response(Readable.toWeb(stream) as unknown as ReadableStream<Uint8Array>, {
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${downloadName}"`,
+        'X-Upload-Id': String(uploadRecord.id),
+      },
     })
 
-    const groupedOrders = groupOrdersByManufacturer(ordersForBreakdown)
-    const manufacturerBreakdown = calculateManufacturerBreakdown(groupedOrders)
-    const summary = calculateSummary(manufacturerBreakdown)
+    void writeShoppingMallExportToStream({
+      stream,
+      worksheet,
+      exportConfig,
+      headerRow: mallConfig.headerRow,
+      dataStartRow: mallConfig.dataStartRow,
+      validRowNumbers: parseResult.orders.map((o) => o.rowIndex),
+      errors: rowErrors,
+    })
 
-    const errors: UploadError[] = parseResult.errors.map((err) => ({
-      row: err.row,
-      message: err.message,
-      productCode: err.data?.productCode as string | undefined,
-      productName: err.data?.productName as string | undefined,
-    }))
-
-    const result: UploadResult = {
-      mallName: mallConfig.displayName,
-      uploadId,
-      processedOrders: insertedCount,
-      duplicateOrders: duplicateCount,
-      errorOrders: parseResult.errors.length,
-      manufacturerBreakdown,
-      errors,
-      summary,
-      autoCreatedManufacturers,
-    }
-
-    return NextResponse.json(result)
+    return response
   } catch (error) {
     console.error(error)
     const errorMessage = error instanceof Error ? error.message : '쇼핑몰 파일을 업로드하지 못했어요'
@@ -255,55 +315,132 @@ export async function POST(request: Request): Promise<NextResponse<UploadResult 
   }
 }
 
-async function createSourceSnapshot(params: {
-  buffer: ArrayBuffer
-  dataStartRow: number
-  headerRow: number
-  validRowNumbers: number[]
-}): Promise<ShoppingMallUploadSourceSnapshot> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(params.buffer)
-  const worksheet = workbook.worksheets[0]
+function calculateUploadSummary(orders: ParsedOrder[]): UploadSummary {
+  let totalAmount = 0
+  let totalCost = 0
 
-  if (!worksheet) {
-    throw new Error('워크시트를 찾을 수 없어요')
+  for (const o of orders) {
+    totalAmount += Number.isFinite(o.paymentAmount) ? o.paymentAmount : 0
+    totalCost += Number.isFinite(o.cost) ? o.cost : 0
   }
 
-  const columnCount = worksheet.columnCount
-  const totalRows = worksheet.rowCount
-  const headerRow = Math.max(1, params.headerRow)
-  const dataStartRow = Math.max(1, params.dataStartRow)
-
-  const prefixRows: string[][] = []
-  for (let rowNumber = 1; rowNumber < headerRow; rowNumber++) {
-    prefixRows.push(readRowCells(worksheet.getRow(rowNumber), columnCount))
-  }
-
-  const headerCells = readRowCells(worksheet.getRow(headerRow), columnCount)
-
-  const dataRows = params.validRowNumbers
-    .filter((rowNumber) => rowNumber >= dataStartRow && rowNumber <= totalRows)
-    .map((rowNumber) => ({
-      rowNumber,
-      cells: readRowCells(worksheet.getRow(rowNumber), columnCount),
-    }))
-
-  return {
-    sheetName: worksheet.name,
-    totalRows,
-    columnCount,
-    headerRow,
-    dataStartRow,
-    prefixRows,
-    headerCells,
-    dataRows,
-  }
+  const estimatedMargin = totalCost > 0 ? totalAmount - totalCost : null
+  return { totalAmount, totalCost, estimatedMargin }
 }
 
-function readRowCells(row: ExcelJS.Row, columnCount: number): string[] {
+function getCellValueFromSource(source: ExportConfig['columns'][number]['source'], rowCells: string[]): string {
+  if (source.type === 'const') {
+    return source.value
+  }
+
+  const idx = source.columnIndex - 1
+  return rowCells[idx] ?? ''
+}
+
+function getMaxReferencedInputColumnIndex(exportConfig: ExportConfig): number {
+  let maxIndex = 0
+  for (const col of exportConfig.columns) {
+    if (col.source.type === 'input') {
+      maxIndex = Math.max(maxIndex, col.source.columnIndex)
+    }
+  }
+  return Math.max(1, maxIndex)
+}
+
+function readRowCells(row: ExcelJS.Row, maxColumnIndex: number): string[] {
   const cells: string[] = []
-  for (let col = 1; col <= columnCount; col++) {
+  for (let col = 1; col <= maxColumnIndex; col++) {
     cells.push(getCellValue(row.getCell(col)))
   }
   return cells
+}
+
+function toUploadErrorSamples(errors: ParseError[]): UploadError[] {
+  return errors.slice(0, ERROR_SAMPLE_LIMIT).map((err) => ({
+    row: err.row,
+    message: err.message,
+    productCode: typeof err.data?.productCode === 'string' ? err.data.productCode : undefined,
+    productName: typeof err.data?.productName === 'string' ? err.data.productName : undefined,
+  }))
+}
+
+async function writeShoppingMallExportToStream(params: {
+  dataStartRow: number
+  errors: ParseError[]
+  exportConfig: ExportConfig
+  headerRow: number
+  stream: PassThrough
+  validRowNumbers: number[]
+  worksheet: ExcelJS.Worksheet
+}): Promise<void> {
+  try {
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: params.stream,
+      useSharedStrings: false,
+      useStyles: false,
+    })
+
+    workbook.creator = '(주)다온에프앤씨'
+    workbook.created = new Date()
+
+    const maxInputColumnIndex = getMaxReferencedInputColumnIndex(params.exportConfig)
+    const safeHeaderRow = Math.max(1, params.headerRow)
+    const safeDataStartRow = Math.max(1, params.dataStartRow)
+    const outputColumns = params.exportConfig.columns
+    const copyPrefixRows = params.exportConfig.copyPrefixRows ?? true
+    const sheetName = params.worksheet.name || '변환결과'
+
+    const worksheet = workbook.addWorksheet(sheetName)
+
+    if (copyPrefixRows) {
+      for (let rowNumber = 1; rowNumber < safeHeaderRow; rowNumber++) {
+        const sourceCells = readRowCells(params.worksheet.getRow(rowNumber), maxInputColumnIndex)
+        const rowValues = outputColumns.map((col) => getCellValueFromSource(col.source, sourceCells))
+        worksheet.addRow(rowValues).commit()
+      }
+    }
+
+    const headerCells = readRowCells(params.worksheet.getRow(safeHeaderRow), maxInputColumnIndex)
+    const headerValues = outputColumns.map((col) => {
+      if (col.header !== undefined) {
+        return col.header
+      }
+      if (col.source.type === 'input') {
+        return headerCells[col.source.columnIndex - 1] ?? ''
+      }
+      return ''
+    })
+    const headerRow = worksheet.addRow(headerValues)
+    headerRow.font = { bold: true }
+    headerRow.commit()
+
+    const totalRows = params.worksheet.rowCount
+    for (const rowNumber of params.validRowNumbers) {
+      if (rowNumber < safeDataStartRow || rowNumber > totalRows) {
+        continue
+      }
+      const sourceCells = readRowCells(params.worksheet.getRow(rowNumber), maxInputColumnIndex)
+      const rowValues = outputColumns.map((col) => getCellValueFromSource(col.source, sourceCells))
+      worksheet.addRow(rowValues).commit()
+    }
+
+    const rowErrors = params.errors.filter((err) => err.row > 0)
+    if (rowErrors.length > 0) {
+      const errorSheet = workbook.addWorksheet('오류')
+      const errorHeaderRow = errorSheet.addRow(['행', '메시지'])
+      errorHeaderRow.font = { bold: true }
+      errorHeaderRow.commit()
+
+      for (const err of rowErrors) {
+        errorSheet.addRow([err.row, err.message]).commit()
+      }
+    }
+
+    await workbook.commit()
+    params.stream.end()
+  } catch (error) {
+    console.error('Shopping mall export error:', error)
+    const err = error instanceof Error ? error : new Error('쇼핑몰 엑셀 생성 중 오류가 발생했어요')
+    params.stream.destroy(err)
+  }
 }

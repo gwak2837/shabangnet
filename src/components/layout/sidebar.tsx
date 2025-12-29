@@ -29,7 +29,7 @@ const mainNavItems = [
   },
   {
     title: '주문 업로드',
-    href: '/upload',
+    href: '/upload/sabangnet',
     icon: Upload,
   },
   {

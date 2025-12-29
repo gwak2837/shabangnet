@@ -2,12 +2,9 @@ import { expect, test } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
-import { FLEXIBLE_COMPARE_OPTIONS_SHOPPING_MALL_BASE, getShoppingMallGoldenCases } from '../common/fixtures'
-import { flexibleCompareExcelFiles, formatFlexibleCompareResult } from '../util/excel'
+import { getShoppingMallGoldenCases } from '../common/fixtures'
 
 const DOWNLOADS_DIR = path.join(__dirname, '../test-results/downloads')
-const UPDATE_GOLDEN = process.env.E2E_UPDATE_GOLDEN === 'true'
-
 function pickHistoryCase() {
   const cases = getShoppingMallGoldenCases()
   const preferred = cases.find(
@@ -23,7 +20,7 @@ test.beforeAll(async () => {
 })
 
 test.describe('업로드 기록', () => {
-  test('쇼핑몰 업로드 기록에서 엑셀 다운로드가 동작해요', async ({ page }) => {
+  test('쇼핑몰 업로드 기록이 남아요 (재다운로드는 없어요)', async ({ page }) => {
     test.setTimeout(90_000)
 
     const testCase = pickHistoryCase()
@@ -39,11 +36,15 @@ test.describe('업로드 기록', () => {
       return res.url().includes('/api/upload/shopping-mall') && res.request().method() === 'POST'
     })
 
+    const downloadPromise = page.waitForEvent('download', { timeout: 60_000 })
     await page.locator('input[type="file"]').setInputFiles(testCase.inputFile)
 
     const uploadResponse = await uploadResponsePromise
     expect(uploadResponse.ok()).toBe(true)
-    await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 60_000 })
+
+    // 업로드 후 즉시 다운로드가 시작돼요.
+    const download = await downloadPromise
+    await download.saveAs(path.join(DOWNLOADS_DIR, `history_setup_${testCase.fileName}`))
 
     // 2) 업로드 기록으로 이동 → 쇼핑몰 필터 적용
     const initialHistoryResponsePromise = page.waitForResponse((res) => {
@@ -67,32 +68,8 @@ test.describe('업로드 기록', () => {
       .first()
     await expect(row).toBeVisible({ timeout: 30_000 })
 
-    // 3) 해당 row의 다운로드 버튼 클릭 → 다운로드 저장
-    const actualPath = path.join(DOWNLOADS_DIR, `history_${testCase.fileName}`)
-    const downloadPromise = page.waitForEvent('download', { timeout: 60_000 })
-    await row.getByRole('button', { name: '엑셀 다운로드' }).click()
-    const download = await downloadPromise
-    await download.saveAs(actualPath)
-
-    expect(fs.statSync(actualPath).size).toBeGreaterThan(0)
-
-    if (UPDATE_GOLDEN) {
-      fs.copyFileSync(actualPath, testCase.expectedFile)
-      return
-    }
-
-    const compareResult = await flexibleCompareExcelFiles(testCase.expectedFile, actualPath, {
-      ...FLEXIBLE_COMPARE_OPTIONS_SHOPPING_MALL_BASE,
-      headerRow: testCase.headerRow,
-    })
-
-    if (!compareResult.isMatch) {
-      console.log(formatFlexibleCompareResult(compareResult))
-    }
-
-    expect(
-      compareResult.isMatch,
-      `업로드 기록 다운로드 Golden 불일치: ${testCase.fileName}\n${compareResult.summary}`,
-    ).toBe(true)
+    // 쇼핑몰 업로드는 재다운로드 기능이 없어요.
+    await expect(page.getByRole('columnheader', { name: '다운로드' })).toHaveCount(0)
+    await expect(row.getByRole('button', { name: '엑셀 다운로드' })).toHaveCount(0)
   })
 })

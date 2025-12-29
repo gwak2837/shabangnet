@@ -1,10 +1,8 @@
 'use client'
 
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, FileSpreadsheet, Loader2, Store } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, FileSpreadsheet, Loader2, Store } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
-import { downloadShoppingMallExcel } from '@/app/upload/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -202,13 +200,10 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
                   sortOrder={sortOrder}
                 />
                 <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
-                  처리
+                  저장
                 </TableHead>
                 <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">
                   크기
-                </TableHead>
-                <TableHead className="w-20 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
-                  다운로드
                 </TableHead>
                 <SortableHeader
                   className="w-36 text-right"
@@ -223,7 +218,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 9 : 8}>
                     <Loader2 className="mr-2 inline-block h-5 w-5 animate-spin align-middle" />
                     불러오는 중...
                   </TableCell>
@@ -242,7 +237,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
                 </>
               ) : (
                 <TableRow>
-                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                  <TableCell className="h-32 text-center text-slate-500" colSpan={isAdmin ? 9 : 8}>
                     업로드 기록이 없어요.
                   </TableCell>
                 </TableRow>
@@ -250,7 +245,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
 
               {isFetchingNextPage ? (
                 <TableRow>
-                  <TableCell className="py-4 text-center text-slate-500" colSpan={isAdmin ? 10 : 9}>
+                  <TableCell className="py-4 text-center text-slate-500" colSpan={isAdmin ? 9 : 8}>
                     <Loader2 className="mr-2 inline-block h-5 w-5 animate-spin align-middle text-slate-400" />더
                     불러오는 중...
                   </TableCell>
@@ -258,7 +253,7 @@ export function UploadHistoryTable({ initialFilters }: UploadHistoryTableProps) 
               ) : null}
 
               <TableRow>
-                <TableCell className="p-0" colSpan={isAdmin ? 10 : 9}>
+                <TableCell className="p-0" colSpan={isAdmin ? 9 : 8}>
                   <InfiniteScrollSentinel
                     hasMore={hasNextPage}
                     isLoading={isFetchingNextPage}
@@ -314,27 +309,6 @@ function UploadHistoryRow({
   item: UploadHistoryItem
   onSelectItem: (id: number, checked: boolean) => void
 }) {
-  const [isDownloading, setIsDownloading] = useState(false)
-
-  async function handleDownload(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (item.fileType !== 'shopping_mall') {
-      return
-    }
-
-    setIsDownloading(true)
-
-    try {
-      await downloadShoppingMallExcel(item.id, item.shoppingMallName ?? undefined)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '다운로드 중 오류가 발생했어요')
-    } finally {
-      setIsDownloading(false)
-    }
-  }
-
   return (
     <TableRow
       aria-selected={isSelected}
@@ -389,24 +363,14 @@ function UploadHistoryRow({
           <span className="text-slate-400">0건</span>
         )}
       </TableCell>
-      <TableCell className="w-20 text-right text-emerald-600 tabular-nums">{item.currentOrderCount}건</TableCell>
-      <TableCell className="w-20 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</TableCell>
-      <TableCell className="w-20 text-center">
-        {item.fileType === 'shopping_mall' ? (
-          <Button
-            aria-label="엑셀 다운로드"
-            disabled={isDownloading}
-            onClick={handleDownload}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
-          </Button>
+      <TableCell className="w-20 text-right tabular-nums">
+        {item.fileType === 'sabangnet' ? (
+          <span className="text-emerald-600">{item.currentOrderCount}건</span>
         ) : (
           <span className="text-slate-300">-</span>
         )}
       </TableCell>
+      <TableCell className="w-20 text-right text-sm text-slate-500">{formatFileSize(item.fileSize)}</TableCell>
       <TableCell className="w-36 text-right text-sm text-slate-500" title={formatDateTime(item.uploadedAt)}>
         {formatRelativeTime(item.uploadedAt)}
       </TableCell>

@@ -33,17 +33,14 @@ test.describe('주문 업로드 / 쇼핑몰', () => {
         return res.url().includes('/api/upload/shopping-mall') && res.request().method() === 'POST'
       })
 
+      const downloadPromise = page.waitForEvent('download', { timeout: 60_000 })
       await page.locator('input[type="file"]').setInputFiles(testCase.inputFile)
 
       const uploadResponse = await uploadResponsePromise
       expect(uploadResponse.ok()).toBe(true)
 
-      await expect(page.getByText('업로드 결과')).toBeVisible({ timeout: 60_000 })
-
-      // 엑셀 다운로드 (download 이벤트)
+      // 업로드 후 즉시 다운로드가 시작돼요 (download 이벤트)
       const actualPath = path.join(DOWNLOADS_DIR, testCase.fileName)
-      const downloadPromise = page.waitForEvent('download', { timeout: 60_000 })
-      await page.getByRole('button', { name: '엑셀 다운로드', exact: true }).click()
       const download = await downloadPromise
       await download.saveAs(actualPath)
 
