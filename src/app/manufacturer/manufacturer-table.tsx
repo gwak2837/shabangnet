@@ -17,7 +17,7 @@ import { authClient } from '@/lib/auth-client'
 import { formatRelativeTime } from '@/utils/format/date'
 import { formatDateTime } from '@/utils/format/number'
 
-import { ManufacturerCsvDialog } from './manufacturer-csv-dialog'
+import { ManufacturerExcelDialog } from './manufacturer-excel-dialog'
 
 interface ManufacturerTableProps {
   fetchNextPage?: () => void
@@ -43,7 +43,7 @@ export function ManufacturerTable({
   const { data: session } = authClient.useSession()
   const isAdmin = session?.user?.isAdmin ?? false
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
+  const [isExcelDialogOpen, setIsExcelDialogOpen] = useState(false)
 
   const visibleIds = useMemo(() => manufacturers.map((m) => m.id), [manufacturers])
   const visibleIdSet = useMemo(() => new Set(visibleIds), [visibleIds])
@@ -54,6 +54,14 @@ export function ManufacturerTable({
   const effectiveSelectedIdSet = useMemo(() => new Set(effectiveSelectedIds), [effectiveSelectedIds])
   const isAllSelected = visibleIds.length > 0 && visibleIds.every((id) => effectiveSelectedIdSet.has(id))
   const isSomeSelected = visibleIds.some((id) => effectiveSelectedIdSet.has(id)) && !isAllSelected
+  const manufacturerExcelHref = useMemo(() => {
+    const sp = new URLSearchParams()
+    if (searchQuery) {
+      sp.set('search', searchQuery)
+    }
+    const qs = sp.toString()
+    return qs ? `/api/manufacturers/excel?${qs}` : '/api/manufacturers/excel'
+  }, [searchQuery])
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
@@ -96,14 +104,14 @@ export function ManufacturerTable({
                 <DeleteManufacturersDialog onSuccess={handleDeleteSuccess} selectedIds={effectiveSelectedIds} />
               )}
               <Button asChild className="gap-2" variant="outline">
-                <a href="/api/manufacturers/csv">
+                <a href={manufacturerExcelHref}>
                   <Download className="h-4 w-4" />
-                  CSV 다운로드
+                  엑셀 다운로드
                 </a>
               </Button>
-              <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
+              <Button className="gap-2" onClick={() => setIsExcelDialogOpen(true)}>
                 <Upload className="h-4 w-4" />
-                CSV 업로드
+                엑셀 업로드
               </Button>
             </div>
           </div>
@@ -242,7 +250,7 @@ export function ManufacturerTable({
         </CardContent>
       </Card>
 
-      <ManufacturerCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
+      <ManufacturerExcelDialog onOpenChange={setIsExcelDialogOpen} open={isExcelDialogOpen} />
     </>
   )
 }

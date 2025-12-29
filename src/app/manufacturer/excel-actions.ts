@@ -3,36 +3,45 @@
 import { eq } from 'drizzle-orm'
 
 import type {
-  ManufacturerCsvImportResult,
-  ManufacturerCsvRowError,
-} from '@/components/manufacturer/manufacturer-csv.types'
+  ManufacturerExcelImportResult,
+  ManufacturerExcelRowError,
+} from '@/components/manufacturer/manufacturer-excel.types'
 
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
-import { parseCsv } from '@/utils/csv'
+import { readXlsxRowsFromFile } from '@/lib/excel/read'
 
 type CanonicalField = 'contactName' | 'emails' | 'name' | 'phone'
 
-export async function importManufacturersCsv(
-  _prevState: ManufacturerCsvImportResult | null,
+export async function importManufacturersExcel(
+  _prevState: ManufacturerExcelImportResult | null,
   formData: FormData,
-): Promise<ManufacturerCsvImportResult> {
+): Promise<ManufacturerExcelImportResult> {
   try {
     const fileValue = formData.get('file')
     if (!isFileValue(fileValue)) {
-      return { error: 'CSV 파일을 선택해 주세요.' }
+      return { error: '엑셀 파일을 선택해 주세요.' }
     }
 
     if (fileValue.size === 0) {
       return { error: '빈 파일이에요.' }
     }
 
-    const rawText = await fileValue.text()
-    const rows = parseCsv(rawText)
+    if (!fileValue.name.toLowerCase().endsWith('.xlsx')) {
+      return { error: '엑셀(.xlsx) 파일만 업로드할 수 있어요.' }
+    }
+
+    let rows: string[][]
+    try {
+      rows = await readXlsxRowsFromFile(fileValue)
+    } catch (err) {
+      console.error('importManufacturersExcel read error:', err)
+      return { error: '엑셀 파일을 읽지 못했어요. 파일을 확인해 주세요.' }
+    }
 
     const headerRowIndex = rows.findIndex((row) => row.some((cell) => cell.trim() !== ''))
     if (headerRowIndex < 0) {
-      return { error: 'CSV에 헤더가 없어요.' }
+      return { error: '엑셀 파일에 헤더가 없어요.' }
     }
 
     const headerRow = rows[headerRowIndex]!.map(normalizeHeaderCell)
@@ -55,15 +64,27 @@ export async function importManufacturersCsv(
       .select({
         id: manufacturer.id,
         name: manufacturer.name,
+        contactName: manufacturer.contactName,
+        emails: manufacturer.emails,
+        phone: manufacturer.phone,
       })
       .from(manufacturer)
 
-    const existingByName = new Map<string, number>()
+    const existingByName = new Map<
+      string,
+      { contactName: string | null; emails: string[]; id: number; name: string; phone: string | null }
+    >()
     for (const m of existingRows) {
-      existingByName.set(normalizeName(m.name), m.id)
+      existingByName.set(normalizeName(m.name), {
+        id: m.id,
+        name: m.name,
+        contactName: m.contactName ?? null,
+        emails: Array.isArray(m.emails) ? m.emails : [],
+        phone: m.phone ?? null,
+      })
     }
 
-    const errors: ManufacturerCsvRowError[] = []
+    const errors: ManufacturerExcelRowError[] = []
     const seenInputNames = new Set<string>()
 
     let totalRows = 0
@@ -92,7 +113,7 @@ export async function importManufacturersCsv(
 
       if (seenInputNames.has(name)) {
         skipped += 1
-        errors.push({ row: rowNumber, name, message: 'CSV 안에서 제조사명이 중복돼요.' })
+        errors.push({ row: rowNumber, name, message: '엑셀 안에서 제조사명이 중복돼요.' })
         continue
       }
       seenInputNames.add(name)
@@ -111,26 +132,44 @@ export async function importManufacturersCsv(
         }
       }
 
-      const existingId = existingByName.get(name)
+      const existing = existingByName.get(name)
 
-      if (existingId != null) {
-        const set: Partial<typeof manufacturer.$inferInsert> = {
-          updatedAt: new Date(),
+      if (existing) {
+        const set: Partial<typeof manufacturer.$inferInsert> = {}
+
+        if (contactName && contactName !== (existing.contactName ?? '')) {
+          set.contactName = contactName
         }
 
-        // 빈 칸은 기존 값 유지: 값이 있을 때만 업데이트해요.
-        if (contactName) set.contactName = contactName
-        if (emails) set.emails = emails
-        if (phone) set.phone = phone
+        if (emails) {
+          const normalizedExisting = normalizeEmailList(existing.emails)
+          const normalizedNext = normalizeEmailList(emails)
+          if (!isSameStringArray(normalizedExisting, normalizedNext)) {
+            set.emails = normalizedNext
+          }
+        }
 
-        const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
-        if (changeKeys.length === 0) {
+        if (phone && phone !== (existing.phone ?? '')) {
+          set.phone = phone
+        }
+
+        if (Object.keys(set).length === 0) {
           skipped += 1
           continue
         }
 
-        await db.update(manufacturer).set(set).where(eq(manufacturer.id, existingId))
+        set.updatedAt = new Date()
+
+        await db.update(manufacturer).set(set).where(eq(manufacturer.id, existing.id))
         updated += 1
+
+        existingByName.set(name, {
+          ...existing,
+          contactName: set.contactName ?? existing.contactName,
+          emails: set.emails ?? existing.emails,
+          phone: set.phone ?? existing.phone,
+        })
+
         continue
       }
 
@@ -147,13 +186,19 @@ export async function importManufacturersCsv(
           .returning({ id: manufacturer.id })
 
         if (inserted?.id != null) {
-          existingByName.set(name, inserted.id)
+          existingByName.set(name, {
+            id: inserted.id,
+            name,
+            contactName: contactName ?? null,
+            emails: emails ?? [],
+            phone: phone ?? null,
+          })
         }
 
         created += 1
       } catch (err) {
         // Unique(name) 충돌 등으로 insert가 실패하면, 존재하는지 확인 후 update로 시도해요.
-        console.error('importManufacturersCsv insert error:', err)
+        console.error('importManufacturersExcel insert error:', err)
 
         const [found] = await db.select({ id: manufacturer.id }).from(manufacturer).where(eq(manufacturer.name, name))
         if (!found) {
@@ -162,20 +207,39 @@ export async function importManufacturersCsv(
           continue
         }
 
-        existingByName.set(name, found.id)
-
-        const set: Partial<typeof manufacturer.$inferInsert> = {
-          updatedAt: new Date(),
+        const fallbackExisting = existingByName.get(name) ?? {
+          id: found.id,
+          name,
+          contactName: null,
+          emails: [],
+          phone: null,
         }
-        if (contactName) set.contactName = contactName
-        if (emails) set.emails = emails
-        if (phone) set.phone = phone
+        existingByName.set(name, fallbackExisting)
 
-        const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
-        if (changeKeys.length === 0) {
+        const set: Partial<typeof manufacturer.$inferInsert> = {}
+
+        if (contactName && contactName !== (fallbackExisting.contactName ?? '')) {
+          set.contactName = contactName
+        }
+
+        if (emails) {
+          const normalizedExisting = normalizeEmailList(fallbackExisting.emails)
+          const normalizedNext = normalizeEmailList(emails)
+          if (!isSameStringArray(normalizedExisting, normalizedNext)) {
+            set.emails = normalizedNext
+          }
+        }
+
+        if (phone && phone !== (fallbackExisting.phone ?? '')) {
+          set.phone = phone
+        }
+
+        if (Object.keys(set).length === 0) {
           skipped += 1
           continue
         }
+
+        set.updatedAt = new Date()
 
         await db.update(manufacturer).set(set).where(eq(manufacturer.id, found.id))
         updated += 1
@@ -191,8 +255,8 @@ export async function importManufacturersCsv(
       errors,
     }
   } catch (err) {
-    console.error('importManufacturersCsv:', err)
-    return { error: 'CSV를 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
+    console.error('importManufacturersExcel:', err)
+    return { error: '엑셀을 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
   }
 }
 
@@ -224,8 +288,31 @@ function isFileValue(value: FormDataEntryValue | null): value is File {
   )
 }
 
+function isSameStringArray(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
+}
+
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function normalizeEmailList(emails: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const raw of emails) {
+    const trimmed = raw.trim().toLowerCase()
+    if (!trimmed) continue
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
+    out.push(trimmed)
+  }
+
+  return out
 }
 
 function normalizeHeaderCell(value: string): string {
@@ -262,3 +349,5 @@ function parseEmails(value: string | undefined): string[] | undefined {
 
   return out
 }
+
+

@@ -3,10 +3,7 @@
 import { AlertTriangle, Loader2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
-import type { ManufacturerCsvImportResult } from '@/components/manufacturer/manufacturer-csv.types'
-
 import { queryKeys } from '@/common/constants/query-keys'
-import { MANUFACTURER_CSV_HEADER } from '@/components/manufacturer/manufacturer-csv.types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,19 +16,22 @@ import {
 import { Input } from '@/components/ui/input'
 import { useFormAction } from '@/hooks/use-server-action'
 
-import { importManufacturersCsv } from './csv-actions'
+import type { ProductExcelImportResult } from './product-excel.types'
 
-interface ManufacturerCsvDialogProps {
+import { importProductsExcel } from './excel-actions'
+import { PRODUCT_EXCEL_HEADER } from './product-excel.types'
+
+interface ProductExcelDialogProps {
   onOpenChange: (open: boolean) => void
   open: boolean
 }
 
-export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDialogProps) {
-  const [state, formAction, isPending] = useFormAction<ManufacturerCsvImportResult | null, FormData>(
-    importManufacturersCsv,
+export function ProductExcelDialog({ open, onOpenChange }: ProductExcelDialogProps) {
+  const [state, formAction, isPending] = useFormAction<ProductExcelImportResult | null, FormData>(
+    importProductsExcel,
     null,
     {
-      invalidateKeys: [queryKeys.manufacturers.all],
+      invalidateKeys: [queryKeys.products.all, queryKeys.orders.batches, queryKeys.orders.matching],
       onError: (error) => toast.error(error),
       onSuccess: (result) => {
         if (!result || 'error' in result) {
@@ -39,12 +39,12 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
         }
 
         const parts = [
-          result.created ? `추가 ${result.created}곳` : null,
-          result.updated ? `수정 ${result.updated}곳` : null,
+          result.created ? `추가 ${result.created}개` : null,
+          result.updated ? `수정 ${result.updated}개` : null,
           result.skipped ? `건너뜀 ${result.skipped}행` : null,
         ].filter(Boolean)
 
-        toast.success(parts.length > 0 ? `CSV를 반영했어요 (${parts.join(' · ')})` : 'CSV를 반영했어요')
+        toast.success(parts.length > 0 ? `엑셀을 반영했어요 (${parts.join(' · ')})` : '엑셀을 반영했어요')
       },
     },
   )
@@ -58,8 +58,8 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
               <Upload className="h-5 w-5 text-slate-600" />
             </div>
             <div>
-              <DialogTitle>CSV 업로드</DialogTitle>
-              <DialogDescription>제조사명 기준으로 업데이트하고, 없으면 새로 추가해요.</DialogDescription>
+              <DialogTitle>엑셀 업로드</DialogTitle>
+              <DialogDescription>상품코드 기준으로 업데이트하고, 없으면 새로 추가해요.</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -67,29 +67,29 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
           <ul className="list-disc pl-5 space-y-1">
             <li>빈 칸은 기존 값을 그대로 유지해요.</li>
+            <li>제조사명은 제조사 관리에 등록된 이름과 일치해야 해요.</li>
             <li>잘못된 행은 건너뛰고, 나머지만 반영해요.</li>
-            <li>이메일은 여러 개면 쉼표(,)로 구분해 주세요.</li>
             <li className="break-all">
-              헤더 예시: <span className="font-mono">{MANUFACTURER_CSV_HEADER.join(',')}</span>
+              헤더 예시: <span className="font-mono">{PRODUCT_EXCEL_HEADER.join(' | ')}</span>
             </li>
           </ul>
         </div>
 
-        <form action={formAction} className="flex flex-col gap-3" encType="multipart/form-data">
+        <form action={formAction} className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-slate-900" htmlFor="manufacturer-csv">
-              CSV 파일
+            <label className="text-sm font-medium text-slate-900" htmlFor="product-excel">
+              엑셀 파일
             </label>
             <Input
-              accept=".csv,text/csv"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               aria-disabled={isPending}
               disabled={isPending}
-              id="manufacturer-csv"
+              id="product-excel"
               name="file"
               required
               type="file"
             />
-            <p className="text-xs text-slate-500">엑셀에서 저장할 때 “CSV UTF-8”로 저장하면 한글이 안전해요.</p>
+            <p className="text-xs text-slate-500">.xlsx 파일만 업로드할 수 있어요.</p>
           </div>
 
           {state && 'error' in state && (
@@ -103,8 +103,8 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm text-slate-700">
                   총 <span className="font-semibold text-slate-900">{state.totalRows}</span>행 중{' '}
-                  <span className="font-semibold text-slate-900">{state.created}</span>곳 추가,{' '}
-                  <span className="font-semibold text-slate-900">{state.updated}</span>곳 수정,{' '}
+                  <span className="font-semibold text-slate-900">{state.created}</span>개 추가,{' '}
+                  <span className="font-semibold text-slate-900">{state.updated}</span>개 수정,{' '}
                   <span className="font-semibold text-slate-900">{state.skipped}</span>행 건너뜀
                 </div>
                 {state.errors.length > 0 && (
@@ -119,15 +119,13 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
                 <div className="mt-3 max-h-48 overflow-y-auto rounded-md border border-amber-200 bg-amber-50/60 p-2">
                   <ul className="space-y-1 text-xs text-amber-900">
                     {state.errors.slice(0, 50).map((e) => (
-                      <li key={`${e.row}-${e.name ?? ''}-${e.message}`}>
-                        <span className="font-medium">[{e.row}행]</span> {e.name ? `${e.name}: ` : ''}
+                      <li key={`${e.row}-${e.productCode ?? ''}-${e.message}`}>
+                        <span className="font-medium">[{e.row}행]</span> {e.productCode ? `${e.productCode}: ` : ''}
                         {e.message}
                       </li>
                     ))}
                   </ul>
-                  {state.errors.length > 50 && (
-                    <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>
-                  )}
+                  {state.errors.length > 50 && <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>}
                 </div>
               )}
             </div>
@@ -147,3 +145,5 @@ export function ManufacturerCsvDialog({ open, onOpenChange }: ManufacturerCsvDia
     </Dialog>
   )
 }
+
+

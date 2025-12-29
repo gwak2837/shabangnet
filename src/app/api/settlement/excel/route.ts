@@ -1,14 +1,16 @@
+import type ExcelJS from 'exceljs'
+
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { createSimpleXlsxBuffer, sanitizeFileNamePart } from '@/app/api/util/excel'
 import { db } from '@/db/client'
 import { manufacturer } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
 import { auth } from '@/lib/auth'
 import { orderExcludedReasonSql, orderIsExcludedSql } from '@/services/order-exclusion'
-import { stringifyCsv } from '@/utils/csv'
 
 const periodTypeSchema = z.enum(['month', 'range']).default('month')
 
@@ -48,7 +50,7 @@ const queryParamsSchema = z
     }
   })
 
-const SETTLEMENT_CSV_HEADER = [
+const SETTLEMENT_EXCEL_HEADER = [
   '주문ID',
   '업로드ID',
   '제조사ID',
@@ -113,10 +115,7 @@ export async function GET(request: NextRequest) {
   const { startAt, endAt } = getDateRange({ periodType, month, startDate, endDate })
   const period = formatPeriod({ periodType, month, startDate, endDate })
 
-  const [mfr] = await db
-    .select({ name: manufacturer.name })
-    .from(manufacturer)
-    .where(eq(manufacturer.id, manufacturerId))
+  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, manufacturerId))
 
   if (!mfr) {
     return NextResponse.json({ error: '제조사를 찾을 수 없어요.' }, { status: 400 })
@@ -163,88 +162,83 @@ export async function GET(request: NextRequest) {
         excludedReason: orderExcludedReasonSql(order.fulfillmentType),
       })
       .from(order)
-      .where(
-        and(
-          eq(order.manufacturerId, manufacturerId),
-          eq(order.status, 'completed'),
-          gte(order.createdAt, startAt),
-          lte(order.createdAt, endAt),
-        ),
-      )
+      .where(and(eq(order.manufacturerId, manufacturerId), eq(order.status, 'completed'), gte(order.createdAt, startAt), lte(order.createdAt, endAt)))
       .orderBy(desc(order.createdAt), desc(order.id))
 
     const summary = await getSettlementSummary({ manufacturerId, startAt, endAt })
 
-    const csvRows: string[][] = [
-      Array.from(SETTLEMENT_CSV_HEADER),
-      ...rows.map((r) => {
-        const quantity = r.quantity ?? 1
-        const cost = r.cost ?? 0
-        const shippingCost = r.shippingCost ?? 0
-        const totalCost = cost + shippingCost
-        const excludedReason = typeof r.excludedReason === 'string' ? r.excludedReason.trim() : ''
-        const excludedFromEmail = excludedReason.length > 0
+    const excelRows: ExcelJS.CellValue[][] = rows.map((r) => {
+      const quantity = r.quantity ?? 1
+      const cost = r.cost ?? 0
+      const shippingCost = r.shippingCost ?? 0
+      const totalCost = cost + shippingCost
+      const excludedReason = typeof r.excludedReason === 'string' ? r.excludedReason.trim() : ''
+      const excludedFromEmail = excludedReason.length > 0
 
-        return [
-          String(r.id),
-          r.uploadId != null ? String(r.uploadId) : '',
-          r.manufacturerId != null ? String(r.manufacturerId) : '',
-          r.manufacturerName ?? '',
-          r.sabangnetOrderNumber,
-          r.mallOrderNumber ?? '',
-          r.subOrderNumber ?? '',
-          r.shoppingMall ?? '',
-          r.productCode ?? '',
-          r.mallProductNumber ?? '',
-          r.productName ?? '',
-          r.optionName ?? '',
-          r.productAbbr ?? '',
-          r.modelNumber ?? '',
-          String(quantity),
-          String(r.paymentAmount ?? 0),
-          String(cost),
-          String(shippingCost),
-          String(totalCost),
-          r.orderName ?? '',
-          r.orderPhone ?? '',
-          r.orderMobile ?? '',
-          r.recipientName ?? '',
-          r.recipientPhone ?? '',
-          r.recipientMobile ?? '',
-          r.postalCode ?? '',
-          r.address ?? '',
-          r.memo ?? '',
-          r.logisticsNote ?? '',
-          r.courier ?? '',
-          r.trackingNumber ?? '',
-          r.fulfillmentType ?? '',
-          r.cjDate ? toIsoDate(r.cjDate) : '',
-          r.collectedAt ? r.collectedAt.toISOString() : '',
-          r.status ?? '',
-          r.createdAt.toISOString(),
-          excludedFromEmail ? 'Y' : '',
-          excludedFromEmail ? excludedReason : '',
-        ]
-      }),
-    ]
+      return [
+        String(r.id),
+        r.uploadId != null ? String(r.uploadId) : '',
+        r.manufacturerId != null ? String(r.manufacturerId) : '',
+        r.manufacturerName ?? '',
+        r.sabangnetOrderNumber,
+        r.mallOrderNumber ?? '',
+        r.subOrderNumber ?? '',
+        r.shoppingMall ?? '',
+        r.productCode ?? '',
+        r.mallProductNumber ?? '',
+        r.productName ?? '',
+        r.optionName ?? '',
+        r.productAbbr ?? '',
+        r.modelNumber ?? '',
+        quantity,
+        r.paymentAmount ?? 0,
+        cost,
+        shippingCost,
+        totalCost,
+        r.orderName ?? '',
+        r.orderPhone ?? '',
+        r.orderMobile ?? '',
+        r.recipientName ?? '',
+        r.recipientPhone ?? '',
+        r.recipientMobile ?? '',
+        r.postalCode ?? '',
+        r.address ?? '',
+        r.memo ?? '',
+        r.logisticsNote ?? '',
+        r.courier ?? '',
+        r.trackingNumber ?? '',
+        r.fulfillmentType ?? '',
+        r.cjDate ? toIsoDate(r.cjDate) : '',
+        r.collectedAt ? r.collectedAt.toISOString() : '',
+        r.status ?? '',
+        r.createdAt.toISOString(),
+        excludedFromEmail ? 'Y' : '',
+        excludedFromEmail ? excludedReason : '',
+      ]
+    })
 
     if (rows.length > 0) {
-      csvRows.push(buildSummaryRow({ manufacturerName: mfr.name, period, summary }))
+      excelRows.push(buildSummaryRow({ manufacturerName: mfr.name, period, summary }))
     }
 
-    const csvText = stringifyCsv(csvRows, { bom: true })
-    const date = new Date().toISOString().split('T')[0]
-    const safeManufacturerName = mfr.name.replace(/[\\/:*?\"<>|]/g, '_')
+    const body = await createSimpleXlsxBuffer({
+      sheetName: '정산',
+      header: Array.from(SETTLEMENT_EXCEL_HEADER),
+      rows: excelRows,
+    })
 
-    return new NextResponse(csvText, {
+    const date = new Date().toISOString().split('T')[0]?.replaceAll('-', '') ?? ''
+    const safeManufacturerName = sanitizeFileNamePart(mfr.name)
+
+    return new NextResponse(body, {
       headers: {
         'Cache-Control': 'private, no-store',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(`정산_${safeManufacturerName}_${date}.csv`)}"`,
-        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(`정산_${safeManufacturerName}_${date}.xlsx`)}"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
     })
   } catch (error) {
-    console.error('Failed to export settlement csv:', error)
+    console.error('Failed to export settlement excel:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -259,7 +253,7 @@ function buildSummaryRow(params: {
     totalQuantity: number
     totalShippingCost: number
   }
-}): string[] {
+}): ExcelJS.CellValue[] {
   const total = params.summary.totalCost + params.summary.totalShippingCost
 
   return [
@@ -277,11 +271,11 @@ function buildSummaryRow(params: {
     `총 ${params.summary.totalOrders}건`,
     '',
     '',
-    String(params.summary.totalQuantity),
+    params.summary.totalQuantity,
     '',
-    String(params.summary.totalCost),
-    String(params.summary.totalShippingCost),
-    String(total),
+    params.summary.totalCost,
+    params.summary.totalShippingCost,
+    total,
     '',
     '',
     '',
@@ -304,12 +298,7 @@ function buildSummaryRow(params: {
   ]
 }
 
-function formatPeriod(filters: {
-  endDate?: string
-  month?: string
-  periodType: 'month' | 'range'
-  startDate?: string
-}): string {
+function formatPeriod(filters: { endDate?: string; month?: string; periodType: 'month' | 'range'; startDate?: string }): string {
   if (filters.periodType === 'month' && filters.month) {
     const [year, month] = filters.month.split('-')
     return `${year}년 ${month}월`
@@ -353,14 +342,7 @@ async function getSettlementSummary(params: { endAt: Date; manufacturerId: numbe
       excludedOrderCount: sql<number>`coalesce(sum(case when ${orderIsExcludedSql(order.fulfillmentType)} then 1 else 0 end), 0)::int`,
     })
     .from(order)
-    .where(
-      and(
-        eq(order.manufacturerId, params.manufacturerId),
-        eq(order.status, 'completed'),
-        gte(order.createdAt, params.startAt),
-        lte(order.createdAt, params.endAt),
-      ),
-    )
+    .where(and(eq(order.manufacturerId, params.manufacturerId), eq(order.status, 'completed'), gte(order.createdAt, params.startAt), lte(order.createdAt, params.endAt)))
 
   return {
     totalOrders: totalOrders ?? 0,
@@ -374,3 +356,5 @@ async function getSettlementSummary(params: { endAt: Date; manufacturerId: numbe
 function toIsoDate(date: Date): string {
   return date.toISOString().split('T')[0] ?? ''
 }
+
+

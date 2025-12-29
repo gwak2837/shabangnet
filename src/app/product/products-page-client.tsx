@@ -20,7 +20,7 @@ import { saveProductManufacturerLink } from '@/services/product-manufacturer-lin
 
 import { updateProductAction } from './action'
 import { DeleteProductsDialog } from './delete-products-dialog'
-import { ProductCsvDialog } from './product-csv-dialog'
+import { ProductExcelDialog } from './product-excel-dialog'
 import { ProductFilters } from './product-filters'
 import { ProductTable } from './product-table'
 import { ProductStats } from './stats/product-stats'
@@ -36,7 +36,7 @@ export default function ProductsPageClient() {
   const searchQuery = (searchParams.get('q') ?? '').trim()
   const showUnmappedOnly = searchParams.get('unlinked') === '1'
   const showPriceErrorsOnly = searchParams.get('price-error') === '1'
-  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
+  const [isExcelDialogOpen, setIsExcelDialogOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   const {
@@ -187,6 +187,21 @@ export default function ProductsPageClient() {
     })
   }
 
+  const productExcelHref = useMemo(() => {
+    const sp = new URLSearchParams()
+    if (searchQuery) {
+      sp.set('search', searchQuery)
+    }
+    if (showUnmappedOnly) {
+      sp.set('unmapped', 'true')
+    }
+    if (showPriceErrorsOnly) {
+      sp.set('price-error', 'true')
+    }
+    const qs = sp.toString()
+    return qs ? `/api/products/excel?${qs}` : '/api/products/excel'
+  }, [searchQuery, showUnmappedOnly, showPriceErrorsOnly])
+
   if (isLoadingProducts) {
     return (
       <AppShell description="상품코드와 제조사를 연결하고 원가를 관리해요" title="상품 연결">
@@ -248,14 +263,14 @@ export default function ProductsPageClient() {
         <div className="flex items-center gap-2">
           {isAdmin && <DeleteProductsDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
           <Button asChild className="gap-2" variant="outline">
-            <a href="/api/products/csv">
+            <a href={productExcelHref}>
               <Download className="h-4 w-4" />
-              CSV 다운로드
+              엑셀 다운로드
             </a>
           </Button>
-          <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
+          <Button className="gap-2" onClick={() => setIsExcelDialogOpen(true)}>
             <Upload className="h-4 w-4" />
-            CSV 업로드
+            엑셀 업로드
           </Button>
         </div>
       </div>
@@ -282,7 +297,7 @@ export default function ProductsPageClient() {
 
       <InfiniteScrollSentinel hasMore={hasNextPage} isLoading={isFetchingNextPage} onLoadMore={() => fetchNextPage()} />
 
-      <ProductCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
+      <ProductExcelDialog onOpenChange={setIsExcelDialogOpen} open={isExcelDialogOpen} />
     </AppShell>
   )
 }

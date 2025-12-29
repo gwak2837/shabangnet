@@ -106,7 +106,7 @@ export default function SettlementPage() {
     setSelectedIds([])
   }
 
-  const settlementCsvHref = useMemo(() => {
+  const settlementExcelHref = useMemo(() => {
     if (!searchParams) return ''
     const sp = new URLSearchParams()
     sp.set('manufacturer-id', String(searchParams.manufacturerId))
@@ -125,7 +125,7 @@ export default function SettlementPage() {
       }
     }
 
-    return `/api/settlement/csv?${sp.toString()}`
+    return `/api/settlement/excel?${sp.toString()}`
   }, [searchParams])
 
   return (
@@ -170,9 +170,9 @@ export default function SettlementPage() {
               <DeleteSettlementOrdersDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />
             )}
             <Button asChild className="gap-2" variant="outline">
-              <a href={settlementCsvHref}>
+              <a href={settlementExcelHref}>
                 <Download className="h-4 w-4" />
-                CSV 다운로드
+                엑셀 다운로드
               </a>
             </Button>
           </div>

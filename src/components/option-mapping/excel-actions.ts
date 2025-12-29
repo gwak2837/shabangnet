@@ -5,33 +5,42 @@ import { inArray, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { manufacturer, optionMapping } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
-import { parseCsv } from '@/utils/csv'
+import { readXlsxRowsFromFile } from '@/lib/excel/read'
 import { normalizeOptionName } from '@/utils/normalize-option-name'
 
-import type { OptionMappingCsvImportResult, OptionMappingCsvRowError } from './option-mapping-csv.types'
+import type { OptionMappingExcelImportResult, OptionMappingExcelRowError } from './option-mapping-excel.types'
 
 type CanonicalField = 'manufacturerName' | 'optionName' | 'productCode'
 
-export async function importOptionMappingsCsv(
-  _prevState: OptionMappingCsvImportResult | null,
+export async function importOptionMappingsExcel(
+  _prevState: OptionMappingExcelImportResult | null,
   formData: FormData,
-): Promise<OptionMappingCsvImportResult> {
+): Promise<OptionMappingExcelImportResult> {
   try {
     const fileValue = formData.get('file')
     if (!isFileValue(fileValue)) {
-      return { error: 'CSV 파일을 선택해 주세요.' }
+      return { error: '엑셀 파일을 선택해 주세요.' }
     }
 
     if (fileValue.size === 0) {
       return { error: '빈 파일이에요.' }
     }
 
-    const rawText = await fileValue.text()
-    const rows = parseCsv(rawText)
+    if (!fileValue.name.toLowerCase().endsWith('.xlsx')) {
+      return { error: '엑셀(.xlsx) 파일만 업로드할 수 있어요.' }
+    }
+
+    let rows: string[][]
+    try {
+      rows = await readXlsxRowsFromFile(fileValue)
+    } catch (err) {
+      console.error('importOptionMappingsExcel read error:', err)
+      return { error: '엑셀 파일을 읽지 못했어요. 파일을 확인해 주세요.' }
+    }
 
     const headerRowIndex = rows.findIndex((row) => row.some((cell) => cell.trim() !== ''))
     if (headerRowIndex < 0) {
-      return { error: 'CSV에 헤더가 없어요.' }
+      return { error: '엑셀 파일에 헤더가 없어요.' }
     }
 
     const headerRow = rows[headerRowIndex]!.map(normalizeHeaderCell)
@@ -89,7 +98,7 @@ export async function importOptionMappingsCsv(
       existingManufacturerById.set(row.id, row.manufacturerId ?? null)
     }
 
-    const errors: OptionMappingCsvRowError[] = []
+    const errors: OptionMappingExcelRowError[] = []
     const seenInputKeys = new Set<string>()
 
     let totalRows = 0
@@ -162,7 +171,7 @@ export async function importOptionMappingsCsv(
           row: rowNumber,
           productCode,
           optionName,
-          message: 'CSV 안에서 상품코드+옵션명이 중복돼요.',
+          message: '엑셀 안에서 상품코드+옵션명이 중복돼요.',
         })
         continue
       }
@@ -170,9 +179,7 @@ export async function importOptionMappingsCsv(
 
       const existingIds = existingIdsByKey.get(key)
       if (existingIds && existingIds.length > 0) {
-        const needsUpdate = existingIds.some(
-          (existingId) => existingManufacturerById.get(existingId) !== manufacturerId,
-        )
+        const needsUpdate = existingIds.some((existingId) => existingManufacturerById.get(existingId) !== manufacturerId)
         if (!needsUpdate) {
           skipped += 1
           continue
@@ -259,8 +266,8 @@ export async function importOptionMappingsCsv(
       errors,
     }
   } catch (err) {
-    console.error('importOptionMappingsCsv:', err)
-    return { error: 'CSV를 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
+    console.error('importOptionMappingsExcel:', err)
+    return { error: '엑셀을 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
   }
 }
 
@@ -315,3 +322,5 @@ function normalizeName(value: string): string {
 function normalizeRequiredCell(value: string): string {
   return value.trim()
 }
+
+

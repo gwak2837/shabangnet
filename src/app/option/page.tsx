@@ -9,7 +9,7 @@ import type { OptionManufacturerMapping } from '@/services/option-mappings'
 import { queryKeys } from '@/common/constants/query-keys'
 import { AppShell } from '@/components/layout/app-shell'
 import { DeleteOptionMappingsDialog } from '@/components/option-mapping/delete-option-mappings-dialog'
-import { OptionMappingCsvDialog } from '@/components/option-mapping/option-mapping-csv-dialog'
+import { OptionMappingExcelDialog } from '@/components/option-mapping/option-mapping-excel-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { InfiniteScrollSentinel } from '@/components/ui/infinite-scroll-sentinel'
@@ -27,7 +27,7 @@ export default function OptionMappingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedManufacturer, setSelectedManufacturer] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
+  const [isExcelDialogOpen, setIsExcelDialogOpen] = useState(false)
   const [editingMapping, setEditingMapping] = useState<OptionManufacturerMapping | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const { data: session } = authClient.useSession()
@@ -147,6 +147,21 @@ export default function OptionMappingsPage() {
     }
   }, [data?.pages])
 
+  const optionMappingExcelHref = useMemo(() => {
+    const sp = new URLSearchParams()
+    if (searchQuery.trim().length > 0) {
+      sp.set('search', searchQuery)
+    }
+    if (manufacturerId) {
+      sp.set('manufacturer-id', String(manufacturerId))
+    }
+    if (isUnmapped) {
+      sp.set('unmapped', 'true')
+    }
+    const qs = sp.toString()
+    return qs ? `/api/options/excel?${qs}` : '/api/options/excel'
+  }, [searchQuery, manufacturerId, isUnmapped])
+
   if (isLoadingMappings) {
     return (
       <AppShell description="상품코드 + 옵션 조합으로 제조사를 연결해요" title="옵션 연결">
@@ -222,14 +237,14 @@ export default function OptionMappingsPage() {
         <div className="flex items-center gap-2">
           {isAdmin && <DeleteOptionMappingsDialog onSuccess={handleDeleteSuccess} selectedIds={visibleSelectedIds} />}
           <Button asChild className="gap-2" variant="outline">
-            <a href="/api/options/csv">
+            <a href={optionMappingExcelHref}>
               <Download className="h-4 w-4" />
-              CSV 다운로드
+              엑셀 다운로드
             </a>
           </Button>
-          <Button className="gap-2" onClick={() => setIsCsvDialogOpen(true)}>
+          <Button className="gap-2" onClick={() => setIsExcelDialogOpen(true)}>
             <Upload className="h-4 w-4" />
-            CSV 업로드
+            엑셀 업로드
           </Button>
         </div>
       </div>
@@ -264,7 +279,7 @@ export default function OptionMappingsPage() {
         open={isModalOpen}
       />
 
-      <OptionMappingCsvDialog onOpenChange={setIsCsvDialogOpen} open={isCsvDialogOpen} />
+      <OptionMappingExcelDialog onOpenChange={setIsExcelDialogOpen} open={isExcelDialogOpen} />
     </AppShell>
   )
 }

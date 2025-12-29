@@ -5,9 +5,9 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { manufacturer, product } from '@/db/schema/manufacturers'
 import { order } from '@/db/schema/orders'
-import { parseCsv } from '@/utils/csv'
+import { readXlsxRowsFromFile } from '@/lib/excel/read'
 
-import type { ProductCsvImportResult, ProductCsvRowError } from './product-csv.types'
+import type { ProductExcelImportResult, ProductExcelRowError } from './product-excel.types'
 
 type CanonicalField =
   | 'cost'
@@ -18,26 +18,35 @@ type CanonicalField =
   | 'productName'
   | 'shippingFee'
 
-export async function importProductsCsv(
-  _prevState: ProductCsvImportResult | null,
+export async function importProductsExcel(
+  _prevState: ProductExcelImportResult | null,
   formData: FormData,
-): Promise<ProductCsvImportResult> {
+): Promise<ProductExcelImportResult> {
   try {
     const fileValue = formData.get('file')
     if (!isFileValue(fileValue)) {
-      return { error: 'CSV 파일을 선택해 주세요.' }
+      return { error: '엑셀 파일을 선택해 주세요.' }
     }
 
     if (fileValue.size === 0) {
       return { error: '빈 파일이에요.' }
     }
 
-    const rawText = await fileValue.text()
-    const rows = parseCsv(rawText)
+    if (!fileValue.name.toLowerCase().endsWith('.xlsx')) {
+      return { error: '엑셀(.xlsx) 파일만 업로드할 수 있어요.' }
+    }
+
+    let rows: string[][]
+    try {
+      rows = await readXlsxRowsFromFile(fileValue)
+    } catch (err) {
+      console.error('importProductsExcel read error:', err)
+      return { error: '엑셀 파일을 읽지 못했어요. 파일을 확인해 주세요.' }
+    }
 
     const headerRowIndex = rows.findIndex((row) => row.some((cell) => cell.trim() !== ''))
     if (headerRowIndex < 0) {
-      return { error: 'CSV에 헤더가 없어요.' }
+      return { error: '엑셀 파일에 헤더가 없어요.' }
     }
 
     const headerRow = rows[headerRowIndex]!.map(normalizeHeaderCell)
@@ -76,17 +85,44 @@ export async function importProductsCsv(
         id: product.id,
         manufacturerId: product.manufacturerId,
         productCode: product.productCode,
+        productName: product.productName,
+        optionName: product.optionName,
+        price: product.price,
+        cost: product.cost,
+        shippingFee: product.shippingFee,
       })
       .from(product)
 
-    const existingByCode = new Map<string, { id: number; manufacturerId: number | null; rawCode: string }>()
+    const existingByCode = new Map<
+      string,
+      {
+        cost: number | null
+        id: number
+        manufacturerId: number | null
+        optionName: string
+        price: number | null
+        productCode: string
+        productName: string
+        shippingFee: number | null
+      }
+    >()
+
     for (const p of existingProducts) {
       const normalized = normalizeProductCode(p.productCode)
       if (!normalized) continue
-      existingByCode.set(normalized, { id: p.id, manufacturerId: p.manufacturerId ?? null, rawCode: p.productCode })
+      existingByCode.set(normalized, {
+        id: p.id,
+        manufacturerId: p.manufacturerId ?? null,
+        productCode: p.productCode,
+        productName: p.productName ?? '',
+        optionName: p.optionName ?? '',
+        price: p.price ?? null,
+        cost: p.cost ?? null,
+        shippingFee: p.shippingFee ?? null,
+      })
     }
 
-    const errors: ProductCsvRowError[] = []
+    const errors: ProductExcelRowError[] = []
     const seenInputCodes = new Set<string>()
 
     let totalRows = 0
@@ -115,7 +151,7 @@ export async function importProductsCsv(
 
       if (seenInputCodes.has(normalizedCode)) {
         skipped += 1
-        errors.push({ row: rowNumber, productCode: rawProductCode.trim(), message: 'CSV 안에서 상품코드가 중복돼요.' })
+        errors.push({ row: rowNumber, productCode: rawProductCode.trim(), message: '엑셀 안에서 상품코드가 중복돼요.' })
         continue
       }
       seenInputCodes.add(normalizedCode)
@@ -164,38 +200,72 @@ export async function importProductsCsv(
         manufacturerId = found
       }
 
-      const existing = existingByCode.get(normalizedCode)
       const rawCode = rawProductCode.trim()
 
+      const existing = existingByCode.get(normalizedCode)
       if (existing) {
-        const set: Partial<typeof product.$inferInsert> = {
-          updatedAt: new Date(),
+        const set: Partial<typeof product.$inferInsert> = {}
+
+        if (productName && productName !== existing.productName) {
+          set.productName = productName
+        }
+        if (optionName && optionName !== existing.optionName) {
+          set.optionName = optionName
         }
 
-        // 빈 칸은 기존 값 유지: 값이 있을 때만 업데이트해요.
-        if (productName) set.productName = productName
-        if (optionName) set.optionName = optionName
-        if (manufacturerId !== undefined) set.manufacturerId = manufacturerId
-        if (priceParsed.value !== undefined) set.price = priceParsed.value
-        if (costParsed.value !== undefined) set.cost = costParsed.value
-        if (shippingFeeParsed.value !== undefined) set.shippingFee = shippingFeeParsed.value
+        const didChangeManufacturer = manufacturerId !== undefined && manufacturerId !== existing.manufacturerId
+        if (didChangeManufacturer) {
+          set.manufacturerId = manufacturerId
+        }
 
-        const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
-        if (changeKeys.length === 0) {
+        if (priceParsed.value !== undefined) {
+          const current = existing.price ?? 0
+          if (priceParsed.value !== current) {
+            set.price = priceParsed.value
+          }
+        }
+
+        if (costParsed.value !== undefined) {
+          const current = existing.cost ?? 0
+          if (costParsed.value !== current) {
+            set.cost = costParsed.value
+          }
+        }
+
+        if (shippingFeeParsed.value !== undefined) {
+          const current = existing.shippingFee ?? 0
+          if (shippingFeeParsed.value !== current) {
+            set.shippingFee = shippingFeeParsed.value
+          }
+        }
+
+        if (Object.keys(set).length === 0) {
           skipped += 1
           continue
         }
 
+        set.updatedAt = new Date()
+
         await db.update(product).set(set).where(eq(product.id, existing.id))
         updated += 1
 
-        if (manufacturerId !== undefined && manufacturerId !== null) {
+        if (didChangeManufacturer && manufacturerId !== undefined && manufacturerId !== null) {
           await applyManufacturerToExistingOrders({
             manufacturerId,
             manufacturerName: manufacturerNameById.get(manufacturerId) ?? null,
-            productCode: existing.rawCode,
+            productCode: existing.productCode,
           })
         }
+
+        existingByCode.set(normalizedCode, {
+          ...existing,
+          manufacturerId: set.manufacturerId ?? existing.manufacturerId,
+          productName: set.productName ?? existing.productName,
+          optionName: set.optionName ?? existing.optionName,
+          price: set.price ?? existing.price,
+          cost: set.cost ?? existing.cost,
+          shippingFee: set.shippingFee ?? existing.shippingFee,
+        })
 
         continue
       }
@@ -225,38 +295,79 @@ export async function importProductsCsv(
         }
 
         if (inserted?.id != null) {
-          existingByCode.set(normalizedCode, { id: inserted.id, manufacturerId: manufacturerId ?? null, rawCode })
+          existingByCode.set(normalizedCode, {
+            id: inserted.id,
+            manufacturerId: manufacturerId ?? null,
+            productCode: rawCode,
+            productName: productName ?? '',
+            optionName: optionName ?? '',
+            price: priceParsed.value ?? 0,
+            cost: costParsed.value ?? 0,
+            shippingFee: shippingFeeParsed.value ?? 0,
+          })
         }
       } catch (err) {
-        console.error('importProductsCsv insert error:', err)
+        console.error('importProductsExcel insert error:', err)
 
-        const normalizedRowCode = normalizeProductCode(rawCode)
-        const fallbackExisting = normalizedRowCode ? existingByCode.get(normalizedRowCode) : undefined
+        const fallbackExisting = existingByCode.get(normalizedCode)
         if (!fallbackExisting) {
           skipped += 1
           errors.push({ row: rowNumber, productCode: rawCode, message: '상품을 저장하지 못했어요.' })
           continue
         }
 
-        const set: Partial<typeof product.$inferInsert> = {
-          updatedAt: new Date(),
+        const set: Partial<typeof product.$inferInsert> = {}
+
+        if (productName && productName !== fallbackExisting.productName) {
+          set.productName = productName
+        }
+        if (optionName && optionName !== fallbackExisting.optionName) {
+          set.optionName = optionName
         }
 
-        if (productName) set.productName = productName
-        if (optionName) set.optionName = optionName
-        if (manufacturerId !== undefined) set.manufacturerId = manufacturerId
-        if (priceParsed.value !== undefined) set.price = priceParsed.value
-        if (costParsed.value !== undefined) set.cost = costParsed.value
-        if (shippingFeeParsed.value !== undefined) set.shippingFee = shippingFeeParsed.value
+        const didChangeManufacturer = manufacturerId !== undefined && manufacturerId !== fallbackExisting.manufacturerId
+        if (didChangeManufacturer) {
+          set.manufacturerId = manufacturerId
+        }
 
-        const changeKeys = Object.keys(set).filter((k) => k !== 'updatedAt')
-        if (changeKeys.length === 0) {
+        if (priceParsed.value !== undefined) {
+          const current = fallbackExisting.price ?? 0
+          if (priceParsed.value !== current) {
+            set.price = priceParsed.value
+          }
+        }
+
+        if (costParsed.value !== undefined) {
+          const current = fallbackExisting.cost ?? 0
+          if (costParsed.value !== current) {
+            set.cost = costParsed.value
+          }
+        }
+
+        if (shippingFeeParsed.value !== undefined) {
+          const current = fallbackExisting.shippingFee ?? 0
+          if (shippingFeeParsed.value !== current) {
+            set.shippingFee = shippingFeeParsed.value
+          }
+        }
+
+        if (Object.keys(set).length === 0) {
           skipped += 1
           continue
         }
 
+        set.updatedAt = new Date()
+
         await db.update(product).set(set).where(eq(product.id, fallbackExisting.id))
         updated += 1
+
+        if (didChangeManufacturer && manufacturerId !== undefined && manufacturerId !== null) {
+          await applyManufacturerToExistingOrders({
+            manufacturerId,
+            manufacturerName: manufacturerNameById.get(manufacturerId) ?? null,
+            productCode: fallbackExisting.productCode,
+          })
+        }
       }
     }
 
@@ -269,8 +380,8 @@ export async function importProductsCsv(
       errors,
     }
   } catch (err) {
-    console.error('importProductsCsv:', err)
-    return { error: 'CSV를 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
+    console.error('importProductsExcel:', err)
+    return { error: '엑셀을 처리하지 못했어요. 파일 내용을 확인해 주세요.' }
   }
 }
 
@@ -371,3 +482,5 @@ function parseOptionalWon(value: string): { ok: false; message: string } | { ok:
 
   return { ok: true, value: Math.round(parsed) }
 }
+
+
