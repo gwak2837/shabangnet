@@ -105,7 +105,7 @@ export async function convertShoppingMallWorkbookToStream(params: {
     errorSheet.addRow([payload.row, payload.message]).commit()
 
     if (errorSamples.length < ERROR_SAMPLE_LIMIT) {
-      errorSamples.push(toUploadErrorSample(payload))
+      errorSamples.push(payload)
     }
   }
 
@@ -469,18 +469,4 @@ function getWorkbookReader(buffer: Buffer): ExcelJS.stream.xlsx.WorkbookReader {
     styles: 'ignore',
     entries: 'ignore',
   })
-}
-
-function toUploadErrorSample(err: {
-  message: string
-  productCode?: string
-  productName?: string
-  row: number
-}): UploadError {
-  return {
-    row: err.row,
-    message: err.message,
-    productCode: err.productCode,
-    productName: err.productName,
-  }
 }
