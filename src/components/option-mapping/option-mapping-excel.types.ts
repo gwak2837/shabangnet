@@ -20,5 +20,3 @@ export interface OptionMappingExcelRowError {
   productCode?: string
   row: number
 }
-
-

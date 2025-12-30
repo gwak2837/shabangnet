@@ -18,5 +18,3 @@ export interface ProductExcelRowError {
 }
 
 export const PRODUCT_EXCEL_HEADER = ['상품코드', '상품명', '옵션명', '제조사명', '판매가', '원가', '배송비'] as const
-
-

@@ -482,5 +482,3 @@ function parseOptionalWon(value: string): { ok: false; message: string } | { ok:
 
   return { ok: true, value: Math.round(parsed) }
 }
-
-

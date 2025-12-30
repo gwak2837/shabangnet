@@ -125,7 +125,9 @@ export function ProductExcelDialog({ open, onOpenChange }: ProductExcelDialogPro
                       </li>
                     ))}
                   </ul>
-                  {state.errors.length > 50 && <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>}
+                  {state.errors.length > 50 && (
+                    <p className="mt-2 text-xs text-amber-700">표시는 50개까지만 보여줘요.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -145,5 +147,3 @@ export function ProductExcelDialog({ open, onOpenChange }: ProductExcelDialogPro
     </Dialog>
   )
 }
-
-

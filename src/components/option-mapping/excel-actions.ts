@@ -179,7 +179,9 @@ export async function importOptionMappingsExcel(
 
       const existingIds = existingIdsByKey.get(key)
       if (existingIds && existingIds.length > 0) {
-        const needsUpdate = existingIds.some((existingId) => existingManufacturerById.get(existingId) !== manufacturerId)
+        const needsUpdate = existingIds.some(
+          (existingId) => existingManufacturerById.get(existingId) !== manufacturerId,
+        )
         if (!needsUpdate) {
           skipped += 1
           continue
@@ -322,5 +324,3 @@ function normalizeName(value: string): string {
 function normalizeRequiredCell(value: string): string {
   return value.trim()
 }
-
-

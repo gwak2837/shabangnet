@@ -115,7 +115,10 @@ export async function GET(request: NextRequest) {
   const { startAt, endAt } = getDateRange({ periodType, month, startDate, endDate })
   const period = formatPeriod({ periodType, month, startDate, endDate })
 
-  const [mfr] = await db.select({ name: manufacturer.name }).from(manufacturer).where(eq(manufacturer.id, manufacturerId))
+  const [mfr] = await db
+    .select({ name: manufacturer.name })
+    .from(manufacturer)
+    .where(eq(manufacturer.id, manufacturerId))
 
   if (!mfr) {
     return NextResponse.json({ error: '제조사를 찾을 수 없어요.' }, { status: 400 })
@@ -162,7 +165,14 @@ export async function GET(request: NextRequest) {
         excludedReason: orderExcludedReasonSql(order.fulfillmentType),
       })
       .from(order)
-      .where(and(eq(order.manufacturerId, manufacturerId), eq(order.status, 'completed'), gte(order.createdAt, startAt), lte(order.createdAt, endAt)))
+      .where(
+        and(
+          eq(order.manufacturerId, manufacturerId),
+          eq(order.status, 'completed'),
+          gte(order.createdAt, startAt),
+          lte(order.createdAt, endAt),
+        ),
+      )
       .orderBy(desc(order.createdAt), desc(order.id))
 
     const summary = await getSettlementSummary({ manufacturerId, startAt, endAt })
@@ -298,7 +308,12 @@ function buildSummaryRow(params: {
   ]
 }
 
-function formatPeriod(filters: { endDate?: string; month?: string; periodType: 'month' | 'range'; startDate?: string }): string {
+function formatPeriod(filters: {
+  endDate?: string
+  month?: string
+  periodType: 'month' | 'range'
+  startDate?: string
+}): string {
   if (filters.periodType === 'month' && filters.month) {
     const [year, month] = filters.month.split('-')
     return `${year}년 ${month}월`
@@ -342,7 +357,14 @@ async function getSettlementSummary(params: { endAt: Date; manufacturerId: numbe
       excludedOrderCount: sql<number>`coalesce(sum(case when ${orderIsExcludedSql(order.fulfillmentType)} then 1 else 0 end), 0)::int`,
     })
     .from(order)
-    .where(and(eq(order.manufacturerId, params.manufacturerId), eq(order.status, 'completed'), gte(order.createdAt, params.startAt), lte(order.createdAt, params.endAt)))
+    .where(
+      and(
+        eq(order.manufacturerId, params.manufacturerId),
+        eq(order.status, 'completed'),
+        gte(order.createdAt, params.startAt),
+        lte(order.createdAt, params.endAt),
+      ),
+    )
 
   return {
     totalOrders: totalOrders ?? 0,
@@ -356,5 +378,3 @@ async function getSettlementSummary(params: { endAt: Date; manufacturerId: numbe
 function toIsoDate(date: Date): string {
   return date.toISOString().split('T')[0] ?? ''
 }
-
-

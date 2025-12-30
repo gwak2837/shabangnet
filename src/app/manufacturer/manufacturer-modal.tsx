@@ -857,7 +857,9 @@ function mergeEmailLists(existing: string[], next: string[]): string[] {
   const seen = new Set<string>()
 
   for (const item of [...existing, ...next]) {
-    const normalized = String(item ?? '').trim().toLowerCase()
+    const normalized = String(item ?? '')
+      .trim()
+      .toLowerCase()
     if (normalized.length === 0) continue
     if (seen.has(normalized)) continue
     seen.add(normalized)

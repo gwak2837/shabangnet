@@ -29,5 +29,3 @@ export async function readXlsxRowsFromFile(file: File): Promise<string[][]> {
   const buffer = await file.arrayBuffer()
   return readXlsxFirstSheetRows(buffer)
 }
-
-

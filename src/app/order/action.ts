@@ -366,7 +366,9 @@ function normalizeEmails(raw: string[]): string[] {
   const seen = new Set<string>()
 
   for (const item of raw) {
-    const trimmed = String(item ?? '').trim().toLowerCase()
+    const trimmed = String(item ?? '')
+      .trim()
+      .toLowerCase()
     if (trimmed.length === 0) continue
     if (seen.has(trimmed)) continue
     seen.add(trimmed)

@@ -24,4 +24,3 @@ export function toTrimmedString(value: unknown): string {
   }
   return String(value).trim()
 }
-

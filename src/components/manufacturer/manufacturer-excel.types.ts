@@ -18,5 +18,3 @@ export interface ManufacturerExcelRowError {
 }
 
 export const MANUFACTURER_EXCEL_HEADER = ['제조사명', '담당자명', '이메일', '휴대전화번호'] as const
-
-
