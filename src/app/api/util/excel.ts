@@ -58,5 +58,3 @@ export async function createSimpleXlsxBuffer(params: {
 export function sanitizeFileNamePart(value: string): string {
   return value.replace(/[\\/:*?"<>|]/g, '_')
 }
-
-

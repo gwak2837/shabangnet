@@ -287,6 +287,7 @@ function ManufacturerModalBody({
   storedAnalysis,
 }: ManufacturerModalBodyProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const orderTemplateFileInputId = `manufacturer-${manufacturer.id}-order-template-file`
 
   const [manufacturerDraft, setManufacturerDraft] = useState<ManufacturerDraft>(() => ({
     contactName: manufacturer.contactName,
@@ -713,22 +714,23 @@ function ManufacturerModalBody({
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="cursor-pointer">
-                  <input
-                    accept=".xlsx"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.currentTarget.files?.[0]
-                      if (!file) return
-                      handleTemplateUpload(file)
-                    }}
-                    ref={fileInputRef}
-                    type="file"
-                  />
-                  <Button size="sm" type="button" variant="outline">
+                <input
+                  accept=".xlsx"
+                  className="sr-only"
+                  id={orderTemplateFileInputId}
+                  onChange={(e) => {
+                    const file = e.currentTarget.files?.[0]
+                    if (!file) return
+                    handleTemplateUpload(file)
+                  }}
+                  ref={fileInputRef}
+                  type="file"
+                />
+                <Button asChild size="sm" variant="outline">
+                  <label className="cursor-pointer" htmlFor={orderTemplateFileInputId}>
                     파일 선택
-                  </Button>
-                </label>
+                  </label>
+                </Button>
 
                 {uploadedOrderTemplateFile && (
                   <Button
