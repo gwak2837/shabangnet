@@ -78,20 +78,20 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const formData = await request.formData()
+
+  const validation = uploadFormSchema.safeParse({
+    file: formData.get('file'),
+    mallId: formData.get('mall-id'),
+  })
+
+  if (!validation.success) {
+    return NextResponse.json({ error: validation.error.message }, { status: 400 })
+  }
+
+  const { file, mallId } = validation.data
+
   try {
-    const formData = await request.formData()
-
-    const validation = uploadFormSchema.safeParse({
-      file: formData.get('file'),
-      mallId: formData.get('mall-id'),
-    })
-
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error.message }, { status: 400 })
-    }
-
-    const { file, mallId } = validation.data
-
     const [dbTemplate] = await db
       .select({
         mallName: shoppingMallTemplate.mallName,
@@ -106,24 +106,6 @@ export async function POST(request: Request): Promise<Response> {
 
     if (!dbTemplate) {
       return NextResponse.json({ error: '알 수 없는 쇼핑몰이에요' }, { status: 400 })
-    }
-
-    const parsedColumnConfig = (() => {
-      try {
-        const raw = dbTemplate.columnMappings ? (JSON.parse(dbTemplate.columnMappings) as unknown) : {}
-        return parseShoppingMallTemplateColumnConfig(raw)
-      } catch {
-        return { columnMappings: {}, fixedValues: {} }
-      }
-    })()
-
-    const mallConfig = {
-      mallName: dbTemplate.mallName,
-      displayName: dbTemplate.displayName,
-      headerRow: dbTemplate.headerRow ?? 1,
-      dataStartRow: dbTemplate.dataStartRow ?? 2,
-      columnMappings: parsedColumnConfig.columnMappings,
-      fixedValues: parsedColumnConfig.fixedValues,
     }
 
     if (!dbTemplate.exportConfig) {
@@ -165,7 +147,7 @@ export async function POST(request: Request): Promise<Response> {
         meta: {
           v: 1,
           kind: 'shopping_mall_upload_meta',
-          mallName: mallConfig.displayName,
+          mallName: dbTemplate.displayName,
           summary: { totalAmount: 0, totalCost: 0, estimatedMargin: null },
           errorSamples: [{ row: 0, message: '워크시트를 찾을 수 없어요' }],
           autoCreatedManufacturers: [],
@@ -175,9 +157,27 @@ export async function POST(request: Request): Promise<Response> {
       return NextResponse.json({ error: '워크시트를 찾을 수 없어요' }, { status: 400 })
     }
 
-    const parseResult = parseShoppingMallWorksheet(worksheet, mallConfig)
+    const parsedColumnConfig = (() => {
+      try {
+        const raw = dbTemplate.columnMappings ? (JSON.parse(dbTemplate.columnMappings) as unknown) : {}
+        return parseShoppingMallTemplateColumnConfig(raw)
+      } catch {
+        return { columnMappings: {}, fixedValues: {} }
+      }
+    })()
 
+    const mallConfig = {
+      mallName: dbTemplate.mallName,
+      displayName: dbTemplate.displayName,
+      headerRow: dbTemplate.headerRow ?? 1,
+      dataStartRow: dbTemplate.dataStartRow ?? 2,
+      columnMappings: parsedColumnConfig.columnMappings,
+      fixedValues: parsedColumnConfig.fixedValues,
+    }
+
+    const parseResult = parseShoppingMallWorksheet(worksheet, mallConfig)
     const fatalError = parseResult.errors.find((err) => err.row === 0)
+
     if (fatalError) {
       await db.insert(upload).values({
         fileName: file.name,
@@ -219,7 +219,6 @@ export async function POST(request: Request): Promise<Response> {
     ])
 
     const lookupMaps = buildLookupMaps(allManufacturers, allProducts, allOptionMappings)
-
     const summary = calculateUploadSummary(parseResult.orders)
     const errorSamples = toUploadErrorSamples(rowErrors)
 
